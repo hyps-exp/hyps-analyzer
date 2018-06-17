@@ -24,6 +24,7 @@
 #include "Hodo2Hit.hh"
 #include "HodoCluster.hh"
 #include "RawData.hh"
+#include "UserParamMan.hh"
 
 namespace
 {
@@ -505,7 +506,7 @@ HodoAnalyzer::DecodeFBT1Hits( RawData* rawData )
 	  hp = NULL;
 	}
       }
-
+      
       if(UorD==0) std::sort(m_FBT1UCont.at(l).begin(), m_FBT1UCont.at(l).end(), FiberHit::CompFiberHit);
       else        std::sort(m_FBT1DCont.at(l).begin(), m_FBT1DCont.at(l).end(), FiberHit::CompFiberHit);
     }
@@ -557,7 +558,7 @@ HodoAnalyzer::DecodeFBT2Hits( RawData* rawData )
 	  hp = NULL;
 	}
       }
-
+      
       if(UorD==0) std::sort(m_FBT2UCont.at(l).begin(), m_FBT2UCont.at(l).end(), FiberHit::CompFiberHit);
       else        std::sort(m_FBT2DCont.at(l).begin(), m_FBT2DCont.at(l).end(), FiberHit::CompFiberHit);
     }
@@ -596,13 +597,13 @@ HodoAnalyzer::MakeUpClusters( const Hodo1HitContainer& HitCont,
     int         mC = -1;
     int       segB = -1;
     if(hitA->JoinedAllMhit()) continue;
-
+    
     int n_mhitA = hitA->GetNumOfHit();
     for(int ma = 0; ma<n_mhitA; ++ma){
       if(hitA->Joined(ma)) continue;
       double    cmtA = hitA->CMeanTime(ma);
       double    cmtB = -9999;
-
+      
       for( int j=i+1; j<nh; ++j ){
 	Hodo1Hit *hit = HitCont[j];
 	int    seg  = hit->SegmentId();
@@ -622,7 +623,7 @@ HodoAnalyzer::MakeUpClusters( const Hodo1HitContainer& HitCont,
 	  if( j==iB ) continue;
 	  Hodo1Hit *hit = HitCont[j];
 	  int    seg  = hit->SegmentId();
-
+	  
 	  int n_mhitC = hit->GetNumOfHit();
 	  for(int mc = 0; mc<n_mhitC; ++mc){
 	    if(hit->Joined(mc)) continue;
@@ -688,13 +689,13 @@ HodoAnalyzer::MakeUpClusters( const Hodo2HitContainer& HitCont,
     int         mC = -1;
     int       segB = -1;
     if(hitA->JoinedAllMhit()) continue;
-
+    
     int n_mhitA = hitA->GetNumOfHit();
     for(int ma = 0; ma<n_mhitA; ++ma){
       if(hitA->Joined(ma)) continue;
       double    cmtA = hitA->CMeanTime(ma);
       double    cmtB = -9999;
-
+      
       for( int j=i+1; j<nh; ++j ){
 	Hodo2Hit *hit = HitCont[j];
 	int    seg  = hit->SegmentId();
@@ -714,7 +715,7 @@ HodoAnalyzer::MakeUpClusters( const Hodo2HitContainer& HitCont,
 	  if( j==iB ) continue;
 	  Hodo2Hit *hit = HitCont[j];
 	  int    seg  = hit->SegmentId();
-
+	  
 	  int n_mhitC = hit->GetNumOfHit();
 	  for(int mc = 0; mc<n_mhitC; ++mc){
 	    if(hit->Joined(mc)) continue;
@@ -778,16 +779,16 @@ HodoAnalyzer::MakeUpClusters( const BH2HitContainer& HitCont,
     int     segB = -1;
     if(hitA->JoinedAllMhit()) continue;
 
-    int n_mhitA = hitA->GetNumOfHit();
+    int n_mhitA = hitA->GetNumOfHit();    
     for(int ma = 0; ma<n_mhitA; ++ma){
       if(hitA->Joined(ma)) continue;
       double    cmtA = hitA->CMeanTime(ma);
-      double    cmtB = -9999;
+      double    cmtB = -9999;    
 
       for( int j=i+1; j<nh; ++j ){
 	BH2Hit *hit = HitCont[j];
 	int     seg = hit->SegmentId();
-
+	
 	int n_mhitB = hit->GetNumOfHit();
 	for(int mb = 0; mb<n_mhitB; ++mb){
 	  if(hit->Joined(mb)) continue;
@@ -869,6 +870,7 @@ HodoAnalyzer::MakeUpClusters( const FiberHitContainer& cont,
     int NofHitA = HitA->GetNumOfHit();
     for(int mhitA = 0; mhitA<NofHitA; ++mhitA){
       if(HitA->Joined(mhitA)) continue;
+
       FiberCluster *cluster = new FiberCluster();
       cluster->push_back( new FLHit(HitA, mhitA) );
 
@@ -914,7 +916,7 @@ HodoAnalyzer::MakeUpClusters( const FiberHitContainer& cont,
 	// there is no more candidates
 	if(cluster->Calculate()){
 	  ClusterCont.push_back(cluster);
-	} else {
+	}else{
 	  delete cluster;
 	  cluster = NULL;
 	}
@@ -989,9 +991,6 @@ HodoAnalyzer::MakeUpClusters( const FiberHitContainer& cont,
     }
   }
 
-  for( const auto& c : ClusterCont ){
-    std::cout << __func__ << " clsize : " << c->ClusterSize() << std::endl;
-  }
   return ClusterCont.size();
 }
 
@@ -1053,6 +1052,7 @@ HodoAnalyzer::MakeUpClusters( const FLHitContainer& cont,
   }
 
   del::ClearContainer( DeleteCand );
+
   return ClusterCont.size();
 }
 
@@ -1406,4 +1406,72 @@ HodoAnalyzer::WidthCut( std::vector<TypeCluster>& cont,
   cont.resize(ValidCand.size());
   std::copy(ValidCand.begin(), ValidCand.end(), cont.begin());
   ValidCand.clear();
+}
+
+//______________________________________________________________________________
+namespace{
+  const UserParamMan& gUser = UserParamMan::GetInstance();
+};
+
+#define REQDE 0
+
+//______________________________________________________________________________
+BH2Cluster*
+HodoAnalyzer::GetTime0BH2Cluster()
+{
+  static const double MinDe = gUser.GetParameter("DeBH2", 0);
+  static const double MaxDe = gUser.GetParameter("DeBH2", 1);
+  static const double MinMt = gUser.GetParameter("MtBH2", 0);
+  static const double MaxMt = gUser.GetParameter("MtBH2", 1);
+
+  BH2Cluster* time0_cluster = NULL;
+  double min_mt = -9999;
+  for(const auto& cluster : m_BH2ClCont){
+    double mt = cluster->MeanTime();
+    double de = cluster->DeltaE();
+
+    if(true
+       && std::abs(mt) < std::abs(min_mt)
+       && MinMt < mt && mt < MaxMt
+#if REQDE
+       && (MinDe < de && de < MaxDe)
+#endif
+       ){
+      min_mt        = mt;
+      time0_cluster = cluster;
+    }// T0 selection
+  }// for
+
+  return time0_cluster;
+}
+
+//______________________________________________________________________________
+HodoCluster*
+HodoAnalyzer::GetBtof0BH1Cluster(double time0)
+{
+  static const double MinDe   = gUser.GetParameter("DeBH1", 0);
+  static const double MaxDe   = gUser.GetParameter("DeBH1", 1);
+  static const double MinBtof = gUser.GetParameter("BTOF",  0);
+  static const double MaxBtof = gUser.GetParameter("BTOF",  1);
+
+  HodoCluster* time0_cluster = NULL;
+  double min_btof            = -9999;
+  for(const auto& cluster : m_BH1ClCont){
+    double cmt  = cluster->CMeanTime();
+    double de   = cluster->DeltaE();
+    double btof = cmt - time0;
+
+    if(true
+       && std::abs(btof) < std::abs(min_btof)
+       && MinBtof < btof && btof < MaxBtof
+#if REQDE
+       && (MinDe < de && de < MaxDe)
+#endif
+       ){
+      min_btof      = btof;
+      time0_cluster = cluster;
+    }// T0 selection
+  }// for
+
+  return time0_cluster;
 }

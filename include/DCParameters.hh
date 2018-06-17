@@ -38,7 +38,8 @@ const DCPairPlaneInfo PPInfoBcOut[] = {
   // { pair_plane, honeycomb, fiber, id1, id2, CellSize }
   { true, false, false, 1,  2,  3.0 }, { true, false, false,  3,  4,  3.0 },
   { true, false, false, 5,  6,  3.0 }, { true, false, false,  7,  8,  3.0 },
-  { true, false, false, 9, 10,  3.0 }, { true, false, false, 11, 12,  3.0 }
+  { true, false, false, 9, 10,  3.0 }, { true, false, false, 11, 12,  3.0 },
+  { false, false, false, 13, 13, 10.0}
 };
 
 const DCPairPlaneInfo PPInfoSdcIn[] = {

@@ -26,13 +26,13 @@ namespace track
   int LocalTrackSearch( const std::vector<DCHitContainer>& HC,
 			const DCPairPlaneInfo *PpInfo,
 			int npp, std::vector<DCLocalTrack*>& TrackCont,
-			int MinNumOfHits=6 );
+			int MinNumOfHits=6, int T0Seg = -1 );
 
   //______________________________________________________________________________
   int LocalTrackSearch( const std::vector< std::vector<DCHitContainer> >& hcAssemble,
 			const DCPairPlaneInfo *PpInfo,
 			int npp, std::vector<DCLocalTrack*>& TrackCont,
-			int MinNumOfHits=6 );
+			int MinNumOfHits=6, int T0Seg = -1 );
 
   //______________________________________________________________________________
   int LocalTrackSearchSdcInFiber( const std::vector<DCHitContainer>& HC,

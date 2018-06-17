@@ -100,8 +100,8 @@ public:
 
   bool TrackSearchBcIn( void );
   bool TrackSearchBcIn( const std::vector< std::vector<DCHitContainer> >& hc );
-  bool TrackSearchBcOut( void );
-  bool TrackSearchBcOut( const std::vector< std::vector<DCHitContainer> >& hc );
+  bool TrackSearchBcOut( int T0Seg );
+  bool TrackSearchBcOut( const std::vector< std::vector<DCHitContainer> >& hc, int T0Seg );
   bool TrackSearchSdcIn( void );
   bool TrackSearchSdcInFiber( void );
   bool TrackSearchSdcOut( void );
@@ -182,6 +182,8 @@ public:
   inline DCLocalTrack * GetTrackBcOutSdcIn( int i ) const;
   inline DCLocalTrack * GetTrackSdcInSdcOut( int i ) const;
 
+  bool MakeBH2DCHit(int t0seg);
+
 protected:
   void ClearDCHits( void );
   void ClearBcInHits( void );
@@ -239,7 +241,7 @@ DCAnalyzer::GetBcInHC( int layer ) const
 inline const DCHitContainer&
 DCAnalyzer::GetBcOutHC( int layer ) const
 {
-  if( layer>NumOfLayersBcOut ) layer=0;
+  if( layer>NumOfLayersBcOut+1 ) layer=0;
   return m_BcOutHC[layer];
 }
 

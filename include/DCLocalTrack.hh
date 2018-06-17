@@ -65,6 +65,8 @@ public:
   bool         FindLayer( int layer ) const;
   int          GetNDF( void ) const;
   int          GetNHit( void ) const { return m_hit_array.size(); }
+  int          GetNHitSFT( void ) const;
+  int          GetNHitY( void ) const;
   DCLTrackHit* GetHit( std::size_t nth ) const;
   DCLTrackHit* GetHitOfLayerNumber( int lnum ) const;
   double       GetWire( int layer ) const;

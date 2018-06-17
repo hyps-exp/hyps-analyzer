@@ -270,7 +270,7 @@ UserEventDisplay::ProcessingNormal( void )
 
   int ntBcOut = 0;
   if( multi_BcOut<MaxMultiHitBcOut ){
-    DCAna->TrackSearchBcOut();
+    DCAna->TrackSearchBcOut(-1);
     ntBcOut = DCAna->GetNtracksBcOut();
     for( int it=0; it<ntBcOut; ++it ){
       DCLocalTrack *tp = DCAna->GetTrackBcOut( it );

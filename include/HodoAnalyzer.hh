@@ -171,6 +171,9 @@ public:
   void WidthCutFBT1( int layer, int UorD, double min_width, double max_width);
   void WidthCutFBT2( int layer, int UorD, double min_width, double max_width);
 
+  BH2Cluster*  GetTime0BH2Cluster();
+  HodoCluster* GetBtof0BH1Cluster(double time0);
+
 private:
   void ClearBH1Hits( void );
   void ClearBH2Hits( void );

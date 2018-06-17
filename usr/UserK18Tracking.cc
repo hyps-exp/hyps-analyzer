@@ -26,6 +26,7 @@
 #include "HodoPHCMan.hh"
 #include "HodoRawHit.hh"
 #include "K18TrackD2U.hh"
+#include "BH1Match.hh"
 #include "BH2Filter.hh"
 #include "KuramaLib.hh"
 #include "MathTools.hh"
@@ -42,9 +43,9 @@ namespace
   using namespace root;
   const std::string& class_name("EventK18Tracking");
   RMAnalyzer&         gRM   = RMAnalyzer::GetInstance();
-  const DCGeomMan&    gGeom = DCGeomMan::GetInstance();
   const UserParamMan& gUser = UserParamMan::GetInstance();
   BH2Filter&          gFilter = BH2Filter::GetInstance();
+  BH1Match&           gBH1Mth = BH1Match::GetInstance();
 }
 
 //______________________________________________________________________________
@@ -109,11 +110,11 @@ struct Event
 
   // BFT
   int    bft_ncl;
+  int    bft_ncl_bh1mth;
   int    bft_clsize[NumOfSegBFT];
   double bft_ctime[NumOfSegBFT];
   double bft_clpos[NumOfSegBFT];
-
-  int pid;
+  int    bft_bh1mth[NumOfSegBFT];
 
   // BcOut
   int nlBcOut;
@@ -219,7 +220,6 @@ EventK18Tracking::ProcessingNormal( void )
 
   // if( event.trigflag[SpillEndFlag] ) return true;
 
-
   HF1(1, 1);
 
   ////////// BH2 time 0
@@ -230,33 +230,13 @@ EventK18Tracking::ProcessingNormal( void )
 #endif
   HF1(1, 2);
 
-
-  double time0    = -999.;
-  double min_time = -999.;
-  int    i_time0  = -1;
   //////////////BH2 Analysis
-  for( int i=0; i<nhBh2; ++i ){
-    BH2Hit *hit = hodoAna->GetHitBH2(i);
-    if(!hit) continue;
-    double  mt = hit->MeanTime();
-    double ct0 = hit->CTime0();
-
-#if HodoCut
-    if( dE<MinDeBH2 || MaxDeBH2<dE ) continue;
-#endif
-    if( std::abs(mt)<std::abs(min_time) ){
-      min_time = mt;
-      time0    = ct0;
-      i_time0  = i;
-    }
-  }
-
-  if(i_time0 != -1){
-    BH2Hit *hit = hodoAna->GetHitBH2(i_time0);
-    event.Time0Seg = hit->SegmentId()+1;
-    event.deTime0  = hit->DeltaE();
-    event.Time0    = hit->Time0();
-    event.CTime0   = hit->CTime0();
+  BH2Cluster *cl_time0 = hodoAna->GetTime0BH2Cluster();
+  if(cl_time0){
+    event.Time0Seg = cl_time0->MeanSeg()+1;
+    event.deTime0  = cl_time0->DeltaE();
+    event.Time0    = cl_time0->Time0();
+    event.CTime0   = cl_time0->CTime0();
   }else{
     return true;
   }
@@ -271,20 +251,10 @@ EventK18Tracking::ProcessingNormal( void )
 #endif
   HF1(1, 4);
 
-  double btof0 = -999;
-  for(int i=0; i<nhBh1; ++i){
-    Hodo2Hit* hit = hodoAna->GetHitBH1(i);
-    if(!hit) continue;
-    double cmt  = hit->CMeanTime();
-    double btof = cmt - time0;
-#if HodoCut
-    double dE   = hit->DeltaE();
-    if( dE<MinDeBH1 || MaxDeBH1<dE ) continue;
-    if( btof<MinBeamToF || MaxBeamToF<btof ) continue;
-#endif
-    if( std::abs(btof)<std::abs(btof0) ){
-      btof0 = btof;
-    }
+  double btof0_seg = -1;
+  HodoCluster* cl_btof0 = event.Time0Seg > 0? hodoAna->GetBtof0BH1Cluster(event.CTime0) : NULL;
+  if(cl_btof0){
+    btof0_seg = cl_btof0->MeanSeg();
   }
 
   HF1(1, 5);
@@ -311,14 +281,27 @@ EventK18Tracking::ProcessingNormal( void )
       double ctime  = cl->CMeanTime();
       double pos    = cl->MeanPosition();
       // double width  = cl->Width();
-      xCand.push_back( pos );
+
       event.bft_clsize[i] = clsize;
       event.bft_ctime[i]  = ctime;
       event.bft_clpos[i]  = pos;
+      
+      if(btof0_seg > 0 && ncl != 1){
+	if(gBH1Mth.Judge(pos, btof0_seg)){
+	  event.bft_bh1mth[i] = 1;
+	  xCand.push_back( pos );
+	}
+      }else{
+	xCand.push_back( pos );
+      }
+
       HF1( BFTHid +102, clsize );
       HF1( BFTHid +103, ctime );
       HF1( BFTHid +104, pos );
     }
+
+    event.bft_ncl_bh1mth = xCand.size();
+    HF1( BFTHid + 105, event.bft_ncl_bh1mth);
   }
 
   HF1( 1, 7.);
@@ -346,7 +329,7 @@ EventK18Tracking::ProcessingNormal( void )
   //////////////BCOut tracking
   BH2Filter::FilterList cands;
   gFilter.Apply((Int_t)event.Time0Seg-1, *DCAna, cands);
-  DCAna->TrackSearchBcOut( cands );
+  DCAna->TrackSearchBcOut( cands, event.Time0Seg-1 );
   DCAna->ChiSqrCutBcOut(10);
 
   int ntBcOut = DCAna->GetNtracksBcOut();
@@ -463,8 +446,8 @@ EventK18Tracking::InitializeEvent( void )
 {
   event.evnum     =  0;
   event.trignhits =  0;
-  event.pid       = -1;
   event.bft_ncl   =  0;
+  event.bft_ncl_bh1mth =  0;
   event.nlBcOut   =  0;
   event.ntBcOut   =  0;
   event.ntK18     =  0;
@@ -483,6 +466,7 @@ EventK18Tracking::InitializeEvent( void )
     event.bft_clsize[it] = -999;
     event.bft_ctime[it]  = -999.;
     event.bft_clpos[it]  = -999.;
+    event.bft_bh1mth[it] = 0;
   }
 
   for(int i = 0; i<MaxHits; ++i){
@@ -558,11 +542,12 @@ ConfMan:: InitializeHistograms( void )
   HB2( BFTHid +24, "BFT CTime/Tot D", NbinTot, MinTot, MaxTot, NbinTime, MinTime, MaxTime );
 
   HB1( BFTHid +100, "BFT NCluster [Raw]", 100, 0, 100 );
-  HB1( BFTHid +101, "BFT NCluster [TimeCut]", 100, 0, 100 );
+  HB1( BFTHid +101, "BFT NCluster [TimeCut]", 10, 0, 10 );
   HB1( BFTHid +102, "BFT Cluster Size", 5, 0, 5 );
   HB1( BFTHid +103, "BFT CTime (Cluster)", NbinTime, MinTime, MaxTime );
   HB1( BFTHid +104, "BFT Cluster Position",
        NumOfSegBFT, -0.5*(double)NumOfSegBFT, 0.5*(double)NumOfSegBFT );
+  HB1( BFTHid +105, "BFT NCluster [TimeCut && BH1Matching]", 10, 0, 10 );
 
   // BcOut
   HB1( 30, "#Tracks BcOut", 10, 0., 10. );
@@ -605,13 +590,13 @@ ConfMan:: InitializeHistograms( void )
   tree->Branch("Time0",    &event.Time0,     "Time0/D");
   tree->Branch("CTime0",   &event.CTime0,    "CTime0/D");
 
-  tree->Branch("pid",       &event.pid,       "pid/I");
-
   //BFT
-  tree->Branch("bft_ncl",     &event.bft_ncl,    "bft_ncl/I");
-  tree->Branch("bft_clsize",   event.bft_clsize, "bft_clsize[bft_ncl]/I");
-  tree->Branch("bft_ctime",    event.bft_ctime,  "bft_ctime[bft_ncl]/D");
-  tree->Branch("bft_clpos",    event.bft_clpos,  "bft_clpos[bft_ncl]/D");
+  tree->Branch("bft_ncl",        &event.bft_ncl,    "bft_ncl/I");
+  tree->Branch("bft_ncl_bh1mth", &event.bft_ncl_bh1mth, "bft_ncl_bh1mth/I");
+  tree->Branch("bft_clsize",      event.bft_clsize, "bft_clsize[bft_ncl]/I");
+  tree->Branch("bft_ctime",       event.bft_ctime,  "bft_ctime[bft_ncl]/D");
+  tree->Branch("bft_clpos",       event.bft_clpos,  "bft_clpos[bft_ncl]/D");
+  tree->Branch("bft_bh1mth",      event.bft_bh1mth, "bft_bh1mth[bft_ncl]/I");
 
   // BcOut
   tree->Branch("nlBcOut",   &event.nlBcOut,     "nlBcOut/I");
@@ -659,7 +644,8 @@ ConfMan::InitializeParameterFiles( void )
       InitializeParameter<DCTdcCalibMan>("DCTDC")    &&
       InitializeParameter<HodoParamMan>("HDPRM")     &&
       InitializeParameter<HodoPHCMan>("HDPHC")       &&
-      InitializeParameter<BH2Filter>("BH2FLT")   &&
+      InitializeParameter<BH2Filter>("BH2FLT")       &&
+      InitializeParameter<BH1Match>("BH1MTH")        &&
       InitializeParameter<K18TransMatrix>("K18TM")   &&
       InitializeParameter<UserParamMan>("USER")      );
 }

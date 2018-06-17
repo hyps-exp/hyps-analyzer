@@ -131,7 +131,7 @@ DCAnalyzer::DCAnalyzer( void )
     m_MWPCClCont(NumOfLayersBcIn+1),
     m_TempBcInHC(NumOfLayersBcIn+1),
     m_BcInHC(NumOfLayersBcIn+1),
-    m_BcOutHC(NumOfLayersBcOut+1),
+    m_BcOutHC(NumOfLayersBcOut+2),
     m_SdcInHC(NumOfLayersSdcIn+1),
     m_SdcOutHC(NumOfLayersSdcOut+1),
     m_SdcInExTC(NumOfLayersSdcIn+1),
@@ -380,6 +380,7 @@ DCAnalyzer::DecodeSdcOutHits( RawData *rawData , double ofs_dt)
 
   ClearSdcOutHits();
 
+  // SdcOut
   for( int layer=1; layer<=NumOfLayersSdcOut; ++layer ){
     const DCRHitContainer &RHitCont = rawData->GetSdcOutRawHC(layer);
     int nh = RHitCont.size();
@@ -562,20 +563,20 @@ DCAnalyzer::TrackSearchBcIn( const std::vector<std::vector<DCHitContainer> >& hc
 
 //______________________________________________________________________________
 bool
-DCAnalyzer::TrackSearchBcOut( void )
+DCAnalyzer::TrackSearchBcOut( int T0Seg )
 {
   static const int MinLayer = gUser.GetParameter("MinLayerBcOut");
 
 #if BcOut_Pair //Pair Plane Tracking Routine for BcOut
-  track::LocalTrackSearch( m_BcOutHC, PPInfoBcOut, NPPInfoBcOut,
-			   m_BcOutTC, MinLayer );
-  return true;
+  int ntrack = track::LocalTrackSearch( m_BcOutHC, PPInfoBcOut, NPPInfoBcOut,
+					m_BcOutTC, MinLayer, T0Seg );
+  return ntrack == -1 ? false : true;
 #endif
 
 #if BcOut_XUV  //XUV Tracking Routine for BcOut
-  track::LocalTrackSearchVUX( m_BcOutHC, PPInfoBcOut, NPPInfoBcOut,
-			      m_BcOutTC, MinLayer );
-  return true;
+  int ntrack = track::LocalTrackSearchVUX( m_BcOutHC, PPInfoBcOut, NPPInfoBcOut,
+					   m_BcOutTC, MinLayer );
+  return ntrack == -1 ? false : true;
 #endif
 
   return false;
@@ -584,18 +585,18 @@ DCAnalyzer::TrackSearchBcOut( void )
 //______________________________________________________________________________
 // Use with BH2Filter
 bool
-DCAnalyzer::TrackSearchBcOut( const std::vector<std::vector<DCHitContainer> >& hc )
+DCAnalyzer::TrackSearchBcOut( const std::vector<std::vector<DCHitContainer> >& hc, int T0Seg )
 {
   static const int MinLayer = gUser.GetParameter("MinLayerBcOut");
 
 #if BcOut_Pair //Pair Plane Tracking Routine for BcOut
-  track::LocalTrackSearch( hc, PPInfoBcOut, NPPInfoBcOut, m_BcOutTC, MinLayer );
-  return true;
+  int ntrack = track::LocalTrackSearch( hc, PPInfoBcOut, NPPInfoBcOut, m_BcOutTC, MinLayer, T0Seg );
+  return ntrack == -1 ? false : true;
 #endif
 
 #if BcOut_XUV  //XUV Tracking Routine for BcOut
-  track::LocalTrackSearchVUX( hc, PPInfoBcOut, NPPInfoBcOut, m_BcOutTC, MinLayer );
-  return true;
+  int ntrack = track::LocalTrackSearchVUX( hc, PPInfoBcOut, NPPInfoBcOut, m_BcOutTC, MinLayer );
+  return ntrack == -1 ? false : true;
 #endif
 
   return false;
@@ -1384,9 +1385,7 @@ DCAnalyzer::ChiSqrCut( DCLocalTrackContainer& TrackCont,
 {
   DCLocalTrackContainer DeleteCand;
   DCLocalTrackContainer ValidCand;
-  int NofTrack = TrackCont.size();
-  for(int i = NofTrack-1; i>=0; --i){
-    DCLocalTrack* tempTrack = TrackCont.at(i);
+  for(auto& tempTrack : TrackCont){
     if(tempTrack->GetChiSquare() > chisqr){
       DeleteCand.push_back(tempTrack);
     }else{
@@ -1493,4 +1492,28 @@ DCAnalyzer::DriftTimeCut( DCHitContainer& HitCont,
   HitCont.resize( ValidCand.size() );
   std::copy( ValidCand.begin(), ValidCand.end(), HitCont.begin() );
   ValidCand.clear();
+}
+
+//______________________________________________________________________________
+bool
+DCAnalyzer::MakeBH2DCHit(int t0seg)
+{
+  static const double centerbh2[] = {
+    -41.8, -19.3, -10.7, -3.6, 3.6, 10.7, 19.3, 41.8
+  };
+
+  bool status = true;
+
+  double bh2pos = centerbh2[t0seg];
+  DCHit *dchit = new DCHit(125, t0seg);
+  dchit->SetTdcVal(0.);
+  if(dchit->CalcFiberObservables()){
+    dchit->SetWirePosition(bh2pos);
+    m_BcOutHC[13].push_back(dchit);
+  }else{
+    delete dchit;
+    status = false;
+  }
+
+  return status;
 }

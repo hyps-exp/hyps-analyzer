@@ -22,7 +22,7 @@ class VEvent;
 class ConfMan
 {
 public:
-  static TString  ClassName( void );
+  static TString ClassName( void );
   static ConfMan& GetInstance( void );
   ~ConfMan( void );
 

@@ -116,6 +116,30 @@ DCLocalTrack::GetNDF( void ) const
 }
 
 //______________________________________________________________________________
+int
+DCLocalTrack::GetNHitSFT(void) const
+{
+  int n_sft=0;
+  for(const auto& hit : m_hit_array){
+    if(hit->GetLayer() > 6) ++n_sft;
+  }
+
+  return n_sft;
+}
+
+//______________________________________________________________________________
+int
+DCLocalTrack::GetNHitY(void) const
+{
+  int n_y=0;
+  for(const auto& hit : m_hit_array){
+    if(hit->GetTiltAngle() > 1) ++n_y;
+  }
+
+  return n_y;
+}
+
+//______________________________________________________________________________
 DCLTrackHit*
 DCLocalTrack::GetHit( std::size_t nth ) const
 {

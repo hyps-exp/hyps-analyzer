@@ -19,7 +19,8 @@
 #include <std_ostream.hh>
 
 // #include "BH1Filter.hh"
-// #include "BH2Filter.hh"
+#include "BH1Match.hh"
+#include "BH2Filter.hh"
 #include "DCGeomMan.hh"
 #include "DCTdcCalibMan.hh"
 #include "DCDriftParamMan.hh"
@@ -148,12 +149,7 @@ ConfMan::FilePath( const std::string& src ) const
   std::ifstream tmp( src.c_str() );
   if ( tmp.good() )
     return src;
-  else {
-    std::string path = sConfDir + '/' + src;
-    tmp = std::ifstream( path.c_str() ); 
-    if ( tmp.good() )
-      return path;
-    else
-      return sConfDir + "+" + src;
-  }
+  else
+    return sConfDir + "+" + src;
 }
+

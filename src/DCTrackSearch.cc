@@ -28,20 +28,36 @@
 #include "UserParamMan.hh"
 #include "DeleteUtility.hh"
 
+#include "RootHelper.hh"
+
 namespace
 {
   const std::string& class_name("DCTrackSearch");
   DCGeomMan& gGeom = DCGeomMan::GetInstance();
   const double& zTarget    = gGeom.LocalZ("Target");
   const double& zK18Target = gGeom.LocalZ("K18Target");
+  const double& zBH2       = gGeom.LocalZ("BH2");
   const double MaxChisquare       = 2000.; // Set to be More than 30
   const double MaxChisquareSdcIn  = 5000.; // Set to be More than 30
   const double MaxChisquareSdcOut = 50.;   // Set to be More than 30
-  const double MaxNumOfCluster = 30.;	   // Set to be Less than 30
+  const double MaxNumOfCluster = 20.;	   // Set to be Less than 30
   const double MaxCombi = 1.0e6;	   // Set to be Less than 10^6
   // SdcIn & BcOut for XUV Tracking routine
   const double MaxChisquareVXU = 50.;//
   const double ChisquareCutVXU = 50.;//
+
+  const double Bh2SegX[NumOfSegBH2]      = {35./2., 10./2., 7./2., 7./2., 7./2., 7./2., 10./2., 35./2.};
+  const double Bh2SegXAcc[NumOfSegBH2]   = {20., 6.5, 5., 5., 5., 5., 6.5, 20.};
+  const double localPosBh2X_dX           = 0.;
+  const double localPosBh2X[NumOfSegBH2] = {-41.5 + localPosBh2X_dX,
+					    -19.0 + localPosBh2X_dX,
+					    -10.5 + localPosBh2X_dX,
+					    -3.5  + localPosBh2X_dX,
+					    3.5   + localPosBh2X_dX,
+					    10.5  + localPosBh2X_dX,
+					    19.0  + localPosBh2X_dX,
+					    41.5  + localPosBh2X_dX};
+
 
   //_____________________________________________________________________
   // Local Functions ____________________________________________________
@@ -502,7 +518,7 @@ namespace
 
   //______________________________________________________________________________
   std::vector<IndexList>
-  MakeIndex( int ndim, const int *index1 )
+  MakeIndex( int ndim, const int *index1, bool& status)
   {
     static const std::string func_name("["+class_name+"::"+__func__+"()]");
 
@@ -515,7 +531,7 @@ namespace
       return index2;
     }
 
-    std::vector<IndexList> index2 = MakeIndex( ndim-1, index1+1 );
+    std::vector<IndexList> index2 = MakeIndex( ndim-1, index1+1, status );
 
     std::vector<IndexList> index;
     int n2=index2.size();
@@ -530,7 +546,8 @@ namespace
 	index.push_back(elem);
 	int size1=index.size();
 	if( size1>MaxCombi ){
-#if 0
+	  status = false;
+#if 1
 	  hddaq::cout << func_name << " too much combinations..." << std::endl;
 #endif
 	  return std::vector<IndexList>(0);
@@ -543,9 +560,9 @@ namespace
 
   //______________________________________________________________________________
   std::vector<IndexList>
-  MakeIndex( int ndim, const IndexList& index1 )
+  MakeIndex( int ndim, const IndexList& index1, bool& status )
   {
-    return MakeIndex( ndim, &(index1[0]) );
+    return MakeIndex( ndim, &(index1[0]), status );
   }
 
   //______________________________________________________________________________
@@ -639,7 +656,7 @@ namespace track
   LocalTrackSearch( const std::vector<DCHitContainer>& HC,
 		    const DCPairPlaneInfo * PpInfo,
 		    int npp, std::vector<DCLocalTrack*>& TrackCont,
-		    int MinNumOfHits /*=6*/ )
+		    int MinNumOfHits, int T0Seg)
   {
     static const std::string func_name("["+class_name+"::"+__func__+"()]");
 
@@ -651,6 +668,7 @@ namespace track
       bool fiber     = PpInfo[i].fiber;
       int  layer1    = PpInfo[i].id1;
       int  layer2    = PpInfo[i].id2;
+
       if( ppFlag && !fiber ){
 	MakePairPlaneHitCluster( HC[layer1], HC[layer2],
 				 PpInfo[i].CellSize, CandCont[i], honeycomb );
@@ -671,7 +689,8 @@ namespace track
     DebugPrint( nCombi, CandCont, func_name );
 #endif
 
-    std::vector<IndexList> CombiIndex = MakeIndex( npp, nCombi );
+    bool status = true;
+    std::vector<IndexList> CombiIndex = MakeIndex( npp, nCombi, status );
 
     for( int i=0, n=CombiIndex.size(); i<n; ++i ){
       DCLocalTrack *track = MakeTrack( CandCont, CombiIndex[i] );
@@ -679,14 +698,35 @@ namespace track
       if( track->GetNHit()>=MinNumOfHits
     	  && track->DoFit()
     	  && track->GetChiSquare()<MaxChisquare ){
-    	TrackCont.push_back( track );
+	
+	if (T0Seg>=0 && T0Seg<NumOfSegBH2) {
+	  double xbh2=track->GetX(zBH2), ybh2=track->GetY(zBH2);
+	  double difPosBh2 = localPosBh2X[T0Seg] - xbh2;
+
+	  //	  double xtgt=track->GetX(zTarget), ytgt=track->GetY(zTarget);
+	  //	  double ytgt=track->GetY(zTarget);
+	  
+	  if (true
+	      && fabs(difPosBh2)<Bh2SegXAcc[T0Seg] 
+	      && (-10 < ybh2 && ybh2 < 40)
+	      //	      && fabs(ytgt)<21.
+	      ){
+	    TrackCont.push_back(track);
+	  }else{
+	    delete track;
+	  }
+
+	}else{
+	  TrackCont.push_back(track);
+	}
       }
-      else
+      else{
     	delete track;
+      }
     }
 
     FinalizeTrack( func_name, TrackCont, DCLTrackComp(), CandCont );
-    return TrackCont.size();
+    return status? TrackCont.size() : -1;
   }
 
   //______________________________________________________________________________
@@ -694,25 +734,28 @@ namespace track
   LocalTrackSearch( const std::vector< std::vector<DCHitContainer> > &hcAssemble,
 		    const DCPairPlaneInfo * PpInfo,
 		    int npp, std::vector<DCLocalTrack*> &trackCont,
-		    int MinNumOfHits /*=6*/ )
+		    int MinNumOfHits, int T0Seg)
   {
     static const std::string func_name("["+class_name+"::"+__func__+"(BH2Filter)]");
 
     std::vector< std::vector<DCHitContainer> >::const_iterator
       itr, itr_end = hcAssemble.end();
+
+    int status = 0;
     for ( itr=hcAssemble.begin(); itr!=itr_end; ++itr ){
       const std::vector<DCHitContainer>& l = *itr;
       std::vector<DCLocalTrack*> tc;
-      LocalTrackSearch( l, PpInfo, npp, tc, MinNumOfHits );
+      status = LocalTrackSearch( l, PpInfo, npp, tc, MinNumOfHits, T0Seg );
       trackCont.insert( trackCont.end(), tc.begin(), tc.end() );
     }
 
     ClearFlags(trackCont);
     std::stable_sort( trackCont.begin(), trackCont.end(), DCLTrackComp() );
+
     DeleteDuplicatedTracks( trackCont );
     //    CalcTracks( trackCont );
 
-    return trackCont.size();
+    return status < 0? status : trackCont.size();
   }
 
   //______________________________________________________________________________
@@ -745,7 +788,8 @@ namespace track
       nCombi[i] = n>MaxNumOfCluster ? 0 : n;
     }
 
-    std::vector<IndexList> CombiIndex = MakeIndex( npp, nCombi );
+    bool status = true;
+    std::vector<IndexList> CombiIndex = MakeIndex( npp, nCombi, status );
 
 #if 0
     DebugPrint( nCombi, CandCont, func_name );
@@ -755,6 +799,7 @@ namespace track
       DCLocalTrack *track = MakeTrack( CandCont, CombiIndex[i] );
       if ( !track ) continue;
       if ( track->GetNHit()>=MinNumOfHits     &&
+	   track->GetNHitY() >= 2             &&
 	   track->DoFit()                     &&
 	   track->GetChiSquare()<MaxChisquare )
 	{
@@ -767,7 +812,7 @@ namespace track
     }
 
     FinalizeTrack( func_name, TrackCont, DCLTrackComp(), CandCont );
-    return TrackCont.size();
+    return status? TrackCont.size() : -1;
   }
 
   //______________________________________________________________________________
@@ -783,7 +828,7 @@ namespace track
 
     std::vector<ClusterList> CandCont(npp);
 
-    for( int i=0; i<npp-2; ++i ){
+    for( int i=0; i<npp; ++i ){
       bool ppFlag    = PpInfo[i].pair;
       bool honeycomb = PpInfo[i].honeycomb;
       int  layer1    = PpInfo[i].id1;
@@ -796,6 +841,7 @@ namespace track
       }
     }
 
+    // TOF
     MakeTOFHitCluster( TOFHC, CandCont[npp-2], 0 );
     MakeTOFHitCluster( TOFHC, CandCont[npp-1], 1 );
 
@@ -805,7 +851,8 @@ namespace track
       nCombi[i] = n>MaxNumOfCluster ? 0 : n;
     }
 
-    std::vector<IndexList> CombiIndex = MakeIndex( npp, nCombi );
+    bool status = true;
+    std::vector<IndexList> CombiIndex = MakeIndex( npp, nCombi, status );
 
 #if 0
     DebugPrint( nCombi, CandCont, func_name );
@@ -824,6 +871,7 @@ namespace track
 
       if( TOFSegXYMatching &&
 	  track->GetNHit()>=MinNumOfHits+2   &&
+	  track->GetNHitY() >= 2             &&
 	  track->DoFit()                     &&
 	  track->GetChiSquare()<MaxChisquare )
 	{
@@ -836,7 +884,7 @@ namespace track
     }
 
     FinalizeTrack( func_name, TrackCont, DCLTrackComp(), CandCont );
-    return TrackCont.size();
+    return status? TrackCont.size() : -1;
   }
 
   //______________________________________________________________________________
@@ -873,21 +921,26 @@ namespace track
       nCombi[i] = n>MaxNumOfCluster ? 0 : n;
     }
 
-    std::vector<IndexList> CombiIndex = MakeIndex( npp, nCombi );
+    bool status = true;
+    std::vector<IndexList> CombiIndex = MakeIndex( npp, nCombi, status );
 
     for( int i=0, n=CombiIndex.size(); i<n; ++i ){
       DCLocalTrack *track = MakeTrack( CandCont, CombiIndex[i] );
       if( !track ) continue;
-      if( track->GetNHit()>=MinNumOfHits && track->DoFit() &&
-	  track->GetChiSquare()<MaxChisquare ){
-	TrackCont.push_back(track);
+      if(true 
+	 && track->GetNHitSFT() > 1
+	 && track->GetNHit()>=MinNumOfHits 
+	 && track->DoFit() 
+	 && track->GetChiSquare()<MaxChisquare
+	 ){
+     	TrackCont.push_back(track);
       }
       else
 	delete track;
     }
 
     FinalizeTrack( func_name, TrackCont, DCLTrackCompSdcInFiber(), CandCont );
-    return TrackCont.size();
+    return status? TrackCont.size() : -1;
   }
 
   // BC3&4, SDC1 VUX Tracking ___________________________________________
@@ -988,11 +1041,12 @@ namespace track
     DebugPrint( nCombiU, CandContU, func_name+" U" );
 #endif
 
-    std::vector<IndexList> CombiIndexV = MakeIndex( npp, nCombiV );
+    bool status[3] = {true, true, true};
+    std::vector<IndexList> CombiIndexV = MakeIndex( npp, nCombiV, status[0] );
     int nnCombiV=CombiIndexV.size();
-    std::vector<IndexList> CombiIndexX = MakeIndex( npp, nCombiX );
+    std::vector<IndexList> CombiIndexX = MakeIndex( npp, nCombiX, status[1] );
     int nnCombiX=CombiIndexX.size();
-    std::vector<IndexList> CombiIndexU = MakeIndex( npp, nCombiU );
+    std::vector<IndexList> CombiIndexU = MakeIndex( npp, nCombiU, status[2] );
     int nnCombiU=CombiIndexU.size();
 
     for( int i=0; i<nnCombiV; ++i ){
@@ -1469,8 +1523,13 @@ namespace track
     del::ClearContainerAll( CandContV );
     del::ClearContainerAll( CandContX );
     del::ClearContainerAll( CandContU );
+    
+    bool status_all = true;
+    status_all = status_all && status[0];
+    status_all = status_all && status[1];
+    status_all = status_all && status[2];
 
-    return TrackCont.size();
+    return status_all? TrackCont.size() : -1;
   }
 
   //______________________________________________________________________________
@@ -1519,7 +1578,8 @@ namespace track
     DebugPrint( nCombi, CandCont, func_name );
 #endif
 
-    std::vector<IndexList> CombiIndex = MakeIndex( npp, nCombi );
+    bool status = true;
+    std::vector<IndexList> CombiIndex = MakeIndex( npp, nCombi, status );
     int nnCombi = CombiIndex.size();
 
 #if 0
@@ -1628,7 +1688,8 @@ namespace track
 	nCombi[i] = n>MaxNumOfCluster ? 0 : n;
     }
 
-    std::vector<IndexList> CombiIndex = MakeIndex( npp, nCombi );
+    bool status = true;
+    std::vector<IndexList> CombiIndex = MakeIndex( npp, nCombi, status );
     int nnCombi = CombiIndex.size();
 
     for( int i=0; i<nnCombi; ++i ){
@@ -1643,7 +1704,7 @@ namespace track
     }
 
     FinalizeTrack( func_name, TrackCont, DCLTrackComp(), CandCont );
-    return TrackCont.size();
+    return status? TrackCont.size() : -1;
   }
 
   //For MWPC
