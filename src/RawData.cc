@@ -417,7 +417,7 @@ RawData::DecodeHits( void )
 	  for(int i=0; i<nhit; i++ ){
 	    int data = gUnpacker.get( DetIdSDC3, plane-NumOfLayersSDC2, 0, wire, lt ,i );
 	    if( lt == 0 && ( data<MinTdcSDC3 || MaxTdcSDC3<data ) ) continue;
-	    if( lt == 1 && data<MinTdcSDC2 ) continue;
+	    if( lt == 1 && data<MinTdcSDC3 ) continue;
 	    //	    if((plane == 4 || plane == 5) && 30 < wire && wire < 38) continue;
 	    //	    if((plane == 6 || plane == 7) && 44 < wire && wire < 54) continue;
 	    AddDCRawHit( m_SdcOutRawHC[plane+1],  plane+PlMinSdcOut, wire+1, data , lt);
