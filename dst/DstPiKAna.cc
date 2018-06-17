@@ -615,13 +615,11 @@ dst::DstRead( int ievent )
 #endif
 
   // TFlag
-  for( int i=0; i<NumOfSegTrig; ++i ){
-    int seg = src.trigpat[i];
-    if( seg<0 ) continue;
-    int tdc = src.trigflag[seg-1];
+  for(int i=0;i<NumOfSegTrig;++i){
+    int tdc = src.trigflag[i];
     if( tdc<=0 ) continue;
-    event.trigpat[i] = seg;
-    event.trigflag[seg-1] = tdc;
+    event.trigpat[i]  = i + 1;
+    event.trigflag[i] = tdc;
   }
 
   HF1( 1, 0. );
