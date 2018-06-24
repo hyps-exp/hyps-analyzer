@@ -107,6 +107,7 @@ const int PlOffsSdcIn      =   0;
 const int PlOffsSft        =   6;
 const int PlOffsSdcOut     =  30;
 const int PlOffsVP         =  20;
+const int PlOffsFbt        =  80;
 
 const int NumOfLayersBc     = 6;
 const int NumOfLayersSFT    = 3;
@@ -119,7 +120,8 @@ const int NumOfLayersBcIn   = PlMaxBcIn   - PlMinBcIn   + 1;
 const int NumOfLayersBcOut  = PlMaxBcOut  - PlMinBcOut  + 1;
 const int NumOfLayersSdcIn  = PlMaxSdcIn  - PlMinSdcIn  + 1;
 const int NumOfLayersFBT    = PlMaxFBT2   - PlMinFBT1   + 1;
-const int NumOfLayersSdcOut = PlMaxSdcOut - PlMinSdcOut + 1;
+//const int NumOfLayersSdcOut = PlMaxSdcOut - PlMinSdcOut + 1; w/o FBT
+const int NumOfLayersSdcOut = PlMaxSdcOut - PlMinSdcOut + 1 + (PlMaxFBT2 - PlMinFBT1 + 1); // including FBT 
 const int NumOfLayersVP     = 5;
 
 const int MaxWireBC3      =  64;

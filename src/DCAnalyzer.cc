@@ -381,30 +381,131 @@ DCAnalyzer::DecodeSdcOutHits( RawData *rawData , double ofs_dt)
   ClearSdcOutHits();
 
   // SdcOut
-  for( int layer=1; layer<=NumOfLayersSdcOut; ++layer ){
-    const DCRHitContainer &RHitCont = rawData->GetSdcOutRawHC(layer);
-    int nh = RHitCont.size();
-    for( int i=0; i<nh; ++i ){
-      DCRawHit *rhit  = RHitCont[i];
-      DCHit    *hit   = new DCHit( rhit->PlaneId(), rhit->WireId() );
-      int       nhtdc      = rhit->GetTdcSize();
-      int       nhtrailing = rhit->GetTrailingSize();
-      if(!hit) continue;
-      
-      hit->SetOfsdT(ofs_dt);
-      for( int j=0; j<nhtdc; ++j ){
-	hit->SetTdcVal( rhit->GetTdc(j) );
+  {
+    for( int layer=1; layer<=NumOfLayersSdcOut; ++layer ){
+      const DCRHitContainer &RHitCont = rawData->GetSdcOutRawHC(layer);
+      int nh = RHitCont.size();
+      for( int i=0; i<nh; ++i ){
+	DCRawHit *rhit  = RHitCont[i];
+	DCHit    *hit   = new DCHit( rhit->PlaneId(), rhit->WireId() );
+	int       nhtdc      = rhit->GetTdcSize();
+	int       nhtrailing = rhit->GetTrailingSize();
+	if(!hit) continue;
+	
+	hit->SetOfsdT(ofs_dt);
+	for( int j=0; j<nhtdc; ++j ){
+	  hit->SetTdcVal( rhit->GetTdc(j) );
+	}
+	for( int j=0; j<nhtrailing; ++j ){
+	  hit->SetTdcTrailing( rhit->GetTrailing(j) );
+	}
+	if( hit->CalcDCObservables() )
+	  m_SdcOutHC[layer].push_back(hit);
+	else
+	  delete hit;
       }
-      for( int j=0; j<nhtrailing; ++j ){
-	hit->SetTdcTrailing( rhit->GetTrailing(j) );
-      }
-      if( hit->CalcDCObservables() )
-	m_SdcOutHC[layer].push_back(hit);
-      else
-	delete hit;
     }
   }
+  
+  // FBT1                                                                  
+  {
+    HodoAnalyzer hodoAna;
+    hodoAna.DecodeFBT1Hits( rawData );
+    
+    for ( int l = 0; l < 2; ++l ) {
+      hodoAna.TimeCutFBT1( l, 0, -10, 5 ); //FBT1-U                           
+      hodoAna.TimeCutFBT1( l, 1, -10, 5 ); //FBT1-D                          
 
+      int nclU = hodoAna.GetNClustersFBT1( l, 0 );
+      int nclD = hodoAna.GetNClustersFBT1( l, 1 );
+
+      for ( int j = 0; j < nclU; ++j ) {
+        FiberCluster* clU = hodoAna.GetClusterFBT1( l, 0, j );
+        double segU  = clU->MeanSeg();
+        double posU  = clU->MeanPosition();
+        double timeU = clU->CMeanTime();
+
+        DCHit *hitU = new DCHit( 1+2*l+PlOffsFbt, segU );
+        hitU->SetTdcVal( static_cast<int>( timeU ) );
+
+        int layer = NumOfLayersSdcOut-7 + 1 + 2*l;
+        if ( hitU->CalcFiberObservables() ) {
+          hitU->SetWirePosition( posU );
+          m_SdcOutHC[layer].push_back( hitU );
+	} else {
+          delete hitU;
+        }
+      }
+      
+      for ( int j = 0; j < nclD; ++j ) {
+        FiberCluster* clD = hodoAna.GetClusterFBT1( l, 1, j );
+	double segD  = clD->MeanSeg();
+        double posD  = clD->MeanPosition();
+        double timeD = clD->CMeanTime();
+
+        DCHit *hitD = new DCHit( 2*l+PlOffsFbt, segD );
+        hitD->SetTdcVal( static_cast<int>( timeD ) );
+
+        int layer = NumOfLayersSdcOut-7 + 2*l;
+        if ( hitD->CalcFiberObservables() ) {
+          hitD->SetWirePosition( posD );
+          m_SdcOutHC[layer].push_back( hitD );
+	} else {
+          delete hitD;
+        }
+      }
+    }
+  }
+  
+  // FBT2
+  {
+    HodoAnalyzer hodoAna;
+    hodoAna.DecodeFBT2Hits( rawData );
+    
+    for ( int l = 0; l < 2; ++l ) {
+      hodoAna.TimeCutFBT2( l, 0, -10, 5 ); //FBT2-U                         
+      hodoAna.TimeCutFBT2( l, 1, -10, 5 ); //FBT2-D                        
+
+      int nclU = hodoAna.GetNClustersFBT2( l, 0 );
+      int nclD = hodoAna.GetNClustersFBT2( l, 1 );
+
+      for ( int j = 0; j < nclU; ++j ) {
+        FiberCluster* clU = hodoAna.GetClusterFBT2( l, 0, j );
+        double segU  = clU->MeanSeg();
+        double posU  = clU->MeanPosition();
+        double timeU = clU->CMeanTime();
+
+        DCHit *hitU = new DCHit( 5+2*l+PlOffsFbt, segU );
+	hitU->SetTdcVal( static_cast<int>( timeU ) );
+
+        int layer = NumOfLayersSdcOut-3 + 1 + 2*l;
+        if ( hitU->CalcFiberObservables() ) {
+          hitU->SetWirePosition( posU );
+          m_SdcOutHC[layer].push_back( hitU );
+        } else {
+          delete hitU;
+	}
+      }
+      
+      for ( int j = 0; j < nclD; ++j ) {
+        FiberCluster* clD = hodoAna.GetClusterFBT2( l, 1, j );
+        double segD  = clD->MeanSeg();
+	double posD  = clD->MeanPosition();
+        double timeD = clD->CMeanTime();
+
+        DCHit *hitD = new DCHit( 4+2*l+PlOffsFbt, segD );
+        hitD->SetTdcVal( static_cast<int>( timeD ) );
+        
+	int layer = NumOfLayersSdcOut-3 + 2*l;
+        if ( hitD->CalcFiberObservables() ) {
+          hitD->SetWirePosition( posD );
+          m_SdcOutHC[layer].push_back( hitD );
+        } else {
+          delete hitD;
+        }
+      }
+    }
+  }
   m_is_decoded[k_SdcOut] = true;
   return true;
 }

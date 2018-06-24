@@ -833,10 +833,10 @@ namespace track
       bool honeycomb = PpInfo[i].honeycomb;
       int  layer1    = PpInfo[i].id1;
       int  layer2    = PpInfo[i].id2;
-      if( ppFlag  ){
+      if( ppFlag  ){ //DC2, 3
 	MakePairPlaneHitCluster( SdcOutHC[layer1], SdcOutHC[layer2],
 				 PpInfo[i].CellSize, CandCont[i], honeycomb );
-      }else{
+      }else{ //FBT
 	MakeUnPairPlaneHitCluster( SdcOutHC[layer1], CandCont[i], honeycomb );
       }
     }
@@ -861,14 +861,30 @@ namespace track
     for( int i=0, n=CombiIndex.size(); i<n; ++i ){
       DCLocalTrack *track = MakeTrack( CandCont, CombiIndex[i] );
       if( !track ) continue;
+
       static const int IdTOF_UX = gGeom.GetDetectorId("TOF-UX");
       static const int IdTOF_UY = gGeom.GetDetectorId("TOF-UY");
       static const int IdTOF_DX = gGeom.GetDetectorId("TOF-DX");
       static const int IdTOF_DY = gGeom.GetDetectorId("TOF-DY");
+     
       bool TOFSegXYMatching =
 	( track->GetWire(IdTOF_UX)==track->GetWire(IdTOF_UY) ) ||
 	( track->GetWire(IdTOF_DX)==track->GetWire(IdTOF_DY) );
 
+      int Track[20]={0};
+      int layer;
+      for( int i=0; i<(track->GetNHit()); ++i){
+	layer=track->GetHit(i)->GetLayer();
+	Track[layer]=1;
+      }
+
+      bool FBT = 
+	( Track[80]==1 && Track[82]==1 ) || ( Track[81]==1 && Track[83]==1 ) ||
+	( Track[84]==1 && Track[86]==1 ) || ( Track[85]==1 && Track[87]==1 ) ;
+      
+      bool DC23x_off =
+	( Track[31]==0 && Track[32]==0 && Track[37]==0 && Track[38]==0 );
+	
       if( TOFSegXYMatching &&
 	  track->GetNHit()>=MinNumOfHits+2   &&
 	  track->GetNHitY() >= 2             &&

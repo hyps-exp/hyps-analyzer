@@ -383,7 +383,7 @@ RawData::DecodeHits( void )
   }
 
   // SdcOut (SDC2&SDC3)
-  for( int plane=0; plane<NumOfLayersSdcOut; ++plane ){
+  for( int plane=0; plane<NumOfLayersSDC2+NumOfLayersSDC3; ++plane ){
     if( plane<NumOfLayersSDC2 ){
       for( int wire=0; wire<MaxWireSDC2; ++wire ){
 	for(int lt = 0; lt<2; ++lt){

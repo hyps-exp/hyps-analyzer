@@ -1,4 +1,4 @@
-/**
+/*a*
  *  file: DCParameters.hh
  *  date: 2017.04.10
  *
@@ -39,7 +39,7 @@ const DCPairPlaneInfo PPInfoBcOut[] = {
   { true, false, false, 1,  2,  3.0 }, { true, false, false,  3,  4,  3.0 },
   { true, false, false, 5,  6,  3.0 }, { true, false, false,  7,  8,  3.0 },
   { true, false, false, 9, 10,  3.0 }, { true, false, false, 11, 12,  3.0 },
-  { false, false, false, 13, 13, 10.0}
+  { false, false, false, 13, 13, 10.0 }
 };
 
 const DCPairPlaneInfo PPInfoSdcIn[] = {
@@ -57,8 +57,15 @@ const DCPairPlaneInfo PPInfoSdcIn[] = {
 const DCPairPlaneInfo PPInfoSdcOut[] = {
   // { pair_plane, honeycomb, fiber, id1, id2, CellSize }
   { true, true, false, 1, 2,  9.0 }, { true, true, false, 3, 4,  9.0 },
-  { true, true, false, 5, 6, 20.0 }, { true, true, false, 7, 8, 20.0 }
-};
+  { true, true, false, 5, 6, 20.0 }, { true, true, false, 7, 8, 20.0 }, 
+  
+  { false, false, true, 9, 9, 4.0 }, { false, false, true, 10, 10, 4.0 }, //FBT1D
+  { false, false, true, 11, 11, 4.0 }, { false, false, true, 12, 12, 4.0 }, //FBT1U
+  { false, false, true, 13, 13, 4.0 }, { false, false, true, 14, 14, 4.0 }, //FBT2D
+  { false, false, true, 15, 15, 4.0 }, { false, false, true, 16, 16, 4.0 }
+
+}; //FBT2U
+
 
 const int NPPInfoBcOut  = sizeof(PPInfoBcOut)/sizeof(DCPairPlaneInfo);
 const int NPPInfoSdcIn  = sizeof(PPInfoSdcIn)/sizeof(DCPairPlaneInfo);

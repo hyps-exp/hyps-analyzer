@@ -23,6 +23,7 @@
 #define HodoCut     0
 #define MaxMultiCut 0
 #define UseTOF      1 // use TOF for SdcOutTracking
+//#define UseTOF      0 // don't use TOF for SdcOutTracking
 
 namespace
 {
@@ -117,10 +118,10 @@ struct Event
   double btof[MaxHits];
   double stof[MaxHits];
 
-  int nhit[NumOfLayersSdcOut];
+  int nhit[NumOfLayersSdcOut+2];
   int nlayer;
-  double wpos[NumOfLayersSdcOut][MaxHits];
-  double pos[NumOfLayersSdcOut][MaxHits];
+  double wpos[NumOfLayersSdcOut+2][MaxHits];
+  double pos[NumOfLayersSdcOut+2][MaxHits];
 
   int tdc[MaxHits];
 
@@ -156,11 +157,16 @@ EventSdcOutTracking::ProcessingNormal( void )
   static const double MaxDeTOF   = gUser.GetParameter("DeTOF",   1);
   static const double MinTimeTOF = gUser.GetParameter("TimeTOF", 0);
   static const double MaxTimeTOF = gUser.GetParameter("TimeTOF", 1);
+  static const double MinTimeFBT1 = gUser.GetParameter("TimeFBT1", 0);
+  static const double MaxTimeFBT1 = gUser.GetParameter("TimeFBT1", 1);
+  static const double MinTimeFBT2 = gUser.GetParameter("TimeFBT2", 0);
+  static const double MaxTimeFBT2 = gUser.GetParameter("TimeFBT2", 1);
   static const double dTOfs      = gUser.GetParameter("dTOfs",   0);
   static const double MinTimeL1  = gUser.GetParameter("TimeL1",  0);
   static const double MaxTimeL1  = gUser.GetParameter("TimeL1",  1);
   static const double MinTotSDC2 = gUser.GetParameter("MinTotSDC2", 0);
   static const double MinTotSDC3 = gUser.GetParameter("MinTotSDC3", 0);
+
 #if MaxMultiCut
   static const double MaxMultiHitSdcOut = gUser.GetParameter("MaxMultiHitSdcOut");
 #endif
@@ -332,18 +338,39 @@ EventSdcOutTracking::ProcessingNormal( void )
   DCAna->TotCutSDC3( MinTotSDC3 );
   double multi_SdcOut = 0.;
   {
-    for( int layer=1; layer<=NumOfLayersSdcOut; ++layer ){
+      for( int layer=1; layer<=NumOfLayersSdcOut; ++layer ) {
+      //std::cout << "layer : " << layer << std::endl; 
+	/*	if ( layer==9 )
+	  hodoAna->TimeCutFBT1(0, 1, MinTimeFBT1, MaxTimeFBT1);
+      if ( layer==10 )
+	hodoAna->TimeCutFBT1(0, 0, MinTimeFBT1, MaxTimeFBT1);
+      if ( layer==11 )
+	hodoAna->TimeCutFBT1(1, 1, MinTimeFBT1, MaxTimeFBT1);
+      if ( layer==12 )
+	hodoAna->TimeCutFBT1(1, 0, MinTimeFBT1, MaxTimeFBT1);
+      if ( layer==13 )
+	hodoAna->TimeCutFBT2(0, 1, MinTimeFBT2, MaxTimeFBT2);
+      if ( layer==14 )
+	hodoAna->TimeCutFBT2(0, 0, MinTimeFBT2, MaxTimeFBT2);
+      if ( layer==15 )
+	hodoAna->TimeCutFBT2(1, 1, MinTimeFBT2, MaxTimeFBT2);
+      if ( layer==16 )
+	hodoAna->TimeCutFBT2(1, 0, MinTimeFBT2, MaxTimeFBT2);
+	*/
+      
       const DCHitContainer &contOut =DCAna->GetSdcOutHC(layer);
       int nhOut=contOut.size();
       if( nhOut>0 ) event.nlayer++;
       multi_SdcOut += double(nhOut);
-      HF1( 100*layer, nhOut );
+      if( layer<10 )
+	HF1( 100*layer, nhOut );
       event.nhit[layer-1] = nhOut;
       if( nhOut>MaxHits ){
 	// std::cerr << "#W " << func_name << " too many hits "
 	// 	  << nhOut << "/" << MaxHits << std::endl;
 	nhOut = MaxHits;
       }
+
       for( int i=0; i<nhOut; ++i ){
 	DCHit *hit=contOut[i];
 	double wire=hit->GetWire();
@@ -365,6 +392,7 @@ EventSdcOutTracking::ProcessingNormal( void )
 	int nhdt = hit->GetDriftTimeSize();
 	for( int k=0; k<nhdt; k++ ){
 	  double dt = hit->GetDriftTime(k);
+
 	  if(flag_tof_stop) HF1( 100*layer+3, dt );
 	  else              HF1( 100*layer+6, dt );
 	  HF1( 10000*layer+1000+int(wire), dt );
@@ -452,12 +480,40 @@ EventSdcOutTracking::ProcessingNormal( void )
     HF1( 23, utof ); HF1( 24, vtof );
     HF2( 25, xtof, utof ); HF2( 26, ytof, vtof );
     HF2( 27, xtof, ytof );
+   
+    bool FBT_flag = false;
+    int n_fbt=0;
+    
     for( int ih=0; ih<nh; ++ih ){
       DCLTrackHit *hit=tp->GetHit(ih);
       if(!hit) continue;
-      int layerId = hit->GetLayer()-30;
-      if( layerId>10 ) layerId -= 2;
+
+      int layerId = 0;
+      layerId = hit->GetLayer()-30; 
+      
+      //if( layerId>10 ) layerId -=2;
+      
+      if( 10<layerId && layerId<20 ) layerId += 6; // 17 ~ TOF
+      if( 49<layerId ) layerId -= 41; // 9 ~ FBT
+      
       HF1( 13, hit->GetLayer() );
+
+      if( 9<=layerId && layerId<=16 )
+	++n_fbt;
+      //if( n_fbt>2 )
+      if( n_fbt>3 )
+	FBT_flag = true;
+      //      std::cout << "NumOfFBTLayers : " << n_fbt << std::endl;
+      
+      if( !FBT_flag ){
+	HF1( 36, double(nh) );
+	HF1( 37, chisqr );
+      }
+      if( FBT_flag ){
+	HF1( 38, double(nh) );
+	HF1( 39, chisqr );
+      }
+      
       double wire=hit->GetWire();
       double dt=hit->GetDriftTime(), dl=hit->GetDriftLength();
       HF1( 100*layerId+11, wire-0.5 );
@@ -663,7 +719,7 @@ ConfMan::InitializeHistograms( void )
   HB1( 10, "#Tracks SdcOut", 10, 0., 10. );
   HB1( 11, "#Hits of Track SdcOut", 20, 0., 20. );
   HB1( 12, "Chisqr SdcOut", 500, 0., 50. );
-  HB1( 13, "LayerId SdcOut", 30, 30., 60. );
+  HB1( 13, "LayerId SdcOut", 60, 30., 90. );
   HB1( 14, "X0 SdcOut", 1400, -1200., 1200. );
   HB1( 15, "Y0 SdcOut", 1000, -500., 500. );
   HB1( 16, "U0 SdcOut", 200, -0.35, 0.35 );
@@ -687,8 +743,13 @@ ConfMan::InitializeHistograms( void )
   HB1( 33, "Chisqr1st-Chisqr SdcOut (20<theta<30)", 500, 0., 10. );
   HB1( 34, "Chisqr1st-Chisqr SdcOut (30<theta<40)", 500, 0., 10. );
   HB1( 35, "Chisqr1st-Chisqr SdcOut (40<theta)", 500, 0., 10. );
+  HB1( 36, "#Hits of Track SdcOut(SDC)", 20, 0., 20. );
+  HB1( 37, "Chisqr SdcOut(SDC)", 500, 0., 50. );
+  HB1( 38, "#Hits of Track SdcOut(FBT)", 20, 0., 20. );
+  HB1( 39, "Chisqr SdcOut(FBT)", 500, 0., 50. );
 
-  for( int i=1; i<=NumOfLayersSdcOut+2; ++i ){
+  //for( int i=1; i<=NumOfLayersSdcOut+2; ++i ){
+  for( int i=1; i<=NumOfLayersSdcOut+4; ++i ){
     int MaxWire = 0;
     if( i==1 || i==2 || i==3 || i==4 )
       MaxWire = MaxWireSDC2;
@@ -696,11 +757,18 @@ ConfMan::InitializeHistograms( void )
       MaxWire = MaxWireSDC3Y;
     if( i==7 || i==8 )
       MaxWire = MaxWireSDC3X;
+    if( i==9 || i==10 || i==11 || i==12 )
+      MaxWire = MaxSegFBT1;
+    if( i==13 || i==14 || i==15 || i==16 )
+      MaxWire = MaxSegFBT2;
+    if( i==17 || i==18 || i==19 || i==20 ) 
+      MaxWire = NumOfSegTOF;
+    
     HB2( 1000*i, Form("Wire%%Tdc for LayerId = %d", i),
 	 NbinSdcOutTdc/4, MinSdcOutTdc, MaxSdcOutTdc,
 	 MaxWire+1, 0., double(MaxWire+1) );
 
-    double MaxDL=0., MaxDT=0.;
+    double MaxDL=1., MaxDT=1.;
     if( i==1 || i==2 || i==3 || i==4 ){
       MaxDL = MaxSDC2DL;
       MaxDT = MaxSDC2DT;
@@ -709,9 +777,9 @@ ConfMan::InitializeHistograms( void )
       MaxDL = MaxSDC3DL;
       MaxDT = MaxSDC3DT;
     }
-    if ( i == 9 || i == 10 ) {
-      MaxDL = MaxSDC3DL;
-      MaxDT = MaxSDC3DT;
+        if ( i == 9 || i == 10 ) {
+    MaxDL = MaxSDC3DL;
+    MaxDT = MaxSDC3DT;
     }
 
     TString title11 = Form("HitPat SdcOut%2d [Track]", i);
@@ -731,16 +799,18 @@ ConfMan::InitializeHistograms( void )
     TString title72 = Form("Residual SdcOut%2d (15<theta<30)", i);
     TString title73 = Form("Residual SdcOut%2d (30<theta<45)", i);
     TString title74 = Form("Residual SdcOut%2d (45<theta)", i);
-    HB1( 100*i+11, title11, 120, 0., 120. );
+    HB1( 100*i+11, title11, MaxWire, 0., MaxWire );
     HB1( 100*i+12, title12, 600, -100, 400 );
     HB1( 100*i+13, title13, 100, -5, MaxDL );
     HB1( 100*i+14, title14, 100, -1000., 1000. );
-    if( i<=NumOfLayersSdcOut )
+    //if( i<=NumOfLayersSdcOut )  
+    if( i<=NumOfLayersSdcOut+4 )
       HB1( 100*i+15, title15, 1000, -5.0, 5.0 );
     else
       HB1( 100*i+15, title15, 1000, -1000.0, 1000.0 );
-    if( i<=NumOfLayersSdcOut )
-      HB2( 100*i+16, title16, 400, -1000., 1000., 100, -1.0, 1.0 );
+    //if( i<=NumOfLayersSdcOut )
+    if( i<=NumOfLayersSdcOut+4 )
+        HB2( 100*i+16, title16, 400, -1000., 1000., 100, -1.0, 1.0 );
     else
       HB2( 100*i+16, title16, 100, -1000., 1000., 100, -1000.0, 1000.0 );
     HB2( 100*i+17, title17, 100, -1000., 1000., 100, -1000., 1000. );
