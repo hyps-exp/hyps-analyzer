@@ -802,7 +802,7 @@ RK::MakeHPContainer( void )
 
   /*** From Upstream ***/
   container.push_back( std::make_pair( IdTarget, RKcalcHitPoint() ) );
-
+  
   for( std::size_t i=0; i<NumOfLayersSFT; ++i ){
     std::size_t plid = i +PlOffsSft +1;
     container.push_back( std::make_pair( plid, RKcalcHitPoint() ) );
@@ -816,10 +816,20 @@ RK::MakeHPContainer( void )
     container.push_back( std::make_pair( plid, RKcalcHitPoint() ) );
   }
   for( std::size_t i=0; i<NumOfLayersSdcOut; ++i ){
-    std::size_t plid = i +PlOffsSdcOut +1;
+    std::size_t plid = 80;
+    if( i<4 ){
+      plid = i +PlOffsFbt;
+    }
+    else if( i<12 ){
+      plid = i -3 +PlOffsSdcOut;
+    }
+    else{
+      plid = i -8 +PlOffsFbt;
+    }
+    
     container.push_back( std::make_pair( plid, RKcalcHitPoint() ) );
   }
-
+  
   container.push_back( std::make_pair( IdTOF_UX, RKcalcHitPoint() ) );
   container.push_back( std::make_pair( IdTOF_UY, RKcalcHitPoint() ) );
   container.push_back( std::make_pair( IdTOF_DX, RKcalcHitPoint() ) );

@@ -343,7 +343,7 @@ EventKuramaTracking::ProcessingNormal( void )
   HodoClusterContainer TOFCont;
   //////////////Tof Analysis
   hodoAna->DecodeTOFHits( rawData );
-  hodoAna->TimeCutTOF(7, 25);
+  //hodoAna->TimeCutTOF(7, 25);
   int nhTof = hodoAna->GetNClustersTOF();
   event.nhTof = nhTof;
   {
@@ -548,8 +548,8 @@ EventKuramaTracking::ProcessingNormal( void )
   HF1( 1, 13. );
 
   //////////////SdcOut tracking
-  // std::cout << "==========TrackSearch SdcOut============" << std::endl;
-
+  //std::cout << "==========TrackSearch SdcOut============" << std::endl;
+  
   if(flag_tof_stop){
 #if UseTOF
     DCAna->TrackSearchSdcOut( TOFCont );
@@ -561,12 +561,14 @@ EventKuramaTracking::ProcessingNormal( void )
   }
 
   DCAna->ChiSqrCutSdcOut(50.);  
-  int ntSdcOut = DCAna->GetNtracksSdcOut();
+  int ntSdcOut = DCAna->GetNtracksSdcOut();  
+
   if( MaxHits<ntSdcOut ){
     std::cout << "#W " << func_name << " "
 	      << "too many ntSdcOut " << ntSdcOut << "/" << MaxHits << std::endl;
     ntSdcOut = MaxHits;
   }
+
   event.ntSdcOut=ntSdcOut;
   HF1( 30, double(ntSdcOut) );
   for( int it=0; it<ntSdcOut; ++it ){
@@ -590,8 +592,11 @@ EventKuramaTracking::ProcessingNormal( void )
     for( int ih=0; ih<nh; ++ih ){
       DCLTrackHit *hit=tp->GetHit(ih);
       int layerId = hit->GetLayer()-16;
-      if( hit->GetLayer()>40 ) layerId -= 2;
-      if( hit->GetLayer()>42 ) layerId -= 2;
+
+      if( hit->GetLayer()>79 ) layerId -= 41; 
+      if( hit->GetLayer()>40 ) layerId -= 10;
+      if( hit->GetLayer()>42 ) layerId -= 10;
+      
       HF1( 33, hit->GetLayer() );
       double wire=hit->GetWire();
       double dt=hit->GetDriftTime(), dl=hit->GetDriftLength();
@@ -611,6 +616,7 @@ EventKuramaTracking::ProcessingNormal( void )
       }
     }
   }
+
 
   if( ntSdcOut<1 ) return true;
 
@@ -645,6 +651,7 @@ EventKuramaTracking::ProcessingNormal( void )
   }
   event.ntKurama = ntKurama;
   HF1( 50, double(ntKurama) );
+
   for( int i=0; i<ntKurama; ++i ){
     KuramaTrack *tp=DCAna->GetKuramaTrack(i);
     if(!tp) continue;
@@ -1119,7 +1126,7 @@ ConfMan:: InitializeHistograms( void )
   HB1( 50, "#Tracks KURAMA", 10, 0., 10. );
   HB1( 51, "#Hits of KuramaTrack", 50, 0., 50. );
   HB1( 52, "Chisqr KuramaTrack", 500, 0., 50. );
-  HB1( 53, "LayerId KuramaTrack", 50, 0., 50. );
+  HB1( 53, "LayerId KuramaTrack", 90, 0., 90. );
   HB1( 54, "Xtgt KuramaTrack", 200, -100., 100. );
   HB1( 55, "Ytgt KuramaTrack", 200, -100., 100. );
   HB1( 56, "Utgt KuramaTrack", 300, -0.30, 0.30 );
