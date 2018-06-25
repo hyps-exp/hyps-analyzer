@@ -3,14 +3,16 @@
 #____________________________________________________
 
 __author__  = 'Y.Nakada <nakada@km.phys.sci.osaka-u.ac.jp>'
-__version__ = '2.1'
-__date__    = '12 May 2018'
+__version__ = '3.0'
+__date__    = '25 June 2018'
 
 #____________________________________________________
 
 import os
 import sys
 import time
+
+import json
 
 sys.path.append( os.path.dirname( os.path.abspath( sys.argv[0] ) )
                  + '/module' )
@@ -26,44 +28,35 @@ SLEEP_TIME = 5
 
 def display( filename ) :
 
-    with open( fstatlist, 'r' ) as f :
-        lines = f.readlines()
-
-    data = list()
-    for line in lines :
-        words = line.split( '\t' )
-        tmp = { 'key'     : cl.bold + words[0][:8] + cl.end,
-                'nevents' : words[1],
-                'unit'    : words[2],
-                'binary'  : words[3][:16],
-                'conf'    : words[4][:16],
-                'data'    : words[5][:16],
-                'root'    : words[6][:16],
-                'stat'    : cl.reverce + cl.bold + cl.red + words[7] + cl.end,
-                'time'    : words[8][:-1] }
-        data.append( tmp )
+    with open( filename, 'r' ) as f :
+        info = json.load( f )
 
     os.system( 'clear' )
 
     buff =  cl.reverce + cl.bold\
             + 'KEY'.ljust(8)   + '  '\
-            + 'STAT'.ljust(14) + '  '\
+            + 'STAT'.ljust(16) + '  '\
             + 'BIN'.ljust(16)  + '  '\
             + 'CONF'.ljust(16) + '  '\
-            + 'DATA(#EVENT)'.ljust(26) + '  '\
+            + 'DATA(#EVENT)'.ljust(24) + '  '\
             + 'ROOT'.ljust(16) + '  '\
             + 'TIME'.ljust(8)\
             + cl.end
     print( buff )
 
-    for item in data :
-        buff = item['key'].ljust(8+8) + '  '\
-               + item['stat'].ljust(14+18) + '  '\
-               + item['binary'].ljust(16)  + '  '\
-               + item['conf'].ljust(16)    + '  '\
-               + item['data'].ljust(16)    + '(' + item['nevents'].rjust(8) + ')' + '  '\
-               + item['root'].ljust(16)    + '  '\
-               + item['time'].rjust(8)
+
+    for key, item in info.items() :
+
+        status = utility.decodeStatus( item )
+        ptime  = utility.decodeTime( item )
+
+        buff = cl.bold + key[:8].ljust(8) + cl.end + '  ' \
+               + '{}{}{}{}{}'.format( cl.reverce, cl.bold, cl.red, status, cl.end ).ljust(16 + 18) + '  ' \
+               + os.path.basename( item['bin'] )[-16:].ljust(16) + '  ' \
+               + os.path.basename( item['conf'] )[-16:].ljust(16) + '  ' \
+               + '{} ({})'.format( os.path.basename( item['data'] ), str( item['nev'] ) )[-24:].ljust(24) + '  ' \
+               + os.path.basename( item['root'] )[-16:].ljust(16) + '  '\
+               + ptime.rjust(8)
         print( buff )
 
     buff = cl.reverce + cl.bold + 'Press \'Ctrl-C\' to exit' + cl.end
@@ -79,9 +72,9 @@ if argc != 2 :
     sys.exit( 0 )
 
 if not os.path.exists( argvs[1] ) :
-    utility.ExitFailure( 'No such file: %s' % argvs[1] )
+    utility.ExitFailure( 'No such file > ' + argvs[1] )
 
-fstatlist = argvs[1]
+fJobInfo = argvs[1]
 
 #____________________________________________________
 
@@ -89,7 +82,7 @@ fstatlist = argvs[1]
 while True :
 
     try :
-        display( fstatlist )
+        display( fJobInfo )
         time.sleep( SLEEP_TIME )
 
     except KeyboardInterrupt :
@@ -97,3 +90,8 @@ while True :
         print( 'KeyboardInterrupt' )
         print( 'Exiting the process...' )
         break
+
+    except FileNotFoundError :
+
+        sys.stderr.write( 'Cannot find file > ' + fJobInfo + '\n' )
+        sys.exit( 1 )

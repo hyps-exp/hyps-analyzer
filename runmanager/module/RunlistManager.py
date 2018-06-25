@@ -3,8 +3,8 @@
 #____________________________________________________
 
 __author__  = 'Y.Nakada <nakada@km.phys.sci.osaka-u.ac.jp>'
-__version__ = '2.1'
-__date__    = '12 May 2018'
+__version__ = '3.0'
+__date__    = '25 June 2018'
 
 #____________________________________________________
 
@@ -96,9 +96,10 @@ class RunlistManager :
             proot = self.makeRootPath( item[1]['root'], base )
 
             unit  = item[1]['unit'] if isinstance( item[1]['unit'], int ) else 0
-            queue = '%s' % item[1]['queue'] if isinstance( item[1]['queue'], str ) else 's'
+            queue = item[1]['queue'] if isinstance( item[1]['queue'], str ) else 's'
+            nproc = item[1]['nproc'] if isinstance( item[1]['nproc'], int ) else 1
 
-            runlist.append( [ item[0], pbin, pconf, pdata, proot, queue, unit, nevents ] )
+            runlist.append( [ item[0], pbin, pconf, pdata, proot, nproc, queue, unit, nevents ] )
 
         os.chdir( self.__workdir )
 
@@ -123,10 +124,13 @@ class RunlistManager :
             if parsets is None :
                 runlist.append( [ key, defset ] )
             else:
-                for par in parsets :
-                    tmp = copy.deepcopy( defset )
-                    tmp.update( par )
-                    runlist.append( [ key, tmp ] )
+                tmp = copy.deepcopy( defset )
+                tmp.update( parsets )
+                runlist.append( [ key, tmp ] )
+                # for par in parsets :
+                #     tmp = copy.deepcopy( defset )
+                #     tmp.update( par )
+                #     runlist.append( [ key, tmp ] )
 
         return runlist
 

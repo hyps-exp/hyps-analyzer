@@ -5,9 +5,7 @@
 *.root
 *.so
 *.pcm
-*.pf
 *.pyc
-*.stat
 \#*
 Makefile
 bin
@@ -16,7 +14,9 @@ lib
 macro
 fieldmap
 rootfile*
-runmanager/conf
+runmanager/stat
+runmanager/tmp
 runmanager/log
-runmanager/unpack
+runmanager/dst/log
+runmanager/dst/prefetch
 scaler

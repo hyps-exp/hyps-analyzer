@@ -4,6 +4,7 @@
 # The allowed keys are
 #   queue  <- bsub queue (eg. s, l, etc...)
 #   unit   <- dividing event unit
+#   nporc  <- number of process for merging (must be less than 20)
 #   bin    <- path to executable binary
 #   conf   <- path to conf file from the work directory
 #   data   <- path to data directory/file
@@ -27,6 +28,7 @@ WORKDIR: ~/work/miwalove/analyzer
 DEFAULT:
   queue: s
   unit:  100000
+  nproc: 1
   bin:   ./bin/Hodoscope
   conf:  ./param/conf/analyzer_default.conf
   data:  ../data
@@ -46,17 +48,11 @@ RUN:
     data: ./test.dat.gz
     root: ./test.root
 
-  3838: # The default setting will be adapted.
+  3838: # The default setting will be adapted. In this case run03838.dat.gz/.dat will be loaded.
 
-  3800: # Three independent process will run
+  3800:
   -
     bin:  ./bin/KuramaTracking
-    conf: ./param/conf/analyzer_1.conf
+    conf: ./param/conf		# ./param/conf/analyzer_03800.conf will be loaded.
     data: ./tmp_data
     root: ./test.root
-  - 				# ../data/run03800.dat.gz will be loaded.
-    bin:  ./bin/KuramaTracking
-    conf: ./param/conf		# ./param/conf/analyzer_03800.conf will be loaded.
-  - 
-    unit: 1000
-    conf: ./param/conf/miwalove.conf

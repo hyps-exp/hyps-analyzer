@@ -9,8 +9,6 @@
 
 APP_PATH=$(readlink -f $0)
 APP_DIR=$(dirname $APP_PATH)
-LOG_DIR=$APP_DIR/log
-PREFETCH_DIR=$APP_DIR/prefetch
 
 #__________________________________________________
 
@@ -31,17 +29,27 @@ if [ $# -ne 1 ]; then
     exit 0
 fi
 
-runlist=$1
-
-if ! [ -e "$runlist" ]; then
-    echo "ERROR: No such file > $runlist"
+if ! [ -e "$1" ]; then
+    echo "ERROR: No such file > $1"
     exit 1
 fi
+
+runlist=$1
 
 tmp=$(basename $runlist)
 label=${tmp%.*}
 
 #__________________________________________________
+
+LOG_DIR=$APP_DIR/log
+if ! [ -e $LOG_DIR ]; then
+    mkdir $LOG_DIR
+fi
+
+PREFETCH_DIR=$APP_DIR/prefetch
+if ! [ -e $PREFETCH_DIR ]; then
+    mkdir $PREFETCH_DIR
+fi
 
 mainlog=$LOG_DIR/$label.log
 if [ -e $mainlog ]; then
@@ -103,8 +111,8 @@ done < $runlist
 
 #__________________________________________________
 
-if [ -z "$work" -o -f "$work" ]; then
-    echo "ERROR: Invalid file declaration [work]" | tee $mainlog
+if [ -z "$work" ] || ! [ -d "$work" ]; then
+    echo "ERROR: Invalid file declaration [work: $work]" | tee $mainlog
     exit 1
 fi
 
@@ -112,6 +120,9 @@ fi
 
 echo "> cd $work" >> $mainlog
 cd $work
+if [ $? -eq 1 ]; then
+    exit 1
+fi
 
 if ! [ -x "$bin" ]; then
     if [ -z "$bin" ]; then bin="null"; fi
@@ -127,13 +138,13 @@ fi
 
 if ! [ -d "$rootin" ]; then
     if [ -z "$rootin" ]; then rootin="null"; fi
-    echo "ERROR: Invalid file declaration [rootin $rootin]" | tee $mainlog
+    echo "ERROR: Invalid file declaration [rootin: $rootin]" | tee $mainlog
     exit 1
 fi
 
 if ! [ -d "$rootout" ]; then
     if [ -z "$rootout" ]; then rootout="null"; fi
-    echo "ERROR: Invalid file declaration [rootout $rootout]" | tee $mainlog
+    echo "ERROR: Invalid file declaration [rootout: $rootout]" | tee $mainlog
     exit 1
 fi
 
@@ -154,6 +165,9 @@ fi
 
 echo "> cd $work/$rootin" >> $mainlog
 cd $work/$rootin
+if [ $? -eq 1 ]; then
+    exit 1
+fi
 
 fl_exit=0
 for id in ${runid[@]}; do
@@ -174,6 +188,9 @@ fi
 
 echo "> cd $APP_DIR" >> $mainlog
 cd $APP_DIR
+if [ $? -eq 1 ]; then
+    exit 1
+fi
 
 if ! [ -e $LOGDIR ]; then
     echo "> mkdir $LOG_DIR" >> $mainlog
@@ -204,6 +221,9 @@ fi
 
 echo "> cd $work" >> $mainlog
 cd $work
+if [ $? -eq 1 ]; then
+    exit 1
+fi
 
 log=()
 out=()
