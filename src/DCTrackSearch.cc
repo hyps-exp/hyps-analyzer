@@ -828,7 +828,7 @@ namespace track
 
     std::vector<ClusterList> CandCont(npp);
 
-    for( int i=0; i<npp; ++i ){
+    for( int i=0; i<npp-2; ++i ){
       bool ppFlag    = PpInfo[i].pair;
       bool honeycomb = PpInfo[i].honeycomb;
       int  layer1    = PpInfo[i].id1;
@@ -838,6 +838,7 @@ namespace track
 				 PpInfo[i].CellSize, CandCont[i], honeycomb );
       }else{ //FBT
 	MakeUnPairPlaneHitCluster( SdcOutHC[layer1], CandCont[i], honeycomb );
+	MakeUnPairPlaneHitCluster( SdcOutHC[layer2], CandCont[i], honeycomb );
       }
     }
 
@@ -870,7 +871,7 @@ namespace track
       bool TOFSegXYMatching =
 	( track->GetWire(IdTOF_UX)==track->GetWire(IdTOF_UY) ) ||
 	( track->GetWire(IdTOF_DX)==track->GetWire(IdTOF_DY) );
-
+      
       int Track[20]={0};
       int layer;
       for( int i=0; i<(track->GetNHit()); ++i){
@@ -884,10 +885,12 @@ namespace track
       
       bool DC23x_off =
 	( Track[31]==0 && Track[32]==0 && Track[37]==0 && Track[38]==0 );
-	
+      
+
       if( TOFSegXYMatching &&
+	  //FBT&&
 	  track->GetNHit()>=MinNumOfHits+2   &&
-	  track->GetNHitY() >= 2             &&
+	  //track->GetNHitY() >= 2             &&
 	  track->DoFit()                     &&
 	  track->GetChiSquare()<MaxChisquare )
 	{

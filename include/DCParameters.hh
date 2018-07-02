@@ -59,12 +59,9 @@ const DCPairPlaneInfo PPInfoSdcOut[] = {
   { true, true, false, 1, 2,  9.0 }, { true, true, false, 3, 4,  9.0 },
   { true, true, false, 5, 6, 20.0 }, { true, true, false, 7, 8, 20.0 }, 
   
-  { false, false, true, 9, 9, 4.0 }, { false, false, true, 10, 10, 4.0 }, //FBT1D
-  { false, false, true, 11, 11, 4.0 }, { false, false, true, 12, 12, 4.0 }, //FBT1U
-  { false, false, true, 13, 13, 4.0 }, { false, false, true, 14, 14, 4.0 }, //FBT2D
-  { false, false, true, 15, 15, 4.0 }, { false, false, true, 16, 16, 4.0 }
-
-}; //FBT2U
+  { false, false, true, 9, 10, 4.0 }, { false, false, true, 11, 12, 4.0 }, //FBT1
+  { false, false, true, 13, 14, 4.0 }, { false, false, true, 15, 16, 4.0 } //FBT2
+};
 
 
 const int NPPInfoBcOut  = sizeof(PPInfoBcOut)/sizeof(DCPairPlaneInfo);
