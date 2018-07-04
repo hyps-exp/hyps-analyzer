@@ -837,8 +837,8 @@ namespace track
 	MakePairPlaneHitCluster( SdcOutHC[layer1], SdcOutHC[layer2],
 				 PpInfo[i].CellSize, CandCont[i], honeycomb );
       }else{ //FBT
-	MakeUnPairPlaneHitCluster( SdcOutHC[layer1], CandCont[i], honeycomb );
-	MakeUnPairPlaneHitCluster( SdcOutHC[layer2], CandCont[i], honeycomb );
+	MakeMWPCPairPlaneHitCluster( SdcOutHC[layer1], CandCont[i] );
+	MakeMWPCPairPlaneHitCluster( SdcOutHC[layer2], CandCont[i] );
       }
     }
 
@@ -890,7 +890,7 @@ namespace track
       if( TOFSegXYMatching &&
 	  //FBT&&
 	  track->GetNHit()>=MinNumOfHits+2   &&
-	  //track->GetNHitY() >= 2             &&
+	  track->GetNHitY() >= 2             &&
 	  track->DoFit()                     &&
 	  track->GetChiSquare()<MaxChisquare )
 	{
