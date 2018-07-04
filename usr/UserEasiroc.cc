@@ -30,7 +30,7 @@
 #include "VEvent.hh"
 
 #define HodoCut    0 // with BH1/BH2
-#define TimeCut    0 // in cluster analysis
+#define TimeCut    1 // in cluster analysis
 #define FHitBranch 0 // make FiberHit branches (becomes heavy)
 
 namespace
@@ -306,6 +306,7 @@ namespace root
       BFTHid  = 10000,
       SCHHid  = 20000,
       SFTVHid = 30000, SFTUHid = 40000, SFTXHid = 50000,
+      FBT1id = 60000, FBT2id = 100000,
       FBT1U1Hid = 60000,  FBT1D1Hid = 70000,
       FBT1U2Hid = 80000,  FBT1D2Hid = 90000,
       FBT2U1Hid = 100000, FBT2D1Hid = 110000,
@@ -1044,9 +1045,9 @@ EventEasiroc::ProcessingNormal( void )
 
 	    if(leading==prev) continue;
 	    prev = leading;
-	    HF1( FBT1U1Hid + 10000*(2*layer+UorD) +6, leading );
-	    HF2( FBT1U1Hid + 10000*(2*layer+UorD) +10, seg, leading );
-	    HF1( FBT1U1Hid + 10000*(2*layer+UorD) +1000*(1)+seg+1, leading );
+	    HF1( FBT1id + 10000*(2*layer+UorD) +6, leading );
+	    HF2( FBT1id + 10000*(2*layer+UorD) +10, seg, leading );
+	    HF1( FBT1id + 10000*(2*layer+UorD) +1000*(1)+seg+1, leading );
 
 	    if(UorD==U){
 	      (layer==0? event.fbt1_u1tdc[seg][m] : event.fbt1_u2tdc[seg][m]) = leading;
@@ -1081,16 +1082,16 @@ EventEasiroc::ProcessingNormal( void )
 	    double ctime    = hit->GetCTime(m);
 	    double width    = hit->GetWidth(m);
 
-	    HF1( FBT1U1Hid + 10000*(2*layer+UorD) +8, width );
-	    HF2( FBT1U1Hid + 10000*(2*layer+UorD) +12, seg, width );
-	    HF1( FBT1U1Hid + 10000*(2*layer+UorD) +21, time );
-	    HF2( FBT1U1Hid + 10000*(2*layer+UorD) +23, width, time );
-	    HF1( FBT1U1Hid + 10000*(2*layer+UorD) +31, ctime );
-	    HF2( FBT1U1Hid + 10000*(2*layer+UorD) +33, width, ctime );
-	    HF1( FBT1U1Hid + 10000*(2*layer+UorD) +1000*(3)+seg+1, width );
+	    HF1( FBT1id + 10000*(2*layer+UorD) +8, width );
+	    HF2( FBT1id + 10000*(2*layer+UorD) +12, seg, width );
+	    HF1( FBT1id + 10000*(2*layer+UorD) +21, time );
+	    HF2( FBT1id + 10000*(2*layer+UorD) +23, width, time );
+	    HF1( FBT1id + 10000*(2*layer+UorD) +31, ctime );
+	    HF2( FBT1id + 10000*(2*layer+UorD) +33, width, ctime );
+	    HF1( FBT1id + 10000*(2*layer+UorD) +1000*(3)+seg+1, width );
 	    if( -10.<time && time<10. ){
-	      HF2( FBT1U1Hid + 10000*(2*layer+UorD) +1000*(5)+seg+1, width, time );
-	      HF2( FBT1U1Hid + 10000*(2*layer+UorD) +1000*(7)+seg+1, width, ctime );
+	      HF2( FBT1id + 10000*(2*layer+UorD) +1000*(5)+seg+1, width, time );
+	      HF2( FBT1id + 10000*(2*layer+UorD) +1000*(7)+seg+1, width, ctime );
 	    }
 	    if(UorD==U){
 	      (layer==0? event.fbt1_u1tot[seg][m] : event.fbt1_u2tot[seg][m]) = width;
@@ -1100,12 +1101,12 @@ EventEasiroc::ProcessingNormal( void )
 	    }
 	  }
 	  if(hit_flag){
-	    HF1( FBT1U1Hid + 10000*(2*layer+UorD) +4, seg+0.5);
+	    HF1( FBT1id + 10000*(2*layer+UorD) +4, seg+0.5);
 	    if(UorD==U) (layer==0? event.fbt1_u1hitpat[nhits[0]++] : event.fbt1_u2hitpat[nhits[2]++]) = seg;
 	    if(UorD==D) (layer==0? event.fbt1_d1hitpat[nhits[1]++] : event.fbt1_d2hitpat[nhits[3]++]) = seg;
 	  }
 	}// for(m)
-	HF1( FBT1U1Hid + 10000*(2*layer+UorD) +3, nhits[2*layer+UorD]);
+	HF1( FBT1id + 10000*(2*layer+UorD) +3, nhits[2*layer+UorD]);
       }// for(UorD)
     }// for(layer)
 
@@ -1128,7 +1129,7 @@ EventEasiroc::ProcessingNormal( void )
 	}
 	if(UorD == U) (layer==0? event.fbt1_u1ncl : event.fbt1_u2ncl) = ncl;
 	if(UorD == D) (layer==0? event.fbt1_d1ncl : event.fbt1_d2ncl) = ncl;
-	HF1( FBT1U1Hid + 10000*(2*layer+UorD) +101, ncl );
+	HF1( FBT1id + 10000*(2*layer+UorD) +101, ncl );
 	for(int i=0; i<ncl; ++i){
 	  FiberCluster *cl = hodoAna->GetClusterFBT1(layer, UorD, i);
 	  if(!cl) continue;
@@ -1145,11 +1146,11 @@ EventEasiroc::ProcessingNormal( void )
 	  if(UorD == U)	(layer==0? event.fbt1_u1clpos[i]  : event.fbt1_u2clpos[i] ) = pos;
 	  if(UorD == D)	(layer==0? event.fbt1_d1clpos[i]  : event.fbt1_d2clpos[i] ) = pos;
 
-	  HF1( FBT1U1Hid + 10000*(2*layer+UorD) +102, clsize );
-	  HF1( FBT1U1Hid + 10000*(2*layer+UorD) +103, ctime );
-	  HF1( FBT1U1Hid + 10000*(2*layer+UorD) +104, ctot );
-	  HF2( FBT1U1Hid + 10000*(2*layer+UorD) +105, ctot, ctime );
-	  HF1( FBT1U1Hid + 10000*(2*layer+UorD) +106, pos );
+	  HF1( FBT1id + 10000*(2*layer+UorD) +102, clsize );
+	  HF1( FBT1id + 10000*(2*layer+UorD) +103, ctime );
+	  HF1( FBT1id + 10000*(2*layer+UorD) +104, ctot );
+	  HF2( FBT1id + 10000*(2*layer+UorD) +105, ctot, ctime );
+	  HF1( FBT1id + 10000*(2*layer+UorD) +106, pos );
 	}// for(ncl)
       }// for(UorD)
    }// for(layer)
@@ -1183,9 +1184,9 @@ EventEasiroc::ProcessingNormal( void )
 
 	    if(leading==prev) continue;
 	    prev = leading;
-	    HF1( FBT2U1Hid + 10000*(2*layer+UorD) +6, leading );
-	    HF2( FBT2U1Hid + 10000*(2*layer+UorD) +10, seg, leading );
-	    HF1( FBT2U1Hid + 10000*(2*layer+UorD) +1000*(1)+seg+1, leading );
+	    HF1( FBT2id + 10000*(2*layer+UorD) +6, leading );
+	    HF2( FBT2id + 10000*(2*layer+UorD) +10, seg, leading );
+	    HF1( FBT2id + 10000*(2*layer+UorD) +1000*(1)+seg+1, leading );
 
 	    if(UorD==U){
 	      (layer==0? event.fbt2_u1tdc[seg][m] : event.fbt2_u2tdc[seg][m]) = leading;
@@ -1220,16 +1221,16 @@ EventEasiroc::ProcessingNormal( void )
 	    double ctime    = hit->GetCTime(m);
 	    double width    = hit->GetWidth(m);
 
-	    HF1( FBT2U1Hid + 10000*(2*layer+UorD) +8, width );
-	    HF2( FBT2U1Hid + 10000*(2*layer+UorD) +12, seg, width );
-	    HF1( FBT2U1Hid + 10000*(2*layer+UorD) +21, time );
-	    HF2( FBT2U1Hid + 10000*(2*layer+UorD) +23, width, time );
-	    HF1( FBT2U1Hid + 10000*(2*layer+UorD) +31, ctime );
-	    HF2( FBT2U1Hid + 10000*(2*layer+UorD) +33, width, ctime );
-	    HF1( FBT2U1Hid + 10000*(2*layer+UorD) +1000*(3)+seg+1, width );
+	    HF1( FBT2id + 10000*(2*layer+UorD) +8, width );
+	    HF2( FBT2id + 10000*(2*layer+UorD) +12, seg, width );
+	    HF1( FBT2id + 10000*(2*layer+UorD) +21, time );
+	    HF2( FBT2id + 10000*(2*layer+UorD) +23, width, time );
+	    HF1( FBT2id + 10000*(2*layer+UorD) +31, ctime );
+	    HF2( FBT2id + 10000*(2*layer+UorD) +33, width, ctime );
+	    HF1( FBT2id + 10000*(2*layer+UorD) +1000*(3)+seg+1, width );
 	    if( -10.<time && time<10. ){
-	      HF2( FBT2U1Hid + 10000*(2*layer+UorD) +1000*(5)+seg+1, width, time );
-	      HF2( FBT2U1Hid + 10000*(2*layer+UorD) +1000*(7)+seg+1, width, ctime );
+	      HF2( FBT2id + 10000*(2*layer+UorD) +1000*(5)+seg+1, width, time );
+	      HF2( FBT2id + 10000*(2*layer+UorD) +1000*(7)+seg+1, width, ctime );
 	    }
 	    if(UorD==U){
 	      (layer==0? event.fbt2_u1tot[seg][m] : event.fbt2_u2tot[seg][m]) = width;
@@ -1239,12 +1240,12 @@ EventEasiroc::ProcessingNormal( void )
 	    }
 	  }
 	  if(hit_flag){
-	    HF1( FBT2U1Hid + 10000*(2*layer+UorD) +4, seg+0.5);
+	    HF1( FBT2id + 10000*(2*layer+UorD) +4, seg+0.5);
 	    if(UorD==U) (layer==0? event.fbt2_u1hitpat[nhits[0]++] : event.fbt2_u2hitpat[nhits[2]++]) = seg;
 	    if(UorD==U) (layer==0? event.fbt2_d1hitpat[nhits[1]++] : event.fbt2_d2hitpat[nhits[3]++]) = seg;
 	  }
 	}// for(m)
-	HF1( FBT2U1Hid + 10000*(2*layer+UorD) +3, nhits[2*layer+UorD]);
+	HF1( FBT2id + 10000*(2*layer+UorD) +3, nhits[2*layer+UorD]);
       }// for(UorD)
     }// for(layer)
 
@@ -1267,7 +1268,7 @@ EventEasiroc::ProcessingNormal( void )
 	}
 	if(UorD == U) (layer==0? event.fbt2_u1ncl : event.fbt2_u2ncl) = ncl;
 	if(UorD == D) (layer==0? event.fbt2_d1ncl : event.fbt2_d2ncl) = ncl;
-	HF1( FBT2U1Hid + 10000*(2*layer+UorD) +101, ncl );
+	HF1( FBT2id + 10000*(2*layer+UorD) +101, ncl );
 	for(int i=0; i<ncl; ++i){
 	  FiberCluster *cl = hodoAna->GetClusterFBT2(layer, UorD, i);
 	  if(!cl) continue;
@@ -1284,11 +1285,11 @@ EventEasiroc::ProcessingNormal( void )
 	  if(UorD == U)	(layer==0? event.fbt2_u1clpos[i]  : event.fbt2_u2clpos[i] ) = pos;
 	  if(UorD == D)	(layer==0? event.fbt2_d1clpos[i]  : event.fbt2_d2clpos[i] ) = pos;
 
-	  HF1( FBT2U1Hid + 10000*(2*layer+UorD) +102, clsize );
-	  HF1( FBT2U1Hid + 10000*(2*layer+UorD) +103, ctime );
-	  HF1( FBT2U1Hid + 10000*(2*layer+UorD) +104, ctot );
-	  HF2( FBT2U1Hid + 10000*(2*layer+UorD) +105, ctot, ctime );
-	  HF1( FBT2U1Hid + 10000*(2*layer+UorD) +106, pos );
+	  HF1( FBT2id + 10000*(2*layer+UorD) +102, clsize );
+	  HF1( FBT2id + 10000*(2*layer+UorD) +103, ctime );
+	  HF1( FBT2id + 10000*(2*layer+UorD) +104, ctot );
+	  HF2( FBT2id + 10000*(2*layer+UorD) +105, ctot, ctime );
+	  HF1( FBT2id + 10000*(2*layer+UorD) +106, pos );
 	}// for(ncl)
       }// for(UorD)
     }// for(layer)
