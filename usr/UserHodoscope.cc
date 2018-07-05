@@ -79,6 +79,7 @@ EventHodoscope::~EventHodoscope( void )
 struct Event
 {
   int evnum;
+  int spill;
 
   int trignhits;
   int trigpat[NumOfSegTrig];
@@ -162,6 +163,9 @@ struct Event
 //______________________________________________________________________________
 struct Dst
 {
+  int evnum;
+  int spill;
+
   int trignhits;
   int trigpat[NumOfSegTrig];
   int trigflag[NumOfSegTrig];
@@ -1338,6 +1342,35 @@ EventHodoscope::ProcessingNormal( void )
     }
   }
 
+#if 0
+  // BH1 (for parameter tuning)
+  if(dst.Time0Seg==4){
+    const HodoRHitContainer &cont = rawData->GetBH1RawHC();
+    int nh = cont.size();
+    for( int i=0; i<nh; ++i ){
+      HodoRawHit *hit = cont[i];
+      int seg = hit->SegmentId()+1;
+
+      //Up
+      {
+	int n_mhit = hit->GetSizeTdcUp();
+	for(int m = 0; m<n_mhit; ++m){
+	  int T = hit->GetTdcUp(m);
+	  if(T > 0) HF1( BH1Hid +100*seg +9, double(T) );
+	}// for(m)
+      }
+
+      //Down
+      {
+	int n_mhit = hit->GetSizeTdcDown();
+	for(int m = 0; m<n_mhit; ++m){
+	  int T = hit->GetTdcDown(m);
+	  if(T > 0) HF1( BH1Hid +100*seg +10, double(T) );
+	}// for(m)
+      }
+    }
+  }// (Raw BH1 TDC for parameter tuning)
+#endif
 
   return true;
 }
@@ -1356,6 +1389,7 @@ void
 EventHodoscope::InitializeEvent( void )
 {
   event.evnum     = 0;
+  event.spill     = 0;
   event.trignhits = 0;
   event.bh1nhits  = 0;
   event.bh2nhits  = 0;
@@ -1381,6 +1415,9 @@ EventHodoscope::InitializeEvent( void )
   event.deBtof0  = -999;
   event.Btof0    = -999;
   event.CBtof0   = -999;
+
+  dst.evnum     = 0;
+  dst.spill     = 0;
 
   dst.Time0Seg = -999;
   dst.deTime0  = -999;
@@ -2072,6 +2109,7 @@ ConfMan::InitializeHistograms( void )
   //Tree
   HBTree( "tree","tree of Counter" );
   tree->Branch("evnum",     &event.evnum,     "evnum/I");
+  tree->Branch("spill",     &event.spill,     "spill/I");
   //Trig
   tree->Branch("trignhits", &event.trignhits, "trignhits/I");
   tree->Branch("trigpat",    event.trigpat,   "trigpat[trignhits]/I");
@@ -2150,6 +2188,8 @@ ConfMan::InitializeHistograms( void )
   ////////////////////////////////////////////
   //Dst
   hodo = new TTree( "hodo","Data Summary Table of Hodoscope" );
+  hodo->Branch("evnum",     &dst.evnum,     "evnum/I");
+  hodo->Branch("spill",     &dst.spill,     "spill/I");
   hodo->Branch("trignhits", &dst.trignhits, "trignhits/I");
   hodo->Branch("trigpat",    dst.trigpat,   "trigpat[trignhits]/I");
   hodo->Branch("trigflag",   dst.trigflag,  Form("trigflag[%d]/I", NumOfSegTrig));

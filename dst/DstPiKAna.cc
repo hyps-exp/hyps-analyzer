@@ -1349,6 +1349,8 @@ ConfMan::InitializeHistograms( void )
 
   ////////// Bring Address From Dst
   TTreeCont[kHodoscope]->SetBranchStatus("*", 0);
+  TTreeCont[kHodoscope]->SetBranchStatus("evnum",    1);
+  TTreeCont[kHodoscope]->SetBranchStatus("spill",    1);
   TTreeCont[kHodoscope]->SetBranchStatus("trigflag", 1);
   TTreeCont[kHodoscope]->SetBranchStatus("trigpat",  1);
   TTreeCont[kHodoscope]->SetBranchStatus("nhBh1",    1);
@@ -1376,6 +1378,8 @@ ConfMan::InitializeHistograms( void )
   TTreeCont[kHodoscope]->SetBranchStatus("dtTof",    1);
   TTreeCont[kHodoscope]->SetBranchStatus("deTof",    1);
 
+  TTreeCont[kHodoscope]->SetBranchAddress("evnum",    &src.evnum);
+  TTreeCont[kHodoscope]->SetBranchAddress("spill",    &src.spill);
   TTreeCont[kHodoscope]->SetBranchAddress("trigflag",  src.trigflag);
   TTreeCont[kHodoscope]->SetBranchAddress("trigpat",   src.trigpat);
   TTreeCont[kHodoscope]->SetBranchAddress("nhBh1",    &src.nhBh1);
