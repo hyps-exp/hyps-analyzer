@@ -3,14 +3,15 @@
 #____________________________________________________
 
 __author__  = 'Y.Nakada <nakada@km.phys.sci.osaka-u.ac.jp>'
-__version__ = '3.0'
+__version__ = '3.1'
 __date__    = '25 June 2018'
 
 #____________________________________________________
 
 import os
 import sys
-import io
+import resource
+import psutil
 import shutil
 import time
 import copy
@@ -23,10 +24,23 @@ import xml.etree.ElementTree
 
 #____________________________________________________
 
+rsrc = resource.RLIMIT_NPROC
+soft, hard = resource.getrlimit( rsrc )
+resource.setrlimit( rsrc, ( hard, hard ) )
+MAX_NPROC = hard
+
+rsrc = resource.RLIMIT_NOFILE
+soft, hard = resource.getrlimit( rsrc )
+resource.setrlimit( rsrc, ( hard, hard ) )
+MAX_NOFILE = hard
+
+#____________________________________________________
+
 SCRIPT_DIR = os.path.dirname( os.path.abspath( sys.argv[0] ) )
 XML_NAMESPACE = 'http://www.w3.org/2001/XMLSchema-instance'
 SCHEMA_LOC_ATTRIB = 'noNamespaceSchemaLocation'
 BSUB_RESPONCE = 'Job <JobID> is submitted to queue <queue>'
+
 #____________________________________________________
 
 
@@ -136,6 +150,7 @@ class AnalysisJob :
                   manager,
                   tag, conf, out, log ) :
 
+        self.__mainProc = psutil.Process()
         self.__manager = manager
 
         self.__tag = tag
@@ -260,6 +275,12 @@ class AnalysisJob :
         if not self.__statProc is None :
             return
 
+        while True :
+            nfds = self.__mainProc.num_fds()
+            nproc = len( self.__mainProc.children( recursive=True ) )
+            if nfds < MAX_NOFILE and nproc < MAX_NPROC :
+                break
+
         pf = self.__manager.getPreFetchPath()
 
         cmd = shlex.split( 'bsub' + ' ' \
@@ -276,6 +297,7 @@ class AnalysisJob :
         self.__proc = subprocess.Popen( cmd,
                                         stdout = subprocess.PIPE,
                                         stderr = subprocess.PIPE )
+
         self.__pid = self.__proc.pid
 
         self.__statProc = 0
@@ -313,7 +335,7 @@ class JobManager :
                   tag,
                   key,
                   fexec_path, fconf_path, fdata_path, fout_path,
-                  nproc = 1,
+                  nproc = 1, buff_path = None,
                   queue = 's', div_unit = 0, nevents = None ) :
 
         # true: success, false: failure,
@@ -351,6 +373,7 @@ class JobManager :
         self.__fMergeLogPath = None
 
         self.__nProc = nproc
+        self.__buffPath = buff_path
 
         self.__nEvents = nevents
         self.__divUnit = div_unit
@@ -442,7 +465,7 @@ class JobManager :
     def getDiffTime( self ) :
 
         if not self.__status is True \
-           or not self.__status is False :
+           and not self.__status is False :
             self.__ctime = time.time()
             self.__diffTime = self.__ctime - self.__stime
 
@@ -507,6 +530,8 @@ class JobManager :
             elif stat is False :
                 self.__statBjob = False
                 self.__status   = False
+                self.__dumpLog( 'error', 'error at {}'.format( job.getTag() ) )
+                self.__dumpLog( None,  64 * '_' )
 
         if len( self.__elemList ) == n_complete :
             self.__statBjob = True
@@ -521,8 +546,16 @@ class JobManager :
         if not self.__statMerge is None :
             return
 
-        cmd = shlex.split( 'bsub -q s -o {} hadd -ff -j {}'\
-                           .format( self.__fMergeLogPath, self.__nProc ) )
+        size = 0
+        for item in self.__fOutList :
+            size += os.path.getsize( item )
+
+        qOpt = '-q sx' if size > 2 * 1024**3 + 5 * 1024**2 else '-q s'
+        pOpt = '-j {}'.format( self.__nProc ) if self.__nProc > 1 else ''
+        bOpt = '-d {}'.format( self.__buffPath ) if not self.__buffPath is None else ''
+
+        cmd = shlex.split( 'bsub {} -o {} hadd -ff {} {}'\
+                           .format( qOpt, self.__fMergeLogPath, pOpt, bOpt ) )
         cmd.append( self.__fOutPath )
         cmd.extend( self.__fOutList )
 
@@ -557,6 +590,8 @@ class JobManager :
             elif stat == 3 :    # EXIT
                 self.__statMerge = False
                 self.__status    = False
+                self.__dumpLog( 'error', 'merging error' )
+                self.__dumpLog( None,  64 * '_' )
             else :              # unknown
                 self.__statMerge = -1
                 self.__status    = -1
@@ -795,6 +830,8 @@ class JobManager :
             self.__fLogList.append( path )
 
         self.__fMergeLogPath = dlog + '/' + self.__baseName + '_merge.log'
+        if os.path.exists( self.__fMergeLogPath ) :
+            os.remove( self.__fMergeLogPath )
 
         self.__dumpLog( 'log', self.__fLogList )
         self.__dumpLog( 'mergelog', self.__fMergeLogPath )
@@ -906,6 +943,7 @@ class JobManager :
         self.__dumpLog( 'nevent',   self.__nEvents )
         self.__dumpLog( 'out',      self.__fOutPath )
         self.__dumpLog( 'nproc',    self.__nProc )
+        self.__dumpLog( 'buffPath', self.__buffPath )
         self.__dumpLog( 'queue',    self.__queue )
         self.__dumpLog( 'prefetch', self.__fPreFetchPath )
         self.__dumpLog( 'dirdummy', self.__dDummy.name )

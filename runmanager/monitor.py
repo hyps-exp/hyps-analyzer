@@ -3,7 +3,7 @@
 #____________________________________________________
 
 __author__  = 'Y.Nakada <nakada@km.phys.sci.osaka-u.ac.jp>'
-__version__ = '3.0'
+__version__ = '3.1'
 __date__    = '25 June 2018'
 
 #____________________________________________________
@@ -28,8 +28,11 @@ SLEEP_TIME = 5
 
 def display( filename ) :
 
+    buff = str()
     with open( filename, 'r' ) as f :
-        info = json.load( f )
+        buff = f.read()
+
+    info = json.loads( buff )
 
     os.system( 'clear' )
 

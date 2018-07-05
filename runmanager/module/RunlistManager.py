@@ -3,7 +3,7 @@
 #____________________________________________________
 
 __author__  = 'Y.Nakada <nakada@km.phys.sci.osaka-u.ac.jp>'
-__version__ = '3.0'
+__version__ = '3.1'
 __date__    = '25 June 2018'
 
 #____________________________________________________
@@ -99,7 +99,14 @@ class RunlistManager :
             queue = item[1]['queue'] if isinstance( item[1]['queue'], str ) else 's'
             nproc = item[1]['nproc'] if isinstance( item[1]['nproc'], int ) else 1
 
-            runlist.append( [ item[0], pbin, pconf, pdata, proot, nproc, queue, unit, nevents ] )
+            if item[1]['buff'] is None :
+                buff = None
+            elif os.path.exists( item[1]['buff'] ) and os.path.isdir( item[1]['buff'] ) :
+                buff = item[1]['buff']
+            else :
+                utility.ExitFailure( 'Cannot decide buffer file path' )
+
+            runlist.append( [ item[0], pbin, pconf, pdata, proot, nproc, buff, queue, unit, nevents ] )
 
         os.chdir( self.__workdir )
 

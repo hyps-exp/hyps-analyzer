@@ -3,7 +3,7 @@
 #____________________________________________________
 
 __author__  = 'Y.Nakada <nakada@km.phys.sci.osaka-u.ac.jp>'
-__version__ = '3.0'
+__version__ = '3.1'
 __date__    = '25 June 2018'
 
 #____________________________________________________
@@ -24,7 +24,7 @@ import JobManager
 
 #____________________________________________________
 
-SLEEP_TIME = 3
+SLEEP_TIME = 0
 
 #____________________________________________________
 
@@ -133,7 +133,8 @@ while sum( fl_done ) != njobs :
             
         info.update( job.getInfo() )
 
+    buff = json.dumps( info, indent=4 )
     with open( fJobInfo, 'w' ) as f :
-        json.dump( info, f, indent=4 )
+        f.write( buff )
 
     time.sleep( SLEEP_TIME )

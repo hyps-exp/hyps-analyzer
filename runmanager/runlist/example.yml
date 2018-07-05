@@ -5,6 +5,7 @@
 #   queue  <- bsub queue (eg. s, l, etc...)
 #   unit   <- dividing event unit
 #   nporc  <- number of process for merging (must be less than 20)
+#   buff   <- intermediate root files will be placed here if nproc is more than 2
 #   bin    <- path to executable binary
 #   conf   <- path to conf file from the work directory
 #   data   <- path to data directory/file
@@ -29,6 +30,7 @@ DEFAULT:
   queue: s
   unit:  100000
   nproc: 1
+  buff:  /group/had/sks/Users/user/buffer
   bin:   ./bin/Hodoscope
   conf:  ./param/conf/analyzer_default.conf
   data:  ../data
@@ -42,7 +44,6 @@ DEFAULT:
 RUN:
 
   test: # Any keys are OK unless it overlaps.
-  - 
     bin:  ./bin/Hodoscope
     conf: ./param/conf/analyzer_default.conf
     data: ./test.dat.gz
@@ -51,8 +52,22 @@ RUN:
   3838: # The default setting will be adapted. In this case run03838.dat.gz/.dat will be loaded.
 
   3800:
-  -
     bin:  ./bin/KuramaTracking
     conf: ./param/conf		# ./param/conf/analyzer_03800.conf will be loaded.
     data: ./tmp_data
     root: ./test.root
+
+  hodo:
+    data: ../data/run03800.dat.gz
+
+  ea0c:
+    nproc: 20
+    data:  ../data/run03800.dat.gz
+
+  k18track:
+    unit:  50000
+    data:  ../data/run03800.dat.gz
+
+  kurama:
+    unit:  50000
+    data:  ../data/run03800.dat.gz
