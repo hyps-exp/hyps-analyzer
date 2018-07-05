@@ -62,12 +62,15 @@ RUN:
 
   ea0c:
     nproc: 20
+    bin:   ./bin/Easiroc
     data:  ../data/run03800.dat.gz
 
   k18track:
     unit:  50000
+    bin:   ./bin/K18Tracking
     data:  ../data/run03800.dat.gz
 
   kurama:
     unit:  50000
+    bin:   ./bin/KuramaTracking
     data:  ../data/run03800.dat.gz
