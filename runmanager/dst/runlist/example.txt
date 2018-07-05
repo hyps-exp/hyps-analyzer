@@ -11,7 +11,7 @@
 #   note that those paths should be relative from work directory
 #
 
-work:    ~work/miwalove/analyzer
+work:    ~/work/miwalove/analyzer
 bin:     bin/DstPiKAna
 conf:    param/conf/analyzer_miwa.conf
 rootin:  rootfile
