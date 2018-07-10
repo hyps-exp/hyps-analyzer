@@ -610,7 +610,7 @@ ConfMan:: InitializeHistograms( void )
 
   // K18
   tree->Branch("ntK18",      &event.ntK18,     "ntK18/I");
-  tree->Branch("nhK18",       event.nhK18,     "nhK18[ntK18]/D");
+  tree->Branch("nhK18",       event.nhK18,     "nhK18[ntK18]/I");
   tree->Branch("chisqrK18",   event.chisqrK18, "chisqrK18[ntK18]/D");
   tree->Branch("p_2nd",       event.p_2nd,     "p_2nd[ntK18]/D");
   tree->Branch("p_3rd",       event.p_3rd,     "p_3rd[ntK18]/D");

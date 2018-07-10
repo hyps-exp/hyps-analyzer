@@ -752,6 +752,8 @@ dst::DstRead( int ievent )
     double stof = -9999.;
     double m2   = -9999.;
     // w/  TOF
+
+    bool fl_matching = false;
     for( int j=0; j<nhTof; ++j ){
       double seg = src.TofSeg[j];
       if( seg == TofSegKurama ){
@@ -760,6 +762,20 @@ dst::DstRead( int ievent )
 	// event.deTof[i] = src.deTof[j];
 	stof  = src.tTof[j] - time0 + OffsetToF;
 	m2 = Kinematics::MassSquare( pCorr, path, stof );
+	fl_matching = true;
+      }
+    }
+    if ( !fl_matching ) {
+      for( int j=0; j<nhTof; ++j ){
+	double seg = src.TofSeg[j];
+	if ( seg == TofSegKurama ) { continue; }
+	if( std::abs( seg - TofSegKurama ) < 2 ){
+	  // event.tTof[i]  = src.tTof[j];
+	  // event.dtTof[i] = src.dtTof[j];
+	  // event.deTof[i] = src.deTof[j];
+	  stof  = src.tTof[j] - time0 + OffsetToF;
+	  m2 = Kinematics::MassSquare( pCorr, path, stof );
+	}
       }
     }
 
@@ -828,7 +844,7 @@ dst::DstRead( int ievent )
 
   ////////// pi
   for( int itK18=0; itK18<ntK18; ++itK18 ){
-    double nh = src.nhK18[itK18];
+    int nh = src.nhK18[itK18];
     double chisqr = src.chisqrK18[itK18];
     //Calibration
     double p = src.pK18[itK18]*pB_offset+pK18_offset;
@@ -971,6 +987,8 @@ dst::DstRead( int ievent )
 	//	event.pCorrDE[npik] = pkpCorrDE.Mag();
 	event.pCorrDE[npik] = 0;
 	npik++;
+      } else {
+	std::cout << "#W npik: "<< npik << " exceeding MaxHits: " << MaxHits << std::endl;
       }
 
       HF1( 5001, vert.z() );
