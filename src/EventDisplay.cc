@@ -61,6 +61,7 @@
 #define SdcIn      1
 #define SdcOut     1
 #define SCH        1
+#define FBT        1
 #define TOF        1
 #define Vertex     1
 #define Hist       0
@@ -70,13 +71,25 @@ namespace
   const std::string& class_name("EventDisplay");
   const DCGeomMan& gGeom = DCGeomMan::GetInstance();
   const int& IdBH2 = gGeom.DetectorId("BH2");
+  const int& IdSFT_U = gGeom.DetectorId("SFT-U");
+  const int& IdSFT_V = gGeom.DetectorId("SFT-V");
+  const int& IdSFT_X = gGeom.DetectorId("SFT-X");
   const int& IdSCH = gGeom.DetectorId("SCH");
+  const int& IdFBT1_D1 = gGeom.DetectorId("FBT1-DX1");
+  const int& IdFBT1_U1 = gGeom.DetectorId("FBT1-UX1");
+  const int& IdFBT1_D2 = gGeom.DetectorId("FBT1-DX2");
+  const int& IdFBT1_U2 = gGeom.DetectorId("FBT1-UX2");
+  const int& IdFBT2_D1 = gGeom.DetectorId("FBT2-DX1");
+  const int& IdFBT2_U1 = gGeom.DetectorId("FBT2-UX1");
+  const int& IdFBT2_D2 = gGeom.DetectorId("FBT2-DX2");
+  const int& IdFBT2_U2 = gGeom.DetectorId("FBT2-UX2");
   const int& IdTOF = gGeom.DetectorId("TOF");
   const int& IdTarget    = gGeom.DetectorId("Target");
   const double& zTarget    = gGeom.LocalZ("Target");
   const double& zK18Target = gGeom.LocalZ("K18Target");
 
-  const double BeamAxis = -150.;
+  //const double BeamAxis = -150.; //E07
+  const double BeamAxis = -240.; //E40
 #if Vertex
   const double MinX = -50.;
   const double MaxX =  50.;
@@ -105,6 +118,14 @@ EventDisplay::EventDisplay( void )
     m_kurama_outer_node(0),
     m_BH2wall_node(0),
     m_SCHwall_node(0),
+    m_FBT1d1wall_node(0),
+    m_FBT1u1wall_node(0),
+    m_FBT1d2wall_node(0),
+    m_FBT1u2wall_node(0),
+    m_FBT2d1wall_node(0),
+    m_FBT2u1wall_node(0),
+    m_FBT2d2wall_node(0),
+    m_FBT2u2wall_node(0),
     m_TOFwall_node(0),
     m_init_step_mark(0),
     m_kurama_step_mark(0),
@@ -190,6 +211,10 @@ EventDisplay::Initialize( void )
 
 #if SCH
   ConstructSCH();
+#endif
+
+#if FBT
+  ConstructFBT();
 #endif
 
 #if TOF
@@ -884,6 +909,92 @@ EventDisplay::ConstructSdcIn( void )
 					  wireGlobalPos.z(),
 					  "rotU2", "void" ) );
     }
+      
+  }
+
+
+  // SFT-U
+  {
+    const int lid = gGeom.GetDetectorId("SFT-U");      
+    double Rmin = 0.0;
+    double Rmax = 0.375;
+    double Z    = wireL/cos(gGeom.GetTiltAngle(lid)*math::Deg2Rad())/2.;
+    double Matrix[9] = {};
+    CalcRotMatrix( gGeom.GetTiltAngle( lid ),
+		   gGeom.GetRotAngle1( lid ),
+		   gGeom.GetRotAngle2( lid ),
+		   Matrix );
+    new TRotMatrix( "rotSFTU", "rotSFTU", Matrix );
+    new TTUBE( "SFTUTube", "SFTUTube", "void", Rmin, Rmax, Z );
+
+    for( int wire=1; wire<=NumOfSegSFT_UV; ++wire ){
+      double localPos = gGeom.CalcWirePosition( lid, wire );
+      ThreeVector wireGlobalPos = gGeom.GetGlobalPosition( lid );
+      m_SFTu_node.push_back( new TNode( Form( "SFTu_Node_%d", wire ),
+					Form( "SFTu_Node_%d", wire ),
+					"SFTUTube",
+					wireGlobalPos.x()+localPos,
+					wireGlobalPos.y(),
+					wireGlobalPos.z(),
+					"rotSFTU", "void" ) );
+    }
+
+  }
+
+  // SFT-V
+  {
+    const int lid = gGeom.GetDetectorId("SFT-V");      
+    double Rmin = 0.0;
+    double Rmax = 0.375;
+    double Z    = wireL/cos(gGeom.GetTiltAngle(lid)*math::Deg2Rad())/2.;
+    double Matrix[9] = {};
+    CalcRotMatrix( gGeom.GetTiltAngle( lid ),
+		   gGeom.GetRotAngle1( lid ),
+		   gGeom.GetRotAngle2( lid ),
+		   Matrix );
+    new TRotMatrix( "rotSFTV", "rotSFTV", Matrix );
+    new TTUBE( "SFTVTube", "SFTVTube", "void", Rmin, Rmax, Z );
+
+    for( int wire=1; wire<=NumOfSegSFT_UV; ++wire ){
+      double localPos = gGeom.CalcWirePosition( lid, wire );
+      ThreeVector wireGlobalPos = gGeom.GetGlobalPosition( lid );
+      m_SFTv_node.push_back( new TNode( Form( "SFTv_Node_%d", wire ),
+					Form( "SFTv_Node_%d", wire ),
+					"SFTVTube",
+					wireGlobalPos.x()+localPos,
+					wireGlobalPos.y(),
+					wireGlobalPos.z(),
+					"rotSFTV", "void" ) );
+    }
+
+  }
+
+  // SFT-X
+  {
+    const int lid = gGeom.GetDetectorId("SFT-X");      
+    double Rmin = 0.0;
+    double Rmax = 0.5;
+    double Z    = wireL/cos(gGeom.GetTiltAngle(lid)*math::Deg2Rad())/2.;
+    double Matrix[9] = {};
+    CalcRotMatrix( gGeom.GetTiltAngle( lid ),
+		   gGeom.GetRotAngle1( lid ),
+		   gGeom.GetRotAngle2( lid ),
+		   Matrix );
+    new TRotMatrix( "rotSFTX", "rotSFTX", Matrix );
+    new TTUBE( "SFTXTube", "SFTXTube", "void", Rmin, Rmax, Z );
+
+    for( int wire=1; wire<=NumOfSegSFT_X; ++wire ){
+      double localPos = gGeom.CalcWirePosition( lid, wire );
+      ThreeVector wireGlobalPos = gGeom.GetGlobalPosition( lid );
+      m_SFTx_node.push_back( new TNode( Form( "SFTx_Node_%d", wire ),
+					Form( "SFTx_Node_%d", wire ),
+					"SFTXTube",
+					wireGlobalPos.x()+localPos,
+					wireGlobalPos.y(),
+					wireGlobalPos.z(),
+					"rotSFTX", "void" ) );
+    }
+
   }
 
   ConstructionDone(__func__);
@@ -1214,6 +1325,332 @@ EventDisplay::ConstructSCH( void )
 
 //______________________________________________________________________________
 bool
+EventDisplay::ConstructFBT( void )
+{
+  static const std::string func_name("["+class_name+"::"+__func__+"()]");
+
+  double FBTSegX =   6.0/2.0; // X
+  double FBTSegY =    2.0/2.0; // Z
+  double FBTSegZ =  550.0/2.0; // Y
+
+  new TBRIK( "FBTseg_brik", "FBTseg_brik", "void",
+	     FBTSegX, FBTSegY, FBTSegZ );
+
+  double overlap = 2.0;
+
+  double FBT1wallX =   4.0/2.0*MaxSegFBT1 + 2.0/2.0; // X
+  double FBT1wallY =    2.0/2.0*2.0; // Z
+  double FBT1wallZ =  450.0/2.0; // Y
+
+  const int lid1D1 = gGeom.GetDetectorId("FBT1-DX1");
+  double rotMatFBT1D1[9] = {};
+  CalcRotMatrix( gGeom.GetTiltAngle( lid1D1 ),
+		 gGeom.GetRotAngle1( lid1D1 ),
+		 gGeom.GetRotAngle2( lid1D1 ),
+		 rotMatFBT1D1 );
+
+  new TRotMatrix( "rotFBT1D1", "rotFBT1D1", rotMatFBT1D1 );
+  ThreeVector  FBT1D1wallPos = gGeom.GetGlobalPosition( lid1D1 );
+  double offset1d1 =  gGeom.CalcWirePosition(lid1D1, (double)MaxSegFBT1/2.-0.5 );
+  std::cout << "ofset1d1 = " << offset1d1 << std::endl;
+  new TBRIK( "FBT1D1wall_brik", "FBT1D1wall_brik", "void",
+	     FBT1wallX, FBT1wallY, FBT1wallZ);
+  m_FBT1d1wall_node = new TNode( "FBT1D1wall_node", "FBT1D1wall_node", 
+				 "FBT1D1wall_brik",
+				 FBT1D1wallPos.x()+offset1d1,
+				 FBT1D1wallPos.y(),
+				 FBT1D1wallPos.z(),
+				 "rotFBT1D1", "void");
+
+  m_FBT1d1wall_node->SetVisibility(0);
+  m_FBT1d1wall_node->cd();
+
+
+  for( int i=0; i<MaxSegFBT1; i++ ){
+    ThreeVector FBT1D1SegLocalPos( (-MaxSegFBT1/2.+i)*((FBTSegX-overlap/2.)*2)+2.0/2.,
+				    (-(i%2)*2+1)*FBTSegY-(i%2)*2+1,
+				    0. );
+    m_FBT1d1seg_node.push_back( new TNode( Form( "FBT1D1seg_node_%d", i ),
+					   Form( "FBT1D1seg_node_%d", i ),
+					   "FBTseg_brik",
+					   FBT1D1SegLocalPos.x(),
+					   FBT1D1SegLocalPos.y(),
+					   FBT1D1SegLocalPos.z() ) );
+  }
+
+  m_node->cd();
+
+  const int lid1U1 = gGeom.GetDetectorId("FBT1-UX1");
+  double rotMatFBT1U1[9] = {};
+  CalcRotMatrix( gGeom.GetTiltAngle( lid1U1 ),
+		 gGeom.GetRotAngle1( lid1U1 ),
+		 gGeom.GetRotAngle2( lid1U1 ),
+		 rotMatFBT1U1 );
+
+  new TRotMatrix( "rotFBT1U1", "rotFBT1U1", rotMatFBT1U1 );
+  ThreeVector  FBT1U1wallPos = gGeom.GetGlobalPosition( lid1U1 );
+  new TBRIK( "FBT1U1wall_brik", "FBT1U1wall_brik", "void",
+	     FBT1wallX, FBT1wallY, FBT1wallZ);
+  double offset1u1 =  gGeom.CalcWirePosition(lid1U1, (double)MaxSegFBT1/2.-0.5 );
+  m_FBT1u1wall_node = new TNode( "FBT1U1wall_node", "FBT1U1wall_node", 
+				 "FBT1U1wall_brik",
+				 FBT1U1wallPos.x() + offset1u1,
+				 FBT1U1wallPos.y(),
+				 FBT1U1wallPos.z(),
+				 "rotFBT1U1", "void");
+
+  m_FBT1u1wall_node->SetVisibility(0);
+  m_FBT1u1wall_node->cd();
+
+
+  for( int i=0; i<MaxSegFBT1; i++ ){
+    ThreeVector FBT1U1SegLocalPos( (-MaxSegFBT1/2.+i)*(FBTSegX-overlap/2.)*2+2./2.,
+				   (-(i%2)*2+1)*FBTSegY-(i%2)*2+1,
+				   0. );
+    m_FBT1u1seg_node.push_back( new TNode( Form( "FBT1U1seg_node_%d", i ),
+					   Form( "FBT1U1seg_node_%d", i ),
+					   "FBTseg_brik",
+					   FBT1U1SegLocalPos.x(),
+					   FBT1U1SegLocalPos.y(),
+					   FBT1U1SegLocalPos.z() ) );
+  }
+
+  m_node->cd();
+
+  const int lid1D2 = gGeom.GetDetectorId("FBT1-DX2");
+  double rotMatFBT1D2[9] = {};
+  CalcRotMatrix( gGeom.GetTiltAngle( lid1D2 ),
+		 gGeom.GetRotAngle1( lid1D2 ),
+		 gGeom.GetRotAngle2( lid1D2 ),
+		 rotMatFBT1D2 );
+
+  new TRotMatrix( "rotFBT1D2", "rotFBT1D2", rotMatFBT1D2 );
+  ThreeVector  FBT1D2wallPos = gGeom.GetGlobalPosition( lid1D2 );
+  new TBRIK( "FBT1D2wall_brik", "FBT1D2wall_brik", "void",
+	     FBT1wallX, FBT1wallY, FBT1wallZ);
+  double offset1d2 =  gGeom.CalcWirePosition(lid1D2, (double)MaxSegFBT1/2.-0.5 );
+  m_FBT1d2wall_node = new TNode( "FBT1D2wall_node", "FBT1D2wall_node", 
+				 "FBT1D2wall_brik",
+				 FBT1D2wallPos.x() + offset1d2,
+				 FBT1D2wallPos.y(),
+				 FBT1D2wallPos.z(),
+				 "rotFBT1D2", "void");
+
+  m_FBT1d2wall_node->SetVisibility(0);
+  m_FBT1d2wall_node->cd();
+
+
+  for( int i=0; i<MaxSegFBT1; i++ ){
+    ThreeVector FBT1D2SegLocalPos( (-MaxSegFBT1/2.+i)*(FBTSegX-overlap/2.)*2+2.0/2.,
+				    (-(i%2)*2+1)*FBTSegY-(i%2)*2+1,
+				    0. );
+    m_FBT1d2seg_node.push_back( new TNode( Form( "FBT1D2seg_node_%d", i ),
+					   Form( "FBT1D2seg_node_%d", i ),
+					   "FBTseg_brik",
+					   FBT1D2SegLocalPos.x(),
+					   FBT1D2SegLocalPos.y(),
+					   FBT1D2SegLocalPos.z() ) );
+  }
+
+  m_node->cd();
+
+  const int lid1U2 = gGeom.GetDetectorId("FBT1-UX2");
+  double rotMatFBT1U2[9] = {};
+  CalcRotMatrix( gGeom.GetTiltAngle( lid1U2 ),
+		 gGeom.GetRotAngle1( lid1U2 ),
+		 gGeom.GetRotAngle2( lid1U2 ),
+		 rotMatFBT1U2 );
+
+  new TRotMatrix( "rotFBT1U2", "rotFBT1U2", rotMatFBT1U2 );
+  ThreeVector  FBT1U2wallPos = gGeom.GetGlobalPosition( lid1U2 );
+  new TBRIK( "FBT1U2wall_brik", "FBT1U2wall_brik", "void",
+	     FBT1wallX, FBT1wallY, FBT1wallZ);
+  double offset1u2 =  gGeom.CalcWirePosition(lid1U2, (double)MaxSegFBT1/2.-0.5 );
+
+  m_FBT1u2wall_node = new TNode( "FBT1U2wall_node", "FBT1U2wall_node", 
+				 "FBT1U2wall_brik",
+				 FBT1U2wallPos.x() + offset1u2,
+				 FBT1U2wallPos.y(),
+				 FBT1U2wallPos.z(),
+				 "rotFBT1U2", "void");
+
+  m_FBT1u2wall_node->SetVisibility(0);
+  m_FBT1u2wall_node->cd();
+
+
+  for( int i=0; i<MaxSegFBT1; i++ ){
+    ThreeVector FBT1U2SegLocalPos( (-MaxSegFBT1/2.+i)*(FBTSegX-overlap/2)*2+2.0/2.,
+				    (-(i%2)*2+1)*FBTSegY-(i%2)*2+1,
+				    0. );
+    m_FBT1u2seg_node.push_back( new TNode( Form( "FBT1U2seg_node_%d", i ),
+					   Form( "FBT1U2seg_node_%d", i ),
+					   "FBTseg_brik",
+					   FBT1U2SegLocalPos.x(),
+					   FBT1U2SegLocalPos.y(),
+					   FBT1U2SegLocalPos.z() ) );
+  }
+
+  m_node->cd();
+
+  double FBT2wallX =   11.5/2.0*MaxSegFBT2; // X
+  double FBT2wallY =    2.0/2.0*2.0; // Z
+  double FBT2wallZ =  450.0/2.0; // Y
+
+  const int lid2D1 = gGeom.GetDetectorId("FBT2-DX1");
+  double rotMatFBT2D1[9] = {};
+  CalcRotMatrix( gGeom.GetTiltAngle( lid2D1 ),
+		 gGeom.GetRotAngle1( lid2D1 ),
+		 gGeom.GetRotAngle2( lid2D1 ),
+		 rotMatFBT2D1 );
+
+  new TRotMatrix( "rotFBT2D1", "rotFBT2D1", rotMatFBT2D1 );
+  ThreeVector  FBT2D1wallPos = gGeom.GetGlobalPosition( lid2D1 );
+  new TBRIK( "FBT2D1wall_brik", "FBT2D1wall_brik", "void",
+	     FBT2wallX, FBT2wallY, FBT2wallZ);
+  double offset2d1 =  gGeom.CalcWirePosition(lid2D1, (double)MaxSegFBT2/2.-0.5 );
+  m_FBT2d1wall_node = new TNode( "FBT2D1wall_node", "FBT2D1wall_node", 
+				 "FBT2D1wall_brik",
+				 FBT2D1wallPos.x() + offset2d1,
+				 FBT2D1wallPos.y(),
+				 FBT2D1wallPos.z(),
+				 "rotFBT2D1", "void");
+
+  m_FBT2d1wall_node->SetVisibility(0);
+  m_FBT2d1wall_node->cd();
+
+
+  for( int i=0; i<MaxSegFBT2; i++ ){
+    ThreeVector FBT2D1SegLocalPos( (-MaxSegFBT2/2.+i)*(FBTSegX-overlap/2)*2+2.0/2.,
+				    (-(i%2)*2+1)*FBTSegY-(i%2)*2+1,
+				    0. );
+    m_FBT2d1seg_node.push_back( new TNode( Form( "FBT2D1seg_node_%d", i ),
+					   Form( "FBT2D1seg_node_%d", i ),
+					   "FBTseg_brik",
+					   FBT2D1SegLocalPos.x(),
+					   FBT2D1SegLocalPos.y(),
+					   FBT2D1SegLocalPos.z() ) );
+  }
+
+  m_node->cd();
+
+  const int lid2U1 = gGeom.GetDetectorId("FBT2-UX1");
+  double rotMatFBT2U1[9] = {};
+  CalcRotMatrix( gGeom.GetTiltAngle( lid2U1 ),
+		 gGeom.GetRotAngle1( lid2U1 ),
+		 gGeom.GetRotAngle2( lid2U1 ),
+		 rotMatFBT2U1 );
+
+  new TRotMatrix( "rotFBT2U1", "rotFBT2U1", rotMatFBT2U1 );
+  ThreeVector  FBT2U1wallPos = gGeom.GetGlobalPosition( lid2U1 );
+  new TBRIK( "FBT2U1wall_brik", "FBT2U1wall_brik", "void",
+	     FBT2wallX, FBT2wallY, FBT2wallZ);
+  double offset2u1 =  gGeom.CalcWirePosition(lid2U1, (double)MaxSegFBT2/2.-0.5 );
+  m_FBT2u1wall_node = new TNode( "FBT2U1wall_node", "FBT2U1wall_node", 
+				 "FBT2U1wall_brik",
+				 FBT2U1wallPos.x() + offset2u1,
+				 FBT2U1wallPos.y(),
+				 FBT2U1wallPos.z(),
+				 "rotFBT2U1", "void");
+
+  m_FBT2u1wall_node->SetVisibility(0);
+  m_FBT2u1wall_node->cd();
+
+
+  for( int i=0; i<MaxSegFBT2; i++ ){
+    ThreeVector FBT2U1SegLocalPos( (-MaxSegFBT2/2.+i)*(FBTSegX-overlap/2.)*2+2.0/2.,
+				    (-(i%2)*2+1)*FBTSegY-(i%2)*2+1,
+				    0. );
+    m_FBT2u1seg_node.push_back( new TNode( Form( "FBT2U1seg_node_%d", i ),
+					   Form( "FBT2U1seg_node_%d", i ),
+					   "FBTseg_brik",
+					   FBT2U1SegLocalPos.x(),
+					   FBT2U1SegLocalPos.y(),
+					   FBT2U1SegLocalPos.z() ) );
+  }
+
+  m_node->cd();
+
+  const int lid2D2 = gGeom.GetDetectorId("FBT2-DX2");
+  double rotMatFBT2D2[9] = {};
+  CalcRotMatrix( gGeom.GetTiltAngle( lid2D2 ),
+		 gGeom.GetRotAngle1( lid2D2 ),
+		 gGeom.GetRotAngle2( lid2D2 ),
+		 rotMatFBT2D2 );
+
+  new TRotMatrix( "rotFBT2D2", "rotFBT2D2", rotMatFBT2D2 );
+  ThreeVector  FBT2D2wallPos = gGeom.GetGlobalPosition( lid2D2 );
+  new TBRIK( "FBT2D2wall_brik", "FBT2D2wall_brik", "void",
+	     FBT2wallX, FBT2wallY, FBT2wallZ);
+  double offset2d2 =  gGeom.CalcWirePosition(lid2D2, (double)MaxSegFBT2/2.-0.5 );
+  m_FBT2d2wall_node = new TNode( "FBT2D2wall_node", "FBT2D2wall_node", 
+				 "FBT2D2wall_brik",
+				 FBT2D2wallPos.x() + offset2d2,
+				 FBT2D2wallPos.y(),
+				 FBT2D2wallPos.z(),
+				 "rotFBT2D2", "void");
+
+  m_FBT2d2wall_node->SetVisibility(0);
+  m_FBT2d2wall_node->cd();
+
+
+  for( int i=0; i<MaxSegFBT2; i++ ){
+    ThreeVector FBT2D2SegLocalPos( (-MaxSegFBT2/2.+i)*(FBTSegX-overlap/2.)*2+2.0/2.,
+				    (-(i%2)*2+1)*FBTSegY-(i%2)*2+1,
+				    0. );
+    m_FBT2d2seg_node.push_back( new TNode( Form( "FBT2D2seg_node_%d", i ),
+					   Form( "FBT2D2seg_node_%d", i ),
+					   "FBTseg_brik",
+					   FBT2D2SegLocalPos.x(),
+					   FBT2D2SegLocalPos.y(),
+					   FBT2D2SegLocalPos.z() ) );
+  }
+
+  m_node->cd();
+
+  const int lid2U2 = gGeom.GetDetectorId("FBT2-UX2");
+  double rotMatFBT2U2[9] = {};
+  CalcRotMatrix( gGeom.GetTiltAngle( lid2U2 ),
+		 gGeom.GetRotAngle1( lid2U2 ),
+		 gGeom.GetRotAngle2( lid2U2 ),
+		 rotMatFBT2U2 );
+
+  new TRotMatrix( "rotFBT2U2", "rotFBT2U2", rotMatFBT2U2 );
+  ThreeVector  FBT2U2wallPos = gGeom.GetGlobalPosition( lid2U2 );
+  new TBRIK( "FBT2U2wall_brik", "FBT2U2wall_brik", "void",
+	     FBT2wallX, FBT2wallY, FBT2wallZ);
+  double offset2u2 =  gGeom.CalcWirePosition(lid2U2, (double)MaxSegFBT2/2.-0.5 );
+  m_FBT2u2wall_node = new TNode( "FBT2U2wall_node", "FBT2U2wall_node", 
+				 "FBT2U2wall_brik",
+				 FBT2U2wallPos.x() + offset2u2,
+				 FBT2U2wallPos.y(),
+				 FBT2U2wallPos.z(),
+				 "rotFBT2U2", "void");
+
+  m_FBT2u2wall_node->SetVisibility(0);
+  m_FBT2u2wall_node->cd();
+
+
+  for( int i=0; i<MaxSegFBT2; i++ ){
+    ThreeVector FBT2U2SegLocalPos( (-MaxSegFBT2/2.+i)*(FBTSegX-overlap/2.)*2.+2.0/2.,
+				    (-(i%2)*2+1)*FBTSegY-(i%2)*2+1,
+				    0. );
+    m_FBT2u2seg_node.push_back( new TNode( Form( "FBT2U2seg_node_%d", i ),
+					   Form( "FBT2U2seg_node_%d", i ),
+					   "FBTseg_brik",
+					   FBT2U2SegLocalPos.x(),
+					   FBT2U2SegLocalPos.y(),
+					   FBT2U2SegLocalPos.z() ) );
+  }
+
+  m_node->cd();
+
+
+  ConstructionDone(__func__);
+  return true;
+}
+
+//______________________________________________________________________________
+bool
 EventDisplay::ConstructTOF( void )
 {
   static const std::string func_name("["+class_name+"::"+__func__+"()]");
@@ -1310,7 +1747,10 @@ EventDisplay::DrawHitWire( int lid, int hit_wire, bool range_check, bool tdc_che
 	Form( "SDC1x1_Node_%d", hit_wire ),
 	Form( "SDC1x2_Node_%d", hit_wire ),
 	Form( "SDC1u1_Node_%d", hit_wire ),
-	Form( "SDC1u2_Node_%d", hit_wire ) };
+	Form( "SDC1u2_Node_%d", hit_wire ),
+	Form( "SFTu_Node_%d", hit_wire ),
+	Form( "SFTv_Node_%d", hit_wire ),
+	Form( "SFTx_Node_%d", hit_wire )};
 
   const std::string sdcout_node_name[NumOfLayersSdcOut]
     = { Form( "SDC2x1_Node_%d", hit_wire ),
@@ -1327,6 +1767,18 @@ EventDisplay::DrawHitWire( int lid, int hit_wire, bool range_check, bool tdc_che
     // SDC1
   case 1: case 2: case 3: case 4: case 5: case 6:
     if( hit_wire>MaxWireSDC1 ) return;
+    node_name = sdcin_node_name[lid-1];
+    break;
+
+    // SFT-UV
+  case 7: case 8:
+    if( hit_wire>NumOfSegSFT_UV ) return;
+    node_name = sdcin_node_name[lid-1];
+    break;
+
+    // SFT-X
+  case 9:
+    if( hit_wire>NumOfSegSFT_X ) return;
     node_name = sdcin_node_name[lid-1];
     break;
 
@@ -1400,9 +1852,42 @@ EventDisplay::DrawHitHodoscope( int lid, int seg, int Tu, int Td )
   if( lid == IdBH2 ){
     if( seg>=NumOfSegBH2 ) return;
     node_name = Form( "BH2seg_node_%d", seg );
+  } else if( lid == IdSFT_U ){
+    if( seg>=NumOfSegSFT_UV ) return;
+    node_name = Form( "SFTu_Node_%d", seg );
+  } else if( lid == IdSFT_V ){
+    if( seg>=NumOfSegSFT_UV ) return;
+    node_name = Form( "SFTv_Node_%d", seg );
+  }  else if( lid == IdSFT_X ){
+    if( seg>=NumOfSegSFT_X ) return;
+    node_name = Form( "SFTx_Node_%d", seg );
   } else if( lid == IdSCH ){
     if( seg>=NumOfSegSCH ) return;
     node_name = Form( "SCHseg_node_%d", seg );
+  } else if( lid == IdFBT1_D1 ){
+    if( seg>=MaxSegFBT1 ) return;
+    node_name = Form( "FBT1D1seg_node_%d", seg );
+  } else if( lid == IdFBT1_U1 ){
+    if( seg>=MaxSegFBT1 ) return;
+    node_name = Form( "FBT1U1seg_node_%d", seg );
+  } else if( lid == IdFBT1_D2 ){
+    if( seg>=MaxSegFBT1 ) return;
+    node_name = Form( "FBT1D2seg_node_%d", seg );
+  } else if( lid == IdFBT1_U2 ){
+    if( seg>=MaxSegFBT1 ) return;
+    node_name = Form( "FBT1U2seg_node_%d", seg );
+  } else if( lid == IdFBT2_D1 ){
+    if( seg>=MaxSegFBT2 ) return;
+    node_name = Form( "FBT2D1seg_node_%d", seg );
+  } else if( lid == IdFBT2_U1 ){
+    if( seg>=MaxSegFBT2 ) return;
+    node_name = Form( "FBT2U1seg_node_%d", seg );
+  } else if( lid == IdFBT2_D2 ){
+    if( seg>=MaxSegFBT2 ) return;
+    node_name = Form( "FBT2D2seg_node_%d", seg );
+  } else if( lid == IdFBT2_U2 ){
+    if( seg>=MaxSegFBT2 ) return;
+    node_name = Form( "FBT2U2seg_node_%d", seg );
   } else if( lid == IdTOF ){
     if( seg>=NumOfSegTOF ) return;
     node_name = Form( "TOFseg_node_%d", seg );
@@ -1562,12 +2047,14 @@ EventDisplay::DrawSdcInLocalTrack( DCLocalTrack *tp )
 
 #if SdcIn
   double x0 = tp->GetX0(), y0 = tp->GetY0();
-  static const int lid = gGeom.GetDetectorId("SDC1-X1");
+  static const int lid = gGeom.GetDetectorId("SFT-U");
   static const double zSdc1x1 = gGeom.GetLocalZ( lid ) - 100.;
   double x1 = tp->GetX( zSdc1x1 ), y1 = tp->GetY( zSdc1x1 );
 
-  ThreeVector gPos0( x0+BeamAxis, y0, 0. );
-  ThreeVector gPos1( x1+BeamAxis, y1, zSdc1x1 );
+  //ThreeVector gPos0( x0+BeamAxis, y0, 0. );
+  //ThreeVector gPos1( x1+BeamAxis, y1, zSdc1x1 );
+  ThreeVector gPos0( x0, y0, 0. );
+  ThreeVector gPos1( x1, y1, zSdc1x1 );
 
   TPolyLine3D *p = new TPolyLine3D(2);
   p->SetLineColor(kRed);
@@ -1863,6 +2350,9 @@ EventDisplay::ResetVisibility( void )
   ResetVisibility( m_BC4v2_node );
   ResetVisibility( m_BC4x1_node );
   ResetVisibility( m_BC4x2_node );
+  ResetVisibility( m_SFTu_node );
+  ResetVisibility( m_SFTv_node );
+  ResetVisibility( m_SFTx_node );
   ResetVisibility( m_SDC1v1_node );
   ResetVisibility( m_SDC1v2_node );
   ResetVisibility( m_SDC1x1_node );
@@ -1878,7 +2368,15 @@ EventDisplay::ResetVisibility( void )
   ResetVisibility( m_SDC3x1_node );
   ResetVisibility( m_SDC3x2_node );
   ResetVisibility( m_BH2seg_node, kBlack );
-  ResetVisibility( m_SCHseg_node );
+  ResetVisibility( m_SCHseg_node, kBlack );
+  ResetVisibility( m_FBT1d1seg_node);
+  ResetVisibility( m_FBT1u1seg_node);
+  ResetVisibility( m_FBT1d2seg_node);
+  ResetVisibility( m_FBT1u2seg_node);
+  ResetVisibility( m_FBT2d1seg_node);
+  ResetVisibility( m_FBT2u1seg_node);
+  ResetVisibility( m_FBT2d2seg_node);
+  ResetVisibility( m_FBT2u2seg_node);
   ResetVisibility( m_TOFseg_node, kBlack );
   ResetVisibility( m_target_node, kBlack );
 

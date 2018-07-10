@@ -512,7 +512,7 @@ HodoAnalyzer::DecodeFBT1Hits( RawData* rawData )
     }
   }
 
-
+  
 #if Cluster
   for(int l = 0; l<NumOfLayersFBT1; ++l){
     MakeUpClusters( m_FBT1UCont.at(l), m_FBT1UClCont.at(l), MaxTimeDifFBT1, 2 );
@@ -534,6 +534,7 @@ HodoAnalyzer::DecodeFBT2Hits( RawData* rawData )
       {"FBT2-UX1", "FBT2-DX1"},
       {"FBT2-UX2", "FBT2-DX2"}
     };
+
 
   m_FBT2UCont.resize( NumOfLayersFBT2 );
   m_FBT2DCont.resize( NumOfLayersFBT2 );
