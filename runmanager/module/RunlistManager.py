@@ -200,8 +200,8 @@ class RunlistManager :
                 cand = list()
                 freclog = open( reclog_path, 'r' )
                 for line in freclog :
-                    if 5 == line.find( str( runno ) ) :
-                        words = line.split()
+                    words = line.split()
+                    if len( words ) > 2 and runno == int( words[1] ) :
                         cand.append( words[15] ) if len( words ) > 15 else -1
                 freclog.close()
 
