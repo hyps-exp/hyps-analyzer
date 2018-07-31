@@ -7,9 +7,9 @@
 #   nporc  <- number of process for merging (must be less than 20)
 #   buff   <- intermediate root files will be placed here if nproc is more than 2
 #   bin    <- path to executable binary
-#   conf   <- path to conf file from the work directory
+#   conf   <- path to conf directory/file from the work directory
 #   data   <- path to data directory/file
-#   root   <- path to the output root file directory/file
+#   root   <- path to the output ROOT output directory/file
 #
 # Be careful of the indent rule because YAML format is sensitive to it.
 # Some problems will happen if there is no default setting declaration.

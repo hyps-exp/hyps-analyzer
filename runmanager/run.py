@@ -3,8 +3,8 @@
 #____________________________________________________
 
 __author__  = 'Y.Nakada <nakada@km.phys.sci.osaka-u.ac.jp>'
-__version__ = '3.1'
-__date__    = '25 June 2018'
+__version__ = '3.2'
+__date__    = '24 July 2018'
 
 #____________________________________________________
 
@@ -12,6 +12,7 @@ import os
 import sys
 import time
 import signal
+import fcntl
 
 import json
 
@@ -97,9 +98,16 @@ for run in runlist :
     joblist.append( jobMan )
     info.update( jobMan.getInfo() )
 
-with open( fJobInfo, 'w' ) as f :
-    json.dump( info, f, indent=4 )
-
+buff = json.dumps( info, indent=4 )
+with open( fJobInfo, 'w+' ) as f :
+    try :
+        fcntl.flock( f.fileno(), fcntl.LOCK_EX )
+        f.write( buff )
+        f.truncate()
+    except IOError :
+        sys.stderr.write( 'ERROR: I/O error was detected.\n' )
+    finally :
+        fcntl.flock( f.fileno(), fcntl.LOCK_UN )
 
 signal.signal( signal.SIGINT, handler )
 
@@ -134,7 +142,14 @@ while sum( fl_done ) != njobs :
         info.update( job.getInfo() )
 
     buff = json.dumps( info, indent=4 )
-    with open( fJobInfo, 'w' ) as f :
-        f.write( buff )
+    with open( fJobInfo, 'w+' ) as f :
+        try :
+            fcntl.flock( f.fileno(), fcntl.LOCK_EX )
+            f.write( buff )
+            f.truncate()
+        except IOError :
+            sys.stderr.write( 'ERROR: I/O error was detected.\n' )
+        finally :
+            fcntl.flock( f.fileno(), fcntl.LOCK_UN )
 
     time.sleep( SLEEP_TIME )

@@ -3,8 +3,8 @@
 #____________________________________________________
 
 __author__  = 'Y.Nakada <nakada@km.phys.sci.osaka-u.ac.jp>'
-__version__ = '3.1'
-__date__    = '25 June 2018'
+__version__ = '3.2'
+__date__    = '24 July 2018'
 
 #____________________________________________________
 
@@ -200,8 +200,8 @@ class RunlistManager :
                 cand = list()
                 freclog = open( reclog_path, 'r' )
                 for line in freclog :
-                    words = line.split()
-                    if len( words ) > 2 and runno == int( words[1] ) :
+                    if 5 == line.find( str( runno ) ) :
+                        words = line.split()
                         cand.append( words[15] ) if len( words ) > 15 else -1
                 freclog.close()
 

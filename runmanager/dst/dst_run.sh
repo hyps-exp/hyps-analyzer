@@ -3,7 +3,7 @@
 #_____________________________
 #    RUN MANAGER for DST
 #  AUTHOR: Yoshiyuki NAKADA
-#      June 15, 2028
+#      July 24, 2028
 #_____________________________
 
 
@@ -64,6 +64,7 @@ conf=""
 rootin=""
 rootout=""
 runid=()
+conff=()			# conf file array
 
 #__________________________________________________
 
@@ -130,7 +131,20 @@ if ! [ -x "$bin" ]; then
     exit 1
 fi
 
-if ! [ -r "$conf" ]; then
+if [ -d "$conf" ]; then
+    for id in ${runid[@]}; do
+	tmpconf="$conf/analyzer_${id}.conf"
+	if ! [ -r "$tmpconf" ]; then
+	    echo "ERROR: Cannot access file >> $tmpconf" | tee $mainlog
+	    exit 1
+	fi
+	conff+=( "$tmpconf" )
+    done
+elif [ -r "$conf" ]; then
+    for id in ${runid[@]}; do
+	conff+=( "$conf" )
+    done
+else
     if [ -z "$conf" ]; then conf="null"; fi
     echo "ERROR: Invalid file declaration [conf: $conf]" | tee $mainlog
     exit 1
@@ -248,21 +262,21 @@ for id in ${runid[@]}; do
     done
     outpath=$(readlink -f $work/$rootout/run${id}_${basebin}.root)
     start=$( date )
-    bsub -q s -o $tmplog -a "$command_prefetch" $work/$bin $work/$conf ${inpath[@]} $outpath > $tmpout &
+    bsub -q s -o $tmplog -a "$command_prefetch" $work/$bin $work/${conff[$index]} ${inpath[@]} $outpath > $tmpout &
     pid+=( $! )
     log+=( $tmplog )
     out+=( $tmpout )
-    echo "> bsub -q s -o $tmplog -a $command_prefetch $work/$bin $work/$conf ${inpath[@]} $outpath > $tmpout &" >> $mainlog
-    echo "key: $id"                         >> $mainlog
-    echo "-- log:      $tmplog"             >> $mainlog
-    echo "-- out:      $tmpout"             >> $mainlog
-    echo "-- prefetch: ${prefetch[$index]}" >> $mainlog
-    echo "-- bin:      $work/$bin"          >> $mainlog
-    echo "-- conf:     $work/$conf"         >> $mainlog
-    echo "-- rootin:   ${inpath[@]}"        >> $mainlog
-    echo "-- rootout:  $outpath"            >> $mainlog
-    echo "-- start:    $start"              >> $mainlog
-    echo "-- pid:      ${pid[$index]}"      >> $mainlog
+    echo "> bsub -q s -o $tmplog -a $command_prefetch $work/$bin $work/${conff[$index]} ${inpath[@]} $outpath > $tmpout &" >> $mainlog
+    echo "key: $id"                            >> $mainlog
+    echo "-- log:      $tmplog"                >> $mainlog
+    echo "-- out:      $tmpout"                >> $mainlog
+    echo "-- prefetch: ${prefetch[$index]}"    >> $mainlog
+    echo "-- bin:      $work/$bin"             >> $mainlog
+    echo "-- conf:     $work/${conff[$index]}" >> $mainlog
+    echo "-- rootin:   ${inpath[@]}"           >> $mainlog
+    echo "-- rootout:  $outpath"               >> $mainlog
+    echo "-- start:    $start"                 >> $mainlog
+    echo "-- pid:      ${pid[$index]}"         >> $mainlog
     index=$(( $index + 1 ))
 done
 
@@ -312,16 +326,18 @@ while : ; do
 			    if [ ${stat[$index]} -lt 2 ]; then
 				fl_done=$(($fl_done + 1))
 				success=$(($success + 1))
+				finish=$( date )
+				echo "done [$id]: $finish" >> $mainlog
 			    fi
 			    stat[$index]=2
-			    finish=$( date )
-			    echo "done [$id]: $finish" >> $mainlog
 			    ;;
 			"EXIT" )
-			    if [ ${stat[$index]} -lt 2 ]; then fl_done=$(($fl_done + 1)); fi
+			    if [ ${stat[$index]} -lt 2 ]; then
+				fl_done=$(($fl_done + 1));
+				finish=$( date )
+				echo "exit [$id]: $finish" >> $mainlog
+			    fi
 			    stat[$index]=3
-			    finish=$( date )
-			    echo "exit [$id]: $finish" >> $mainlog
 			    ;;
 			* )
 			    echo "ERROR: Unknow status was detected [key: $id]" | tee $mainlog

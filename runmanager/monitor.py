@@ -3,14 +3,15 @@
 #____________________________________________________
 
 __author__  = 'Y.Nakada <nakada@km.phys.sci.osaka-u.ac.jp>'
-__version__ = '3.1'
-__date__    = '25 June 2018'
+__version__ = '3.2'
+__date__    = '24 July 2018'
 
 #____________________________________________________
 
 import os
 import sys
 import time
+import fcntl
 
 import json
 
@@ -30,7 +31,14 @@ def display( filename ) :
 
     buff = str()
     with open( filename, 'r' ) as f :
-        buff = f.read()
+        try :
+            fcntl.flock( f.fileno(), fcntl.LOCK_SH )
+            buff = f.read()
+        except IOError :
+            pass
+            # sys.stderr.write( 'ERROR: I/O error was detected.\n' )
+        finally :
+            fcntl.flock( f.fileno(), fcntl.LOCK_UN )
 
     info = json.loads( buff )
 
