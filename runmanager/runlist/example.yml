@@ -55,7 +55,6 @@ RUN:
     bin:  ./bin/KuramaTracking
     conf: ./param/conf		# ./param/conf/analyzer_03800.conf will be loaded.
     data: ./tmp_data
-    root: ./test.root
 
   hodo:
     data: ../data/run03800.dat.gz
