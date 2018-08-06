@@ -24,6 +24,7 @@
 //#include "RootHelper.hh"
 #include "UnpackerManager.hh"
 #include "VEvent.hh"
+#include "BH2Filter.hh"
 
 namespace
 {
@@ -32,6 +33,7 @@ namespace
   EventDisplay&        gEvDisp = EventDisplay::GetInstance();
   RMAnalyzer&          gRM     = RMAnalyzer::GetInstance();
   const UserParamMan&  gUser   = UserParamMan::GetInstance();
+BH2Filter&          gFilter = BH2Filter::GetInstance();
   const hddaq::unpacker::UnpackerManager& gUnpacker
   = hddaq::unpacker::GUnpacker::get_instance();
   const double KaonMass   = pdg::KaonMass();
@@ -130,7 +132,13 @@ UserEventDisplay::ProcessingNormal( void )
   static const int IdFBT2_U1 = gGeom.DetectorId("FBT2-UX1");
   static const int IdFBT2_D2 = gGeom.DetectorId("FBT2-DX2");
   static const int IdFBT2_U2 = gGeom.DetectorId("FBT2-UX2");
-
+  static const int IdSDC1 = gGeom.DetectorId("SDC1-X1");
+  static const int IdSDC2 = gGeom.DetectorId("SDC2-X1");
+  static const int IdSDC3 = gGeom.DetectorId("SDC3-X1");
+  static const int PlOffsBcOut =  gGeom.DetectorId("BC3-X1");
+  static const int IdBC3 = gGeom.DetectorId("BC3-X1") - PlOffsBcOut + 1;
+  static const int IdBC4 = gGeom.DetectorId("BC4-X1") - PlOffsBcOut + 1;
+  static const int kSkip = 1;
 
   rawData = new RawData;
   rawData->DecodeHits();
@@ -140,6 +148,9 @@ UserEventDisplay::ProcessingNormal( void )
   gEvDisp.DrawText( 0.1, 0.3, Form("Run# %5d%4sEvent# %6d",
 				    gRM.RunNumber(), "",
 				    gRM.EventNumber() ) );
+
+  //if ( gEvDisp.GetCommand() == kSkip)
+  //return true;
 
   // Trigger Flag
   {
@@ -170,27 +181,71 @@ UserEventDisplay::ProcessingNormal( void )
 
 
   // BH2
-  // {
-  //   const HodoRHitContainer &cont = rawData->GetBH2RawHC();
-  //   int nh=cont.size();
-  //   for( int i=0; i<nh; ++i ){
-  //     HodoRawHit *hit = cont[i];
-  //     if( !hit ) continue;
-  //     int seg=hit->SegmentId();
-  //     int Tu=hit->GetTdcUp(), Td=hit->GetTdcDown();
-  //     // if( Tu>0 || Td>0 )
-  //     // 	gEvDisp.DrawHitHodoscope( DCGeomIdBH2, seg, Tu, Td );
-  //   }
-  // }
+  {
+    const HodoRHitContainer &cont = rawData->GetBH2RawHC();
+    int nh=cont.size();
+    for( int i=0; i<nh; ++i ){
+      HodoRawHit *hit = cont[i];
+      if( !hit ) continue;
+      int seg=hit->SegmentId();
+      int mh1  = hit->GetSizeTdcUp();
+      int mh2  = hit->GetSizeTdcDown();
+      int mh = 0;
+      if (mh1 <= mh2)
+	mh= mh1;
+      else
+	mh = mh2;
+      for (int j=0; j<mh; j++) {
+	int Tu=hit->GetTdcUp(j), Td=hit->GetTdcDown(j);
+	std::cout << "BH2 : seg = " << seg << ", Tu = " << Tu << ", Td = " << Td << std::endl;
+	if( Tu>0 && Td>0 ) {
+	  gEvDisp.DrawBH2(seg, Td);
+	} else if (Tu >0 ) {
+	  gEvDisp.DrawBH2(seg, Tu);
+	} else if (Td > 0) {
+	  gEvDisp.DrawBH2(seg, Td);
+	}
+      }
+    }
+  }
+
   hodoAna->DecodeBH2Hits(rawData);
-  int ncBh2 = hodoAna->GetNClustersBH2();
-  if( ncBh2==0 ) {
-    gEvDisp.GetCommand();
+  int nhBh2 = hodoAna->GetNHitsBH2();
+
+  if( nhBh2==0 ) {
+    std::cout << "Warning : nhBh2 is 0 !" << std::endl;
+    //gEvDisp.GetCommand();
     return true;
   }
-  BH2Cluster *clBH2 = hodoAna->GetClusterBH2(0);
-  double time0 = clBH2->CTime0();
 
+  double time0 = -999.;
+  double time0_seg = -1;
+
+  double min_time = -999.;
+  for( int i=0; i<nhBh2; ++i ){
+    BH2Hit *hit = hodoAna->GetHitBH2(i);
+    if(!hit) continue;
+    double seg = hit->SegmentId()+1;
+    double de  = hit->DeltaE();
+#if HodoCut
+    if( de<MinDeBH2 || MaxDeBH2<de ) continue;
+#endif
+
+    int multi = hit->GetNumOfHit();
+    for (int m=0; m<multi; m++) {
+      double mt  = hit->MeanTime(m);
+      double cmt = hit->CMeanTime(m);
+      double ct0 = hit->CTime0(m);
+      if( std::abs(mt)<std::abs(min_time) ){
+	min_time = mt;
+	time0    = ct0;
+	time0_seg = seg;
+      }
+    }
+  }
+
+  //double time0 = 0.; // tempolary
+  //std::cout << "time0 = " << time0 << std::endl;
   // TOF
   {
     const HodoRHitContainer &cont = rawData->GetTOFRawHC();
@@ -199,9 +254,25 @@ UserEventDisplay::ProcessingNormal( void )
       HodoRawHit *hit = cont[i];
       if( !hit ) continue;
       int seg = hit->SegmentId();
-      int Tu = hit->GetTdcUp(), Td = hit->GetTdcDown();
-      if( Tu>0 || Td>0 )
-	gEvDisp.DrawHitHodoscope( IdTOF, seg, Tu, Td );
+
+      int mh1  = hit->GetSizeTdcUp();
+      int mh2  = hit->GetSizeTdcDown();
+      int mh = 0;
+      if (mh1 <= mh2)
+	mh= mh1;
+      else
+	mh = mh2;
+
+      for (int j=0; j<mh; j++) {
+	int Tu = hit->GetTdcUp(j), Td = hit->GetTdcDown(j);
+	if( Tu>0 || Td>0 )
+	  gEvDisp.DrawHitHodoscope( IdTOF, seg, Tu, Td );
+	
+	//std::cout << "TOF : seg " << seg << ", " << Tu << std::endl;
+	if (Tu>0 && Td>0) 
+	  gEvDisp.DrawTOF(seg, Tu);
+      }
+      
     }
   }
   hodoAna->DecodeTOFHits(rawData);
@@ -212,10 +283,340 @@ UserEventDisplay::ProcessingNormal( void )
     if( !hit ) continue;
     TOFCont.push_back( hit );
   }
+
   if( nhTof==0 ) {
-    gEvDisp.GetCommand();
+    std::cout << "Warning : nhTof is 0 !" << std::endl;
+    //gEvDisp.GetCommand();
     return true;
   }
+
+  // SFT-X raw data
+  {
+    for (int layer=SFT_X1; layer<=SFT_X2; layer++) {
+      const HodoRHitContainer &cont = rawData->GetSFTRawHC(layer);
+      int nh = cont.size();
+      for( int i=0; i<nh; ++i ){
+	HodoRawHit *hit = cont[i];
+	if( !hit ) continue;
+	int mh  = hit->GetSizeTdcUp();
+
+	int seg = hit->SegmentId();
+	for (int j=0; j<mh; j++) {
+	  int Tu = hit->GetTdcUp(j);
+	  //std::cout << "SFT-X : seg " << seg << ", " << Tu << std::endl;
+	  if (Tu>0)
+	    gEvDisp.DrawSFT_X(seg, Tu);
+	}
+      }
+    }
+  }
+
+  // SFT-U raw data
+  {
+    for (int layer=SFT_U; layer<=SFT_U; layer++) {
+      const HodoRHitContainer &cont = rawData->GetSFTRawHC(layer);
+      int nh = cont.size();
+      for( int i=0; i<nh; ++i ){
+	HodoRawHit *hit = cont[i];
+	if( !hit ) continue;
+	int mh  = hit->GetSizeTdcUp();
+
+	int seg = hit->SegmentId();
+	for (int j=0; j<mh; j++) {
+	  int Tu = hit->GetTdcUp(j);
+	  //std::cout << "SFT-X : seg " << seg << ", " << Tu << std::endl;
+	  if (Tu>0)
+	    gEvDisp.DrawSFT_U(seg, Tu);
+	}
+      }
+    }
+  }
+
+  // SFT-V raw data
+  {
+    for (int layer=SFT_V; layer<=SFT_V; layer++) {
+      const HodoRHitContainer &cont = rawData->GetSFTRawHC(layer);
+      int nh = cont.size();
+      for( int i=0; i<nh; ++i ){
+	HodoRawHit *hit = cont[i];
+	if( !hit ) continue;
+	int mh  = hit->GetSizeTdcUp();
+
+	int seg = hit->SegmentId();
+	for (int j=0; j<mh; j++) {
+	  int Tu = hit->GetTdcUp(j);
+	  //std::cout << "SFT-X : seg " << seg << ", " << Tu << std::endl;
+	  if (Tu>0)
+	    gEvDisp.DrawSFT_V(seg, Tu);
+	}
+      }
+    }
+  }
+
+  // SCH
+  {
+    const HodoRHitContainer &cont = rawData->GetSCHRawHC();
+    int nh = cont.size();
+    for( int i=0; i<nh; ++i ){
+      HodoRawHit *hit = cont[i];
+      if( !hit ) continue;
+
+      int mh  = hit->GetSizeTdcUp();
+      int seg = hit->SegmentId();
+      for (int j=0; j<mh; j++) {
+	int Tu = hit->GetTdcUp(j);
+	if (Tu>0)
+	  gEvDisp.DrawSCH(seg, Tu);
+      }
+
+      //std::cout << "SCH : seg " << seg << ", " << Tu << std::endl;
+    }
+
+  }
+
+  // BC Out
+  for (int layer=1; layer<=NumOfLayersBcOut; ++layer) {
+    const DCRHitContainer &cont = rawData->GetBcOutRawHC(layer);
+    int nh = cont.size();
+    for( int i=0; i<nh; ++i ){
+      DCRawHit *hit = cont[i];
+      if( !hit ) continue;
+
+      int mh  = hit->GetTdcSize();
+      int wire = hit->WireId();
+      for (int j=0; j<mh; j++) {
+	int tdc = hit->GetTdc(j);
+	if (tdc>0)
+	  gEvDisp.DrawBcOutHit(layer, wire, tdc);
+      }
+    }
+  }
+#if 0
+  // BC3
+  {
+    const DCRHitContainer &cont = rawData->GetBcOutRawHC(IdBC3);
+    int nh = cont.size();
+    for( int i=0; i<nh; ++i ){
+      DCRawHit *hit = cont[i];
+      if( !hit ) continue;
+
+      int mh  = hit->GetTdcSize();
+      int wire = hit->WireId();
+      for (int j=0; j<mh; j++) {
+	int tdc = hit->GetTdc(j);
+	if (tdc>0)
+	  gEvDisp.DrawBC3(wire, tdc);
+      }
+    }
+  }
+  {
+    const DCRHitContainer &cont = rawData->GetBcOutRawHC(IdBC3+1);
+    int nh = cont.size();
+    for( int i=0; i<nh; ++i ){
+      DCRawHit *hit = cont[i];
+      if( !hit ) continue;
+
+      int mh  = hit->GetTdcSize();
+      int wire = hit->WireId();
+      for (int j=0; j<mh; j++) {
+	int tdc = hit->GetTdc(j);
+	if (tdc>0)
+	  gEvDisp.DrawBC3p(wire, tdc);
+      }
+    }
+  }
+
+  // BC4
+  {
+    const DCRHitContainer &cont = rawData->GetBcOutRawHC(IdBC4);
+    int nh = cont.size();
+    for( int i=0; i<nh; ++i ){
+      DCRawHit *hit = cont[i];
+      if( !hit ) continue;
+
+      int mh  = hit->GetTdcSize();
+      int wire = hit->WireId();
+      for (int j=0; j<mh; j++) {
+	int tdc = hit->GetTdc(j);
+	if (tdc>0)
+	  gEvDisp.DrawBC4(wire, tdc);
+      }
+    }
+  }
+  {
+    const DCRHitContainer &cont = rawData->GetBcOutRawHC(IdBC4+1);
+    int nh = cont.size();
+    for( int i=0; i<nh; ++i ){
+      DCRawHit *hit = cont[i];
+      if( !hit ) continue;
+
+      int mh  = hit->GetTdcSize();
+      int wire = hit->WireId();
+      for (int j=0; j<mh; j++) {
+	int tdc = hit->GetTdc(j);
+	if (tdc>0)
+	  gEvDisp.DrawBC4p(wire, tdc);
+      }
+    }
+  }
+#endif
+
+  // SDC1
+  {
+    const DCRHitContainer &cont = rawData->GetSdcInRawHC(IdSDC1);
+    int nh = cont.size();
+    for( int i=0; i<nh; ++i ){
+      DCRawHit *hit = cont[i];
+      if( !hit ) continue;
+
+      int mh  = hit->GetTdcSize();
+      int wire = hit->WireId();
+      for (int j=0; j<mh; j++) {
+	int tdc = hit->GetTdc(j);
+	if (tdc>0)
+	  gEvDisp.DrawSDC1(wire, tdc);
+      }
+    }
+
+  }
+  // SDC1Xp
+  {
+    const DCRHitContainer &cont = rawData->GetSdcInRawHC(IdSDC1+1);
+    int nh = cont.size();
+    for( int i=0; i<nh; ++i ){
+      DCRawHit *hit = cont[i];
+      if( !hit ) continue;
+
+      int mh  = hit->GetTdcSize();
+      int wire = hit->WireId();
+      for (int j=0; j<mh; j++) {
+	int tdc = hit->GetTdc(j);
+	if (tdc>0)
+	  gEvDisp.DrawSDC1p(wire, tdc);
+      }
+    }
+
+  }
+
+  // SDC2
+  {
+    const DCRHitContainer &cont = rawData->GetSdcOutRawHC(IdSDC2-30);
+    int nh = cont.size();
+    for( int i=0; i<nh; ++i ){
+      DCRawHit *hit = cont[i];
+      if( !hit ) continue;
+
+      int mh  = hit->GetTdcSize();
+      int wire = hit->WireId();
+      for (int j=0; j<mh; j++) {
+	int tdc = hit->GetTdc(j);
+	if (tdc>0)
+	  gEvDisp.DrawSDC2_Leading(wire, tdc);
+      }
+
+      mh  = hit->GetTrailingSize();
+      for (int j=0; j<mh; j++) {
+	int tdc = hit->GetTrailing(j);
+	if (tdc>0)
+	  gEvDisp.DrawSDC2_Trailing(wire, tdc);
+      }
+
+      //std::cout << "SCH : seg " << seg << ", " << Tu << std::endl;
+    }
+
+  }
+
+  // SDC2Xp
+  {
+    const DCRHitContainer &cont = rawData->GetSdcOutRawHC(IdSDC2+1-30);
+    int nh = cont.size();
+    for( int i=0; i<nh; ++i ){
+      DCRawHit *hit = cont[i];
+      if( !hit ) continue;
+
+      int mh  = hit->GetTdcSize();
+      int wire = hit->WireId();
+      for (int j=0; j<mh; j++) {
+	int tdc = hit->GetTdc(j);
+	if (tdc>0)
+	  gEvDisp.DrawSDC2p_Leading(wire, tdc);
+      }
+
+      mh  = hit->GetTrailingSize();
+      for (int j=0; j<mh; j++) {
+	int tdc = hit->GetTrailing(j);
+	if (tdc>0)
+	  gEvDisp.DrawSDC2p_Trailing(wire, tdc);
+      }
+
+      //std::cout << "SCH : seg " << seg << ", " << Tu << std::endl;
+    }
+
+  }
+
+  // SDC3
+  {
+    const DCRHitContainer &cont = rawData->GetSdcOutRawHC(IdSDC3-30);
+    int nh = cont.size();
+    for( int i=0; i<nh; ++i ){
+      DCRawHit *hit = cont[i];
+      if( !hit ) continue;
+
+      int mh  = hit->GetTdcSize();
+      int wire = hit->WireId();
+      for (int j=0; j<mh; j++) {
+	int tdc = hit->GetTdc(j);
+	if (tdc>0)
+	  gEvDisp.DrawSDC3_Leading(wire, tdc);
+      }
+
+      mh  = hit->GetTrailingSize();
+      for (int j=0; j<mh; j++) {
+	int tdc = hit->GetTrailing(j);
+	if (tdc>0)
+	  gEvDisp.DrawSDC3_Trailing(wire, tdc);
+      }
+
+      //std::cout << "SCH : seg " << seg << ", " << Tu << std::endl;
+    }
+
+  }
+
+  // SDC3Xp
+  {
+    const DCRHitContainer &cont = rawData->GetSdcOutRawHC(IdSDC3+1-30);
+    int nh = cont.size();
+    for( int i=0; i<nh; ++i ){
+      DCRawHit *hit = cont[i];
+      if( !hit ) continue;
+
+      int mh  = hit->GetTdcSize();
+      int wire = hit->WireId();
+      for (int j=0; j<mh; j++) {
+	int tdc = hit->GetTdc(j);
+	if (tdc>0)
+	  gEvDisp.DrawSDC3p_Leading(wire, tdc);
+      }
+
+      mh  = hit->GetTrailingSize();
+      for (int j=0; j<mh; j++) {
+	int tdc = hit->GetTrailing(j);
+	if (tdc>0)
+	  gEvDisp.DrawSDC3p_Trailing(wire, tdc);
+      }
+
+      //std::cout << "SCH : seg " << seg << ", " << Tu << std::endl;
+    }
+
+  }
+
+
+  gEvDisp.UpdateHist();
+  /*
+  if ( 1 )
+    gEvDisp.GetCommand();
+  return true;
+  */
 
   // SCH
   {
@@ -264,10 +665,10 @@ UserEventDisplay::ProcessingNormal( void )
   	double leading = hit->GetLeading(m);
   	if( 530<leading && leading<MaxTdcSFT ){
   	  hit_flag = true;
-	  std::cout << "SFT_U : " << seg << ", " << leading<< std::endl;
+	  //std::cout << "SFT_U : " << seg << ", " << leading<< std::endl;
   	} else if( MinTdcSFT <leading && leading<MaxTdcSFT ){
   	  hit_flag2 = true;
-	  std::cout << "SFT_U : " << seg << ", " << leading<< std::endl;
+	  //std::cout << "SFT_U : " << seg << ", " << leading<< std::endl;
   	}
 
       }
@@ -297,10 +698,10 @@ UserEventDisplay::ProcessingNormal( void )
   	double leading = hit->GetLeading(m);
   	if( 530<leading && leading<MaxTdcSFT ){
   	  hit_flag = true;
-	  std::cout << "SFT_V : " << seg << ", " << leading<< std::endl;
+	  //std::cout << "SFT_V : " << seg << ", " << leading<< std::endl;
   	} else if( MinTdcSFT <leading && leading<MaxTdcSFT ){
   	  hit_flag2 = true;
-	  std::cout << "SFT_V : " << seg << ", " << leading<< std::endl;
+	  //std::cout << "SFT_V : " << seg << ", " << leading<< std::endl;
   	}
       }
       if( hit_flag ){
@@ -331,10 +732,10 @@ UserEventDisplay::ProcessingNormal( void )
 
 	  if( 530<leading && leading<MaxTdcSFT ){
 	    hit_flag = true;
-	    std::cout << "SFT_X : " << seg << ", " << leading<< std::endl;
+	    //std::cout << "SFT_X : " << seg << ", " << leading<< std::endl;
 	  } else if( MinTdcSFT <leading && leading<MaxTdcSFT ){
 	    hit_flag2 = true;
-	    std::cout << "SFT_X : " << seg << ", " << leading<< std::endl;
+	    //std::cout << "SFT_X : " << seg << ", " << leading<< std::endl;
 	  }
 	}// for(m)
 
@@ -371,11 +772,11 @@ UserEventDisplay::ProcessingNormal( void )
 	    if( 505<leading && leading<MaxTdcFBT1 ){
 	      hit_flag = true;
 	      flagFBT = true;
-	      std::cout << "FBT1 : " << seg << ", " << leading<< std::endl;
+	      //std::cout << "FBT1 : " << seg << ", " << leading<< std::endl;
 	    } else if( MinTdcFBT1 <leading && leading<MaxTdcFBT1 ){
 	      flagFBT = true;
 	      hit_flag2 = true;
-	      std::cout << "FBT1 : " << seg << ", " << leading<< std::endl;
+	      //std::cout << "FBT1 : " << seg << ", " << leading<< std::endl;
 	    } 
 	  }// for(m)
 	  
@@ -449,17 +850,26 @@ UserEventDisplay::ProcessingNormal( void )
 
 
   DCAna->DecodeRawHits( rawData );
-
+  //DCAna->DriftTimeCutBC34(-10, 50);
+  DCAna->DriftTimeCutBC34(-100, 150);
   // BcOut
   double multi_BcOut = 0.;
   {
     for( int layer=1; layer<=NumOfLayersBcOut; ++layer ){
       const DCHitContainer &contIn =DCAna->GetBcOutHC(layer);
       int nhIn=contIn.size();
+      //std::cout << "layer : " << layer << std::endl;
       for( int i=0; i<nhIn; ++i ){
-	// DCHit  *hit  = contIn[i];
-	// double  wire = hit->GetWire();
-	// int     mhit = hit->GetTdcSize();
+	 DCHit  *hit  = contIn[i];
+	 double  wire = hit->GetWire();
+	 int     mhit = hit->GetTdcSize();
+	 //std::cout << "wire " << wire << " : ";
+
+	 //for (int j=0; j<mhit; j++) {
+	 //std::cout << hit->GetDriftTime(j) << ", ";
+	 //}
+	 //std::cout << std::endl;
+
 	// bool    goodFlag = false;
 	++multi_BcOut;
 	// for (int j=0; j<mhit; j++) {
@@ -532,8 +942,21 @@ UserEventDisplay::ProcessingNormal( void )
       for( int i=0; i<nhOut; ++i ){
 	DCHit  *hit  = contOut[i];
 	double  wire = hit->GetWire();
+
+	int     mhit = hit->GetDriftTimeSize();
+	bool    goodFlag = false;
+	for (int j=0; j<mhit; j++) {
+	  if (hit->IsWithinRange(j)) {
+	    goodFlag = true;
+	    break;
+	  }
+	}
+
 	++multi_SdcOut;
-	gEvDisp.DrawHitWire( layer+30, int(wire) );
+	if( goodFlag )
+	  gEvDisp.DrawHitWire( layer+30, int(wire) );
+	else 
+	  gEvDisp.DrawHitWire( layer+30, int(wire), false, false );
       }
     }
   }
@@ -546,17 +969,21 @@ UserEventDisplay::ProcessingNormal( void )
   }
 
   int ntBcOut = 0;
-  if( multi_BcOut<MaxMultiHitBcOut ){
-    DCAna->TrackSearchBcOut(-1);
+  //if( multi_BcOut<MaxMultiHitBcOut ){
+  if( 1 ){
+    BH2Filter::FilterList cands;
+    gFilter.Apply((Int_t)time0_seg-1, *DCAna, cands);
+    DCAna->TrackSearchBcOut( cands, time0_seg-1 );
+    //DCAna->TrackSearchBcOut(-1);
+    //DCAna->TrackSearchBcOut(time0_seg-1);
     ntBcOut = DCAna->GetNtracksBcOut();
+    std::cout << "NtBcOut : " << ntBcOut << std::endl;
     for( int it=0; it<ntBcOut; ++it ){
       DCLocalTrack *tp = DCAna->GetTrackBcOut( it );
       if( tp ) gEvDisp.DrawBcOutLocalTrack( tp );
     }
-  }
-  if( ntBcOut==0 ) {
-    gEvDisp.GetCommand();
-    return true;
+  } else {
+    std::cout << "Multi_BcOut over limit : " << multi_BcOut << std::endl;
   }
 
   int ntSdcIn = 0;
@@ -566,6 +993,18 @@ UserEventDisplay::ProcessingNormal( void )
     ntSdcIn = DCAna->GetNtracksSdcIn();
     for( int it=0; it<ntSdcIn; ++it ){
       DCLocalTrack *tp = DCAna->GetTrackSdcIn( it );
+
+      int nh=tp->GetNHit();
+      double chisqr=tp->GetChiSquare();
+      std::cout << "SdcIn " << it << "-th track, chi2 = " << chisqr << std::endl; 
+      for( int ih=0; ih<nh; ++ih ){
+	DCLTrackHit *hit=tp->GetHit(ih);
+	if( !hit ) continue;
+	int layerId = hit->GetLayer();
+	double wire=hit->GetWire();
+	double res=hit->GetResidual();
+	//std::cout << "layer = " << layerId << ", wire = " << wire << ", res = " << res << std::endl;
+      }
       if( tp ) gEvDisp.DrawSdcInLocalTrack( tp );
     }
   }
@@ -582,6 +1021,22 @@ UserEventDisplay::ProcessingNormal( void )
     ntSdcOut = DCAna->GetNtracksSdcOut();
     for( int it=0; it<ntSdcOut; ++it ){
       DCLocalTrack *tp = DCAna->GetTrackSdcOut( it );
+
+      int nh=tp->GetNHit();
+      double chisqr=tp->GetChiSquare();
+      //std::cout << "SdcOut " << it << "-th track, chi2 = " << chisqr << std::endl; 
+      for( int ih=0; ih<nh; ++ih ){
+	DCLTrackHit *hit=tp->GetHit(ih);
+	if( !hit ) continue;
+	int layerId = hit->GetLayer();
+	double wire=hit->GetWire();
+	double res=hit->GetResidual();
+	//std::cout << "layer = " << layerId << ", wire = " << wire << ", res = " << res << std::endl;
+      }
+    }
+
+    for( int it=0; it<ntSdcOut; ++it ){
+      DCLocalTrack *tp = DCAna->GetTrackSdcOut( it );
       if( tp ) gEvDisp.DrawSdcOutLocalTrack( tp );
     }
   }
@@ -591,9 +1046,12 @@ UserEventDisplay::ProcessingNormal( void )
     return true;
   }
   */
-  if ( flagFBT )
+  //if ( flagFBT )
+  /*
+  if ( 1 )
     gEvDisp.GetCommand();
   return true;
+  */
 
   std::vector<ThreeVector> KnPCont, KnXCont;
   std::vector<ThreeVector> KpPCont, KpXCont;
@@ -602,6 +1060,7 @@ UserEventDisplay::ProcessingNormal( void )
   static int ntKurama_all = 0;
   if( ntSdcIn>0 && ntSdcOut>0 ){
     //if( ntSdcIn==1 && ntSdcOut==1 ){
+
     bool through_target = false;
     DCAna->TrackSearchKurama();
     ntKurama = DCAna->GetNTracksKurama();
@@ -609,7 +1068,7 @@ UserEventDisplay::ProcessingNormal( void )
     for( int it=0; it<ntKurama; ++it ){
       KuramaTrack *tp = DCAna->GetKuramaTrack( it );
       if( !tp ) continue;
-      tp->Print( "in "+func_name );
+      //tp->Print( "in "+func_name );
       const ThreeVector& postgt = tp->PrimaryPosition();
       const ThreeVector& momtgt = tp->PrimaryMomentum();
       double path = tp->PathLengthToTOF();
@@ -638,6 +1097,11 @@ UserEventDisplay::ProcessingNormal( void )
     static double KuramaOk = 0.;
     KuramaOk += ( ntKurama>0 );
   }
+
+  //if (ntBcOut == 0)
+  if ( 1 )
+    gEvDisp.GetCommand();
+  return true;
 
   std::vector<double> BftXCont;
   ////////// BFT
@@ -727,6 +1191,7 @@ ConfMan::InitializeParameterFiles( void )
       InitializeParameter<HodoPHCMan>("HDPHC")       &&
       InitializeParameter<FieldMan>("FLDMAP")        &&
       InitializeParameter<K18TransMatrix>("K18TM")   &&
+      InitializeParameter<BH2Filter>("BH2FLT")       &&
       InitializeParameter<UserParamMan>("USER")      &&
       InitializeParameter<EventDisplay>()            );
 }

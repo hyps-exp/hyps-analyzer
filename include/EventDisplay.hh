@@ -20,6 +20,7 @@ class TFile;
 class TGeometry;
 class TGraph;
 class TH1;
+class TH2;
 class TLatex;
 class TMarker;
 class TMarker3DBox;
@@ -63,10 +64,46 @@ private:
   TCanvas                   *m_canvas;
   TCanvas                   *m_canvas_vertex;
   TCanvas                   *m_canvas_hist;
+  TCanvas                   *m_canvas_hist2;
+  TCanvas                   *m_canvas_hist3;
   TH1                       *m_hist_vertex_x;
   TH1                       *m_hist_vertex_y;
   TH1                       *m_hist_p;
   TH1                       *m_hist_m2;
+  TH2                       *m_hist_bh2;
+  TH2                       *m_hist_sft_x;
+  TH2                       *m_hist_sft_u;
+  TH2                       *m_hist_sft_v;
+  TH2                       *m_hist_sch;
+  TH2                       *m_hist_tof;
+  TH2                       *m_hist_sdc1;
+  TH2                       *m_hist_sdc1p;
+  TH2                       *m_hist_sdc2_l;
+  TH2                       *m_hist_sdc2_t;
+  TH2                       *m_hist_sdc2p_l;
+  TH2                       *m_hist_sdc2p_t;
+  TH2                       *m_hist_sdc3_l;
+  TH2                       *m_hist_sdc3_t;
+  TH2                       *m_hist_sdc3p_l;
+  TH2                       *m_hist_sdc3p_t;
+
+  TH2                       *m_hist_bc3;
+  TH2                       *m_hist_bc3p;
+  TH2                       *m_hist_bc3u;
+  TH2                       *m_hist_bc3up;
+  TH2                       *m_hist_bc3v;
+  TH2                       *m_hist_bc3vp;
+  TH2                       *m_hist_bc4;
+  TH2                       *m_hist_bc4p;
+  TH2                       *m_hist_bc4u;
+  TH2                       *m_hist_bc4up;
+  TH2                       *m_hist_bc4v;
+  TH2                       *m_hist_bc4vp;
+  TH1                       *m_hist_bc3_time;
+  TH1                       *m_hist_bc3p_time;
+  TH1                       *m_hist_bc4_time;
+  TH1                       *m_hist_bc4p_time;
+
   TNode                     *m_target_node;
   TNode                     *m_kurama_inner_node;
   TNode                     *m_kurama_outer_node;
@@ -183,16 +220,38 @@ public:
 			    const ThreeVector& pos );
   void DrawMomentum( double momentum );
   void DrawMassSquare( double mass_square );
+  void DrawBH2( int seg, int tdc );
+  void DrawSFT_X( int seg, int tdc );
+  void DrawSFT_U( int seg, int tdc );
+  void DrawSFT_V( int seg, int tdc );
+  void DrawSCH( int seg, int tdc );
+  void DrawTOF( int seg, int tdc );
+  void DrawBcOutHit(int layer,  int wire, int tdc );
+  void DrawBC3( int wire, int tdc );
+  void DrawBC3p( int wire, int tdc );
+  void DrawBC4( int wire, int tdc );
+  void DrawBC4p( int wire, int tdc );
+  void DrawSDC1( int wire, int tdc );
+  void DrawSDC1p( int wire, int tdc );
+  void DrawSDC2_Leading( int wire, int tdc );
+  void DrawSDC2_Trailing( int wire, int tdc );
+  void DrawSDC2p_Leading( int wire, int tdc );
+  void DrawSDC2p_Trailing( int wire, int tdc );
+  void DrawSDC3_Leading( int wire, int tdc );
+  void DrawSDC3_Trailing( int wire, int tdc );
+  void DrawSDC3p_Leading( int wire, int tdc );
+  void DrawSDC3p_Trailing( int wire, int tdc );
+  void UpdateHist( void );
   void EndOfEvent( void );
   void ResetVisibility( void );
   void CalcRotMatrix( double TA, double RA1, double RA2, double *rotMat );
-  void GetCommand( void ) const;
+  int  GetCommand( void ) const;
   void Run( bool flag=kTRUE );
 
 private:
   void ResetVisibility( TNode *& node, Color_t c=kWhite );
   void ResetVisibility( std::vector<TNode*>& node, Color_t c=kWhite );
-
+  void ResetHist( void );
 };
 
 //______________________________________________________________________________

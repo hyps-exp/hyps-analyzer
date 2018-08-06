@@ -31,6 +31,7 @@
 #include <TMixture.h>
 #include <TNode.h>
 #include <TPad.h>
+#include <TSystem.h>
 #include <TPave.h>
 #include <TPaveLabel.h>
 #include <TPaveText.h>
@@ -65,6 +66,7 @@
 #define TOF        1
 #define Vertex     1
 #define Hist       0
+#define Hist_Timing 1
 
 namespace
 {
@@ -109,10 +111,44 @@ EventDisplay::EventDisplay( void )
     m_canvas(0),
     m_canvas_vertex(0),
     m_canvas_hist(0),
+    m_canvas_hist2(0),
+    m_canvas_hist3(0),
     m_hist_vertex_x(0),
     m_hist_vertex_y(0),
     m_hist_p(0),
     m_hist_m2(0),
+    m_hist_bh2(0),
+    m_hist_sft_x(0),
+    m_hist_sft_u(0),
+    m_hist_sft_v(0),
+    m_hist_sch(0),
+    m_hist_tof(0),
+    m_hist_sdc1(0),
+    m_hist_sdc1p(0),
+    m_hist_sdc2_l(0),
+    m_hist_sdc2_t(0),
+    m_hist_sdc2p_l(0),
+    m_hist_sdc2p_t(0),
+    m_hist_sdc3_l(0),
+    m_hist_sdc3_t(0),
+    m_hist_sdc3p_l(0),
+    m_hist_sdc3p_t(0),
+    m_hist_bc3(0),
+    m_hist_bc3p(0),
+    m_hist_bc3u(0),
+    m_hist_bc3up(0),
+    m_hist_bc3v(0),
+    m_hist_bc3vp(0),
+    m_hist_bc4(0),
+    m_hist_bc4p(0),
+    m_hist_bc4u(0),
+    m_hist_bc4up(0),
+    m_hist_bc4v(0),
+    m_hist_bc4vp(0),
+    m_hist_bc3_time(0),
+    m_hist_bc3p_time(0),
+    m_hist_bc4_time(0),
+    m_hist_bc4p_time(0),
     m_target_node(0),
     m_kurama_inner_node(0),
     m_kurama_outer_node(0),
@@ -266,6 +302,147 @@ EventDisplay::Initialize( void )
   m_hist_m2->Draw();
   // gStyle->SetOptTitle(0);
   gStyle->SetOptStat(1111110);
+#endif
+
+#if Hist_Timing
+  m_canvas_hist2 = new TCanvas( "canvas_hist2", "EventDisplay Detector Timing",
+			       800, 1000 );
+  m_canvas_hist2->Divide(3,3);
+  m_hist_bh2  = new TH2F( "hist_bh2", "BH2", NumOfSegBH2, 0., NumOfSegBH2, 500, -500, 500 );
+  m_hist_bh2->GetYaxis()->SetRangeUser(-100, 100);
+  m_hist_sft_x  = new TH2F( "hist_sft_x", "SFT_X", NumOfSegSFT_X, 0., NumOfSegSFT_X, 500, -500, 500 );
+  m_hist_sft_u  = new TH2F( "hist_sft_u", "SFT_U", NumOfSegSFT_UV, 0., NumOfSegSFT_UV, 500, -500, 500 );
+  m_hist_sft_v  = new TH2F( "hist_sft_v", "SFT_V", NumOfSegSFT_UV, 0., NumOfSegSFT_UV, 500, -500, 500 );
+  m_hist_sch = new TH2F( "hist_sch", "SCH", NumOfSegSCH, 0, NumOfSegSCH, 500, -500, 500 );
+  m_hist_tof = new TH2F( "hist_tof", "TOF", NumOfSegTOF, 0, NumOfSegTOF, 500, -500, 500 );
+
+  m_hist_sdc1 = new TH2F( "hist_sdc1", "SDC1", MaxWireSDC1, 0, MaxWireSDC1, 500, -500, 500 );
+  m_hist_sdc1p = new TH2F( "hist_sdc1p", "SDC1 Xp", MaxWireSDC1, 0, MaxWireSDC1, 500, -500, 500 );
+  m_hist_sdc1p->SetFillColor(kBlack);
+
+  m_hist_sdc2_l = new TH2F( "hist_sdc2_l", "SDC2 (leading)", MaxWireSDC2, 0, MaxWireSDC2, 500, -500, 500 );
+  m_hist_sdc2_t = new TH2F( "hist_sdc2_t", "SDC2 (trailing)", MaxWireSDC2, 0, MaxWireSDC2, 500, -500, 500 );
+  m_hist_sdc2_t->SetFillColor(kRed);
+
+  m_hist_sdc2p_l = new TH2F( "hist_sdc2p_l", "SDC2 Xp (leading)", MaxWireSDC2, 0, MaxWireSDC2, 500, -500, 500 );
+  m_hist_sdc2p_t = new TH2F( "hist_sdc2p_t", "SDC2 Xp(trailing)", MaxWireSDC2, 0, MaxWireSDC2, 500, -500, 500 );
+  m_hist_sdc2p_l->SetFillColor(kBlack);
+  m_hist_sdc2p_t->SetFillColor(kGreen);
+
+  m_hist_sdc3_l = new TH2F( "hist_sdc3_l", "SDC3 (leading)", MaxWireSDC3X, 0, MaxWireSDC3X, 500, -500, 500 );
+  m_hist_sdc3_t = new TH2F( "hist_sdc3_t", "SDC3 (trailing)", MaxWireSDC3X, 0, MaxWireSDC3X, 500, -500, 500 );
+  m_hist_sdc3_t->SetFillColor(kRed);
+
+  m_hist_sdc3p_l = new TH2F( "hist_sdc3p_l", "SDC3 Xp(leading)", MaxWireSDC3X, 0, MaxWireSDC3X, 500, -500, 500 );
+  m_hist_sdc3p_t = new TH2F( "hist_sdc3p_t", "SDC3 Xp(trailing)", MaxWireSDC3X, 0, MaxWireSDC3X, 500, -500, 500 );
+  m_hist_sdc3p_l->SetFillColor(kBlack);
+  m_hist_sdc3p_t->SetFillColor(kGreen);
+
+  m_canvas_hist2->cd(1)->SetGrid();
+  m_hist_bh2->Draw("box");
+  m_canvas_hist2->cd(2)->SetGrid();
+  m_hist_sft_x->Draw("box");
+  m_canvas_hist2->cd(4)->SetGrid();
+  m_hist_sft_u->Draw("box");
+  m_canvas_hist2->cd(5)->SetGrid();
+  m_hist_sft_v->Draw("box");
+  m_canvas_hist2->cd(7)->SetGrid();
+  m_hist_sch->Draw("box");
+  m_canvas_hist2->cd(8)->SetGrid();
+  m_hist_tof->Draw("box");
+  m_canvas_hist2->cd(3)->SetGrid();
+  m_hist_sdc1->Draw("box");
+  m_hist_sdc1p->Draw("samebox");
+  m_canvas_hist2->cd(6)->SetGrid();
+  m_hist_sdc2_l->Draw("box");
+  m_hist_sdc2_t->Draw("samebox");
+  m_hist_sdc2p_l->Draw("samebox");
+  m_hist_sdc2p_t->Draw("samebox");
+  m_canvas_hist2->cd(9)->SetGrid();
+  m_hist_sdc3_l->Draw("box");
+  m_hist_sdc3_t->Draw("samebox");
+  m_hist_sdc3p_l->Draw("samebox");
+  m_hist_sdc3p_t->Draw("samebox");
+
+  m_canvas_hist3 = new TCanvas( "canvas_hist3", "EventDisplay Detector Timing",
+			       800, 1000 );
+  m_canvas_hist3->Divide(3,2);
+
+  m_hist_bc3 = new TH2F( "hist_bc3", "BC3 X", MaxWireBC3, 0, MaxWireBC3, 500, -500, 500 );
+  m_hist_bc3p = new TH2F( "hist_bc3p", "BC3 Xp", MaxWireBC3, 0, MaxWireBC3, 500, -500, 500 );
+  m_hist_bc3p->SetFillColor(kBlack);
+  m_hist_bc3->GetYaxis()->SetRangeUser(-100, 100);
+  m_hist_bc3p->GetYaxis()->SetRangeUser(-100, 100);
+
+  m_hist_bc3_time = new TH1F( "hist_bc3_time", "BC3 X", 500, -500, 500 );
+  m_hist_bc3p_time = new TH1F( "hist_bc3p_time", "BC3 X", 500, -500, 500 );
+  m_hist_bc3p_time->SetFillStyle(3001);
+  m_hist_bc3p_time->SetFillColor(kBlack);
+
+  m_hist_bc3u = new TH2F( "hist_bc3u", "BC3 U", MaxWireBC3, 0, MaxWireBC3, 500, -500, 500 );
+  m_hist_bc3up = new TH2F( "hist_bc3up", "BC3 Up", MaxWireBC3, 0, MaxWireBC3, 500, -500, 500 );
+  m_hist_bc3up->SetFillColor(kBlack);
+  m_hist_bc3u->GetYaxis()->SetRangeUser(-100, 100);
+  m_hist_bc3up->GetYaxis()->SetRangeUser(-100, 100);
+
+  m_hist_bc3v = new TH2F( "hist_bc3v", "BC3 V", MaxWireBC3, 0, MaxWireBC3, 500, -500, 500 );
+  m_hist_bc3vp = new TH2F( "hist_bc3vp", "BC3 Vp", MaxWireBC3, 0, MaxWireBC3, 500, -500, 500 );
+  m_hist_bc3vp->SetFillColor(kBlack);
+  m_hist_bc3v->GetYaxis()->SetRangeUser(-100, 100);
+  m_hist_bc3vp->GetYaxis()->SetRangeUser(-100, 100);
+
+  m_hist_bc4 = new TH2F( "hist_bc4", "BC4 X", MaxWireBC4, 0, MaxWireBC4, 500, -500, 500 );
+  m_hist_bc4p = new TH2F( "hist_bc4p", "BC4 Xp", MaxWireBC4, 0, MaxWireBC4, 500, -500, 500 );
+  m_hist_bc4p->SetFillColor(kBlack);
+  m_hist_bc4->GetYaxis()->SetRangeUser(-100, 100);
+  m_hist_bc4p->GetYaxis()->SetRangeUser(-100, 100);
+
+  m_hist_bc4_time = new TH1F( "hist_bc4_time", "BC4 X", 500, -500, 500 );
+  m_hist_bc4p_time = new TH1F( "hist_bc4p_time", "BC4 X", 500, -500, 500 );
+  m_hist_bc4p_time->SetFillStyle(3001);
+  m_hist_bc4p_time->SetFillColor(kBlack);
+
+  m_hist_bc4u = new TH2F( "hist_bc4u", "BC4 U", MaxWireBC4, 0, MaxWireBC4, 500, -500, 500 );
+  m_hist_bc4up = new TH2F( "hist_bc4up", "BC4 Up", MaxWireBC4, 0, MaxWireBC4, 500, -500, 500 );
+  m_hist_bc4up->SetFillColor(kBlack);
+  m_hist_bc4u->GetYaxis()->SetRangeUser(-100, 100);
+  m_hist_bc4up->GetYaxis()->SetRangeUser(-100, 100);
+
+  m_hist_bc4v = new TH2F( "hist_bc4v", "BC4 V", MaxWireBC4, 0, MaxWireBC4, 500, -500, 500 );
+  m_hist_bc4vp = new TH2F( "hist_bc4vp", "BC4 Vp", MaxWireBC4, 0, MaxWireBC4, 500, -500, 500 );
+  m_hist_bc4vp->SetFillColor(kBlack);
+  m_hist_bc4v->GetYaxis()->SetRangeUser(-100, 100);
+  m_hist_bc4vp->GetYaxis()->SetRangeUser(-100, 100);
+
+  m_canvas_hist3->cd(1)->SetGrid();
+  m_hist_bc3->Draw("box");
+  m_hist_bc3p->Draw("samebox");
+  m_canvas_hist3->cd(2)->SetGrid();
+  m_hist_bc3v->Draw("box");
+  m_hist_bc3vp->Draw("samebox");
+  m_canvas_hist3->cd(3)->SetGrid();
+  m_hist_bc3u->Draw("box");
+  m_hist_bc3up->Draw("samebox");
+  m_canvas_hist3->cd(4)->SetGrid();
+  m_hist_bc4->Draw("box");
+  m_hist_bc4p->Draw("samebox");
+  m_canvas_hist3->cd(5)->SetGrid();
+  m_hist_bc4v->Draw("box");
+  m_hist_bc4vp->Draw("samebox");
+  m_canvas_hist3->cd(6)->SetGrid();
+  m_hist_bc4u->Draw("box");
+  m_hist_bc4up->Draw("samebox");
+  /*
+  m_canvas_hist3->cd(3)->SetGrid();
+  m_hist_bc3_time->Draw("");
+  m_hist_bc3p_time->Draw("same");
+  m_canvas_hist3->cd(4)->SetGrid();
+  m_hist_bc4_time->Draw();
+  m_hist_bc4p_time->Draw("same");
+  */
+  // gStyle->SetOptTitle(0);
+  gStyle->SetOptStat(0);
+
 #endif
 
   ResetVisibility();
@@ -1292,10 +1469,11 @@ EventDisplay::ConstructSCH( void )
 
   new TRotMatrix( "rotSCH", "rotSCH", rotMatSCH );
   ThreeVector  SCHwallPos = gGeom.GetGlobalPosition( lid );
+  double offset =  gGeom.CalcWirePosition(lid, (double)NumOfSegSCH/2.-0.5 );
   new TBRIK( "SCHwall_brik", "SCHwall_brik", "void",
 	     SCHwallX, SCHwallY, SCHwallZ);
   m_SCHwall_node = new TNode( "SCHwall_node", "SCHwall_node", "SCHwall_brik",
-			      SCHwallPos.x(),
+			      SCHwallPos.x() + offset,
 			      SCHwallPos.y(),
 			      SCHwallPos.z(),
 			      "rotSCH", "void");
@@ -1675,10 +1853,11 @@ EventDisplay::ConstructTOF( void )
 
   new TRotMatrix( "rotTOF", "rotTOF", rotMatTOF );
   ThreeVector  TOFwallPos = gGeom.GetGlobalPosition( lid );
+  double offset =  gGeom.CalcWirePosition(lid, (double)NumOfSegTOF/2.-0.5 );
   new TBRIK( "TOFwall_brik", "TOFwall_brik", "void",
 	     TOFwallX, TOFwallY, TOFwallZ);
   m_TOFwall_node = new TNode( "TOFwall_node", "TOFwall_node", "TOFwall_brik",
-			      TOFwallPos.x(),
+			      TOFwallPos.x() + offset,
 			      TOFwallPos.y(),
 			      TOFwallPos.z(),
 			      "rotTOF", "void");
@@ -2309,6 +2488,7 @@ EventDisplay::EndOfEvent( void )
 
   ResetVisibility();
 
+  ResetHist();
 }
 
 //______________________________________________________________________________
@@ -2384,6 +2564,54 @@ EventDisplay::ResetVisibility( void )
 
 //______________________________________________________________________________
 void
+EventDisplay::ResetHist(  )
+{
+#if Hist_Timing
+  m_hist_bh2->Reset();
+  m_hist_sft_x->Reset();
+  m_hist_sft_u->Reset();
+  m_hist_sft_v->Reset();
+  m_hist_sch->Reset();
+  m_hist_tof->Reset();
+  m_hist_sdc1->Reset();
+  m_hist_sdc1p->Reset();
+  m_hist_sdc2_l->Reset();
+  m_hist_sdc2_t->Reset();
+  m_hist_sdc2p_l->Reset();
+  m_hist_sdc2p_t->Reset();
+  m_hist_sdc3_l->Reset();
+  m_hist_sdc3_t->Reset();
+  m_hist_sdc3p_l->Reset();
+  m_hist_sdc3p_t->Reset();
+
+  m_hist_bc3->Reset();
+  m_hist_bc3p->Reset();
+  m_hist_bc3u->Reset();
+  m_hist_bc3up->Reset();
+  m_hist_bc3v->Reset();
+  m_hist_bc3vp->Reset();
+
+  m_hist_bc4->Reset();
+  m_hist_bc4p->Reset();
+  m_hist_bc4u->Reset();
+  m_hist_bc4up->Reset();
+  m_hist_bc4v->Reset();
+  m_hist_bc4vp->Reset();
+
+  m_hist_bc3_time->Reset();
+  m_hist_bc3_time->SetMaximum(-1111);
+  m_hist_bc3p_time->Reset();
+
+  m_hist_bc4_time->Reset();
+  m_hist_bc4_time->SetMaximum(-1111);
+  m_hist_bc4p_time->Reset();
+
+#endif
+}
+
+
+//______________________________________________________________________________
+void
 EventDisplay::DrawMomentum( double momentum )
 {
 #if Hist
@@ -2405,6 +2633,324 @@ EventDisplay::DrawMassSquare( double mass_square )
   gPad->Update();
 #endif
 }
+
+//______________________________________________________________________________
+void
+EventDisplay::DrawBH2( int seg, int tdc )
+{
+#if Hist_Timing
+  m_hist_bh2->Fill( seg, -0.000939*((double)tdc-353893.) );
+  //m_canvas_hist2->cd(1);
+  //gPad->Modified();
+  //gPad->Update();
+#endif
+}
+
+//______________________________________________________________________________
+void
+EventDisplay::DrawSFT_X( int seg, int tdc )
+{
+#if Hist_Timing
+  m_hist_sft_x->Fill( seg, -0.8333*((double)tdc-547.) );
+  //m_canvas_hist2->cd(1);
+  //gPad->Modified();
+  //gPad->Update();
+#endif
+}
+
+//______________________________________________________________________________
+void
+EventDisplay::DrawSFT_U( int seg, int tdc )
+{
+#if Hist_Timing
+  m_hist_sft_u->Fill( seg, -0.8333*((double)tdc-547.) );
+  //m_canvas_hist2->cd(1);
+  //gPad->Modified();
+  //gPad->Update();
+#endif
+}
+
+//______________________________________________________________________________
+void
+EventDisplay::DrawSFT_V( int seg, int tdc )
+{
+#if Hist_Timing
+  m_hist_sft_v->Fill( seg, -0.8333*((double)tdc-547.) );
+  //m_canvas_hist2->cd(1);
+  //gPad->Modified();
+  //gPad->Update();
+#endif
+}
+
+//______________________________________________________________________________
+void
+EventDisplay::DrawSCH( int seg, int tdc )
+{
+#if Hist_Timing
+  m_hist_sch->Fill( seg, -1.*((double)tdc-470.) );
+  //m_canvas_hist2->cd(2);
+  //gPad->Modified();
+  //gPad->Update();
+#endif
+}
+
+//______________________________________________________________________________
+void
+EventDisplay::DrawTOF( int seg, int tdc )
+{
+#if Hist_Timing
+  m_hist_tof->Fill( seg, -0.000939*((double)tdc-317383. ));
+  //m_canvas_hist2->cd(3);
+  //gPad->Modified();
+  //gPad->Update();
+#endif
+}
+
+//______________________________________________________________________________
+void
+EventDisplay::DrawBcOutHit(int layer,  int wire, int tdc )
+{
+#if Hist_Timing
+  TH2 *hp=0;
+
+  if (layer == 1)
+    hp = m_hist_bc3;
+  else if (layer == 2)
+    hp = m_hist_bc3p;
+  else if (layer == 3)
+    hp = m_hist_bc3v;
+  else if (layer == 4)
+    hp = m_hist_bc3vp;
+  else if (layer == 5)
+    hp = m_hist_bc3u;
+  else if (layer == 6)
+    hp = m_hist_bc3up;
+  else if (layer == 7)
+    hp = m_hist_bc4u;
+  else if (layer == 8)
+    hp = m_hist_bc4up;
+  else if (layer == 9)
+    hp = m_hist_bc4v;
+  else if (layer == 10)
+    hp = m_hist_bc4vp;
+  else if (layer == 11)
+    hp = m_hist_bc4;
+  else if (layer == 12)
+    hp = m_hist_bc4p;
+
+  hp->Fill( wire, -1.*(tdc-351));
+  //m_canvas_hist2->cd(3);
+  //gPad->Modified();
+  //gPad->Update();
+#endif
+}
+
+//______________________________________________________________________________
+void
+EventDisplay::DrawBC3( int wire, int tdc )
+{
+#if Hist_Timing
+  m_hist_bc3->Fill( wire, -1.*(tdc-351));
+  m_hist_bc3_time->Fill( -1.*(tdc-351));
+  //m_canvas_hist2->cd(3);
+  //gPad->Modified();
+  //gPad->Update();
+#endif
+}
+
+//______________________________________________________________________________
+void
+EventDisplay::DrawBC3p( int wire, int tdc )
+{
+#if Hist_Timing
+  m_hist_bc3p->Fill( wire, -1.*(tdc-351));
+  m_hist_bc3p_time->Fill( -1.*(tdc-351));
+  //m_canvas_hist2->cd(3);
+  //gPad->Modified();
+  //gPad->Update();
+#endif
+}
+
+
+//______________________________________________________________________________
+void
+EventDisplay::DrawBC4( int wire, int tdc )
+{
+#if Hist_Timing
+  m_hist_bc4->Fill( wire, -1.*(tdc-351));
+  m_hist_bc4_time->Fill( -1.*(tdc-351));
+  //m_canvas_hist2->cd(3);
+  //gPad->Modified();
+  //gPad->Update();
+#endif
+}
+
+//______________________________________________________________________________
+void
+EventDisplay::DrawBC4p( int wire, int tdc )
+{
+#if Hist_Timing
+  m_hist_bc4p->Fill( wire, -1.*(tdc-351));
+  m_hist_bc4p_time->Fill(-1.*(tdc-351));
+  //m_canvas_hist2->cd(3);
+  //gPad->Modified();
+  //gPad->Update();
+#endif
+}
+
+//______________________________________________________________________________
+void
+EventDisplay::DrawSDC1( int wire, int tdc )
+{
+#if Hist_Timing
+  m_hist_sdc1->Fill( wire, -1.*(tdc-351));
+  //m_canvas_hist2->cd(3);
+  //gPad->Modified();
+  //gPad->Update();
+#endif
+}
+
+
+//______________________________________________________________________________
+void
+EventDisplay::DrawSDC1p( int wire, int tdc )
+{
+#if Hist_Timing
+  m_hist_sdc1p->Fill( wire, -1.*(tdc-351));
+  //m_canvas_hist2->cd(3);
+  //gPad->Modified();
+  //gPad->Update();
+#endif
+}
+
+//______________________________________________________________________________
+void
+EventDisplay::DrawSDC2_Leading( int wire, int tdc )
+{
+#if Hist_Timing
+  m_hist_sdc2_l->Fill( wire, -0.833*(tdc-890));
+  //m_canvas_hist2->cd(3);
+  //gPad->Modified();
+  //gPad->Update();
+#endif
+}
+
+
+//______________________________________________________________________________
+void
+EventDisplay::DrawSDC2_Trailing( int wire, int tdc )
+{
+#if Hist_Timing
+  m_hist_sdc2_t->Fill( wire, -0.833*(tdc-890));
+  //m_canvas_hist2->cd(3);
+  //gPad->Modified();
+  //gPad->Update();
+#endif
+}
+
+//______________________________________________________________________________
+void
+EventDisplay::DrawSDC2p_Leading( int wire, int tdc )
+{
+#if Hist_Timing
+  m_hist_sdc2p_l->Fill( wire, -0.833*(tdc-890));
+  //m_canvas_hist2->cd(3);
+  //gPad->Modified();
+  //gPad->Update();
+#endif
+}
+
+//______________________________________________________________________________
+void
+EventDisplay::DrawSDC2p_Trailing( int wire, int tdc )
+{
+#if Hist_Timing
+  m_hist_sdc2p_t->Fill( wire, -0.833*(tdc-890));
+  //m_canvas_hist2->cd(3);
+  //gPad->Modified();
+  //gPad->Update();
+#endif
+}
+
+
+//______________________________________________________________________________
+void
+EventDisplay::DrawSDC3_Leading( int wire, int tdc )
+{
+#if Hist_Timing
+  m_hist_sdc3_l->Fill( wire, -0.833*(tdc-885));
+  //m_canvas_hist2->cd(3);
+  //gPad->Modified();
+  //gPad->Update();
+#endif
+}
+
+//______________________________________________________________________________
+void
+EventDisplay::DrawSDC3_Trailing( int wire, int tdc )
+{
+#if Hist_Timing
+  m_hist_sdc3_t->Fill( wire, -0.833*(tdc-885));
+  //m_canvas_hist2->cd(3);
+  //gPad->Modified();
+  //gPad->Update();
+#endif
+}
+
+//______________________________________________________________________________
+void
+EventDisplay::DrawSDC3p_Leading( int wire, int tdc )
+{
+#if Hist_Timing
+  m_hist_sdc3p_l->Fill( wire, -0.833*(tdc-885));
+  //m_canvas_hist2->cd(3);
+  //gPad->Modified();
+  //gPad->Update();
+#endif
+}
+
+//______________________________________________________________________________
+void
+EventDisplay::DrawSDC3p_Trailing( int wire, int tdc )
+{
+#if Hist_Timing
+  m_hist_sdc3p_t->Fill( wire, -0.833*(tdc-885));
+  //m_canvas_hist2->cd(3);
+  //gPad->Modified();
+  //gPad->Update();
+#endif
+}
+
+
+//______________________________________________________________________________
+void
+EventDisplay::UpdateHist( )
+{
+#if Hist_Timing
+  for (int i=0; i<9; i++) {
+    m_canvas_hist2->cd(i+1);
+    gPad->Modified();
+    gPad->Update();
+  }
+
+  int max1 = m_hist_bc3_time->GetMaximum();
+  int max2 = m_hist_bc3p_time->GetMaximum();
+  if (max2 > max1) 
+    m_hist_bc3_time->SetMaximum(max2*1.1);
+
+  max1 = m_hist_bc4_time->GetMaximum();
+  max2 = m_hist_bc4p_time->GetMaximum();
+  if (max2 > max1) 
+    m_hist_bc4_time->SetMaximum(max2*1.1);
+
+  for (int i=0; i<6; i++) {
+    m_canvas_hist3->cd(i+1);
+    gPad->Modified();
+    gPad->Update();
+  }
+#endif
+}
+
 
 //______________________________________________________________________________
 void
@@ -2480,7 +3026,7 @@ EventDisplay::CalcRotMatrix( double TA, double RA1, double RA2, double *rotMat )
 }
 
 //______________________________________________________________________________
-void
+int
 EventDisplay::GetCommand( void ) const
 {
   static const std::string func_name("["+class_name+"::"+__func__+"()]");
@@ -2491,9 +3037,12 @@ EventDisplay::GetCommand( void ) const
   static int Nevent = 0;
   static int ev     = 0;
 
+  const int kSkip = 1;
+  const int kNormal = 0;
+
   if (stat == 1 && Nevent > 0 && ev<Nevent) {
     ev++;
-    return;
+    return kSkip;
   }
   if (ev==Nevent) {
     stat=0;
@@ -2516,13 +3065,19 @@ EventDisplay::GetCommand( void ) const
 	printf("event#>");
 	scanf("%s",data);
       } while ( (Nevent=atoi(data))<=0 );
-      hddaq::cout << "Continue " << Nevent << "event" << std::endl;
+      //hddaq::cout << "Continue " << Nevent << "event" << std::endl;
+      hddaq::cout << "Skip " << Nevent << "event" << std::endl;
       break;
     case 'p':
       m_theApp->Run(kTRUE);
       break;
     }
   }
+
+  if (stat == 1)
+    return kSkip;
+
+  return kNormal;
 }
 
 //______________________________________________________________________________
