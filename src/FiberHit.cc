@@ -41,6 +41,10 @@ FiberHit::FiberHit( HodoRawHit *object, const char* name )
     m_position(-999.),
     m_offset(0),
     m_pair_id(0),
+    m_adc_hi(0.),
+    m_adc_low(0.),
+    m_r(0.),
+    m_phi(0.),
     m_status(false)
 {
   debug::ObjectCounter::increase(class_name);
@@ -110,13 +114,16 @@ FiberHit::Calculate( void )
     m_ud = 1;
     m_pair_id = seg;
   }else{
-    // case of SFT UV layers
+    // case of SFT UV layers & CFT
     // They have only 1 plane in 1 layer.
     m_pair_id = m_raw->SegmentId();
   }
 
   int DetectorId = gGeom.GetDetectorId( m_detector_name );
   m_position     = gGeom.CalcWirePosition( DetectorId, seg );
+  // for CFT
+  m_r      = gGeom.CalcCFTPositionR(DetectorId, seg);
+  m_phi    = gGeom.CalcCFTPositionPhi(DetectorId, seg);
 
   // hit information
   m_multi_hit_l = m_ud==0? m_raw->SizeTdc1()  : m_raw->SizeTdc2();
@@ -215,8 +222,21 @@ FiberHit::Calculate( void )
     m_pair_cont.at(i).ctime_l = ctime_leading;
     m_pair_cont.at(i).tot     = tot;
 
-
   }// for(i)
+
+  // CFT ADC
+  if(cid==113){ 
+    double nhit_adc = m_raw->SizeAdc1();
+    if(nhit_adc>0){
+      double hi  =  m_raw->GetAdc1();
+      double low =  m_raw->GetAdc2();
+      double pedeHi  = gHodo.GetP0(cid, plid, seg, 0);
+      double pedeLow = gHodo.GetP0(cid, plid, seg, 1);
+      m_adc_hi  = hi  - pedeHi;
+      m_adc_low = low - pedeLow;
+
+    }
+  }
 
   m_status = true;
   return true;

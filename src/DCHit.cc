@@ -75,6 +75,12 @@ DCHit::~DCHit( void )
   debug::ObjectCounter::decrease(class_name);
 }
 
+void DCHit::SetTdcCFT( int tdc )
+{
+  m_tdc.push_back(tdc); 
+  m_belong_track.push_back(false);
+}
+
 //______________________________________________________________________________
 void
 DCHit::SetDummyPair()
@@ -373,6 +379,33 @@ DCHit::CalcFiberObservables( void )
 			-1, false, true};
     m_pair_cont.push_back( a_pair );
   }
+
+  return status;
+}
+
+//______________________________________________________________________________
+bool
+DCHit::CalcCFTObservables( void )
+{
+  static const std::string func_name("["+class_name+"::"+__func__+"()]");
+
+  if( !gGeom.IsReady() ) return false;
+
+  //m_angle = gGeom.GetTiltAngle( m_layer );
+  //m_z     = gGeom.GetLocalZ( m_layer );
+
+  bool status = true;
+    
+  std::size_t nh_tdc = m_tdc.size();
+  for( std::size_t i=0; i<nh_tdc; i++ ){
+    data_pair a_pair = {(double)m_tdc[i], 0., 
+			std::numeric_limits<double>::quiet_NaN(), 
+			std::numeric_limits<double>::quiet_NaN(), 
+			//-1, false, true};
+			-1, false, false};
+    m_pair_cont.push_back( a_pair );
+  }
+  
 
   return status;
 }

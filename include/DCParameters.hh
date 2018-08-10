@@ -30,8 +30,8 @@ struct DCPairPlaneInfo
   }
 };
 
-extern const DCPairPlaneInfo PPInfoBcOut[], PPInfoSdcIn[], PPInfoSdcOut[];
-extern const int NPPInfoBcOut, NPPInfoSdcIn, NPPInfoSdcOut;
+extern const DCPairPlaneInfo PPInfoBcOut[], PPInfoSdcIn[], PPInfoSdcOut[], PPInfoCFT[], PPInfoCFT16[];
+extern const int NPPInfoBcOut, NPPInfoSdcIn, NPPInfoSdcOut, NPPInfoCFT, NPPInfoCFT16;
 
 #ifdef DefStatic
 const DCPairPlaneInfo PPInfoBcOut[] = {
@@ -63,10 +63,29 @@ const DCPairPlaneInfo PPInfoSdcOut[] = {
   { false, false, true, 13, 14, 4.0 }, { false, false, true, 15, 16, 4.0 } //FBT2
 };
 
+const DCPairPlaneInfo PPInfoCFT[] = {  
+  { false, false, true,  0,  0,  3.0 }, { false, false, true,  1,  1,  3.0 },
+  { false, false, true,  2,  2,  3.0 }, { false, false, true,  3,  3,  3.0 },
+  { false, false, true,  4,  4,  3.0 }, { false, false, true,  5,  5,  3.0 },
+  { false, false, true,  6,  6,  3.0 }, { false, false, true,  7,  7,  3.0 },
+};
+const DCPairPlaneInfo PPInfoCFT16[] = {
+  { false, false, true,  0,  0,  3.0 }, { false, false, true,  1,  1,  3.0 },
+  { false, false, true,  2,  2,  3.0 }, { false, false, true,  3,  3,  3.0 },
+  { false, false, true,  4,  4,  3.0 }, { false, false, true,  5,  5,  3.0 },
+  { false, false, true,  6,  6,  3.0 }, { false, false, true,  7,  7,  3.0 },
+  { false, false, true,  8,  8,  3.0 }, { false, false, true,  9,  9,  3.0 },
+  { false, false, true, 10, 10,  3.0 }, { false, false, true, 11, 11,  3.0 },
+  { false, false, true, 12, 12,  3.0 }, { false, false, true, 13, 13,  3.0 },
+  { false, false, true, 14, 14,  3.0 }, { false, false, true, 15, 15,  3.0 },
+};
+
 
 const int NPPInfoBcOut  = sizeof(PPInfoBcOut)/sizeof(DCPairPlaneInfo);
 const int NPPInfoSdcIn  = sizeof(PPInfoSdcIn)/sizeof(DCPairPlaneInfo);
 const int NPPInfoSdcOut = sizeof(PPInfoSdcOut)/sizeof(DCPairPlaneInfo);
+const int NPPInfoCFT    = sizeof(PPInfoCFT)   /sizeof(DCPairPlaneInfo);
+const int NPPInfoCFT16  = sizeof(PPInfoCFT16)   /sizeof(DCPairPlaneInfo);
 
 #endif
 

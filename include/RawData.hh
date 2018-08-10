@@ -37,6 +37,7 @@ private:
   HodoRHitContainer m_LCRawHC;
   std::vector<HodoRHitContainer> m_BFTRawHC;
   std::vector<HodoRHitContainer> m_SFTRawHC;
+  std::vector<HodoRHitContainer> m_CFTRawHC;
   HodoRHitContainer m_SCHRawHC;
   std::vector<HodoRHitContainer> m_FBT1RawHC;
   std::vector<HodoRHitContainer> m_FBT2RawHC;
@@ -66,6 +67,7 @@ public:
 
   const HodoRHitContainer& GetBFTRawHC( int plane ) const;
   const HodoRHitContainer& GetSFTRawHC( int plane ) const;
+  const HodoRHitContainer& GetCFTRawHC( int plane ) const;
   const HodoRHitContainer& GetSCHRawHC( void ) const;
   const HodoRHitContainer& GetFBT1RawHC( int layer, int UorD ) const;
   const HodoRHitContainer& GetFBT2RawHC( int layer, int UorD ) const;
@@ -138,6 +140,13 @@ RawData::GetSFTRawHC( int plane ) const
 {
   if( plane<0 || plane>NumOfPlaneSFT-1 ) plane=0;
   return m_SFTRawHC[plane];
+}
+
+inline const HodoRHitContainer&
+RawData::GetCFTRawHC( int plane ) const
+{
+  if( plane<0 || plane>NumOfPlaneCFT-1 ) plane=0;
+  return m_CFTRawHC[plane];
 }
 
 //______________________________________________________________________________

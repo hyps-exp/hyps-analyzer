@@ -163,6 +163,7 @@ RawData::RawData( void )
     m_LCRawHC(),
     m_BFTRawHC(NumOfPlaneBFT),
     m_SFTRawHC(NumOfPlaneSFT),
+    m_CFTRawHC(NumOfPlaneCFT),
     m_SCHRawHC(),
     m_FBT1RawHC(2*NumOfLayersFBT1),
     m_FBT2RawHC(2*NumOfLayersFBT2),
@@ -200,6 +201,7 @@ RawData::ClearAll( void )
 
   del::ClearContainerAll( m_BFTRawHC );
   del::ClearContainerAll( m_SFTRawHC );
+  del::ClearContainerAll( m_CFTRawHC );
   del::ClearContainerAll( m_FBT1RawHC );
   del::ClearContainerAll( m_FBT2RawHC );
 
@@ -292,6 +294,46 @@ RawData::DecodeHits( void )
       }
     }
   }
+
+  //CFT
+  for( int plane=0; plane<NumOfPlaneCFT; ++plane ){    
+    //CFT TDC 
+    for(int seg = 0; seg<NumOfSegCFT[plane]; ++seg){
+      int nhit_tdc = gUnpacker.get_entries( DetIdCFT, plane, seg, 0, 0 );
+      if( nhit_tdc>0 ){
+	for(int i = 0; i<nhit_tdc; ++i){
+	  int leading  = gUnpacker.get( DetIdCFT, plane, seg, 0, 0, i );
+	  int trailing = 0;
+	  int nhit_trailing = gUnpacker.get_entries( DetIdCFT, plane, seg, 0, 1 );
+	  AddHodoRawHit( m_CFTRawHC[plane], DetIdCFT, plane, seg , 0, 1, leading );
+	  if(i<nhit_trailing){
+	    trailing = gUnpacker.get( DetIdCFT, plane, seg, 0, 1, i )  ;
+	    AddHodoRawHit( m_CFTRawHC[plane], DetIdCFT, plane, seg , 1, 1, trailing );
+	  }	  
+	}	
+      }
+      else continue; // w/ or w/o TDC,   comment out => pedestal              
+      //CFT ADC HI
+      int nhit_adc_hi = gUnpacker.get_entries( DetIdCFT, plane, seg, 0, 2 );
+      if( nhit_adc_hi>0 ){
+	for(int i = 0; i<nhit_adc_hi; ++i){
+	  int adc_hi  = gUnpacker.get( DetIdCFT, plane, seg, 0, 2, i )  ;
+	  AddHodoRawHit( m_CFTRawHC[plane], DetIdCFT, plane, seg , 0, 0, adc_hi );//ADC Hi	  
+	}
+      }
+      else continue;
+      //CFT ADC LOW
+      int nhit_adc_low = gUnpacker.get_entries( DetIdCFT, plane, seg, 0, 3 );
+      if( nhit_adc_low>0 ){
+	for(int i = 0; i<nhit_adc_low; ++i){
+	  int adc_low = gUnpacker.get( DetIdCFT, plane, seg, 0, 3, i );
+	  AddHodoRawHit( m_CFTRawHC[plane], DetIdCFT, plane, seg , 1, 0, adc_low );//ADC Low
+	}
+      }
+      else continue;      
+    }
+  }
+  
 
   //SCH
   for(int seg=0; seg<NumOfSegSCH; ++seg){

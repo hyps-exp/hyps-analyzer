@@ -78,12 +78,20 @@ protected:
   ///// For E40 Acrylic TOF
   double    m_ofs_dt;
 
+  ///// for CFT
+  double m_meanseg;
+  double m_maxseg;
+  double m_r;
+  double m_phi;
+  BoolVec m_belong_track;
+
   mutable std::vector <DCLTrackHit *> m_register_container;
 
 public:
   bool CalcDCObservables( void );
   bool CalcMWPCObservables( void );
   bool CalcFiberObservables( void );
+  bool CalcCFTObservables( void );
   //  bool CalcObservablesSimulation( double dlength);
 
   void SetLayer( int layer )              { m_layer = layer;                    }
@@ -107,6 +115,14 @@ public:
 
   ///// For E40 Acrylic TOF
   void SetOfsdT( double ofs) { m_ofs_dt = ofs;}
+
+  ///// for CFT
+  void SetMeanSeg    ( double seg ) { m_meanseg    = seg;   }
+  void SetMaxSeg    ( double seg ) { m_maxseg    = seg;   }
+  void SetPositionR  ( double r   ) { m_r    = r;   }
+  void SetPositionPhi( double phi ) { m_phi  = phi; }
+  void SetTdcCFT( int tdc );
+
 
   void GateDriftTime(double min, double max, bool select_1st);
 
@@ -145,12 +161,20 @@ public:
   ///// for TOF
   double GetZ( void ) const { return m_z; }
 
-
+  ///// for CFT
+  double GetMeanSeg    ( void ) const { return m_meanseg;  } 
+  double GetMaxSeg     ( void ) const { return m_maxseg;  } 
+  double GetPositionR  ( void ) const { return m_r;        } 
+  double GetPositionPhi( void ) const { return m_phi;      } 
 
   void JoinTrack( int nh=0 ) { m_pair_cont.at(nh).belong_track = true; }
-  void QuitTrack( int nh=0 ) { m_pair_cont.at(nh).belong_track = false; }
+  void QuitTrack( int nh=0 ) { m_pair_cont.at(nh).belong_track = false;}
   bool BelongToTrack( int nh=0 ) const { return m_pair_cont.at(nh).belong_track; }
   bool IsWithinRange( int nh=0 ) const { return m_pair_cont.at(nh).dl_range; }
+
+  void JoinTrackCFT( int nh=0 ) {m_belong_track[nh] = true; }
+  void QuitTrackCFT( int nh=0 ) {m_belong_track[nh] = false; }
+  bool BelongToTrackCFT( int nh=0 ) const { return m_belong_track[nh]; }
 
   void RegisterHits( DCLTrackHit *hit ) const
   { m_register_container.push_back(hit); }

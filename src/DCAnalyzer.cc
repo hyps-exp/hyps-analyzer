@@ -130,6 +130,8 @@ DCAnalyzer::DCAnalyzer( void )
     m_much_combi(n_type),
     m_MWPCClCont(NumOfLayersBcIn+1),
     m_TempBcInHC(NumOfLayersBcIn+1),
+    m_CFTHC(NumOfPlaneCFT),
+    m_CFT16HC(NumOfPlaneCFT*2+1),
     m_BcInHC(NumOfLayersBcIn+1),
     m_BcOutHC(NumOfLayersBcOut+2),
     m_SdcInHC(NumOfLayersSdcIn+1),
@@ -157,8 +159,12 @@ DCAnalyzer::~DCAnalyzer( void )
   ClearTracksBcOut();
   ClearTracksBcOutSdcIn();
   ClearTracksSdcInSdcOut();
+  ClearTracksCFT();
+  ClearTracksCFT16();
   ClearDCHits();
   ClearVtxHits();
+  ClearCFTHits();
+  ClearCFT16Hits();
   debug::ObjectCounter::decrease(class_name);
 }
 
@@ -509,6 +515,153 @@ DCAnalyzer::DecodeSdcOutHits( RawData *rawData , double ofs_dt)
   m_is_decoded[k_SdcOut] = true;
   return true;
 }
+
+//______________________________________________________________________________
+bool
+DCAnalyzer::DecodeCFTHits( RawData *rawData )
+{
+  static const std::string func_name("["+class_name+"::"+__func__+"()]");
+
+  if( m_is_decoded[k_CFT] ){
+    hddaq::cout << "#D " << func_name << " "
+		<< "already decoded" << std::endl;
+    return true;
+  }
+
+  ClearCFTHits();
+  
+  HodoAnalyzer hodoAna;
+  hodoAna.DecodeCFTHits( rawData );
+  
+  for ( int l = 0; l < NumOfPlaneCFT; ++l ) {
+    hodoAna.TimeCutCFT( l, -30, 30 );
+    
+    int ncl = hodoAna.GetNClustersCFT( l );    
+    for ( int j = 0; j < ncl; ++j ) {
+            
+      FiberCluster* cl = hodoAna.GetClusterCFT( l, j );
+      double seg  = cl->MeanSeg();
+      double size  = cl->ClusterSize();
+      double posR   = cl->MeanPositionR();
+      double posPhi = cl->MeanPositionPhi();
+      double time   = cl->CMeanTime();
+      double adcLow   = cl->SumAdcLow();
+      if (adcLow>0) {
+
+	DCHit *hit = new DCHit(l);
+
+	hit->SetTdcCFT( static_cast<int>( time ) );      
+	
+	if ( hit->CalcCFTObservables() ) {
+	  hit->SetMeanSeg    ( seg    );
+	  hit->SetPositionR  ( posR   );
+	  hit->SetPositionPhi( posPhi );
+	  
+	  hit->SetWirePosition(0.);      
+	  m_CFTHC[l].push_back( hit );
+	} else {
+	  delete hit;      
+	} 	     
+      }      
+    }
+  }
+  
+  m_is_decoded[k_CFT] = true;
+  return true;
+}
+
+//______________________________________________________________________________
+bool
+DCAnalyzer::DecodeCFT16Hits( RawData* rawData ,DCLocalTrack* tp , int i )
+{
+  static const std::string func_name("["+class_name+"::"+__func__+"()]");
+  
+  if( m_is_decoded[k_CFT16_1st] && m_is_decoded[k_CFT16_2nd]  ){
+    hddaq::cout << "#D " << func_name << " "
+		<< "already decoded" 
+		<< ", i=" << i 
+		<< ", 1st = " << m_is_decoded[k_CFT16_1st]
+		<< ", 2nd = " << m_is_decoded[k_CFT16_2nd] << std::endl;
+    return true;
+  }  
+  if(i==0){ClearCFT16Hits();}
+
+  HodoAnalyzer hodoAna;
+  hodoAna.DecodeCFTHits( rawData );    
+    
+  int nh   = tp->GetNHit();
+  int nhUV = tp->GetNHitUV();
+  // straight layer
+  for ( int ip = 0; ip < nh; ++ip ) {
+    DCLTrackHit *hitp = tp->GetHit(ip);
+    int layer = hitp->GetLayer();
+    int ll = layer;
+    if(i==1)ll += 8 ;
+    int seg = (int)hitp->GetMeanSeg();
+
+    int ncl = hodoAna.GetNClustersCFT( layer );    
+    for ( int j = 0; j < ncl; ++j ) {      
+      FiberCluster* cl = hodoAna.GetClusterCFT( layer, j );
+      int    segCl  = (int)cl->MeanSeg();
+      double size  = cl->ClusterSize();
+      double posR   = cl->MeanPositionR();
+      double posPhi = cl->MeanPositionPhi();
+      double time   = cl->CMeanTime();
+      double adcLow   = cl->SumAdcLow();
+      if(seg == segCl){
+	DCHit *hit = new DCHit(ll);
+	hit->SetTdcCFT( static_cast<int>( 0 ) );
+	if ( hit->CalcCFTObservables() ) {
+	  hit->SetMeanSeg    (seg);      
+	  hit->SetWirePosition(0.);            
+	  hit->SetPositionR  ( posR   );
+	  hit->SetPositionPhi( posPhi );
+	  m_CFT16HC[ll].push_back( hit );	  
+	}else {
+	  delete hit;      
+	}  
+      }      
+    }   
+  }
+  // spiral layer
+  for ( int ip = 0; ip < nhUV; ++ip ) {
+    DCLTrackHit *hitp = tp->GetHitUV(ip);
+    int layer = hitp->GetLayer();
+    int ll = layer;
+    if(i==1)ll += 8 ;
+    int seg = (int)hitp->GetMeanSeg();
+    
+    int ncl = hodoAna.GetNClustersCFT( layer );    
+    for ( int j = 0; j < ncl; ++j ) {      
+      FiberCluster* cl = hodoAna.GetClusterCFT( layer, j );
+      int    segCl  = (int)cl->MeanSeg();
+      double size  = cl->ClusterSize();
+      double posR   = cl->MeanPositionR();
+      double posPhi = cl->MeanPositionPhi();
+      double time   = cl->CMeanTime();
+      double adcLow   = cl->SumAdcLow();
+      if(seg == segCl){	
+	DCHit *hit = new DCHit(ll);
+	hit->SetTdcCFT( static_cast<int>( 0 ) ); 
+	
+	if ( hit->CalcCFTObservables() ) {
+	  hit->SetMeanSeg    ( seg    );      
+	  hit->SetWirePosition(0.);            
+	  hit->SetPositionR  ( posR   );
+	  hit->SetPositionPhi( posPhi );
+	  m_CFT16HC[ll].push_back( hit );	  
+	}else {
+	  delete hit;      
+	}  
+      }
+    }
+  }
+
+  if(i==0){m_is_decoded[k_CFT16_1st] = true;}
+  else if(i==1){m_is_decoded[k_CFT16_2nd] = true;}
+  return true;
+}
+
 
 //______________________________________________________________________________
 bool
@@ -1042,6 +1195,28 @@ DCAnalyzer::TrackSearchKurama( double initial_momentum )
 }
 
 //______________________________________________________________________________
+bool
+DCAnalyzer::TrackSearchCFT( void )
+{
+  static const int MinLayer = gUser.GetParameter("MinLayerCFT");
+
+  track::LocalTrackSearchCFT( m_CFTHC, PPInfoCFT, NPPInfoCFT, m_CFTTC, MinLayer );
+  return true;
+}
+
+//______________________________________________________________________________
+bool
+DCAnalyzer::TrackSearchCFT16( void )
+{
+  static const int MinLayer = gUser.GetParameter("MinLayerCFT16");
+
+  track::LocalTrackSearchCFT( m_CFT16HC, PPInfoCFT16, NPPInfoCFT16, m_CFT16TC, MinLayer );//same with normal tracking
+  return true;
+}
+
+
+
+//______________________________________________________________________________
 void
 DCAnalyzer::ClearDCHits( void )
 {
@@ -1052,6 +1227,8 @@ DCAnalyzer::ClearDCHits( void )
   ClearSdcInHits();
   ClearSdcOutHits();
   ClearTOFHits();
+  ClearCFTHits();
+  ClearCFT16Hits();
 }
 
 //______________________________________________________________________________
@@ -1098,6 +1275,20 @@ void
 DCAnalyzer::ClearTOFHits( void )
 {
   del::ClearContainer( m_TOFHC );
+}
+
+//______________________________________________________________________________
+void
+DCAnalyzer::ClearCFTHits( void )
+{
+  del::ClearContainerAll( m_CFTHC );
+}
+
+//______________________________________________________________________________
+void
+DCAnalyzer::ClearCFT16Hits( void )
+{
+  del::ClearContainerAll( m_CFT16HC );
 }
 
 //______________________________________________________________________________
@@ -1167,6 +1358,20 @@ void
 DCAnalyzer::ClearTracksSdcInSdcOut( void )
 {
   del::ClearContainer( m_SdcInSdcOutTC );
+}
+
+//______________________________________________________________________________
+void
+DCAnalyzer::ClearTracksCFT( void )
+{
+  del::ClearContainer( m_CFTTC );
+}
+
+//______________________________________________________________________________
+void
+DCAnalyzer::ClearTracksCFT16( void )
+{
+  del::ClearContainer( m_CFT16TC );
 }
 
 //______________________________________________________________________________

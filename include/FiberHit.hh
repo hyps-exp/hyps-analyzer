@@ -37,6 +37,12 @@ protected:
   bool        m_status;
   std::vector<FLHit*> m_hit_container;
 
+  // for CFT
+  double         m_adc_hi; 
+  double         m_adc_low; 
+  double         m_r; 
+  double         m_phi; 
+
   struct data_pair{
     double time_l;
     double time_t;
@@ -66,8 +72,15 @@ public:
   double GetTot( int n=0 )      const { return m_pair_cont.at(n).tot;     }
 
   double GetPosition( void )  const { return m_position + m_offset;       }
+
   int    PairId( void )       const { return m_pair_id;                   }
   //  virtual double SegmentId( void )    const { return m_segment;                   }
+
+  // for CFT
+  double GetAdcHi( void ) const { return m_adc_hi;       }
+  double GetAdcLow( void )  const { return m_adc_low;    }
+  double GetPositionR( void )  const { return m_r;       }
+  double GetPositionPhi( void )  const { return m_phi;   }
 
   void   Print( const std::string& arg="", std::ostream& ost=hddaq::cout ) const;
   void   RegisterHits( FLHit* hit )   { m_hit_container.push_back(hit);   }
