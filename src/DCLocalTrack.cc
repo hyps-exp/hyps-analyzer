@@ -760,8 +760,7 @@ bool DCLocalTrack::DoFitUV()
 #endif  
   
   std::vector <double> z, xy, s;
-  z.reserve(n); xy.reserve(n); s.reserve(n);
-  
+  z.reserve(n); xy.reserve(n); s.reserve(n);  
 
   for( std::size_t i=0; i<n; ++i ){
     
@@ -770,6 +769,7 @@ bool DCLocalTrack::DoFitUV()
       int lnum = hitp->GetLayer();
       int l_geo = lnum +301;
       if(lnum>7){l_geo -= 8;}
+      double seg = hitp->GetMeanSeg();
       double r = hitp->GetPositionR();
       
       double phi;
@@ -791,8 +791,7 @@ bool DCLocalTrack::DoFitUV()
       
       double ss = geomMan.GetResolution( l_geo );
       z.push_back( z1 ); xy.push_back( xy1 ); s.push_back(ss);
-      rrr[i] = r;
-    
+      rrr[i] = r;    
     
 #if 0
     std::cout << std::setw(10) << "layer = " << lnum 
@@ -943,13 +942,15 @@ DCLocalTrack::DoFitPhi2nd( void )
     DCLTrackHit *hitp = m_hit_array[i];
     if( hitp ){
       int lnum = hitp->GetLayer();
+      int ll = lnum;
+      if(lnum>7){lnum -= 8;}
       int seg  = (int)hitp->GetMeanSeg();
       m_meanseg[lnum] = seg;
 
       double rr = hitp->GetPositionR();
       //double rr = hitp->GetPositionRMax();
-      double xx = rr*cos(m_phi_ini[lnum]*math::Deg2Rad());
-      double yy = rr*sin(m_phi_ini[lnum]*math::Deg2Rad());
+      double xx = rr*cos(m_phi_ini[ll]*math::Deg2Rad());
+      double yy = rr*sin(m_phi_ini[ll]*math::Deg2Rad());
  
       
       double ss = 0.75/sqrt(12);  
@@ -971,18 +972,14 @@ DCLocalTrack::DoFitPhi2nd( void )
 	  zz = m_Az*yy + m_Bz;
 	}
       }      
-      m_z_track[lnum] = zz;
+      m_z_track[ll] = zz;
 
       // parameter for position correction
-      int ll = lnum;
-      if(lnum>7){lnum -= 8;}
       double par[6], par2nd[6];
       for(int ip=0; ip<6; ip++){
 	par[ip] = gHodo.GetPar(113,lnum,seg,0,ip);	
 	//par2nd[ip] = gHodo.GetPar(113,lnum,seg,1,ip);
       }      
-
-
 
 #if 1 // correction depending on z
       if(zz>=0&&zz<400){
@@ -990,17 +987,17 @@ DCLocalTrack::DoFitPhi2nd( void )
 	  +par[2]*pow(zz,2) +par[3]*pow(zz,3)
 	  +par[4]*pow(zz,4) +par[5]*pow(zz,5) ;
 	if(fabs(d_phi)>6){
-	  std::cout << "layer=" << lnum <<  ",seg=" << m_meanseg[lnum]
+	  std::cout << "layer=" << ll <<  ",seg=" << m_meanseg[ll]
 		    <<  ", z=" << zz <<  ", d_phi = " <<d_phi  << std::endl;
 	}else{
-	  m_phi_ini[lnum] += d_phi; //axis test
+	  m_phi_ini[ll] -= d_phi; // after axis changing
 	}
       }else{}
 #endif
       
       // re:calc
-      xx = rr*cos(m_phi_ini[lnum]*math::Deg2Rad() );
-      yy = rr*sin(m_phi_ini[lnum]*math::Deg2Rad() );
+      xx = rr*cos(m_phi_ini[ll]*math::Deg2Rad() );
+      yy = rr*sin(m_phi_ini[ll]*math::Deg2Rad() );
             
       x.push_back( xx ); y.push_back( yy ); s.push_back(ss);
       l.push_back( lnum );
@@ -1129,6 +1126,8 @@ bool DCLocalTrack::DoFitUV2nd()
     if( hitp ){
       int lnum = hitp->GetLayer();
       Layer[i] = lnum;
+      int ll = lnum;
+      if(lnum>7){lnum -= 8;}
       m_meanseg[lnum] = hitp->GetMeanSeg();
       int seg = (int)m_meanseg[lnum];
       int l_geo = lnum +301;
@@ -1136,19 +1135,17 @@ bool DCLocalTrack::DoFitUV2nd()
       double r = hitp->GetPositionR();
       
       double phi;
-      bool ret = GetCrossPointR(r, &phi, lnum);
+      bool ret = GetCrossPointR(r, &phi, ll);
       if (!ret) {
 	//std::cout << funcname << " return at GetCrossPointR" << std::endl;
 	return false;
       }
 
       double z1 = CalculateZpos(phi, hitp);
-      m_z_ini[lnum] = z1;      
-      m_phi_track[lnum] = phi;    
+      m_z_ini[ll] = z1;      
+      m_phi_track[ll] = phi;    
 
       // parameter for position correction
-      int ll = lnum;
-      if(lnum>7){lnum -= 8;}
       double par[6], par2nd[6];;
       for(int ip=0; ip<6; ip++){
 	par[ip] = gHodo.GetPar(113,lnum,seg,0,ip);	
@@ -1157,37 +1154,30 @@ bool DCLocalTrack::DoFitUV2nd()
 
 #if 1 // position correction
       // divide <180 or >=180
-      //double phis=phi;
-      double phis=-(phi-90.); // axis test
-      if(phis<0){phis+=360.;}
-      else if(phis>360){phis-=360.;}
       double d_z = 0;
-      //if(phi<180){// use 1st par
-      if(phis<180){// use 1st par
-	d_z = par[0]*pow(phis,0) +par[1]*pow(phis,1) 
-	    +par[2]*pow(phis,2) +par[3]*pow(phis,3)
-	  +par[4]*pow(phis,4) +par[5]*pow(phis,5) ;	  
+      if(phi<180){// use 1st par
+	d_z = par[0]*pow(phi,0) +par[1]*pow(phi,1) 
+	    +par[2]*pow(phi,2) +par[3]*pow(phi,3)
+	  +par[4]*pow(phi,4) +par[5]*pow(phi,5) ;	  
       }else{// use 2nd par
-	d_z = par2nd[0]*pow(phis,0) +par2nd[1]*pow(phis,1) 
-	  +par2nd[2]*pow(phis,2) +par2nd[3]*pow(phis,3)
-	  +par2nd[4]*pow(phis,4) +par2nd[5]*pow(phis,5) ;
-      }
-      if(fabs(d_z)>6){z1 += (d_z/2.);}
-      else{z1 += d_z;}            
-      //if(fabs(d_z)>6){z1 -= (d_z/2.);} // axis test
-      //else{z1 -= d_z;} // axis test
+	d_z = par2nd[0]*pow(phi,0) +par2nd[1]*pow(phi,1) 
+	  +par2nd[2]*pow(phi,2) +par2nd[3]*pow(phi,3)
+	  +par2nd[4]*pow(phi,4) +par2nd[5]*pow(phi,5) ;
+      }     
+      if(fabs(d_z)>6){z1 -= (d_z/2.);}
+      else{z1 -= d_z;}
+
 #endif      
-      m_z_ini[lnum] = z1;      
+      m_z_ini[ll] = z1;      
 
       double xy1=-999.;
       if (m_xyFitFlag==0) { // x
-	xy1 = r*cos(m_phi_track[lnum]*math::Deg2Rad());
+	xy1 = r*cos(m_phi_track[ll]*math::Deg2Rad());
       }else{ // y
-	xy1 = r*sin(m_phi_track[lnum]*math::Deg2Rad());
+	xy1 = r*sin(m_phi_track[ll]*math::Deg2Rad());
       }      
       double ss = geomMan.GetResolution( l_geo );
       z.push_back( z1 ); xy.push_back( xy1 ); s.push_back(ss);
-    
     
 #if 0
     std::cout << std::setw(10) << "layer = " << lnum 

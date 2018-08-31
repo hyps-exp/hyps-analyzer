@@ -40,6 +40,12 @@ protected:
   // for CFT
   double         m_adc_hi; 
   double         m_adc_low; 
+  //double         m_nphoton_hi; 
+  //double         m_nphoton_low; 
+  double         m_mip_hi; 
+  double         m_mip_low; 
+  double         m_dE_hi; 
+  double         m_dE_low; 
   double         m_r; 
   double         m_phi; 
 
@@ -77,10 +83,16 @@ public:
   //  virtual double SegmentId( void )    const { return m_segment;                   }
 
   // for CFT
-  double GetAdcHi( void ) const { return m_adc_hi;       }
-  double GetAdcLow( void )  const { return m_adc_low;    }
-  double GetPositionR( void )  const { return m_r;       }
-  double GetPositionPhi( void )  const { return m_phi;   }
+  double GetAdcHi( void ) const { return m_adc_hi;  }
+  double GetAdcLow( void )const { return m_adc_low; }
+  //double GetNPhotonHi( void ) const { return m_nphoton_hi;  }
+  //double GetNPhotonLow( void )const { return m_nphoton_low; }
+  double GetMIPHi( void ) const { return m_mip_hi;  }
+  double GetMIPLow( void )const { return m_mip_low; }
+  double GetdEHi( void ) const { return m_dE_hi;  }
+  double GetdELow( void )const { return m_dE_low; }
+  double GetPositionR( void )  const { return m_r;     }
+  double GetPositionPhi( void )  const { return m_phi; }
 
   void   Print( const std::string& arg="", std::ostream& ost=hddaq::cout ) const;
   void   RegisterHits( FLHit* hit )   { m_hit_container.push_back(hit);   }

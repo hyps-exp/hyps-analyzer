@@ -182,6 +182,14 @@ double HodoParamMan::GetP0( int cid, int plid, int seg, int ud ) const
   double p0=map->Pedestal();
   return p0;
 }
+double HodoParamMan::GetP1( int cid, int plid, int seg, int ud ) const
+{
+  HodoAParam* map=GetAmap(  cid, plid, seg, ud);
+  if(!map) return -1;
+
+  double p1=map->Gain();
+  return p1;
+}
 double HodoParamMan::GetPar( int cid, int plid, int seg, int ud, int i ) const
 {
   HodoFParam *map=GetFmap(cid,plid,seg,ud);

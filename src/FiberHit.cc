@@ -43,6 +43,12 @@ FiberHit::FiberHit( HodoRawHit *object, const char* name )
     m_pair_id(0),
     m_adc_hi(0.),
     m_adc_low(0.),
+    //m_nphoton_hi(0.),
+    //m_nphoton_low(0.),
+    m_mip_hi(0.),
+    m_mip_low(0.),
+    m_dE_hi(0.),
+    m_dE_low(0.),
     m_r(0.),
     m_phi(0.),
     m_status(false)
@@ -232,8 +238,28 @@ FiberHit::Calculate( void )
       double low =  m_raw->GetAdc2();
       double pedeHi  = gHodo.GetP0(cid, plid, seg, 0);
       double pedeLow = gHodo.GetP0(cid, plid, seg, 1);
-      m_adc_hi  = hi  - pedeHi;
-      m_adc_low = low - pedeLow;
+      double gainHi  = gHodo.GetP1(cid, plid, seg, 0);// pedestal+mip(or peak)
+      double gainLow = gHodo.GetP1(cid, plid, seg, 1);// pedestal+mip(or peak)
+      double Alow = gHodo.GetP0(cid,plid,0/*seg*/,3);// same value for the same layer
+      double Blow = gHodo.GetP1(cid,plid,0/*seg*/,3);// same value for the same layer
+
+      if(low>=0){      
+	m_adc_hi  = hi  - pedeHi;
+	m_adc_low = low - pedeLow;
+	//m_mip_hi  = (hi  - pedeHi )/(gainHi  - pedeHi );
+	//m_mip_low = (low - pedeLow)/(gainLow - pedeLow);      
+	m_mip_hi  = (hi  - pedeHi )/gainHi ;
+	m_mip_low = (low - pedeLow)/gainLow;      
+
+	if(m_mip_low>0){
+	  m_dE_low = -(Alow/Blow) * log(1. - m_mip_low/Alow);// [MeV]
+	  if(1-m_mip_low/Alow<0){ // when pe is too big
+	    m_dE_low = -(Alow/Blow) * log(1. - (Alow-0.001)/Alow);// [MeV] almost max
+	  }
+	}else{
+	  m_dE_low = 0;// [MeV]
+	}
+      }
 
     }
   }

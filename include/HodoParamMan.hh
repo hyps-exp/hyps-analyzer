@@ -131,6 +131,7 @@ public:
   void SetFileName( const std::string& file_name ) { m_file_name = file_name; }
 
   double GetP0( int cid, int plid, int seg, int ud) const;
+  double GetP1( int cid, int plid, int seg, int ud) const;
   double GetPar( int cid, int plid, int seg, int ud ,int i) const; // i=0~5
 
 private:

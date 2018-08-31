@@ -180,6 +180,8 @@ public:
   void WidthCutFBT1( int layer, int UorD, double min_width, double max_width);
   void WidthCutFBT2( int layer, int UorD, double min_width, double max_width);
 
+  void AdcCutCFT( int layer, double amin, double amax );
+
   BH2Cluster*  GetTime0BH2Cluster();
   HodoCluster* GetBtof0BH1Cluster(double time0);
 
@@ -202,6 +204,9 @@ private:
 
   template<typename TypeCluster>
   void WidthCut(std::vector<TypeCluster>& cont, double min_width, double max_width, bool adopt_nan);
+
+  template<typename TypeCluster>
+  void AdcCut(std::vector<TypeCluster>& cont, double amin, double amax);
 
   static int MakeUpClusters( const Hodo1HitContainer& HitCont,
 			     HodoClusterContainer& ClusterCont,

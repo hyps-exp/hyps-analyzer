@@ -60,8 +60,9 @@ namespace
 					    41.5  + localPosBh2X_dX};
 
   // for CFT
-  const double MaxChi2CFT1st  = 250.; 
-  const double MaxChi2CFT2nd  = 150.; 
+  const double MaxChi2CFT1st  = 150.; 
+  const double MaxChi2CFT2nd  = 100.; 
+  const double MaxChi2CFTcosmic  = 300.; 
 
 
   //_____________________________________________________________________
@@ -1887,29 +1888,68 @@ namespace track
     bool status = true;
     std::vector<IndexList> CombiIndex = MakeIndex( npp, nCombi, status );
 
-    for( int i=0, n=CombiIndex.size(); i<n; ++i ){
-      DCLocalTrack *track = MakeTrackCFT( CandCont, CombiIndex[i] );
-      if( !track ) continue;
-      if(true 
-	 && track->GetNHit()>=MinNumOfHits 
-	 && track->GetNHitUV()>=MinNumOfHits 
-	 && track->DoFitPhi() 
-	 && track->GetChiSquareXY()<MaxChi2CFT1st
-	 && track->DoFitUV() 
-	 && track->GetChiSquareZ ()<MaxChi2CFT1st
-	 && fabs(track->GetVtxZ()-z_center)<cut_range // vtx cut
-	 // CFT 2nd tracking (position correction)
-	 && track->DoFitPhi2nd() 
-	 && track->GetChiSquareXY ()<MaxChi2CFT2nd
-	 && track->DoFitUV2nd() 
-	 && track->GetChiSquareZ ()<MaxChi2CFT2nd
-	 && fabs(track->GetVtxZ()-z_center)<cut_range // vtx cut
-	 ){
-	
-     	TrackCont.push_back(track);
-	
-      }else{delete track;}
+    double Chi1st = MaxChi2CFT1st;
+    double Chi2nd = MaxChi2CFT2nd;
+    if(MinNumOfHits>4){// 16 layer tracking
+      Chi1st = MaxChi2CFTcosmic;
+      Chi2nd = MaxChi2CFTcosmic;
     }
+
+    if(MinNumOfHits<=4){// 16 layer tracking
+
+      for( int i=0, n=CombiIndex.size(); i<n; ++i ){
+	DCLocalTrack *track = MakeTrackCFT( CandCont, CombiIndex[i] );
+	if( !track ) continue;
+	if(true 
+	   && track->GetNHit()>=MinNumOfHits 
+	   && track->GetNHitUV()>=MinNumOfHits 
+	   && track->DoFitPhi() 
+	   && track->GetChiSquareXY()<Chi1st
+	   && track->DoFitUV() 
+	   && track->GetChiSquareZ ()<Chi1st
+	   && fabs(track->GetVtxZ()-z_center)<cut_range // vtx cut
+	   // CFT 2nd tracking (position correction)
+	   && track->DoFitPhi2nd() 
+	   && track->GetChiSquareXY ()<Chi2nd
+	   && track->DoFitUV2nd() 
+	   && track->GetChiSquareZ ()<Chi2nd
+	   && fabs(track->GetVtxZ()-z_center)<cut_range // vtx cut
+	   ){
+	  
+	  TrackCont.push_back(track);
+	  
+	}else{delete track;}
+      }
+
+    }else{ //
+
+      for( int i=0, n=CombiIndex.size(); i<n; ++i ){
+	DCLocalTrack *track = MakeTrackCFT( CandCont, CombiIndex[i] );
+	if( !track ) continue;
+	if(true 
+	   && track->GetNHit()>=MinNumOfHits 
+	   && track->GetNHitUV()>=MinNumOfHits 
+	   && track->DoFitPhi() 
+	   && track->GetChiSquareXY()<Chi1st
+	   && track->DoFitUV() 
+	   && track->GetChiSquareZ ()<Chi1st
+	   && fabs(track->GetVtxZ()-z_center)<cut_range // vtx cut
+	   // CFT 2nd tracking (position correction)
+	   && track->DoFitPhi2nd() 
+	   && track->GetChiSquareXY ()<Chi2nd
+	   && track->DoFitUV2nd() 
+	   && track->GetChiSquareZ ()<Chi2nd
+	   && fabs(track->GetVtxZ()-z_center)<cut_range // vtx cut
+	   ){
+	  
+	  TrackCont.push_back(track);
+	  
+	}else{delete track;}
+      }
+
+    }
+
+
 
     // Clear Flags        
     ClearFlagsCFT(TrackCont);

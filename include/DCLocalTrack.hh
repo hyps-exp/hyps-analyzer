@@ -19,7 +19,7 @@
 class DCLTrackHit;
 class DCAnalyzer;
 
-const double MaxChi2CFT  = 250.;
+const double MaxChi2CFT  = 300.;
 
 //______________________________________________________________________________
 class DCLocalTrack

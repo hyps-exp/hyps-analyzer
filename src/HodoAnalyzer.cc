@@ -513,7 +513,7 @@ HodoAnalyzer::DecodeCFTHits( RawData* rawData )
 
 
 #if Cluster
-    MakeUpClustersCFT( m_CFTCont.at(p), m_CFTClCont.at(p), MaxTimeDifCFT, 4 );
+    MakeUpClustersCFT( m_CFTCont.at(p), m_CFTClCont.at(p), MaxTimeDifCFT, 8 );
 #endif
 
   }
@@ -1090,135 +1090,84 @@ HodoAnalyzer::MakeUpClustersCFT( const FiberHitContainer& cont,
     FiberHit* HitA = cont.at(seg);
     double adcLowA    =  HitA->GetAdcLow();
     bool fl_ClCandA = false;
+
     if( seg != (NofSeg -1) ){
-      if( DifPairId > (cont.at(seg+1)->PairId() - HitA->PairId()) && adcLowA>0){
+      if( DifPairId > (cont.at(seg+1)->PairId() - HitA->PairId()) && adcLowA>=0){
 	fl_ClCandA = true;
       }
     }
-    
+
     int NofHitA = HitA->GetNumOfHit();
     for(int mhitA = 0; mhitA<NofHitA; ++mhitA){
       if(HitA->Joined(mhitA)) continue;
-      
       FiberCluster *cluster = new FiberCluster();
       cluster->push_back( new FLHit(HitA, mhitA) );
-      
       if(!fl_ClCandA){
 	// there is no more candidates
 	if(cluster->Calculate()){
 	  ClusterCont.push_back(cluster);
+	  continue;
 	}else{
-	  delete cluster;
-	  cluster = NULL;
+	  //delete cluster;
+	  //cluster = NULL;
 	}
-	continue;
+	//continue;
       }
-      
-      // Start Search HitB
+          
+#if 1 // new ver.
       double cmtA    = (double)HitA->GetCTime(mhitA);
-      int    NofHitB = cont.at(seg+1)->GetNumOfHit();
-      bool   fl_HitB = false;
-      double cmtB    = -1;
       int    CurrentPair = HitA->PairId();
-      for(int mhitB = 0; mhitB<NofHitB; ++mhitB){
-	if(cont.at(seg+1)->Joined(mhitB)){continue;}
+      
+      bool   fl_Hit[MaxSizeCl];
+      bool fl_ClCand[MaxSizeCl];
+      double cmt[MaxSizeCl]; double mt[MaxSizeCl]; 
+      int seg_[MaxSizeCl];
+      double peLow[MaxSizeCl];
+      FiberHit* Hit[MaxSizeCl];
+      
+      for(int ic=0;ic<MaxSizeCl-1;ic++){
 
-	FiberHit* HitB = cont.at(seg+1);
-	double adcLowB = HitB->GetAdcLow();
-	cmtB = (double)HitB->GetCTime(mhitB);
-	if(std::abs(cmtB-cmtA)<maxTimeDif && adcLowB>0){
-	  cluster->push_back(new FLHit(HitB, mhitB));
-	  CurrentPair = HitB->PairId();
-	  fl_HitB = true;
-	  break;
+	// Next Hit Search
+	int    NofHit = cont.at(seg+1+ic)->GetNumOfHit();
+	fl_Hit[ic] = false;
+	Hit[ic] = cont.at(seg+1+ic);
+	cmt[ic]    = -1;
+	seg_[ic]   =  Hit[ic]->PairId();
+	for(int mhit = 0; mhit<NofHit; ++mhit){
+
+	  if(cont.at(seg+1+ic)->Joined(mhit)){continue;}	  
+	  double adcLow = Hit[ic]->GetAdcLow();
+	  cmt[ic] = (double)Hit[ic]->GetCTime(mhit);
+
+	  if(std::abs(cmt[ic]-cmtA)<maxTimeDif && adcLow>=0){
+	    cluster->push_back(new FLHit(Hit[ic], mhit));
+	    fl_Hit[ic] = true;
+	    break;
+	  }
 	}
-      }
+	
+        fl_ClCand[ic]  = false;
 
-      bool fl_ClCandB  = false;
-      if((seg+1) != (NofSeg -1)){
-	if( DifPairId > (cont.at(seg+2)->PairId() - CurrentPair) ){
-	  fl_ClCandB = true;
+	if((seg+1+ic) != (NofSeg -1)){
+	  if( DifPairId > (cont.at(seg+2+ic)->PairId() - CurrentPair) ){
+	    fl_ClCand[ic] = true;
+	  }
 	}
+	if(!fl_ClCand[ic]){
+	  // there is no more candidates
+	  if(cluster->Calculate()){
+	    ClusterCont.push_back(cluster);
+	    break;
+	  }else{
+	    //delete cluster;
+	    //cluster = NULL;
+	  }
+	  //continue;
+	}else{}
+
       }
+#endif
 
-      if(!fl_ClCandB){
-	// there is no more candidates
-	if(cluster->Calculate()){
-	  ClusterCont.push_back(cluster);
-	}else{
-	  delete cluster;
-	  cluster = NULL;
-	}
-	continue;
-      }
-
-      // Start Search HitC
-      int    NofHitC = cont.at(seg+2)->GetNumOfHit();
-      bool   fl_HitC = false;
-      double cmtC    = -1;
-      for(int mhitC = 0; mhitC<NofHitC; ++mhitC){
-	if(cont.at(seg+2)->Joined(mhitC)){continue;}
-
-	FiberHit* HitC = cont.at(seg+2);
-	double adcLowC = HitC->GetAdcLow();
-	cmtC = (double)HitC->GetCTime(mhitC);
-	if(true
-	   && std::abs(cmtC-cmtA)<maxTimeDif
-	   && !(fl_HitB && (std::abs(cmtC-cmtB)>maxTimeDif))
-	   && adcLowC>0
-	   ){
-	  cluster->push_back(new FLHit(HitC, mhitC));
-	  CurrentPair = HitC->PairId();
-	  fl_HitC = true;
-	  break;
-	}
-      }
-
-      bool fl_ClCandC  = false;
-      if((seg+2) != (NofSeg -1)){
-	if( DifPairId > (cont.at(seg+3)->PairId() - CurrentPair) ){
-	  fl_ClCandC = true;
-	}
-      }
-
-      if(!fl_ClCandC){
-	// there is no more candidates
-	if(cluster->Calculate()){
-	  ClusterCont.push_back(cluster);
-	}else{
-	  delete cluster;
-	  cluster = NULL;
-	}
-	continue;
-      }
-
-      // Start Search HitD
-      int    NofHitD = cont.at(seg+3)->GetNumOfHit();
-      double cmtD    = -1;
-      for(int mhitD = 0; mhitD<NofHitD; ++mhitD){
-	if(cont.at(seg+3)->Joined(mhitD)){continue;}
-
-	FiberHit* HitD = cont.at(seg+3);
-	double adcLowD = HitD->GetAdcLow();
-	cmtD = (double)HitD->GetCTime(mhitD);
-	if(true
-	   && std::abs(cmtD-cmtA)<maxTimeDif
-	   && !(fl_HitB && (std::abs(cmtD-cmtB)>maxTimeDif))
-	   && !(fl_HitC && (std::abs(cmtD-cmtC)>maxTimeDif))
-	   && adcLowD>0
-	   ){
-	  cluster->push_back(new FLHit(HitD, mhitD));
-	  break;
-	}
-      }
-
-      // Finish
-      if(cluster->Calculate()){
-	ClusterCont.push_back(cluster);
-      }else{
-	delete cluster;
-	cluster = NULL;
-      }
     }
   }
 
@@ -1640,6 +1589,40 @@ HodoAnalyzer::WidthCut( std::vector<TypeCluster>& cont,
     if(isnan(width) && adopt_nan){
       ValidCand.push_back(cont.at(i));
     }else if(min_width < width && width < max_width){
+      ValidCand.push_back(cont.at(i));
+    }else{
+      DeleteCand.push_back(cont.at(i));
+    }
+  }
+
+  del::ClearContainer( DeleteCand );
+
+  cont.clear();
+  cont.resize(ValidCand.size());
+  std::copy(ValidCand.begin(), ValidCand.end(), cont.begin());
+  ValidCand.clear();
+}
+
+//______________________________________________________________________________
+void
+HodoAnalyzer::AdcCutCFT( int layer, double amin, double amax )
+{
+  AdcCut( m_CFTClCont.at( layer ), amin, amax );
+}
+
+//______________________________________________________________________________
+//Implementation of ADC cut for the cluster container
+template <typename TypeCluster>
+void
+HodoAnalyzer::AdcCut( std::vector<TypeCluster>& cont,
+		      double amin, double amax )
+{
+  std::vector<TypeCluster> DeleteCand;
+  std::vector<TypeCluster> ValidCand;
+  std::size_t size = cont.size();
+  for( std::size_t i=0; i<size; ++i ){
+    double adc = cont.at(i)->SumAdcLow();
+    if(amin < adc && adc < amax){
       ValidCand.push_back(cont.at(i));
     }else{
       DeleteCand.push_back(cont.at(i));

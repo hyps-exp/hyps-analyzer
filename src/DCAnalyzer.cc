@@ -535,6 +535,7 @@ DCAnalyzer::DecodeCFTHits( RawData *rawData )
   
   for ( int l = 0; l < NumOfPlaneCFT; ++l ) {
     hodoAna.TimeCutCFT( l, -30, 30 );
+    hodoAna.AdcCutCFT( l, 0, 4000 );
     
     int ncl = hodoAna.GetNClustersCFT( l );    
     for ( int j = 0; j < ncl; ++j ) {
@@ -612,11 +613,12 @@ DCAnalyzer::DecodeCFT16Hits( RawData* rawData ,DCLocalTrack* tp , int i )
 	DCHit *hit = new DCHit(ll);
 	hit->SetTdcCFT( static_cast<int>( 0 ) );
 	if ( hit->CalcCFTObservables() ) {
+	  hit->SetLayer      (ll);      
 	  hit->SetMeanSeg    (seg);      
 	  hit->SetWirePosition(0.);            
 	  hit->SetPositionR  ( posR   );
 	  hit->SetPositionPhi( posPhi );
-	  m_CFT16HC[ll].push_back( hit );	  
+	  m_CFT16HC[ll].push_back( hit );
 	}else {
 	  delete hit;      
 	}  
@@ -645,6 +647,7 @@ DCAnalyzer::DecodeCFT16Hits( RawData* rawData ,DCLocalTrack* tp , int i )
 	hit->SetTdcCFT( static_cast<int>( 0 ) ); 
 	
 	if ( hit->CalcCFTObservables() ) {
+	  hit->SetLayer      (ll);      
 	  hit->SetMeanSeg    ( seg    );      
 	  hit->SetWirePosition(0.);            
 	  hit->SetPositionR  ( posR   );
