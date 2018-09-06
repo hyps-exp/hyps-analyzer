@@ -145,7 +145,7 @@ FiberHit::Calculate( void )
     }
 
     std::sort(leading_cont.begin(),  leading_cont.end(),  std::greater<int>());
-    std::sort(trailing_cont.begin(), trailing_cont.end(), std::greater<int>());
+    std::sort(trailing_cont.begin(), trailing_cont.end(), std::greater<int>());    
 
     int i_t = 0;
     for(int i = 0; i<m_multi_hit_l; ++i){
@@ -222,11 +222,18 @@ FiberHit::Calculate( void )
 
     m_a.push_back( tot );
     m_ct.push_back( ctime_leading );
-
-    m_pair_cont.at(i).time_l  = time_leading;
-    m_pair_cont.at(i).time_t  = time_trailing;
-    m_pair_cont.at(i).ctime_l = ctime_leading;
-    m_pair_cont.at(i).tot     = tot;
+    
+    if(cid==113){ // CFT
+      m_pair_cont.at(m_multi_hit_l -1 -i).time_l  = time_leading;
+      m_pair_cont.at(m_multi_hit_l -1 -i).time_t  = time_trailing;
+      m_pair_cont.at(m_multi_hit_l -1 -i).ctime_l = ctime_leading;
+      m_pair_cont.at(m_multi_hit_l -1 -i).tot     = -tot;
+    }else{    
+      m_pair_cont.at(i).time_l  = time_leading;
+      m_pair_cont.at(i).time_t  = time_trailing;
+      m_pair_cont.at(i).ctime_l = ctime_leading;
+      m_pair_cont.at(i).tot     = tot;
+    }
 
   }// for(i)
 
@@ -243,23 +250,22 @@ FiberHit::Calculate( void )
       double Alow = gHodo.GetP0(cid,plid,0/*seg*/,3);// same value for the same layer
       double Blow = gHodo.GetP1(cid,plid,0/*seg*/,3);// same value for the same layer
 
-      if(low>=0){      
-	m_adc_hi  = hi  - pedeHi;
-	m_adc_low = low - pedeLow;
-	//m_mip_hi  = (hi  - pedeHi )/(gainHi  - pedeHi );
-	//m_mip_low = (low - pedeLow)/(gainLow - pedeLow);      
-	m_mip_hi  = (hi  - pedeHi )/gainHi ;
-	m_mip_low = (low - pedeLow)/gainLow;      
-
-	if(m_mip_low>0){
-	  m_dE_low = -(Alow/Blow) * log(1. - m_mip_low/Alow);// [MeV]
-	  if(1-m_mip_low/Alow<0){ // when pe is too big
-	    m_dE_low = -(Alow/Blow) * log(1. - (Alow-0.001)/Alow);// [MeV] almost max
-	  }
-	}else{
-	  m_dE_low = 0;// [MeV]
+      m_adc_hi  = hi  - pedeHi;
+      m_adc_low = low - pedeLow;
+      //m_mip_hi  = (hi  - pedeHi )/(gainHi  - pedeHi );
+      //m_mip_low = (low - pedeLow)/(gainLow - pedeLow);      
+      m_mip_hi  = (hi  - pedeHi )/gainHi ;
+      m_mip_low = (low - pedeLow)/gainLow;      
+      
+      if(m_mip_low>0){
+	m_dE_low = -(Alow/Blow) * log(1. - m_mip_low/Alow);// [MeV]
+	if(1-m_mip_low/Alow<0){ // when pe is too big
+	  m_dE_low = -(Alow/Blow) * log(1. - (Alow-0.001)/Alow);// [MeV] almost max
 	}
+      }else{
+	m_dE_low = 0;// [MeV]
       }
+      
 
     }
   }

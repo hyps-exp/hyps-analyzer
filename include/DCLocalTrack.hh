@@ -80,6 +80,16 @@ private:
   double m_z_track[NumOfPlaneCFT*2];  // z from tracking
   double m_dz[NumOfPlaneCFT*2];     // delta z (ini - calc)
   double m_dist_uv[NumOfPlaneCFT*2]; // residual of Z_XY plane
+  // dE value
+  double m_sum_adc[NumOfPlaneCFT*2]; double m_max_adc[NumOfPlaneCFT*2];
+  double m_sum_mip[NumOfPlaneCFT*2]; double m_max_mip[NumOfPlaneCFT*2];
+  double m_sum_dE[NumOfPlaneCFT*2];  double m_max_dE[NumOfPlaneCFT*2]; 
+  double m_total_adc   , m_total_max_adc;
+  double m_total_mip   , m_total_max_mip;
+  double m_total_dE    , m_total_max_dE;
+  double m_total_dE_phi, m_total_max_dE_phi; // only phi sum
+  double m_total_dE_uv , m_total_max_dE_uv;  // only uv  sum
+
 
 public:
   void         AddHit( DCLTrackHit *hitp );
@@ -183,6 +193,23 @@ public:
   double GetdZ(      int layer) const {return m_dz[layer]     ; }
   ThreeVector GetPos0( void ) const { return m_Pos0; }
   ThreeVector GetDir( void )  const { return m_Dir; }
+  double GetSumAdc(  int layer) const {return m_sum_adc[layer];   }
+  double GetSumMIP(  int layer) const {return m_sum_mip[layer];   }
+  double GetSumdE (  int layer) const {return m_sum_dE[layer];   }
+  double GetMaxAdc(  int layer) const {return m_max_adc[layer];   }
+  double GetMaxMIP(  int layer) const {return m_max_mip[layer];   }
+  double GetMaxdE (  int layer) const {return m_max_dE[layer];   }
+
+  double GetTotalSumAdc( void ) const {return m_total_adc;   }
+  double GetTotalSumMIP( void ) const {return m_total_mip;   }
+  double GetTotalSumdE ( void ) const {return m_total_dE ;   }
+  double GetTotalSumdEphi ( void ) const {return m_total_dE_phi ;   }
+  double GetTotalSumdEuv  ( void ) const {return m_total_dE_uv ;   }
+  double GetTotalMaxAdc( void ) const {return m_total_max_adc;   }
+  double GetTotalMaxMIP( void ) const {return m_total_max_mip;   }
+  double GetTotalMaxdE ( void ) const {return m_total_max_dE ;   }
+  double GetTotalMaxdEphi ( void ) const {return m_total_max_dE_phi ;   }
+  double GetTotalMaxdEuv  ( void ) const {return m_total_max_dE_uv ;   }
 
 };
 
@@ -358,13 +385,13 @@ struct DCLTrackCompCFT
     int nuv1=p1->GetNHitUV(), nuv2=p2->GetNHitUV();
     int n1=nphi1+nuv1, n2=nphi2+nuv2;
     
-    double chi1=p1->GetChiSquareXY(),chi2=p2->GetChiSquareXY();// zantei
-    /*
+    //double chi1=p1->GetChiSquareXY(),chi2=p2->GetChiSquareXY();// zantei
+    
     double chiXY1=p1->GetChiSquareXY(),chiZ1=p2->GetChiSquareZ();
     double chiXY2=p2->GetChiSquareXY(),chiZ2=p2->GetChiSquareZ();
     double chi1=sqrt(chiXY1*chiXY1+chiZ1*chiZ1);
     double chi2=sqrt(chiXY2*chiXY2+chiZ2*chiZ2);
-    */
+    
     if( (n1>n2)&&(chi1<MaxChi2CFT*sqrt(2.))){
       return true;
     }else if( (n2>n1)&&(chi2<MaxChi2CFT*sqrt(2.))){

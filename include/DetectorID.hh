@@ -89,6 +89,7 @@ const int DetIdBFT  = 110;
 const int DetIdSFT  = 111;
 const int DetIdCFT  = 113;
 const int DetIdBGO  = 114;
+const int DetIdPiID = 115;
 const int DetIdFBT1 = 131;
 const int DetIdFBT2 = 132;
 
@@ -173,7 +174,8 @@ const int    NumOfBGOInOneUnit2 = 1;//single unit
 const double RadiusOfBGOSurface2 = 120.;
 const int NumOfSegBGO = NumOfBGOUnit*(NumOfBGOInOneUnit+NumOfBGOInOneUnit2);//24
 
-
+// PiID counter
+const int NumOfSegPiID =  32;
 
 // HulRm -----------------------------------------------
 const int NumOfHulRm   = 4;

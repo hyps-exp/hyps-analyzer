@@ -535,28 +535,43 @@ DCAnalyzer::DecodeCFTHits( RawData *rawData )
   
   for ( int l = 0; l < NumOfPlaneCFT; ++l ) {
     hodoAna.TimeCutCFT( l, -30, 30 );
+    //hodoAna.AdcCutCFT( l, -100, 4000 );
     hodoAna.AdcCutCFT( l, 0, 4000 );
+    //hodoAna.AdcCutCFT( l, 50, 4000 ); // for proton
+    //hodoAna.WidthCutCFT( l, 60, 300 );//pp scattering
+    //hodoAna.WidthCutCFT( l, 30, 300 );// cosmic ray
     
     int ncl = hodoAna.GetNClustersCFT( l );    
     for ( int j = 0; j < ncl; ++j ) {
             
       FiberCluster* cl = hodoAna.GetClusterCFT( l, j );
-      double seg  = cl->MeanSeg();
-      double size  = cl->ClusterSize();
-      double posR   = cl->MeanPositionR();
-      double posPhi = cl->MeanPositionPhi();
-      double time   = cl->CMeanTime();
-      double adcLow   = cl->SumAdcLow();
+      double mean_seg = cl->MeanSeg();
+      double max_seg     = cl->MaxSeg();
+      double size     = cl->ClusterSize();
+      double posR     = cl->MeanPositionR();
+      double posPhi   = cl->MeanPositionPhi();
+      double time     = cl->CMeanTime();
+
+      double adcLow   = cl->SumAdcLow(); double max_adcLow  = cl->MaxAdcLow();
+      double mipLow   = cl->SumMIPLow(); double max_mipLow  = cl->MaxMIPLow();
+      double dELow    = cl->SumdELow();	 double max_dELow   = cl->MaxdELow(); 
+
       if (adcLow>0) {
 
 	DCHit *hit = new DCHit(l);
 
-	hit->SetTdcCFT( static_cast<int>( time ) );      
-	
+	hit->SetTdcCFT( static_cast<int>( time ) );      	
 	if ( hit->CalcCFTObservables() ) {
-	  hit->SetMeanSeg    ( seg    );
-	  hit->SetPositionR  ( posR   );
-	  hit->SetPositionPhi( posPhi );
+	  hit->SetMeanSeg    ( mean_seg);
+	  hit->SetMaxSeg     ( max_seg );
+	  hit->SetClusterSize( size    );
+
+	  hit->SetAdcLow     ( adcLow ); hit->SetMaxAdcLow  ( max_adcLow );
+	  hit->SetMIPLow     ( mipLow ); hit->SetMaxMIPLow  ( max_mipLow );
+	  hit->SetdELow      ( dELow  ); hit->SetMaxdELow   ( max_dELow  );
+
+	  hit->SetPositionR  ( posR    );
+	  hit->SetPositionPhi( posPhi  );
 	  
 	  hit->SetWirePosition(0.);      
 	  m_CFTHC[l].push_back( hit );

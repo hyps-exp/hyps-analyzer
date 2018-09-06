@@ -54,8 +54,10 @@ private:
   Hodo2HitContainer     m_TOFCont;
   Hodo1HitContainer     m_HtTOFCont;
   Hodo1HitContainer     m_LCCont;
+  Hodo1HitContainer     m_BGOCont;
   MultiPlaneFiberHitContainer m_BFTCont;
   FiberHitContainer     m_SCHCont;
+  FiberHitContainer     m_PiIDCont;
   MultiPlaneFiberHitContainer m_SFTCont;
   MultiPlaneFiberHitContainer m_CFTCont;
   MultiPlaneFiberHitContainer m_FBT1UCont;
@@ -89,6 +91,8 @@ public:
   bool DecodeBFTHits( RawData* rawData );
   bool DecodeSFTHits( RawData* rawData );
   bool DecodeCFTHits( RawData* rawData );
+  bool DecodeBGOHits( RawData* rawData );
+  bool DecodePiIDHits( RawData* rawData );
   bool DecodeSCHHits( RawData* rawData );
   bool DecodeFBT1Hits( RawData* rawData );
   bool DecodeFBT2Hits( RawData* rawData );
@@ -101,6 +105,8 @@ public:
   int  GetNHitsBFT( int plane)  const { return m_BFTCont.at( plane ).size(); };
   int  GetNHitsSFT( int plane ) const { return m_SFTCont.at( plane ).size(); };
   int  GetNHitsCFT( int plane ) const { return m_CFTCont.at( plane ).size(); };
+  int  GetNHitsBGO( void) const { return m_BGOCont.size(); };
+  int  GetNHitsPiID(void) const { return m_PiIDCont.size();};
   int  GetNHitsSCH( void )  const { return m_SCHCont.size();  };
   int  GetNHitsFBT1( int layer, int UorD)  const 
   { return UorD==0? m_FBT1UCont.size() : m_FBT1DCont.size();}
@@ -116,6 +122,8 @@ public:
   inline FiberHit * GetHitBFT( int plane, std::size_t seg ) const;
   inline FiberHit * GetHitSFT( int plane, std::size_t seg ) const;
   inline FiberHit * GetHitCFT( int plane, std::size_t seg ) const;
+  inline Hodo1Hit * GetHitBGO( std::size_t i )  const;
+  inline FiberHit * GetHitPiID(std::size_t seg ) const;
   inline FiberHit * GetHitSCH( std::size_t seg ) const;
   inline FiberHit * GetHitFBT1( int layer, int UorD, std::size_t seg ) const;
   inline FiberHit * GetHitFBT2( int layer, int UorD, std::size_t seg ) const;
@@ -195,6 +203,8 @@ private:
   void ClearBFTHits();
   void ClearSFTHits();
   void ClearCFTHits();
+  void ClearBGOHits();
+  void ClearPiIDHits();
   void ClearSCHHits();
   void ClearFBT1Hits();
   void ClearFBT2Hits();
@@ -204,6 +214,8 @@ private:
 
   template<typename TypeCluster>
   void WidthCut(std::vector<TypeCluster>& cont, double min_width, double max_width, bool adopt_nan);
+  template<typename TypeCluster>
+  void WidthCutR(std::vector<TypeCluster>& cont, double min_width, double max_width, bool adopt_nan);
 
   template<typename TypeCluster>
   void AdcCut(std::vector<TypeCluster>& cont, double amin, double amax);
@@ -432,6 +444,16 @@ HodoAnalyzer::GetHitLC( std::size_t i ) const
 }
 
 //______________________________________________________________________________
+inline Hodo1Hit*
+HodoAnalyzer::GetHitBGO( std::size_t i ) const
+{
+  if( i<m_BGOCont.size() )
+    return m_BGOCont[i];
+  else
+    return 0;
+}
+
+//______________________________________________________________________________
 inline FiberHit*
 HodoAnalyzer::GetHitBFT( int plane, std::size_t seg ) const
 {
@@ -457,6 +479,16 @@ HodoAnalyzer::GetHitCFT( int plane, std::size_t seg ) const
 {
   if( seg<m_CFTCont.at( plane ).size() )
     return m_CFTCont.at( plane ).at( seg );
+  else
+    return NULL;
+}
+
+//______________________________________________________________________________
+inline FiberHit*
+HodoAnalyzer::GetHitPiID( std::size_t seg ) const
+{
+  if( seg<m_PiIDCont.size() )
+    return m_PiIDCont[seg];
   else
     return NULL;
 }

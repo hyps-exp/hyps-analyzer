@@ -81,6 +81,12 @@ protected:
   ///// for CFT
   double m_meanseg;
   double m_maxseg;
+  double m_adc_low;
+  double m_mip_low;
+  double m_dE_low;
+  double max_adc_low;
+  double max_mip_low;
+  double max_dE_low;
   double m_r;
   double m_phi;
   BoolVec m_belong_track;
@@ -118,7 +124,13 @@ public:
 
   ///// for CFT
   void SetMeanSeg    ( double seg ) { m_meanseg    = seg;   }
-  void SetMaxSeg    ( double seg ) { m_maxseg    = seg;   }
+  void SetMaxSeg     ( double seg ) { m_maxseg     = seg;   }
+  void SetAdcLow     ( double adc ) { m_adc_low    = adc;   }
+  void SetMIPLow     ( double mip ) { m_mip_low    = mip;   }
+  void SetdELow      ( double dE )  { m_dE_low     = dE;   }
+  void SetMaxAdcLow  ( double adc ) { max_adc_low    = adc;   }
+  void SetMaxMIPLow  ( double mip ) { max_mip_low    = mip;   }
+  void SetMaxdELow   ( double dE )  { max_dE_low     = dE;   }
   void SetPositionR  ( double r   ) { m_r    = r;   }
   void SetPositionPhi( double phi ) { m_phi  = phi; }
   void SetTdcCFT( int tdc );
@@ -162,8 +174,16 @@ public:
   double GetZ( void ) const { return m_z; }
 
   ///// for CFT
-  double GetMeanSeg    ( void ) const { return m_meanseg;  } 
+  double GetMeanSeg    ( void ) const { return m_meanseg; } 
   double GetMaxSeg     ( void ) const { return m_maxseg;  } 
+  double SetMaxSeg     ( void ) const { return m_maxseg;  }
+  double GetAdcLow     ( void ) const { return m_adc_low; }
+  double GetMIPLow     ( void ) const { return m_mip_low; }
+  double GetdELow      ( void ) const { return m_dE_low ; }
+  double GetMaxAdcLow  ( void ) const { return max_adc_low; }
+  double GetMaxMIPLow  ( void ) const { return max_mip_low; }
+  double GetMaxdELow   ( void ) const { return max_dE_low ; }
+
   double GetPositionR  ( void ) const { return m_r;        } 
   double GetPositionPhi( void ) const { return m_phi;      } 
 

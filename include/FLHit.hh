@@ -43,6 +43,8 @@ public:
   double GetPositionR( void ) const { return m_hit_u->GetPositionR(); }
   double GetPositionPhi( void ) const { return m_hit_u->GetPositionPhi(); }
   double GetAdcLow( void )   const { return m_hit_u->GetAdcLow(); }
+  double GetMIPLow( void )   const { return m_hit_u->GetMIPLow(); }
+  double GetdELow( void )   const { return m_hit_u->GetdELow(); }
   int    PairId( void )      const { return m_hit_u->PairId();      }
   double SegmentId( void )   const { return m_hit_u->SegmentId();   }
   void   SetJoined( void )         { m_flag_fljoin = true;          }

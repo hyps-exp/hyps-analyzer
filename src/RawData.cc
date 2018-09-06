@@ -164,6 +164,8 @@ RawData::RawData( void )
     m_BFTRawHC(NumOfPlaneBFT),
     m_SFTRawHC(NumOfPlaneSFT),
     m_CFTRawHC(NumOfPlaneCFT),
+    m_BGORawHC(),
+    m_PiIDRawHC(),
     m_SCHRawHC(),
     m_FBT1RawHC(2*NumOfLayersFBT1),
     m_FBT2RawHC(2*NumOfLayersFBT2),
@@ -202,6 +204,8 @@ RawData::ClearAll( void )
   del::ClearContainerAll( m_BFTRawHC );
   del::ClearContainerAll( m_SFTRawHC );
   del::ClearContainerAll( m_CFTRawHC );
+  del::ClearContainer( m_BGORawHC );
+  del::ClearContainer( m_PiIDRawHC );
   del::ClearContainerAll( m_FBT1RawHC );
   del::ClearContainerAll( m_FBT2RawHC );
 
@@ -299,20 +303,22 @@ RawData::DecodeHits( void )
   for( int plane=0; plane<NumOfPlaneCFT; ++plane ){    
     //CFT TDC 
     for(int seg = 0; seg<NumOfSegCFT[plane]; ++seg){
-      int nhit_tdc = gUnpacker.get_entries( DetIdCFT, plane, seg, 0, 0 );
+      int nhit_tdc      = gUnpacker.get_entries( DetIdCFT, plane, seg, 0, 0 );
+      int nhit_trailing = gUnpacker.get_entries( DetIdCFT, plane, seg, 0, 1 );
       if( nhit_tdc>0 ){
 	for(int i = 0; i<nhit_tdc; ++i){
 	  int leading  = gUnpacker.get( DetIdCFT, plane, seg, 0, 0, i );
-	  int trailing = 0;
-	  int nhit_trailing = gUnpacker.get_entries( DetIdCFT, plane, seg, 0, 1 );
-	  AddHodoRawHit( m_CFTRawHC[plane], DetIdCFT, plane, seg , 0, 1, leading );
-	  if(i<nhit_trailing){
-	    trailing = gUnpacker.get( DetIdCFT, plane, seg, 0, 1, i )  ;
-	    AddHodoRawHit( m_CFTRawHC[plane], DetIdCFT, plane, seg , 1, 1, trailing );
-	  }	  
-	}	
+	  AddHodoRawHit( m_CFTRawHC[plane], DetIdCFT, plane, seg , 0, kHodoLeading, leading );
+	}
+      }	
+      if(nhit_trailing>0){
+	for(int i = 0; i<nhit_trailing; ++i){
+	  int trailing = gUnpacker.get( DetIdCFT, plane, seg, 0, 1, i )  ;
+	  AddHodoRawHit( m_CFTRawHC[plane], DetIdCFT, plane, seg , 0, kHodoTrailing, trailing );
+	}	  	
       }
-      else continue; // w/ or w/o TDC,   comment out => pedestal              
+      //if( nhit_tdc==0 )continue; // w/ or w/o TDC,   comment out => pedestal              
+
       //CFT ADC HI
       int nhit_adc_hi = gUnpacker.get_entries( DetIdCFT, plane, seg, 0, 2 );
       if( nhit_adc_hi>0 ){
@@ -334,7 +340,62 @@ RawData::DecodeHits( void )
     }
   }
   
+  //BGO
+  for(int seg=0; seg<NumOfSegBGO; ++seg){
+    int ped      = 0;
+    int integral = 0;
 
+    int nhit_a = gUnpacker.get_entries( DetIdBGO, 0, seg, 0, 0 );
+    if( nhit_a>0 ){
+      for(int i = 0; i<nhit_a; ++i){
+	unsigned int fadc = gUnpacker.get(DetIdBGO, 0, seg, 0, 0 ,i);	
+	if( fadc == 0xffff ){
+	}else{
+	  if( ped == 0 ){ped = fadc;} // 1st value is seemed to be pedestal
+	  int delta = ped - fadc;
+	  /*
+	  std::cout << "BGO : seg=" << seg  << ", i=" << i << "/nhit=" << nhit
+		    << ", fadc=" << fadc << ", pede=" << ped 
+		    << ", integral=" << integral << ", +=" << delta // (ped - fadc)
+		    << std::endl;
+	  */
+	  integral += delta;
+	}	
+      }
+      AddHodoRawHit( m_BGORawHC, DetIdBGO, 0, seg , 0, kHodoAdc, integral );
+    }
+
+    //TDC
+    unsigned int nhit_t = gUnpacker.get_entries(DetIdBGO, 0, seg, 0, 1);
+    for(unsigned int m = 0; m<nhit_t; ++m){
+      int tdc = gUnpacker.get(DetIdBGO, 0, seg, 0, kHodoLeading, m);
+      AddHodoRawHit( m_BGORawHC, DetIdBGO, 0, seg , 0, kHodoLeading, tdc );
+      //std::cout << "BGO TDC : seg=" << seg  << ", tdc=" << tdc	<< std::endl;
+    }
+
+  }
+
+  //PiID counter
+  for(int seg=0; seg<NumOfSegPiID; ++seg){
+    int nhit_l = gUnpacker.get_entries( DetIdPiID, 0, seg, 0, 0 );
+    int nhit_t = gUnpacker.get_entries( DetIdPiID, 0, seg, 0, 1 );
+    if( nhit_l>0 ){
+      for(int i = 0; i<nhit_l; ++i){
+	int leading  = gUnpacker.get( DetIdPiID, 0, seg, 0, 0, i );
+	AddHodoRawHit( m_PiIDRawHC, DetIdPiID, 0, seg , 0, kHodoLeading,  leading );
+	//std::cout << "PiID TDC : seg=" << seg  << ", tdc=" << leading << std::endl;
+      }
+    }
+    if( nhit_t>0 ){
+      for(int j = 0; j<nhit_t; ++j){	    
+	int trailing = gUnpacker.get( DetIdPiID, 0, seg, 0, 1, j );
+	AddHodoRawHit( m_PiIDRawHC, DetIdPiID, 0, seg , 0, kHodoTrailing, trailing );
+	//std::cout << "PiID TDC trailing : seg=" << seg  << ", tdc=" << trailing << std::endl;
+      }	  
+    }
+    
+  }
+    
   //SCH
   for(int seg=0; seg<NumOfSegSCH; ++seg){
     int nhit = gUnpacker.get_entries( DetIdSCH, 0, seg, 0, 0 );

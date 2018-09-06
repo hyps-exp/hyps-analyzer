@@ -68,6 +68,10 @@ DCLocalTrack::DCLocalTrack( void )
   m_hit_arrayUV.reserve( ReservedNumOfHits );
   debug::ObjectCounter::increase(class_name);
 
+  m_total_dE     = 0; m_total_max_dE = 0;
+  m_total_dE_phi = 0; m_total_max_dE_phi = 0;
+  m_total_dE_uv  = 0; m_total_max_dE_uv  = 0;
+
   for(int i=0; i<NumOfPlaneCFT*2; i++){
     m_meanseg[i]   = -999;
     m_phi_ini[i]   = -999;  
@@ -77,6 +81,9 @@ DCLocalTrack::DCLocalTrack( void )
     m_z_track[i]   = -999;  
     m_dz[i]        = -999;           
     m_dist_phi[i]  = -999;           
+    m_sum_adc[i]=0;  m_max_adc[i]=0;
+    m_sum_mip[i]=0;  m_max_mip[i]=0;
+    m_sum_dE [i]=0;  m_max_dE [i]=0; 
   }
 
 }
@@ -153,13 +160,6 @@ DCLocalTrack::CalculateCFT( void )
     // for Honeycomb
     if( !hitp->IsHoneycomb() )
       continue;
-    /*
-    double scal = hitp->GetLocalCalPos();
-    double wp   = hitp->GetWirePosition();
-    double dl   = hitp->GetDriftLength();
-    double ss   = scal-wp>0 ? wp+dl : wp-dl;
-    */
-    //hitp->SetLocalHitPos( ss );
     hitp->SetLocalHitPos( 0 );    
   }
 
@@ -1657,13 +1657,31 @@ bool DCLocalTrack::SetCalculatedValueCFT()
     DCLTrackHit *hitp = m_hit_array[i];
     if( hitp ){
       int lnum = hitp->GetLayer();
-      double phi;
 
+      m_sum_adc[lnum] = hitp->GetAdcLow();
+      m_sum_mip[lnum] = hitp->GetMIPLow();
+      m_sum_dE[lnum]  = hitp->GetdELow();
+      m_max_adc[lnum] = hitp->GetMaxAdcLow();
+      m_max_mip[lnum] = hitp->GetMaxMIPLow();
+      m_max_dE[lnum]  = hitp->GetMaxdELow();
+
+      m_total_adc += m_sum_adc[lnum];
+      m_total_mip += m_sum_mip[lnum];
+      m_total_dE  += m_sum_dE[lnum];
+
+      m_total_max_adc += m_max_adc[lnum];
+      m_total_max_mip += m_max_mip[lnum];
+      m_total_max_dE  += m_max_dE[lnum];
+
+      m_total_dE_phi     += m_sum_dE[lnum];
+      m_total_max_dE_phi += m_max_dE[lnum];
+      
       int seg=0;
       int l_geo = lnum +301;
       if(lnum>7){l_geo -= 8;}
       //double r = hitp->GetRMax();
       double r = hitp->GetPositionR();
+      double phi;
       bool ret = GetCrossPointR(r, &phi, lnum);
       if (!ret) {
 	std::cout << funcname << " return at GetCrossPointR" << std::endl;
@@ -1723,6 +1741,26 @@ bool DCLocalTrack::SetCalculatedValueCFT()
     DCLTrackHit *hitp = m_hit_arrayUV[i];
     if( hitp ){
       int lnum = hitp->GetLayer();
+
+      m_sum_adc[lnum] = hitp->GetAdcLow();
+      m_sum_mip[lnum] = hitp->GetMIPLow();
+      m_sum_dE[lnum]  = hitp->GetdELow();
+      m_max_adc[lnum] = hitp->GetMaxAdcLow();
+      m_max_mip[lnum] = hitp->GetMaxMIPLow();
+      m_max_dE[lnum]  = hitp->GetMaxdELow();
+
+      m_total_adc += m_sum_adc[lnum];
+      m_total_mip += m_sum_mip[lnum];
+      m_total_dE  += m_sum_dE[lnum];
+
+      m_total_max_adc += m_max_adc[lnum];
+      m_total_max_mip += m_max_mip[lnum];
+      m_total_max_dE  += m_max_dE[lnum];
+
+      m_total_dE_uv     += m_sum_dE[lnum];
+      m_total_max_dE_uv += m_max_dE[lnum];
+
+
       int l_geo = lnum +301;
       if(lnum>7){l_geo -= 8;}
       //double r = hitp->GetRMax();

@@ -76,8 +76,10 @@ void EvDispCFT::Initialize(int RunNum)
   gPad->SetGridx();  
   gPad->SetGridy();  
 
-  hbase_ = new TH2F("hbase","Event Display XY plane", 120, -120, 120, 120, -120, 120);
-  hbase_->SetMaximum(30);
+  //hbase_ = new TH2F("hbase","Event Display XY plane", 120, -120, 120, 120, -120, 120);
+  hbase_ = new TH2F("hbase","Event Display XY plane", 180, -180, 180, 180, -180, 180);
+  //hbase_->SetMaximum(30);
+  hbase_->SetMaximum(200);
   hbase_->SetMinimum(-1);
   hbase_->Draw();
 
@@ -349,18 +351,177 @@ void EvDispCFT::ConstructCFT(void)
 	BGO_Line_[seg][i]->SetLineColor(kBlack);		
 	BGO_Line_[seg][i]->Draw("same");
       }
-
     }else if(seg==0||seg==1){
     }else{
       BGO_Box_[seg] = new TBox(x1, y1, x2, y2);
       printf("BGO seg=%d, (x1,y1)=(%f,%f) , (x2,y2)=(%f,%f)\n", seg,x1,y1,x2,y2);
-      BGO_Box_[seg]->SetLineColor(kBlack);
-      
+      BGO_Box_[seg]->SetLineColor(kBlack);      
       BGO_Box_[seg]->SetFillStyle(0);
       BGO_Box_[seg]->Draw("same");
     }
-
   }
+
+  // PiID
+  for (int seg=0; seg<NumOfSegPiID; seg++) {
+    double w  = 30.,  t = 15.;//width, thickness
+    double ww = 40., tt = 15.;//width, thickness for 45 deg.
+    double x1,x2,x3,x4,y1,y2,y3,y4;
+    double x01,x02,y01,y02;
+    // box
+    if(seg==0 || seg==1 || seg==2){      
+      x1 = 159.0; x2 = x1 + t;
+      if     (seg==0){y1 = -1.5*w; y2 = -0.5*w;}
+      else if(seg==1){y1 = -0.5*w; y2 =  0.5*w;}
+      else if(seg==2){y1 =  0.5*w; y2 =  1.5*w;}      
+
+    }else if(seg==8 || seg==9 || seg==10){
+      y1 = 159.0; y2 = y1 + t;
+      if     (seg==8) {x1 = 0.5*w; x2 = 1.5*w;}
+      else if(seg==9) {x1 =-0.5*w; x2 = 0.5*w;}
+      else if(seg==10){x1 =-1.5*w; x2 =-0.5*w;}      
+
+    }else if(seg==16 || seg==17 || seg==18){
+      x1 = -159.0; x2 = x1 - t;
+      if     (seg==16){y1 = 1.5*w; y2 = 0.5*w;}
+      else if(seg==17){y1 =-0.5*w; y2 = 0.5*w;}
+      else if(seg==18){y1 =-1.5*w; y2 =-0.5*w;}      
+
+    }else if(seg==24 || seg==25 || seg==26){
+      y1 = -159.0; y2 = y1 - t;
+      if     (seg==24) {x1 =-1.5*w; x2 =-0.5*w;}
+      else if(seg==25) {x1 =-0.5*w; x2 = 0.5*w;}
+      else if(seg==26) {x1 = 0.5*w; x2 = 1.5*w;}      
+
+    }else if(seg==4 || seg==5 || seg==6){ // Line
+      double angle = 45.;
+      x01 = 159.*cos(angle*D2R);
+      y01 = 159.*sin(angle*D2R);
+      x02 = x01 + t*cos(45.*D2R);
+      y02 = y01 + t*cos(45.*D2R);      
+      if(seg==6){
+	x1 = x01 - 0.5*w*cos(45.*D2R); x3 = x01 - 1.5*w*cos(45.*D2R);
+	y1 = y01 + 0.5*w*cos(45.*D2R); y3 = y01 + 1.5*w*cos(45.*D2R);
+	x2 = x02 - 0.5*w*cos(45.*D2R); x4 = x02 - 1.5*w*cos(45.*D2R);
+	y2 = y02 + 0.5*w*cos(45.*D2R); y4 = y02 + 1.5*w*cos(45.*D2R);
+      }if(seg==5){
+	x1 = x01 + 0.5*w*cos(45.*D2R); x3 = x01 - 0.5*w*cos(45.*D2R);
+	y1 = y01 - 0.5*w*cos(45.*D2R); y3 = y01 + 0.5*w*cos(45.*D2R);
+	x2 = x02 + 0.5*w*cos(45.*D2R); x4 = x02 - 0.5*w*cos(45.*D2R);
+	y2 = y02 - 0.5*w*cos(45.*D2R); y4 = y02 + 0.5*w*cos(45.*D2R);
+      }else if(seg==4){
+	x1 = x01 + 0.5*w*cos(45.*D2R); x3 = x01 + 1.5*w*cos(45.*D2R);
+	y1 = y01 - 0.5*w*cos(45.*D2R); y3 = y01 - 1.5*w*cos(45.*D2R);
+	x2 = x02 + 0.5*w*cos(45.*D2R); x4 = x02 + 1.5*w*cos(45.*D2R);
+	y2 = y02 - 0.5*w*cos(45.*D2R); y4 = y02 - 1.5*w*cos(45.*D2R);
+      }   
+
+    }else if(seg==12 || seg==13 || seg==14){ // Line
+      double angle = 135.;
+      x01 = 159.*cos(angle*D2R);
+      y01 = 159.*sin(angle*D2R);
+      x02 = x01 - t*cos(45.*D2R);
+      y02 = y01 + t*cos(45.*D2R);      
+      if(seg==12){
+	x3 = x01 + 1.5*w*cos(45.*D2R); x1 = x01 + 0.5*w*cos(45.*D2R);
+	y3 = y01 + 1.5*w*cos(45.*D2R); y1 = y01 + 0.5*w*cos(45.*D2R);
+	x4 = x02 + 1.5*w*cos(45.*D2R); x2 = x02 + 0.5*w*cos(45.*D2R);
+	y4 = y02 + 1.5*w*cos(45.*D2R); y2 = y02 + 0.5*w*cos(45.*D2R);	
+      }else if(seg==13){
+	x1 = x01 + 0.5*w*cos(45.*D2R); x3 = x01 - 0.5*w*cos(45.*D2R);	
+	y1 = y01 + 0.5*w*cos(45.*D2R); y3 = y01 - 0.5*w*cos(45.*D2R);	
+	x2 = x02 + 0.5*w*cos(45.*D2R); x4 = x02 - 0.5*w*cos(45.*D2R);	
+	y2 = y02 + 0.5*w*cos(45.*D2R); y4 = y02 - 0.5*w*cos(45.*D2R);
+      }else if(seg==14){
+	x1 = x01 - 1.5*w*cos(45.*D2R); x3 = x01 - 0.5*w*cos(45.*D2R); 
+	y1 = y01 - 1.5*w*cos(45.*D2R); y3 = y01 - 0.5*w*cos(45.*D2R); 
+	x2 = x02 - 1.5*w*cos(45.*D2R); x4 = x02 - 0.5*w*cos(45.*D2R); 
+	y2 = y02 - 1.5*w*cos(45.*D2R); y4 = y02 - 0.5*w*cos(45.*D2R); 	
+      }
+
+    }else if(seg==20 || seg==21 || seg==22){ // Line
+      double angle = -135.;
+      x01 = 159.*cos(angle*D2R);
+      y01 = 159.*sin(angle*D2R);
+      x02 = x01 - t*cos(45.*D2R);
+      y02 = y01 - t*cos(45.*D2R);      
+      if(seg==22){
+	x3 = x01 + 1.5*w*cos(45.*D2R); x1 = x01 + 0.5*w*cos(45.*D2R);
+	y3 = y01 - 1.5*w*cos(45.*D2R); y1 = y01 - 0.5*w*cos(45.*D2R);
+	x4 = x02 + 1.5*w*cos(45.*D2R); x2 = x02 + 0.5*w*cos(45.*D2R);
+	y4 = y02 - 1.5*w*cos(45.*D2R); y2 = y02 - 0.5*w*cos(45.*D2R);	
+      }else if(seg==21){
+	x1 = x01 + 0.5*w*cos(45.*D2R); x3 = x01 - 0.5*w*cos(45.*D2R);
+	y1 = y01 - 0.5*w*cos(45.*D2R); y3 = y01 + 0.5*w*cos(45.*D2R);
+	x2 = x02 + 0.5*w*cos(45.*D2R); x4 = x02 - 0.5*w*cos(45.*D2R);
+	y2 = y02 - 0.5*w*cos(45.*D2R); y4 = y02 + 0.5*w*cos(45.*D2R);	
+      }else if(seg==20){
+	x1 = x01 - 0.5*w*cos(45.*D2R); x3 = x01 - 1.5*w*cos(45.*D2R);
+	y1 = y01 + 0.5*w*cos(45.*D2R); y3 = y01 + 1.5*w*cos(45.*D2R);
+	x2 = x02 - 0.5*w*cos(45.*D2R); x4 = x02 - 1.5*w*cos(45.*D2R);
+	y2 = y02 + 0.5*w*cos(45.*D2R); y4 = y02 + 1.5*w*cos(45.*D2R);	
+      }
+
+    }else if(seg==28 || seg==29 || seg==30){ // Line
+      double angle = -45.;
+      x01 = 159.*cos(angle*D2R);
+      y01 = 159.*sin(angle*D2R);
+      x02 = x01 + t*cos(45.*D2R);
+      y02 = y01 - t*cos(45.*D2R);      
+      if(seg==28){
+	x3 = x01 - 1.5*w*cos(45.*D2R); x1 = x01 - 0.5*w*cos(45.*D2R);
+	y3 = y01 - 1.5*w*cos(45.*D2R); y1 = y01 - 0.5*w*cos(45.*D2R);
+	x4 = x02 - 1.5*w*cos(45.*D2R); x2 = x02 - 0.5*w*cos(45.*D2R);
+	y4 = y02 - 1.5*w*cos(45.*D2R); y2 = y02 - 0.5*w*cos(45.*D2R);	
+      }else if(seg==29){
+	x1 = x01 - 0.5*w*cos(45.*D2R); x3 = x01 + 0.5*w*cos(45.*D2R);
+	y1 = y01 - 0.5*w*cos(45.*D2R); y3 = y01 + 0.5*w*cos(45.*D2R);
+	x2 = x02 - 0.5*w*cos(45.*D2R); x4 = x02 + 0.5*w*cos(45.*D2R);
+	y2 = y02 - 0.5*w*cos(45.*D2R); y4 = y02 + 0.5*w*cos(45.*D2R);	
+      }else if(seg==30){
+	x1 = x01 + 0.5*w*cos(45.*D2R); x3 = x01 + 1.5*w*cos(45.*D2R);
+	y1 = y01 + 0.5*w*cos(45.*D2R); y3 = y01 + 1.5*w*cos(45.*D2R);
+	x2 = x02 + 0.5*w*cos(45.*D2R); x4 = x02 + 1.5*w*cos(45.*D2R);
+	y2 = y02 + 0.5*w*cos(45.*D2R); y4 = y02 + 1.5*w*cos(45.*D2R);	
+      }
+
+    }else if(seg%4==3){ // Line
+      double n=(seg+1)/4;
+      double angle = +22.5+45.*(n-1);
+      printf("PiID seg=%d, angle=%f\n", seg,angle);
+      double xc = (120.+25.+25+tt/2.)*cos(angle*D2R);
+      double yc = (120.+25.+25+tt/2.)*sin(angle*D2R);
+      x1 = xc +(-tt/2)*cos(angle*D2R) - (-ww/2)*sin(angle*D2R);
+      y1 = yc +(-tt/2)*sin(angle*D2R) + (-ww/2)*cos(angle*D2R);
+      x2 = xc +(-tt/2)*cos(angle*D2R) - ( ww/2)*sin(angle*D2R);
+      y2 = yc +(-tt/2)*sin(angle*D2R) + ( ww/2)*cos(angle*D2R);
+      x3 = xc +( tt/2)*cos(angle*D2R) - (-ww/2)*sin(angle*D2R);
+      y3 = yc +( tt/2)*sin(angle*D2R) + (-ww/2)*cos(angle*D2R);
+      x4 = xc +( tt/2)*cos(angle*D2R) - ( ww/2)*sin(angle*D2R);
+      y4 = yc +( tt/2)*sin(angle*D2R) + ( ww/2)*cos(angle*D2R);
+    }
+
+    if(seg%8==0 || seg%8==1 || seg%8==2){
+      PiID_Box_[seg] = new TBox(x1, y1, x2, y2);
+      printf("PiID seg=%d, (x1,y1)=(%f,%f) , (x2,y2)=(%f,%f)\n", seg,x1,y1,x2,y2);
+      PiID_Box_[seg]->SetLineColor(kBlack);      
+      PiID_Box_[seg]->SetFillStyle(0);
+      PiID_Box_[seg]->Draw("same");    
+    }else{
+      PiID_Line_[seg][0] = new TLine(x1, y1, x2, y2);
+      PiID_Line_[seg][1] = new TLine(x1, y1, x3, y3);
+      PiID_Line_[seg][2] = new TLine(x2, y2, x4, y4);
+      PiID_Line_[seg][3] = new TLine(x3, y3, x4, y4);
+      printf("PiID seg=%d, (%f,%f),(%f,%f),(%f,%f),(%f,%f)\n", seg,x1,y1,x2,y2,x3,y3,x4,y4);
+      for(int i=0;i<4;i++){
+	PiID_Line_[seg][i]->SetLineColor(kBlack);		
+	PiID_Line_[seg][i]->Draw("same");
+      }      
+    }
+    
+  }
+
+
+
 
   tp_[5]->cd();
   Tgt_Box_ = new TBox(-50, -20, 300, 20);
@@ -442,6 +603,19 @@ void EvDispCFT::ShowHitBGO(int segment, int ADC) const
   }else{
     BGO_Box_[segment]->SetLineColor(kRed);
   } 
+}
+
+void EvDispCFT::ShowHitPiID(int segment) const
+{
+  static const std::string funcname = "EvDispCFT::ShowHitPiID";
+  const DCGeomMan & geomMan=DCGeomMan::GetInstance();
+
+  if(segment==0||segment==1||segment==2){}
+  else if(segment%8==0||segment%8==1 || segment%8==2){
+    PiID_Box_[segment]->SetLineColor(kRed);
+  }else{
+    for(int i=0;i<4;i++){PiID_Line_[segment][i]->SetLineColor(kRed);}    
+  }
 }
 
 void EvDispCFT::ShowHitPos(double X, double Y, double pe) const
@@ -540,8 +714,8 @@ void EvDispCFT::UpdateCanvas() const
 {
 
   tp_[0]->cd();
-  //hbase_->Draw("colz");
-  hbase_->Draw("col");
+  hbase_->Draw("colz");
+  //hbase_->Draw("col");
   //hbase_->Draw("");
   Tgt_Arc_->Draw("same");
   CFRP_Arc_->Draw("same");
@@ -582,7 +756,17 @@ void EvDispCFT::UpdateCanvas() const
       BGO_Box_[seg]->Draw("same");
     }
   }
-  
+
+  for (int seg=0; seg<NumOfSegPiID; seg++) {
+    if(seg==0||seg==1||seg==2){}
+    else if(seg%8==0||seg%8==1||seg%8==2){
+      PiID_Box_[seg]->Draw("same");
+    }else{
+      for(int i=0;i<4;i++){
+	PiID_Line_[seg][i]->Draw("same");
+      }            
+    }
+  }  
   
   int nt = TrackXYCont.size();
   for (int i=0; i<nt; i++) {
@@ -633,6 +817,18 @@ void EvDispCFT::EndOfEvent() const
     }else{
       BGO_Box_[seg]->SetLineColor(kBlack);
     }
+  }
+
+  //PiID
+  for (int seg=0; seg<NumOfSegPiID; seg++) {
+    if(seg==0||seg==1||seg==2){} 
+    else if(seg%8==0||seg%8==1||seg%8==2){
+      PiID_Box_[seg]->SetLineColor(kBlack);
+    }else{
+      for(int i=0;i<4;i++){
+	PiID_Line_[seg][i]->SetLineColor(kBlack);
+      }      
+    } 
   }
   
   hbase_->Reset("ICES");

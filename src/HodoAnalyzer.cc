@@ -64,6 +64,8 @@ HodoAnalyzer::~HodoAnalyzer( void )
   ClearBFTHits();
   ClearSFTHits();
   ClearCFTHits();
+  ClearBGOHits();
+  ClearPiIDHits();
   ClearSCHHits();
   ClearFBT1Hits();
   ClearFBT2Hits();
@@ -159,6 +161,20 @@ HodoAnalyzer::ClearCFTHits( void )
 
 //______________________________________________________________________________
 void
+HodoAnalyzer::ClearBGOHits( void )
+{
+  del::ClearContainer( m_BGOCont );
+}
+
+//______________________________________________________________________________
+void
+HodoAnalyzer::ClearPiIDHits( void )
+{
+  del::ClearContainer( m_PiIDCont );
+}
+
+//______________________________________________________________________________
+void
 HodoAnalyzer::ClearSCHHits( void )
 {
   del::ClearContainer( m_SCHCont );
@@ -198,6 +214,8 @@ HodoAnalyzer::DecodeRawHits( RawData *rawData )
   DecodeBFTHits( rawData );
   DecodeSFTHits( rawData );
   DecodeCFTHits( rawData );
+  DecodeBGOHits( rawData );
+  DecodePiIDHits( rawData );
   DecodeSCHHits( rawData );
   DecodeFBT1Hits( rawData );
   DecodeFBT2Hits( rawData );
@@ -497,7 +515,7 @@ HodoAnalyzer::DecodeCFTHits( RawData* rawData )
 	strcpy( pname, "CFT-PHI4" ); break;
       default: break;
       }
-
+      
       FiberHit *hp = new FiberHit(hit, pname);
       if(!hp) continue;
       if(hp->Calculate()){
@@ -521,6 +539,49 @@ HodoAnalyzer::DecodeCFTHits( RawData* rawData )
   return true;
 }
 
+//______________________________________________________________________________
+bool
+HodoAnalyzer::DecodeBGOHits( RawData *rawData )
+{
+  ClearBGOHits();
+  const HodoRHitContainer &cont = rawData->GetBGORawHC();
+  int nh = cont.size();
+  for( int i=0; i<nh; ++i ){
+    HodoRawHit *hit = cont[i];
+    if( !hit ) continue;
+    Hodo1Hit *hp = new Hodo1Hit( hit );
+    //Hodo2Hit *hp = new Hodo2Hit( hit );
+    if( !hp ) continue;
+    if( hp->Calculate() )
+      m_BGOCont.push_back(hp);
+    else
+      delete hp;
+  }//for(i)
+
+  return true;
+}
+
+//______________________________________________________________________________
+bool
+HodoAnalyzer::DecodePiIDHits( RawData* rawData )
+{
+  ClearPiIDHits();
+  const HodoRHitContainer &cont = rawData->GetPiIDRawHC();
+  int nh = cont.size();
+  for( int i=0; i<nh; ++i ){
+    HodoRawHit *hit = cont[i];
+    if( !hit ) continue;
+    FiberHit *hp = new FiberHit( hit, "PiID" );
+    if( !hp ) continue;
+    if( hp->Calculate() ){
+      m_PiIDCont.push_back( hp );
+    }else{
+      delete hp;
+    }
+  }
+
+  return true;
+}
 
 //______________________________________________________________________________
 bool
@@ -1554,7 +1615,8 @@ HodoAnalyzer::WidthCutSFT( int layer, double min_width, double max_width)
 void
 HodoAnalyzer::WidthCutCFT( int layer, double min_width, double max_width)
 {
-  WidthCut( m_CFTClCont.at( layer ), min_width, max_width , true);
+  //WidthCut( m_CFTClCont.at( layer ), min_width, max_width , true);
+  WidthCutR( m_CFTClCont.at( layer ), min_width, max_width , true);
 }
 
 //______________________________________________________________________________
@@ -1604,6 +1666,38 @@ HodoAnalyzer::WidthCut( std::vector<TypeCluster>& cont,
 }
 
 //______________________________________________________________________________
+//Implementation of width cut for the cluster container
+template <typename TypeCluster>
+void
+HodoAnalyzer::WidthCutR( std::vector<TypeCluster>& cont,
+			double min_width, double max_width,
+			bool adopt_nan)
+{
+  std::vector<TypeCluster> DeleteCand;
+  std::vector<TypeCluster> ValidCand;
+  std::size_t size = cont.size();
+  for( std::size_t i=0; i<size; ++i ){
+    double width = cont.at(i)->Width();
+    //double width = -cont.at(i)->minWidth();//reverse
+
+    if(isnan(width) && adopt_nan){
+      ValidCand.push_back(cont.at(i));
+    }else if(min_width < width && width < max_width){
+      ValidCand.push_back(cont.at(i));
+    }else{
+      DeleteCand.push_back(cont.at(i));
+    }
+  }
+
+  del::ClearContainer( DeleteCand );
+
+  cont.clear();
+  cont.resize(ValidCand.size());
+  std::copy(ValidCand.begin(), ValidCand.end(), cont.begin());
+  ValidCand.clear();
+}
+
+//______________________________________________________________________________
 void
 HodoAnalyzer::AdcCutCFT( int layer, double amin, double amax )
 {
@@ -1621,7 +1715,7 @@ HodoAnalyzer::AdcCut( std::vector<TypeCluster>& cont,
   std::vector<TypeCluster> ValidCand;
   std::size_t size = cont.size();
   for( std::size_t i=0; i<size; ++i ){
-    double adc = cont.at(i)->SumAdcLow();
+    double adc = cont.at(i)->MaxAdcLow();
     if(amin < adc && adc < amax){
       ValidCand.push_back(cont.at(i));
     }else{

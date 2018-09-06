@@ -72,9 +72,11 @@ private:
   TArc      *U_Arc_[NumOfSegCFT_PHI4];
   TLine     *U_Line_[NumOfSegCFT_PHI4][2];
 
-
   TBox      *BGO_Box_[24];
   TLine     *BGO_Line_[24][4];
+
+  TBox      *PiID_Box_[32];
+  TLine     *PiID_Line_[32][4];
 
   TBox      *Tgt_Box_;
   TArc      *Tgt_Arc_;
@@ -95,6 +97,7 @@ public:
   void ConstructCFT(void);
   void ShowHitFiber(int layer, int segment, double pe) const;
   void ShowHitBGO(int seg, int ADC) const;
+  void ShowHitPiID(int seg) const;
   void ShowHitPos(double X, double Y, double pe) const;
   void ShowHitPosZX(double Z, double X, double pe) const;
   void ShowHitPosZY(double Z, double Y, double pe) const;
