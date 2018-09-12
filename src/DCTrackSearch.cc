@@ -139,6 +139,60 @@ namespace
     }
   }
 
+  //_____________________________________________________________________                                                    
+  inline void
+  DeleteDuplicatedTracks( std::vector<DCLocalTrack*>& trackCont, int first, int second, double ChisqrCut=0. )
+  {
+    std::vector <int> delete_index;
+    // evaluate container size in every iteration                                                                            
+    for( std::size_t i=first; i<=second; ++i ){
+
+      auto itr = std::find(delete_index.begin(), delete_index.end(), i);
+      if (itr != delete_index.end())
+        continue;
+
+      const DCLocalTrack* const tp = trackCont[i];
+      if (!tp) continue;
+
+      int nh = tp->GetNHit();
+      for(int j=0; j<nh; ++j) tp->GetHit(j)->JoinTrack();
+
+      for( std::size_t i2=second; i2>i; --i2 ){
+        auto itr = std::find(delete_index.begin(), delete_index.end(), i2);
+        if (itr != delete_index.end())
+          continue;
+
+        const DCLocalTrack* tp2 = trackCont[i2];
+        int nh2 = tp2->GetNHit(), flag=0;
+        double chisqr = tp2->GetChiSquare();
+        for( int j=0; j<nh2; ++j )
+          if( tp2->GetHit(j)->BelongToTrack() ) ++flag;
+        if( flag>0 && chisqr>ChisqrCut ){
+          delete tp2;
+          tp2 = 0;
+
+          delete_index.push_back(i2);
+        }
+      }
+    }
+
+    // sort from bigger order                                                                                                
+    std::sort(delete_index.begin(), delete_index.end(), std::greater<int>());
+    for (int i=0; i<delete_index.size(); i++) {
+      trackCont.erase(trackCont.begin()+delete_index[i]);
+    }
+
+    // reset hit record of DCHit                                                                                             
+    for( std::size_t i=0; i<trackCont.size(); ++i ){
+      const DCLocalTrack* const tp = trackCont[i];
+      if (!tp) continue;
+      int nh = tp->GetNHit();
+      for(int j=0; j<nh; ++j) tp->GetHit(j)->QuitTrack();
+    }
+  }
+
+
+
   //_____________________________________________________________________
   inline void // for SSD PreTrack
   DeleteWideTracks( std::vector<DCLocalTrack*>& TrackContX,
@@ -276,7 +330,9 @@ namespace
       hddaq::cout << "[" << std::setw(3) << i << "]: "
 		  << std::setw(3) << n << " ";
       for( int j=0; j<n; ++j ){
-	hddaq::cout << ((DCLTrackHit *)CandCont[i][j]->GetHit(0))->GetWire() << " ";
+	hddaq::cout << ((DCLTrackHit *)CandCont[i][j]->GetHit(0))->GetWire() 
+		    << "( " << CandCont[i][j]->NumberOfHits() << " )" 
+		    << " ";
       }
       hddaq::cout << std::endl;
     }
@@ -297,10 +353,64 @@ namespace
     DebugPrint( trackCont, arg+" Before Sorting " );
 #endif
 
+    std::stable_sort( trackCont.begin(), trackCont.end(), DCLTrackComp_Nhit() );
+
+
+#if 0
+    DebugPrint( trackCont, arg+" After Sorting (Nhit) " );
+#endif
+
+    typedef std::pair <int, int> index_pair;
+    std::vector <index_pair> index_pair_vec;
+    
+    std::vector <int> nhit_vec;
+    
+    for (int i=0; i<trackCont.size(); i++) {
+      int nhit = trackCont[i]->GetNHit();
+      nhit_vec.push_back(nhit);
+    }
+    
+    if (!nhit_vec.empty()) {
+      int max_nhit = nhit_vec.front();
+      int min_nhit = nhit_vec.back();
+      for (int nhit=max_nhit; nhit>=min_nhit; nhit--) {
+	auto itr1 = std::find(nhit_vec.begin(), nhit_vec.end(), nhit);
+	if (itr1 == nhit_vec.end())
+	  continue;
+	
+	size_t index1 = std::distance(nhit_vec.begin(), itr1);
+	
+	auto itr2 = std::find(nhit_vec.rbegin(), nhit_vec.rend(), nhit);
+	size_t index2 = nhit_vec.size() - std::distance(nhit_vec.rbegin(), itr2) - 1;
+	
+	index_pair_vec.push_back(index_pair(index1, index2));
+      }
+    }
+    
+    for (int i=0; i<index_pair_vec.size(); i++) {
+      std::stable_sort( trackCont.begin() + index_pair_vec[i].first,
+			trackCont.begin() +  index_pair_vec[i].second + 1, DCLTrackComp_Chisqr() );
+    }
+    
+#if 0
+      DebugPrint( trackCont, arg+" After Sorting (chisqr)" );
+#endif
+
+    if( delete_flag ) {
+      for (int i = index_pair_vec.size()-1; i>=0; --i) {
+        DeleteDuplicatedTracks( trackCont, index_pair_vec[i].first, index_pair_vec[i].second, 0.);
+      }
+    }
+
+#if 0
+      DebugPrint( trackCont, arg+" After Deleting in each hit number" );
+#endif
+
+
     std::stable_sort( trackCont.begin(), trackCont.end(), comp );
 
 #if 0
-    DebugPrint( trackCont, arg+" After Sorting " );
+    DebugPrint( trackCont, arg+" After Sorting with comp func " );
 #endif
 
     if( delete_flag ) DeleteDuplicatedTracks( trackCont );

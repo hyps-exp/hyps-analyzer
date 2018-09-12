@@ -66,6 +66,7 @@ private:
   TCanvas                   *m_canvas_hist;
   TCanvas                   *m_canvas_hist2;
   TCanvas                   *m_canvas_hist3;
+  TCanvas                   *m_canvas_hist4;
   TH1                       *m_hist_vertex_x;
   TH1                       *m_hist_vertex_y;
   TH1                       *m_hist_p;
@@ -82,10 +83,18 @@ private:
   TH2                       *m_hist_sdc2_t;
   TH2                       *m_hist_sdc2p_l;
   TH2                       *m_hist_sdc2p_t;
+  TH2                       *m_hist_sdc2y_l;
+  TH2                       *m_hist_sdc2y_t;
+  TH2                       *m_hist_sdc2yp_l;
+  TH2                       *m_hist_sdc2yp_t;
   TH2                       *m_hist_sdc3_l;
   TH2                       *m_hist_sdc3_t;
   TH2                       *m_hist_sdc3p_l;
   TH2                       *m_hist_sdc3p_t;
+  TH2                       *m_hist_sdc3y_l;
+  TH2                       *m_hist_sdc3y_t;
+  TH2                       *m_hist_sdc3yp_l;
+  TH2                       *m_hist_sdc3yp_t;
 
   TH2                       *m_hist_bc3;
   TH2                       *m_hist_bc3p;
@@ -103,6 +112,15 @@ private:
   TH1                       *m_hist_bc3p_time;
   TH1                       *m_hist_bc4_time;
   TH1                       *m_hist_bc4p_time;
+
+  TH2                       *m_hist_fbt1u;
+  TH2                       *m_hist_fbt1up;
+  TH2                       *m_hist_fbt1d;
+  TH2                       *m_hist_fbt1dp;
+  TH2                       *m_hist_fbt2u;
+  TH2                       *m_hist_fbt2up;
+  TH2                       *m_hist_fbt2d;
+  TH2                       *m_hist_fbt2dp;
 
   TNode                     *m_target_node;
   TNode                     *m_kurama_inner_node;
@@ -221,10 +239,12 @@ public:
   void DrawMomentum( double momentum );
   void DrawMassSquare( double mass_square );
   void DrawBH2( int seg, int tdc );
+  void DrawSFT( int layer, int seg, int tdc );
   void DrawSFT_X( int seg, int tdc );
   void DrawSFT_U( int seg, int tdc );
   void DrawSFT_V( int seg, int tdc );
   void DrawSCH( int seg, int tdc );
+  void DrawFBT( int detId, int layer, int UorD, int seg, int tdc );
   void DrawTOF( int seg, int tdc );
   void DrawBcOutHit(int layer,  int wire, int tdc );
   void DrawBC3( int wire, int tdc );
@@ -233,6 +253,7 @@ public:
   void DrawBC4p( int wire, int tdc );
   void DrawSDC1( int wire, int tdc );
   void DrawSDC1p( int wire, int tdc );
+  void DrawSdcOutHit(int layer,  int wire, int LorT, int tdc );
   void DrawSDC2_Leading( int wire, int tdc );
   void DrawSDC2_Trailing( int wire, int tdc );
   void DrawSDC2p_Leading( int wire, int tdc );

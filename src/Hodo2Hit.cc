@@ -159,6 +159,7 @@ Hodo2Hit::Calculate( void )
   std::sort(ctime1.begin(), ctime1.end(), std::greater<double>());
   std::sort(ctime2.begin(), ctime2.end(), std::greater<double>());
 
+#if 0
   // Make coincidence
   for(int i = 0, i_d = 0, last_d = 0; i<n_mhit1; ++i){
     while(i_d < n_mhit2){
@@ -182,6 +183,27 @@ Hodo2Hit::Calculate( void )
     if(last_d == n_mhit2) break; // no more D hit
     if(i_d == n_mhit2-1) i_d = last_d;
   }// for(i)
+#endif
+
+#if 1
+  // Make coincidence 
+  for(int i = 0, i_d = 0, last_d = 0; i<n_mhit1; ++i){
+    for (int i_d = 0; i_d<n_mhit2; ++i_d) {
+      if(abs(time1[i]-time2[i_d]) < m_max_time_diff){
+        // Coincidence
+        data_pair a_pair;
+        a_pair.time1   = time1[i]     + offset_vtof;
+        a_pair.time2   = time2[i_d]   + offset_vtof;
+        a_pair.ctime1  = ctime1[i]    + offset_vtof;
+        a_pair.ctime2  = ctime2[i_d]  + offset_vtof;
+        m_pair_cont.push_back(a_pair);
+
+        m_flag_join.push_back(false);
+        break;
+      }
+    }// for(i_d)
+  }// for(i)
+#endif
 
   if(m_pair_cont.size() == 0) return false;
   

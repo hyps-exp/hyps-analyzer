@@ -207,6 +207,29 @@ double HodoParamMan::GetPar( int cid, int plid, int seg, int ud, int i ) const
 }
 
 
+//______________________________________________________________________________                                             
+double
+HodoParamMan::GetOffset(int cid, int plid, int seg, int ud) const
+{
+  HodoTParam* map = GetTmap( cid, plid, seg, ud );
+  if(!map) return -9999.;
+
+  return map->Offset();
+
+}
+
+//______________________________________________________________________________                                             
+double
+HodoParamMan::GetGain(int cid, int plid, int seg, int ud) const
+{
+  HodoTParam* map = GetTmap( cid, plid, seg, ud );
+  if(!map) return -9999.;
+
+  return map->Gain();
+
+}
+
+
 //______________________________________________________________________________
 HodoTParam*
 HodoParamMan::GetTmap( int cid, int plid, int seg, int ud ) const

@@ -314,6 +314,43 @@ struct DCLTrackComp4
 };
 
 //______________________________________________________________________________
+
+struct DCLTrackComp_Nhit 
+  : public std::binary_function <DCLocalTrack *, DCLocalTrack *, bool>
+{
+  bool operator()( const DCLocalTrack * const p1,
+                   const DCLocalTrack * const p2 ) const
+  {
+    const int minimum=8;
+
+    int n1=p1->GetNHit(), n2=p2->GetNHit();
+
+    if( n1>=n2 )
+      return true;
+    else
+      return false;
+  }
+};
+
+//______________________________________________________________________________
+
+struct DCLTrackComp_Chisqr
+  : public std::binary_function <DCLocalTrack *, DCLocalTrack *, bool>
+{
+  bool operator()( const DCLocalTrack * const p1,
+                   const DCLocalTrack * const p2 ) const
+  {
+    double chi1=p1->GetChiSquare(),chi2=p2->GetChiSquare();
+
+    if (chi1 <= chi2)
+      return true;
+    else
+      return false;
+  }
+};
+
+
+//______________________________________________________________________________
 struct DCLTrackCompSdcInFiber
   : public std::binary_function <DCLocalTrack *, DCLocalTrack *, bool>
 {

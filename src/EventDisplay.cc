@@ -55,6 +55,8 @@
 #include "DCLocalTrack.hh"
 #include "MathTools.hh"
 #include "DeleteUtility.hh"
+#include "HodoParamMan.hh"
+#include "DCTdcCalibMan.hh"
 
 #define BH2        1
 #define BcOut      1
@@ -67,6 +69,7 @@
 #define Vertex     1
 #define Hist       0
 #define Hist_Timing 1
+#define Hist_SdcOut 1
 
 namespace
 {
@@ -100,6 +103,15 @@ namespace
   const double MinZ = -25.;
 #endif
   const double MaxZ =  50.;
+
+  const HodoParamMan& gHodo = HodoParamMan::GetInstance();
+  const DCTdcCalibMan& gTdc = DCTdcCalibMan::GetInstance();
+// FBT
+//const double p0_FBT = gHodo.GetOffset(DetIdFBT1, 0, 0, 0);
+//const double p1_FBT = gHodo.GetGain(DetIdFBT1, 0, 0, 0);
+//const double p0_FBT = 526.;
+//const double p1_FBT = -1;
+
 }
 
 //______________________________________________________________________________
@@ -113,6 +125,7 @@ EventDisplay::EventDisplay( void )
     m_canvas_hist(0),
     m_canvas_hist2(0),
     m_canvas_hist3(0),
+    m_canvas_hist4(0),
     m_hist_vertex_x(0),
     m_hist_vertex_y(0),
     m_hist_p(0),
@@ -129,10 +142,18 @@ EventDisplay::EventDisplay( void )
     m_hist_sdc2_t(0),
     m_hist_sdc2p_l(0),
     m_hist_sdc2p_t(0),
+    m_hist_sdc2y_l(0),
+    m_hist_sdc2y_t(0),
+    m_hist_sdc2yp_l(0),
+    m_hist_sdc2yp_t(0),
     m_hist_sdc3_l(0),
     m_hist_sdc3_t(0),
     m_hist_sdc3p_l(0),
     m_hist_sdc3p_t(0),
+    m_hist_sdc3y_l(0),
+    m_hist_sdc3y_t(0),
+    m_hist_sdc3yp_l(0),
+    m_hist_sdc3yp_t(0),
     m_hist_bc3(0),
     m_hist_bc3p(0),
     m_hist_bc3u(0),
@@ -149,6 +170,14 @@ EventDisplay::EventDisplay( void )
     m_hist_bc3p_time(0),
     m_hist_bc4_time(0),
     m_hist_bc4p_time(0),
+    m_hist_fbt1u(0),
+    m_hist_fbt1up(0),
+    m_hist_fbt2u(0),
+    m_hist_fbt2up(0),
+    m_hist_fbt1d(0),
+    m_hist_fbt1dp(0),
+    m_hist_fbt2d(0),
+    m_hist_fbt2dp(0),
     m_target_node(0),
     m_kurama_inner_node(0),
     m_kurama_outer_node(0),
@@ -311,33 +340,21 @@ EventDisplay::Initialize( void )
   m_hist_bh2  = new TH2F( "hist_bh2", "BH2", NumOfSegBH2, 0., NumOfSegBH2, 500, -500, 500 );
   m_hist_bh2->GetYaxis()->SetRangeUser(-100, 100);
   m_hist_sft_x  = new TH2F( "hist_sft_x", "SFT_X", NumOfSegSFT_X, 0., NumOfSegSFT_X, 500, -500, 500 );
+  m_hist_sft_x->GetYaxis()->SetRangeUser(-100, 100);
   m_hist_sft_u  = new TH2F( "hist_sft_u", "SFT_U", NumOfSegSFT_UV, 0., NumOfSegSFT_UV, 500, -500, 500 );
+  m_hist_sft_u->GetYaxis()->SetRangeUser(-100, 100);
   m_hist_sft_v  = new TH2F( "hist_sft_v", "SFT_V", NumOfSegSFT_UV, 0., NumOfSegSFT_UV, 500, -500, 500 );
+  m_hist_sft_v->GetYaxis()->SetRangeUser(-100, 100);
   m_hist_sch = new TH2F( "hist_sch", "SCH", NumOfSegSCH, 0, NumOfSegSCH, 500, -500, 500 );
+  m_hist_sch->GetYaxis()->SetRangeUser(-100, 100);
   m_hist_tof = new TH2F( "hist_tof", "TOF", NumOfSegTOF, 0, NumOfSegTOF, 500, -500, 500 );
+  m_hist_tof->GetYaxis()->SetRangeUser(-100, 100);
 
   m_hist_sdc1 = new TH2F( "hist_sdc1", "SDC1", MaxWireSDC1, 0, MaxWireSDC1, 500, -500, 500 );
+  m_hist_sdc1->GetYaxis()->SetRangeUser(-100, 100);
   m_hist_sdc1p = new TH2F( "hist_sdc1p", "SDC1 Xp", MaxWireSDC1, 0, MaxWireSDC1, 500, -500, 500 );
+
   m_hist_sdc1p->SetFillColor(kBlack);
-
-  m_hist_sdc2_l = new TH2F( "hist_sdc2_l", "SDC2 (leading)", MaxWireSDC2, 0, MaxWireSDC2, 500, -500, 500 );
-  m_hist_sdc2_t = new TH2F( "hist_sdc2_t", "SDC2 (trailing)", MaxWireSDC2, 0, MaxWireSDC2, 500, -500, 500 );
-  m_hist_sdc2_t->SetFillColor(kRed);
-
-  m_hist_sdc2p_l = new TH2F( "hist_sdc2p_l", "SDC2 Xp (leading)", MaxWireSDC2, 0, MaxWireSDC2, 500, -500, 500 );
-  m_hist_sdc2p_t = new TH2F( "hist_sdc2p_t", "SDC2 Xp(trailing)", MaxWireSDC2, 0, MaxWireSDC2, 500, -500, 500 );
-  m_hist_sdc2p_l->SetFillColor(kBlack);
-  m_hist_sdc2p_t->SetFillColor(kGreen);
-
-  m_hist_sdc3_l = new TH2F( "hist_sdc3_l", "SDC3 (leading)", MaxWireSDC3X, 0, MaxWireSDC3X, 500, -500, 500 );
-  m_hist_sdc3_t = new TH2F( "hist_sdc3_t", "SDC3 (trailing)", MaxWireSDC3X, 0, MaxWireSDC3X, 500, -500, 500 );
-  m_hist_sdc3_t->SetFillColor(kRed);
-
-  m_hist_sdc3p_l = new TH2F( "hist_sdc3p_l", "SDC3 Xp(leading)", MaxWireSDC3X, 0, MaxWireSDC3X, 500, -500, 500 );
-  m_hist_sdc3p_t = new TH2F( "hist_sdc3p_t", "SDC3 Xp(trailing)", MaxWireSDC3X, 0, MaxWireSDC3X, 500, -500, 500 );
-  m_hist_sdc3p_l->SetFillColor(kBlack);
-  m_hist_sdc3p_t->SetFillColor(kGreen);
-
   m_canvas_hist2->cd(1)->SetGrid();
   m_hist_bh2->Draw("box");
   m_canvas_hist2->cd(2)->SetGrid();
@@ -353,16 +370,6 @@ EventDisplay::Initialize( void )
   m_canvas_hist2->cd(3)->SetGrid();
   m_hist_sdc1->Draw("box");
   m_hist_sdc1p->Draw("samebox");
-  m_canvas_hist2->cd(6)->SetGrid();
-  m_hist_sdc2_l->Draw("box");
-  m_hist_sdc2_t->Draw("samebox");
-  m_hist_sdc2p_l->Draw("samebox");
-  m_hist_sdc2p_t->Draw("samebox");
-  m_canvas_hist2->cd(9)->SetGrid();
-  m_hist_sdc3_l->Draw("box");
-  m_hist_sdc3_t->Draw("samebox");
-  m_hist_sdc3p_l->Draw("samebox");
-  m_hist_sdc3p_t->Draw("samebox");
 
   m_canvas_hist3 = new TCanvas( "canvas_hist3", "EventDisplay Detector Timing",
 			       800, 1000 );
@@ -442,6 +449,122 @@ EventDisplay::Initialize( void )
   */
   // gStyle->SetOptTitle(0);
   gStyle->SetOptStat(0);
+
+#endif
+
+#if Hist_SdcOut
+  m_canvas_hist4 = new TCanvas( "canvas_hist4", "EventDisplay Detector Timing (SdcOut)", 800, 800);
+  m_canvas_hist4->Divide(2,4);  
+
+  m_hist_fbt1u = new TH2F( "hist_fbt1u", "FBT1U", MaxSegFBT1, 0, MaxSegFBT1, 500, -500, 500 );
+  m_hist_fbt1up = new TH2F( "hist_fbt1u", "FBT1U p", MaxSegFBT1, 0, MaxSegFBT1, 500, -500, 500 );
+  m_hist_fbt1up->SetFillColor(kBlack);
+
+  m_hist_fbt1u->GetYaxis()->SetRangeUser(-100, 100);
+  m_hist_fbt1up->GetYaxis()->SetRangeUser(-100, 100);
+
+  m_hist_fbt2u = new TH2F( "hist_fbt2u", "FBT2U", MaxSegFBT2, 0, MaxSegFBT2, 500, -500, 500 );
+  m_hist_fbt2up = new TH2F( "hist_fbt2u", "FBT2U p", MaxSegFBT2, 0, MaxSegFBT2, 500, -500, 500 );
+  m_hist_fbt2up->SetFillColor(kBlack);
+
+  m_hist_fbt2u->GetYaxis()->SetRangeUser(-100, 100);
+  m_hist_fbt2up->GetYaxis()->SetRangeUser(-100, 100);
+
+  m_hist_fbt1d = new TH2F( "hist_fbt1d", "FBT1D", MaxSegFBT1, 0, MaxSegFBT1, 500, -500, 500 );
+  m_hist_fbt1dp = new TH2F( "hist_fbt1d", "FBT1D p", MaxSegFBT1, 0, MaxSegFBT1, 500, -500, 500 );
+  m_hist_fbt1dp->SetFillColor(kBlack);
+
+  m_hist_fbt1d->GetYaxis()->SetRangeUser(-100, 100);
+  m_hist_fbt1dp->GetYaxis()->SetRangeUser(-100, 100);
+
+  m_hist_fbt2d = new TH2F( "hist_fbt2d", "FBT2D", MaxSegFBT2, 0, MaxSegFBT2, 500, -500, 500 );
+  m_hist_fbt2dp = new TH2F( "hist_fbt2d", "FBT2D p", MaxSegFBT2, 0, MaxSegFBT2, 500, -500, 500 );
+  m_hist_fbt2dp->SetFillColor(kBlack);
+
+  m_hist_fbt2d->GetYaxis()->SetRangeUser(-100, 100);
+  m_hist_fbt2dp->GetYaxis()->SetRangeUser(-100, 100);
+
+  m_canvas_hist4->cd(1)->SetGrid();
+  m_hist_fbt1u->Draw("box");
+  m_canvas_hist4->cd(1)->SetGrid();
+  m_hist_fbt1up->Draw("samebox");
+
+  m_canvas_hist4->cd(2)->SetGrid();
+  m_hist_fbt2u->Draw("box");
+  m_canvas_hist4->cd(2)->SetGrid();
+  m_hist_fbt2up->Draw("samebox");
+
+  m_canvas_hist4->cd(3)->SetGrid();
+  m_hist_fbt1d->Draw("box");
+  m_canvas_hist4->cd(3)->SetGrid();
+  m_hist_fbt1dp->Draw("samebox");
+
+  m_canvas_hist4->cd(4)->SetGrid();
+  m_hist_fbt2d->Draw("box");
+  m_canvas_hist4->cd(4)->SetGrid();
+  m_hist_fbt2dp->Draw("samebox");
+
+  m_hist_sdc2_l = new TH2F( "hist_sdc2_l", "SDC2 (leading)", MaxWireSDC2, 0, MaxWireSDC2, 500, -500, 500 );
+  m_hist_sdc2_t = new TH2F( "hist_sdc2_t", "SDC2 (trailing)", MaxWireSDC2, 0, MaxWireSDC2, 500, -500, 500 );
+  m_hist_sdc2_t->SetFillColor(kRed);
+
+  m_hist_sdc2p_l = new TH2F( "hist_sdc2p_l", "SDC2 Xp (leading)", MaxWireSDC2, 0, MaxWireSDC2, 500, -500, 500 );
+  m_hist_sdc2p_t = new TH2F( "hist_sdc2p_t", "SDC2 Xp(trailing)", MaxWireSDC2, 0, MaxWireSDC2, 500, -500, 500 );
+  m_hist_sdc2p_l->SetFillColor(kBlack);
+  m_hist_sdc2p_t->SetFillColor(kGreen);
+
+  m_hist_sdc2y_l = new TH2F( "hist_sdc2y_l", "SDC2 Y (leading)", MaxWireSDC2, 0, MaxWireSDC2, 500, -500, 500 );
+  m_hist_sdc2y_t = new TH2F( "hist_sdc2y_t", "SDC2 Y (trailing)", MaxWireSDC2, 0, MaxWireSDC2, 500, -500, 500 );
+  m_hist_sdc2y_t->SetFillColor(kRed);
+
+  m_hist_sdc2yp_l = new TH2F( "hist_sdc2yp_l", "SDC2 Yp (leading)", MaxWireSDC2, 0, MaxWireSDC2, 500, -500, 500 );
+  m_hist_sdc2yp_t = new TH2F( "hist_sdc2yp_t", "SDC2 Yp(trailing)", MaxWireSDC2, 0, MaxWireSDC2, 500, -500, 500 );
+  m_hist_sdc2yp_l->SetFillColor(kBlack);
+  m_hist_sdc2yp_t->SetFillColor(kGreen);
+
+
+  m_hist_sdc3_l = new TH2F( "hist_sdc3_l", "SDC3 (leading)", MaxWireSDC3X, 0, MaxWireSDC3X, 500, -500, 500 );
+  m_hist_sdc3_t = new TH2F( "hist_sdc3_t", "SDC3 (trailing)", MaxWireSDC3X, 0, MaxWireSDC3X, 500, -500, 500 );
+  m_hist_sdc3_t->SetFillColor(kRed);
+
+  m_hist_sdc3p_l = new TH2F( "hist_sdc3p_l", "SDC3 Xp(leading)", MaxWireSDC3X, 0, MaxWireSDC3X, 500, -500, 500 );
+  m_hist_sdc3p_t = new TH2F( "hist_sdc3p_t", "SDC3 Xp(trailing)", MaxWireSDC3X, 0, MaxWireSDC3X, 500, -500, 500 );
+  m_hist_sdc3p_l->SetFillColor(kBlack);
+  m_hist_sdc3p_t->SetFillColor(kGreen);
+
+  m_hist_sdc3y_l = new TH2F( "hist_sdc3y_l", "SDC3 Y (leading)", MaxWireSDC3Y, 0, MaxWireSDC3Y, 500, -500, 500 );
+  m_hist_sdc3y_t = new TH2F( "hist_sdc3y_t", "SDC3 Y (trailing)", MaxWireSDC3Y, 0, MaxWireSDC3Y, 500, -500, 500 );
+  m_hist_sdc3y_t->SetFillColor(kRed);
+
+  m_hist_sdc3yp_l = new TH2F( "hist_sdc3yp_l", "SDC3 Yp(leading)", MaxWireSDC3Y, 0, MaxWireSDC3Y, 500, -500, 500 );
+  m_hist_sdc3yp_t = new TH2F( "hist_sdc3yp_t", "SDC3 Yp(trailing)", MaxWireSDC3Y, 0, MaxWireSDC3Y, 500, -500, 500 );
+  m_hist_sdc3yp_l->SetFillColor(kBlack);
+  m_hist_sdc3yp_t->SetFillColor(kGreen);
+
+  m_canvas_hist4->cd(5)->SetGrid();
+  m_hist_sdc2_l->Draw("box");
+  m_hist_sdc2_t->Draw("samebox");
+  m_hist_sdc2p_l->Draw("samebox");
+  m_hist_sdc2p_t->Draw("samebox");
+
+  m_canvas_hist4->cd(6)->SetGrid();
+  m_hist_sdc2y_l->Draw("box");
+  m_hist_sdc2y_t->Draw("samebox");
+  m_hist_sdc2yp_l->Draw("samebox");
+  m_hist_sdc2yp_t->Draw("samebox");
+
+  m_canvas_hist4->cd(7)->SetGrid();
+  m_hist_sdc3_l->Draw("box");
+  m_hist_sdc3_t->Draw("samebox");
+  m_hist_sdc3p_l->Draw("samebox");
+  m_hist_sdc3p_t->Draw("samebox");
+
+  m_canvas_hist4->cd(8)->SetGrid();
+  m_hist_sdc3y_l->Draw("box");
+  m_hist_sdc3y_t->Draw("samebox");
+  m_hist_sdc3yp_l->Draw("samebox");
+  m_hist_sdc3yp_t->Draw("samebox");
+
 
 #endif
 
@@ -2575,14 +2698,6 @@ EventDisplay::ResetHist(  )
   m_hist_tof->Reset();
   m_hist_sdc1->Reset();
   m_hist_sdc1p->Reset();
-  m_hist_sdc2_l->Reset();
-  m_hist_sdc2_t->Reset();
-  m_hist_sdc2p_l->Reset();
-  m_hist_sdc2p_t->Reset();
-  m_hist_sdc3_l->Reset();
-  m_hist_sdc3_t->Reset();
-  m_hist_sdc3p_l->Reset();
-  m_hist_sdc3p_t->Reset();
 
   m_hist_bc3->Reset();
   m_hist_bc3p->Reset();
@@ -2605,6 +2720,37 @@ EventDisplay::ResetHist(  )
   m_hist_bc4_time->Reset();
   m_hist_bc4_time->SetMaximum(-1111);
   m_hist_bc4p_time->Reset();
+#endif 
+
+#if Hist_SdcOut
+  m_hist_fbt1u->Reset();
+  m_hist_fbt1up->Reset();
+  m_hist_fbt1d->Reset();
+  m_hist_fbt1dp->Reset();
+  m_hist_fbt2u->Reset();
+  m_hist_fbt2up->Reset();
+  m_hist_fbt2d->Reset();
+  m_hist_fbt2dp->Reset();
+
+  m_hist_sdc2_l->Reset();
+  m_hist_sdc2_t->Reset();
+  m_hist_sdc2p_l->Reset();
+  m_hist_sdc2p_t->Reset();
+
+  m_hist_sdc2y_l->Reset();
+  m_hist_sdc2y_t->Reset();
+  m_hist_sdc2yp_l->Reset();
+  m_hist_sdc2yp_t->Reset();
+
+  m_hist_sdc3_l->Reset();
+  m_hist_sdc3_t->Reset();
+  m_hist_sdc3p_l->Reset();
+  m_hist_sdc3p_t->Reset();
+
+  m_hist_sdc3y_l->Reset();
+  m_hist_sdc3y_t->Reset();
+  m_hist_sdc3yp_l->Reset();
+  m_hist_sdc3yp_t->Reset();
 
 #endif
 }
@@ -2639,7 +2785,34 @@ void
 EventDisplay::DrawBH2( int seg, int tdc )
 {
 #if Hist_Timing
-  m_hist_bh2->Fill( seg, -0.000939*((double)tdc-353893.) );
+  double p0 = gHodo.GetOffset(DetIdBH2, 0, seg, 0);
+  double p1 = gHodo.GetGain(DetIdBH2, 0, seg, 0);
+
+  m_hist_bh2->Fill( seg, p1*((double)tdc-p0) );
+  //m_canvas_hist2->cd(1);
+  //gPad->Modified();
+  //gPad->Update();
+#endif
+}
+
+//______________________________________________________________________________
+void
+EventDisplay::DrawSFT( int layer, int seg, int tdc )
+{
+#if Hist_Timing
+  double p0 = gHodo.GetOffset(DetIdSFT, layer, seg, 0);
+  double p1 = gHodo.GetGain(DetIdSFT, layer, seg, 0);
+
+  TH2 *hp=0;
+
+  if (layer == 0)
+    hp = m_hist_sft_u;
+  else if (layer == 1)
+    hp = m_hist_sft_v;
+  else 
+    hp = m_hist_sft_x;
+
+  hp->Fill( seg, p1*((double)tdc-p0) );
   //m_canvas_hist2->cd(1);
   //gPad->Modified();
   //gPad->Update();
@@ -2651,7 +2824,10 @@ void
 EventDisplay::DrawSFT_X( int seg, int tdc )
 {
 #if Hist_Timing
-  m_hist_sft_x->Fill( seg, -0.8333*((double)tdc-547.) );
+  double p0 = gHodo.GetOffset(DetIdSFT, 2, seg, 0);
+  double p1 = gHodo.GetGain(DetIdSFT, 2, seg, 0);
+
+  m_hist_sft_x->Fill( seg, p1*((double)tdc-p0) );
   //m_canvas_hist2->cd(1);
   //gPad->Modified();
   //gPad->Update();
@@ -2663,7 +2839,10 @@ void
 EventDisplay::DrawSFT_U( int seg, int tdc )
 {
 #if Hist_Timing
-  m_hist_sft_u->Fill( seg, -0.8333*((double)tdc-547.) );
+  double p0 = gHodo.GetOffset(DetIdSFT, 1, seg, 0);
+  double p1 = gHodo.GetGain(DetIdSFT, 1, seg, 0);
+
+  m_hist_sft_u->Fill( seg, p1*((double)tdc-p0) );
   //m_canvas_hist2->cd(1);
   //gPad->Modified();
   //gPad->Update();
@@ -2675,7 +2854,10 @@ void
 EventDisplay::DrawSFT_V( int seg, int tdc )
 {
 #if Hist_Timing
-  m_hist_sft_v->Fill( seg, -0.8333*((double)tdc-547.) );
+  double p0 = gHodo.GetOffset(DetIdSFT, 0, seg, 0);
+  double p1 = gHodo.GetGain(DetIdSFT, 0, seg, 0);
+
+  m_hist_sft_v->Fill( seg, p1*((double)tdc-p0) );
   //m_canvas_hist2->cd(1);
   //gPad->Modified();
   //gPad->Update();
@@ -2687,7 +2869,10 @@ void
 EventDisplay::DrawSCH( int seg, int tdc )
 {
 #if Hist_Timing
-  m_hist_sch->Fill( seg, -1.*((double)tdc-470.) );
+  double p0 = gHodo.GetOffset(DetIdSCH, 0, seg, 0);
+  double p1 = gHodo.GetGain(DetIdSCH, 0, seg, 0);
+
+  m_hist_sch->Fill( seg, p1*((double)tdc-p0) );
   //m_canvas_hist2->cd(2);
   //gPad->Modified();
   //gPad->Update();
@@ -2696,10 +2881,52 @@ EventDisplay::DrawSCH( int seg, int tdc )
 
 //______________________________________________________________________________
 void
+  EventDisplay::DrawFBT( int detId, int layer, int UorD, int seg, int tdc )
+{
+#if Hist_SdcOut
+  TH2 *hp=0;
+
+  if (detId == 0 && layer == 0 && UorD == 0)
+    hp = m_hist_fbt1u;
+  else if (detId == 0 && layer == 1 && UorD == 0)
+    hp = m_hist_fbt1up;
+  else if (detId == 0 && layer == 0 && UorD == 1)
+    hp = m_hist_fbt1d;
+  else if (detId == 0 && layer == 1 && UorD == 1)
+    hp = m_hist_fbt1dp;
+  else if (detId == 1 && layer == 0 && UorD == 0)
+    hp = m_hist_fbt2u;
+  else if (detId == 1 && layer == 1 && UorD == 0)
+    hp = m_hist_fbt2up;
+  else if (detId == 1 && layer == 0 && UorD == 1)
+    hp = m_hist_fbt2d;
+  else if (detId == 1 && layer == 1 && UorD == 1)
+    hp = m_hist_fbt2dp;
+
+  double p0_FBT = 0;
+  double p1_FBT = 0;
+  if (detId == 0) {
+    p0_FBT = gHodo.GetOffset(DetIdFBT1, layer, seg, UorD);
+    p1_FBT = gHodo.GetGain(DetIdFBT1, layer, seg, UorD);
+  } else {
+    p0_FBT = gHodo.GetOffset(DetIdFBT2, layer, seg, UorD);
+    p1_FBT = gHodo.GetGain(DetIdFBT2, layer, seg, UorD);
+  }
+  //std::cout << "p0 = " << p0_FBT << ", p1 = " << p1_FBT << std::endl;
+
+  hp->Fill( seg, p1_FBT*(tdc-p0_FBT));
+#endif
+}
+
+//______________________________________________________________________________
+void
 EventDisplay::DrawTOF( int seg, int tdc )
 {
 #if Hist_Timing
-  m_hist_tof->Fill( seg, -0.000939*((double)tdc-317383. ));
+  double p0 = gHodo.GetOffset(DetIdTOF, 0, seg, 0);
+  double p1 = gHodo.GetGain(DetIdTOF, 0, seg, 0);
+
+  m_hist_tof->Fill( seg, p1*((double)tdc-p0 ));
   //m_canvas_hist2->cd(3);
   //gPad->Modified();
   //gPad->Update();
@@ -2738,7 +2965,10 @@ EventDisplay::DrawBcOutHit(int layer,  int wire, int tdc )
   else if (layer == 12)
     hp = m_hist_bc4p;
 
-  hp->Fill( wire, -1.*(tdc-351));
+  double p0=0.0, p1=-0.;
+  gTdc.GetParameter(layer + 112, wire, p0, p1);
+
+  hp->Fill( wire, -p1*(tdc+p0));
   //m_canvas_hist2->cd(3);
   //gPad->Modified();
   //gPad->Update();
@@ -2822,6 +3052,58 @@ EventDisplay::DrawSDC1p( int wire, int tdc )
   //gPad->Update();
 #endif
 }
+
+
+//______________________________________________________________________________
+void
+EventDisplay::DrawSdcOutHit(int layer,  int wire, int LorT, int tdc )
+{
+#if Hist_SdcOut
+  TH2 *hp=0;
+
+  if (layer == 1 && LorT == 0)
+    hp = m_hist_sdc2_l;
+  else if (layer == 1 && LorT == 1)
+    hp = m_hist_sdc2_t;
+  else if (layer == 2 && LorT == 0)
+    hp = m_hist_sdc2p_l;
+  else if (layer == 2 && LorT == 1)
+    hp = m_hist_sdc2p_t;
+  else if (layer == 3 && LorT == 0)
+    hp = m_hist_sdc2y_l;
+  else if (layer == 3 && LorT == 1)
+    hp = m_hist_sdc2y_t;
+  else if (layer == 4 && LorT == 0)
+    hp = m_hist_sdc2yp_l;
+  else if (layer == 4 && LorT == 1)
+    hp = m_hist_sdc2yp_t;
+  else if (layer == 5 && LorT == 0)
+    hp = m_hist_sdc3y_l;
+  else if (layer == 5 && LorT == 1)
+    hp = m_hist_sdc3y_t;
+  else if (layer == 6 && LorT == 0)
+    hp = m_hist_sdc3yp_l;
+  else if (layer == 6 && LorT == 1)
+    hp = m_hist_sdc3yp_t;
+  else if (layer == 7 && LorT == 0)
+    hp = m_hist_sdc3_l;
+  else if (layer == 7 && LorT == 1)
+    hp = m_hist_sdc3_t;
+  else if (layer == 8 && LorT == 0)
+    hp = m_hist_sdc3p_l;
+  else if (layer == 8 && LorT == 1)
+    hp = m_hist_sdc3p_t;
+
+  double p0=0.0, p1=-0.;
+  gTdc.GetParameter(layer + 30, wire, p0, p1);
+
+  hp->Fill( wire, -p1*(tdc+p0));
+  //m_canvas_hist2->cd(3);
+  //gPad->Modified();
+  //gPad->Update();
+#endif
+}
+
 
 //______________________________________________________________________________
 void
@@ -2945,6 +3227,14 @@ EventDisplay::UpdateHist( )
 
   for (int i=0; i<6; i++) {
     m_canvas_hist3->cd(i+1);
+    gPad->Modified();
+    gPad->Update();
+  }
+#endif
+
+#if Hist_SdcOut
+  for (int i=0; i<8; i++) {
+    m_canvas_hist4->cd(i+1);
     gPad->Modified();
     gPad->Update();
   }

@@ -134,6 +134,9 @@ public:
   double GetP1( int cid, int plid, int seg, int ud) const;
   double GetPar( int cid, int plid, int seg, int ud ,int i) const; // i=0~5
 
+  double  GetOffset(int cid, int plid, int seg, int ud) const;
+  double  GetGain(int cid, int plid, int seg, int ud) const;
+
 private:
   HodoTParam *GetTmap( int cid, int plid, int seg, int ud ) const;
   HodoAParam *GetAmap( int cid, int plid, int seg, int ud ) const;
