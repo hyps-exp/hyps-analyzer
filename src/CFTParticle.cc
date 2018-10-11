@@ -2,6 +2,7 @@
 #include "DCLTrackHit.hh"
 #include "Hodo1Hit.hh"
 #include "Hodo2Hit.hh"
+#include "FiberHit.hh"
 #include <TRandom.h>
 #include "HodoAnalyzer.hh"
 #include "RawData.hh"
@@ -11,7 +12,8 @@ const double Rad2Deg = 180./acos(-1.);
 CFTParticle::CFTParticle(DCLocalTrack *track, RawData *rawData)
   : Track_(track), RawData_(rawData), 
     CFTVtx_(-999, -999, -999),
-    m_bgo_seg(-1)
+    m_bgo_seg(-1),
+    m_piid_seg(-1)
 {  
 Calculate();
 }
@@ -46,17 +48,19 @@ bool CFTParticle::Calculate()
   NormalizedFiberMax_E_   = Track_->NormalizedMaxDEHiGain();
   */
 
-  // track to BGO segment
+
   int xyFlag = Track_->GetCFTxyFlag();
   int zFlag  = Track_->GetCFTzFlag() ;
   double Axy = Track_->GetAxy(); double Bxy = Track_->GetBxy();
   double Az  = Track_->GetAz() ; double Bz  = Track_->GetBz();
   ThreeVector Pos0 = Track_->GetPos0();
   ThreeVector Dir  = Track_->GetDir();
-  double dist=1000.;
 
+  // track to BGO segment
+  double distBGO=1000.;
   HodoAnalyzer hodoAna;
   hodoAna.DecodeBGOHits(RawData_);
+  hodoAna.DecodePiIDHits(RawData_);
 
   // BGO
   int nhBGO = hodoAna.GetNHitsBGO();
@@ -77,16 +81,15 @@ bool CFTParticle::Calculate()
       }
     }
     if(!hit_flag)continue;
-
     double x, y;
     BGOPos(seg, &x, &y);
-    if     (xyFlag==0){dist = (Axy*x-y+Bxy)/sqrt(Axy*Axy+1.*1.);}
-    else if(xyFlag==1){dist = (Axy*y-x+Bxy)/sqrt(Axy*Axy+1.*1.);}
+    if     (xyFlag==0){distBGO = (Axy*x-y+Bxy)/sqrt(Axy*Axy+1.*1.);}
+    else if(xyFlag==1){distBGO = (Axy*y-x+Bxy)/sqrt(Axy*Axy+1.*1.);}
     double u=Dir.x(), v=Dir.y();
     double x0=Pos0.x(), y0=Pos0.y();
     double t = (u*(x-x0)+v*(y-y0))/(u*u+v*v);
     if (t>=0) {	
-      if (fabs(dist)<25) {
+      if (fabs(distBGO)<25) {
 	AddBGOHit(hit);
 	if(adc>max_adc){
 	  max_adc = adc;
@@ -96,13 +99,39 @@ bool CFTParticle::Calculate()
     }
   }
 
+  // track to PiID segment
+  double distPiID=1000.;
+  int nhPiID = hodoAna.GetNHitsPiID();
+  for(int i = 0; i<nhPiID; ++i){
+    const FiberHit* hit = hodoAna.GetHitPiID(i);
+    int mhit = hit->GetNLeading();
+    int seg = hit->PairId();
+    bool hit_flag = false;
+    for(int m = 0; m<mhit; ++m){	
+      double ctime  = hit->GetCTime(m);
+      if(ctime>-50&&ctime<50){hit_flag=true;}    
+    }
+    if(!hit_flag)continue;
+    double x, y;
+    PiIDPos(seg, &x, &y);
+    if     (xyFlag==0){distPiID = (Axy*x-y+Bxy)/sqrt(Axy*Axy+1.*1.);}
+    else if(xyFlag==1){distPiID = (Axy*y-x+Bxy)/sqrt(Axy*Axy+1.*1.);}
+    double u=Dir.x(), v=Dir.y();
+    double x0=Pos0.x(), y0=Pos0.y();
+    double t = (u*(x-x0)+v*(y-y0))/(u*u+v*v);
+    if (t>=0) {	
+      if (fabs(distPiID)<40) {
+	m_piid_seg = seg;
+      }
+    }
+  }
+
+#if 0    
   int nc = BGOCont_.size();
   for (int i=0; i<nc; i++) {
     Hodo1Hit *hitp = BGOCont_[i];
     //BGO_E_ += hitp->DeltaEBGO(); here!    
   }
-
-#if 0    
   int ncPiV = PiVCont_.size();
   for (int i=0; i<ncPiV; i++) {
     Hodo2Hit *hitp = PiVCont_[i];
@@ -368,6 +397,112 @@ void CFTParticle::BGOPos(int seg, double *x, double *y) const
     }
   }
 #endif
+  *x = xc;
+  *y = yc;
+}
+
+void CFTParticle::PiIDPos(int seg, double *x, double *y) const
+{
+  int UnitNum = seg/(NumOfBGOInOneUnit+NumOfBGOInOneUnit2);
+  int SegInUnit = seg%(NumOfBGOInOneUnit+NumOfBGOInOneUnit2);
+  double theta = 22.5+(double)UnitNum*45.;
+  double x0 = RadiusOfBGOSurface+BGO_Y/2;
+  double y0 = (double)(SegInUnit-1)*BGO_X;
+  double xc = 0.;
+  double yc = 0.;
+  double w  = 30.,  t = 15.;//width, thickness
+  double ww = 40., tt = 15.;//width, thickness for 45 deg.
+
+  if(seg%4==3){ // single segment
+    double n=(seg+1)/4;
+    double angle = +22.5+45.*(n-1); // axis change
+    xc = (164.1+tt/2.)*cos(angle*Deg2Rad);
+    yc = (164.1+tt/2.)*sin(angle*Deg2Rad);    
+  }else if(seg==0 || seg==1 || seg==2){      
+    xc = 159.0 + t/2.;
+    if     (seg==0){yc = -1.*w;}
+    else if(seg==1){yc =  0.*w;}
+    else if(seg==2){yc =  1.*w;}      
+
+  }else if(seg==8 || seg==9 || seg==10){
+    yc = 159.0 + t/2.;
+    if     (seg==8) {xc = 1.*w;}
+    else if(seg==9) {xc = 0.*w;}
+    else if(seg==10){xc =-1.*w;}      
+
+  }else if(seg==16 || seg==17 || seg==18){
+    xc = -159.0 - t/2.;
+    if     (seg==16){yc = 1.*w;}
+    else if(seg==17){yc = 0.*w;}
+    else if(seg==18){yc =-1.*w;}      
+
+  }else if(seg==24 || seg==25 || seg==26){
+    yc = -159.0 - t/2.;
+    if     (seg==24) {xc =-1.*w;}
+    else if(seg==25) {xc = 0.*w;}
+    else if(seg==26) {xc = 1.*w;}      
+
+  }else if(seg==4 || seg==5 || seg==6){ // Line
+    double angle = 45.;
+    x0 = (159.+t/2.)*cos(angle*Deg2Rad);
+    y0 = (159.+t/2.)*sin(angle*Deg2Rad);
+    if(seg==6){
+      xc = x0 - w*cos(45.*Deg2Rad);
+      yc = y0 + w*cos(45.*Deg2Rad);
+    }if(seg==5){
+      xc = x0 - 0*cos(45.*Deg2Rad);
+      yc = y0 + 0*cos(45.*Deg2Rad);
+    }else if(seg==4){
+      xc = x0 + w*cos(45.*Deg2Rad); 
+      yc = y0 - w*cos(45.*Deg2Rad); 
+    }   
+
+  }else if(seg==12 || seg==13 || seg==14){ // Line
+      double angle = 135.;
+      x0 = (159.+t/2.)*cos(angle*Deg2Rad);
+      y0 = (159.+t/2.)*sin(angle*Deg2Rad);
+      if(seg==12){
+	xc = x0 + w*cos(45.*Deg2Rad);
+	yc = y0 + w*cos(45.*Deg2Rad);
+      }else if(seg==13){
+	xc = x0 + 0*cos(45.*Deg2Rad);
+	yc = y0 + 0*cos(45.*Deg2Rad);
+      }else if(seg==14){
+	xc = x0 - w*cos(45.*Deg2Rad);
+	yc = y0 - w*cos(45.*Deg2Rad);
+      }
+
+  }else if(seg==20 || seg==21 || seg==22){ // Line
+    double angle = -135.;
+    x0 = (159. +t/2.)*cos(angle*Deg2Rad);
+    y0 = (159. +t/2.)*sin(angle*Deg2Rad);
+    if(seg==22){
+      xc = x0 + 1.*w*cos(45.*Deg2Rad); 
+      yc = y0 - 1.*w*cos(45.*Deg2Rad); 
+    }else if(seg==21){
+      xc = x0 + 0.*w*cos(45.*Deg2Rad); 
+      yc = y0 - 0.*w*cos(45.*Deg2Rad); 
+    }else if(seg==20){
+      xc = x0 - 1.*w*cos(45.*Deg2Rad);
+      yc = y0 + 1.*w*cos(45.*Deg2Rad);
+    }
+
+  }else if(seg==28 || seg==29 || seg==30){ // Line
+    double angle = -45.;
+    x0 = (159.+t/2.)*cos(angle*Deg2Rad);
+    y0 = (159.+t/2.)*sin(angle*Deg2Rad);
+    if(seg==28){
+      xc = x0 - 1.*w*cos(45.*Deg2Rad);
+      yc = y0 - 1.*w*cos(45.*Deg2Rad);
+    }else if(seg==29){
+      xc = x0 - 0.*w*cos(45.*Deg2Rad);
+      yc = y0 - 0.*w*cos(45.*Deg2Rad);
+    }else if(seg==30){
+      xc = x0 + 1.*w*cos(45.*Deg2Rad);
+      yc = y0 + 1.*w*cos(45.*Deg2Rad);
+    }
+  }
+
   *x = xc;
   *y = yc;
 }

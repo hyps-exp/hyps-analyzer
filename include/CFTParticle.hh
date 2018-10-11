@@ -27,6 +27,7 @@ private:
   std::vector <Hodo1Hit *> BGOCont_;
   std::vector <Hodo2Hit *> PiVCont_;
   int     m_bgo_seg;
+  int     m_piid_seg;
   /*
   double  m_cft_dEsum[NumOfPlaneCFT];//sum of cluster
   double  m_cft_dEmax[NumOfPlaneCFT];//max in cluster
@@ -40,12 +41,14 @@ public:
   void AddBGOHit(Hodo1Hit* hit) {BGOCont_.push_back(hit);}
   void AddPiVHit(Hodo2Hit* hit) {PiVCont_.push_back(hit);}
   void BGOPos(int seg, double *x, double *y) const;
+  void PiIDPos(int seg, double *x, double *y) const;
   bool Calculate();
 
   DCLocalTrack * GetTrack() {return Track_;}
   int NHitBGO() { return BGOCont_.size();}
 
-  int    GetTrackBGOSeg() { return m_bgo_seg;}
+  int    GetTrackBGOSeg()  { return m_bgo_seg; }
+  int    GetTrackPiIDSeg() { return m_piid_seg;}
   /*
   double GetCFTdESum(int layer) { return m_cft_dEsum[layer];}
   double GetCFTdEMax(int layer) { return m_cft_dEmax[layer];}

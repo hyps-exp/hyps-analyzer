@@ -42,6 +42,7 @@ public:
   bool   IsHoneycomb( void )                   const { return m_honeycomb; }
   int    GetLayer( void )                      const { return m_hit->GetLayer(); }
   int    GetMeanSeg( void )                    const { return m_hit->GetMeanSeg(); }
+  int    GetMaxSeg( void )                    const { return m_hit->GetMaxSeg(); }
   double GetWire( void )                       const { return m_hit->GetWire(); }
   int    GetTdcVal( void )                     const { return m_hit->GetTdcVal(m_nth_hit); }
   int    GetTdcSize( void )                    const { return m_hit->GetTdcSize(); }
