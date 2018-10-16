@@ -177,6 +177,19 @@ const int NumOfSegBGO = NumOfBGOUnit*(NumOfBGOInOneUnit+NumOfBGOInOneUnit2);//24
 // PiID counter
 const int NumOfSegPiID =  32;
 
+const int NumOfPiIDUnit = 8;
+const int NumOfPiIDInOneUnit = 3;
+const double PiID_X = 30.;
+const double PiID_Y = 10.;
+const double PiID_Z = 400.;
+const double RadiusOfPiIDSurface = 164.;
+
+const int    NumOfPiIDInOneUnit2 = 1;//single unit
+const double PiID2_X = 40.;
+const double PiID2_Y = 10.;
+const double PiID2_Z = 400.;
+const double RadiusOfPiID2Surface = 180.;
+
 // HulRm -----------------------------------------------
 const int NumOfHulRm   = 4;
 

@@ -611,7 +611,6 @@ UserEventDisplay::ProcessingNormal( void )
   }
 
 
-  gEvDisp.UpdateHist();
   /*
   if ( 1 )
     gEvDisp.GetCommand();
@@ -845,6 +844,220 @@ UserEventDisplay::ProcessingNormal( void )
 
 	}
       }
+    }
+  }
+
+
+  // BH1
+  {
+    const HodoRHitContainer &cont = rawData->GetBH1RawHC();
+    int nh=cont.size();
+    for( int i=0; i<nh; ++i ){
+      HodoRawHit *hit = cont[i];
+      if( !hit ) continue;
+      int seg=hit->SegmentId();
+      int mh1  = hit->GetSizeTdcUp();
+      int mh2  = hit->GetSizeTdcDown();
+      int mh = 0;
+      if (mh1 <= mh2)
+	mh= mh1;
+      else
+	mh = mh2;
+      for (int j=0; j<mh; j++) {
+	int Tu=hit->GetTdcUp(j), Td=hit->GetTdcDown(j);
+	//std::cout << "BH2 : seg = " << seg << ", Tu = " << Tu << ", Td = " << Td << std::endl;
+	if( Tu>0 && Td>0 ) {
+	  gEvDisp.DrawBH1(seg, Td);
+	} else if (Tu >0 ) {
+	  gEvDisp.DrawBH1(seg, Tu);
+	} else if (Td > 0) {
+	  gEvDisp.DrawBH1(seg, Td);
+	}
+      }
+    }
+  }
+
+  // BFT raw data
+  {
+    for (int layer=0; layer<NumOfPlaneBFT; layer++) {
+      const HodoRHitContainer &cont = rawData->GetBFTRawHC(layer);
+      int nh = cont.size();
+      for( int i=0; i<nh; ++i ){
+	HodoRawHit *hit = cont[i];
+	if( !hit ) continue;
+	int mh  = hit->GetSizeTdcUp();
+
+	int seg = hit->SegmentId();
+	for (int j=0; j<mh; j++) {
+	  int Tu = hit->GetTdcUp(j);
+	  //std::cout << "BFT-X : seg " << seg << ", " << Tu << std::endl;
+	  if (Tu>0)
+	    gEvDisp.DrawBFT(layer, seg, Tu);
+	}
+      }
+    }
+  }
+
+  // CFT   
+  {
+    for(int layer = 0; layer<NumOfPlaneCFT; ++layer){
+      const HodoRHitContainer &cont = rawData->GetCFTRawHC(layer);
+      int nhit = cont.size();
+      
+      for(int i = 0; i<nhit; ++i){	
+	HodoRawHit *hit = cont.at(i);
+	int seg = hit->SegmentId(); 
+	int NhitT = hit->GetSizeTdcUp();
+	int NhitT_tr = hit->GetSizeTdcTUp();
+	int NhitAH = hit->GetSizeAdcUp();	  
+	int NhitAL = hit->GetSizeAdcDown();
+	
+	//TDC
+	for(int m = 0; m<NhitT; ++m){	    
+	  int bufT = hit->GetTdcUp(m);
+	  gEvDisp.DrawCFT(layer, seg, 0, bufT);
+	}	  
+	for(int m = 0; m<NhitT_tr; ++m){
+	  int bufTtr = hit->GetTdcTUp(m);
+	  gEvDisp.DrawCFT(layer, seg, 1, bufTtr);	      
+	}	    
+
+	//ADC Hi
+	for(int m = 0; m<NhitAH; ++m){
+	  int bufAH = hit->GetAdcUp();	
+	  gEvDisp.DrawCFT_Adc(layer, seg, 0, bufAH);
+	}
+	
+	//ADC Low
+	for(int m = 0; m<NhitAL; ++m){	    
+	  int bufAL = hit->GetAdcDown();	
+	  gEvDisp.DrawCFT_Adc(layer, seg, 1, bufAL);
+	}
+
+      }	
+    }
+  }
+
+  // FiberHitCFT    
+  hodoAna->DecodeCFTHits(rawData);
+  for(int p = 0; p<NumOfPlaneCFT; ++p){
+
+    int nhit = hodoAna->GetNHitsCFT(p);          
+
+    int nhit_t = 0;
+    for(int i = 0; i<nhit; ++i){
+      const FiberHit* hit = hodoAna->GetHitCFT(p, i);
+      int mhit = hit->GetNumOfHit();
+      int seg_id = hit->PairId();
+      double adcHi  = hit->GetAdcHi();
+      double adcLow = hit->GetAdcLow();  
+
+      bool fl_m = false;
+      for(int m = 0; m<mhit; ++m){
+
+	double leading = hit->GetLeading(m);	
+	//double trailing = hit->GetTrailing(m);	
+	double ctime  = hit->GetCTime(m);
+	double time   = hit->GetTime(m);
+	double width  = hit->GetWidth(m);	
+
+	if(-10 < ctime && ctime < 10){
+	  if(fl_m==false){
+	    fl_m=true;
+	    nhit_t++;
+
+	    //if( adcLow > 50)
+	    gEvDisp.ShowHitFiber(p, seg_id, adcLow);
+	    /*
+	      std::cout << "Fiber Hit : layer=" << p << ", seg=" << seg_id
+			<< ", adcLow=" << adcLow << ", tdc=" << ctime 
+			<< ", MIP=" << MIPLow << ", dE=" << dELow << ", width=" << width
+			<< std::endl;
+	    */
+	  }
+	}
+
+      }// mhit      
+    }//nhit
+  }  
+
+  // BGO
+  {
+    const HodoRHitContainer &cont = rawData->GetBGORawHC();
+    int nhit = cont.size();
+    for(int i = 0; i<nhit; ++i){	
+      HodoRawHit *hit = cont.at(i);
+      int seg = hit->SegmentId(); 
+      int NhitT = hit->GetSizeTdcUp();
+      int NhitA = hit->GetSizeAdcUp();	  
+
+      for(int m = 0; m<NhitT; ++m){
+	int tdc = hit->GetTdcUp(m);	
+	gEvDisp.DrawBGO(seg, tdc);	      
+      }
+      for(int m = 0; m<NhitA; ++m){
+	int integral = hit->GetAdcUp();	
+      }      
+    }
+  }
+
+  hodoAna->DecodeBGOHits(rawData);
+  int nhBGO = hodoAna->GetNHitsBGO();
+  for(int i=0; i<nhBGO; ++i){
+    Hodo1Hit *hit = hodoAna->GetHitBGO(i);
+    int seg = hit->SegmentId();
+    int nh = hit->GetNumOfHit();
+    double adc = hit->GetAUp();
+
+    for(int m=0; m<nh; ++m){
+      double cmt = hit->CMeanTime(m);
+      if(-50<cmt&&cmt<50){
+	if (adc>0) {
+	  //std::cout << "BGO decode : seg=" << seg << ", integral="
+	  //<< adc << ", ct=" << cmt << std::endl;	
+	  gEvDisp.ShowHitBGO(seg, adc);
+	}    
+      }
+    }
+  }
+
+  // PiID counter
+  {
+    const HodoRHitContainer &cont = rawData->GetPiIDRawHC();
+    int nhit = cont.size();
+
+    for(int i = 0; i<nhit; ++i){	
+      HodoRawHit *hit = cont.at(i);
+      int seg = hit->SegmentId(); 
+      int NhitTl = hit->GetSizeTdcUp();
+      int NhitTt = hit->GetSizeTdcTUp();
+	
+      for(int m = 0; m<NhitTl; ++m){
+	int tdc = hit->GetTdcUp(m);	
+	gEvDisp.DrawPiID(seg, 0, tdc);
+      }
+      for(int m = 0; m<NhitTt; ++m){
+	int tdc = hit->GetTdcTUp(m);
+	gEvDisp.DrawPiID(seg, 1, tdc);	
+
+      }      
+    }
+  }
+
+  hodoAna->DecodePiIDHits(rawData);
+  int nhit = hodoAna->GetNHitsPiID();          
+  for(int i = 0; i<nhit; ++i){
+    const FiberHit* hit = hodoAna->GetHitPiID(i);
+    int mhit = hit->GetNumOfHit();
+    int seg = hit->PairId();
+    for(int m = 0; m<mhit; ++m){	
+      double ctime  = hit->GetCTime(m);
+
+      if (ctime>-50 && ctime<50) {
+	//std::cout << "PiID : seg=" << seg << ", ct=" << ctime << std::endl;	
+	gEvDisp.ShowHitPiID(seg);
+      }    
+
     }
   }
 
@@ -1099,9 +1312,9 @@ UserEventDisplay::ProcessingNormal( void )
   }
 
   //if (ntBcOut == 0)
-  if ( 1 )
-    gEvDisp.GetCommand();
-  return true;
+  //  if ( 1 )
+  //gEvDisp.GetCommand();
+  //return true;
 
   std::vector<double> BftXCont;
   ////////// BFT
@@ -1151,6 +1364,75 @@ UserEventDisplay::ProcessingNormal( void )
     gEvDisp.DrawMissingMomentum( MissMom, vertex );
   }
 #endif
+
+
+  // Fiber Cluster
+  for(int p = 0; p<NumOfPlaneCFT; ++p){
+    //hodoAna->TimeCutCFT(p, -30, 30); // CATCH@J-PARC  
+    hodoAna->TimeCutCFT(p, -10, 10); // CATCH@J-PARC  
+    //hodoAna->AdcCutCFT(p, 0, 4000); // CATCH@J-PARC  
+    //hodoAna->AdcCutCFT(p, 50, 4000); // CATCH@J-PARC  for proton
+    hodoAna->AdcCutCFT(p, 10, 4000); // CATCH@J-PARC  for proton
+    //hodoAna->WidthCutCFT(p, 60, 300); // pp scattering
+    //hodoAna->WidthCutCFT(p, 30, 300); // cosmic ray
+  }
+
+  // CFT tracking
+
+  DCAna->DecodeCFTHits( rawData );
+  DCAna->TrackSearchCFT();
+
+  int ntCFT=DCAna->GetNtracksCFT();// vtx limit ver.
+
+  for( int i=0; i<ntCFT; ++i ){
+
+    DCLocalTrack *tp=DCAna->GetTrackCFT(i);
+
+    int nh   = tp->GetNHit();
+    int nhUV = tp->GetNHitUV();
+    double chisqrXY=tp->GetChiSquareXY();
+    double chisqrXYZ=tp->GetChiSquareZ();
+
+    gEvDisp.DrawCFTLocalTrack( tp );
+
+    // straight layer
+    for(int ip=0; ip<nh; ip++){
+      DCLTrackHit *hit = tp->GetHit(ip);
+      int layer = hit->GetLayer();
+      int seg = (int)hit->GetMeanSeg();
+
+      double phi_ini   = tp->GetPhiIni(layer);      
+      double phi_track   = tp->GetPhiTrack(layer);      
+      double z_track = tp->GetZTrack(layer);
+      double dphi  = tp->GetdPhi(layer);
+
+      std::cout << "track#" << i << ", layer=" << layer << ", seg=" << seg
+		<< ", ini_phi=" << phi_ini << std::endl;
+
+
+    }
+    for(int ip=0; ip<nhUV; ip++){
+      DCLTrackHit *hit = tp->GetHitUV(ip);
+      int layer = hit->GetLayer();
+      int seg = (int)hit->GetMeanSeg();
+      
+      double phi_track   = tp->GetPhiTrack(layer);      
+      double z_track = tp->GetZTrack(layer);
+      double z_ini   = tp->GetZIni(layer);      
+      double dz    = tp->GetdZ(layer);
+
+      std::cout << "track#" << i << ", layer=" << layer << ", seg=" << seg
+		<< ", phi=" << phi_track << ", z_ini=" << z_ini << std::endl;      	
+
+
+    }    
+  }
+
+  gEvDisp.UpdateHist();
+
+  if ( 1 )
+    gEvDisp.GetCommand();
+
 
   return true;
 }
