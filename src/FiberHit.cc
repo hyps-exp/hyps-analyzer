@@ -41,16 +41,18 @@ FiberHit::FiberHit( HodoRawHit *object, const char* name )
     m_position(-999.),
     m_offset(0),
     m_pair_id(0),
-    m_adc_hi(0.),
-    m_adc_low(0.),
+    m_adc_hi(-1.),
+    m_adc_low(-1.),
     //m_nphoton_hi(0.),
     //m_nphoton_low(0.),
-    m_mip_hi(0.),
-    m_mip_low(0.),
+    m_mip_hi(-1.),
+    m_mip_low(-1.),
     m_dE_hi(0.),
     m_dE_low(0.),
     m_r(0.),
     m_phi(0.),
+    m_pedcor_hi(-99999.),
+    m_pedcor_low(-99999.),
     m_status(false)
 {
   debug::ObjectCounter::increase(class_name);
@@ -227,7 +229,7 @@ FiberHit::Calculate( void )
       m_pair_cont.at(m_multi_hit_l -1 -i).time_l  = time_leading;
       m_pair_cont.at(m_multi_hit_l -1 -i).time_t  = time_trailing;
       m_pair_cont.at(m_multi_hit_l -1 -i).ctime_l = ctime_leading;
-      m_pair_cont.at(m_multi_hit_l -1 -i).tot     = -tot;
+      m_pair_cont.at(m_multi_hit_l -1 -i).tot     = tot;
     }else{    
       m_pair_cont.at(i).time_l  = time_leading;
       m_pair_cont.at(i).time_t  = time_trailing;
@@ -250,12 +252,21 @@ FiberHit::Calculate( void )
       double Alow = gHodo.GetP0(cid,plid,0/*seg*/,3);// same value for the same layer
       double Blow = gHodo.GetP1(cid,plid,0/*seg*/,3);// same value for the same layer
 
-      m_adc_hi  = hi  - pedeHi;
-      m_adc_low = low - pedeLow;
+      if (hi>0)
+	m_adc_hi  = hi  - pedeHi;
+      if (low>0)
+	m_adc_low = low - pedeLow;
       //m_mip_hi  = (hi  - pedeHi )/(gainHi  - pedeHi );
       //m_mip_low = (low - pedeLow)/(gainLow - pedeLow);      
-      m_mip_hi  = (hi  - pedeHi )/gainHi ;
-      m_mip_low = (low - pedeLow)/gainLow;      
+      if (m_pedcor_hi>-2000 && hi >0)
+	m_adc_hi  = hi  + m_pedcor_hi;
+      if (m_pedcor_low>-2000 && low >0)
+	m_adc_low  = low  + m_pedcor_low;
+
+      if (m_adc_hi>0/* && gainHi > 0*/)
+	m_mip_hi  = m_adc_hi/gainHi ;
+      if (m_adc_low>0/* && gainLow >0*/)
+	m_mip_low = m_adc_low/gainLow;      
       
       if(m_mip_low>0){
 	m_dE_low = -(Alow/Blow) * log(1. - m_mip_low/Alow);// [MeV]
@@ -265,8 +276,22 @@ FiberHit::Calculate( void )
       }else{
 	m_dE_low = 0;// [MeV]
       }
-      
 
+      /*
+      if (m_dE_low>10) {
+	std::cout << "layer = " << plid << ", seg = " << seg << ", adcLow = " << m_adc_low << ", dE = " << m_dE_low << ", mip_low = " << m_mip_low << ", gainLow = " << gainLow << ", gainHi = " << gainHi << std::endl;
+      }
+      */
+      
+      for (int j=0; j< m_pair_cont.size(); j++) {
+	double time= m_pair_cont.at(j).time_l;
+	double ctime = -100;
+	if (m_adc_hi>20) {
+	  gPHC.DoCorrection( cid, plid, seg, m_ud, time, m_adc_hi, ctime);
+	  m_pair_cont.at(j).ctime_l = ctime;
+	} else 
+	  m_pair_cont.at(j).ctime_l = time;
+      }
     }
   }
 

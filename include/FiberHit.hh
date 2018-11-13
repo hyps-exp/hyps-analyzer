@@ -40,6 +40,10 @@ protected:
   // for CFT
   double         m_adc_hi; 
   double         m_adc_low; 
+
+  double         m_pedcor_hi;
+  double         m_pedcor_low;
+
   //double         m_nphoton_hi; 
   //double         m_nphoton_low; 
   double         m_mip_hi; 
@@ -93,6 +97,8 @@ public:
   double GetdELow( void )const { return m_dE_low; }
   double GetPositionR( void )  const { return m_r;     }
   double GetPositionPhi( void )  const { return m_phi; }
+
+  void SetPedestalCor( double deltaHG, double deltaLG ){ m_pedcor_hi = deltaHG; m_pedcor_low = deltaLG; }
 
   void   Print( const std::string& arg="", std::ostream& ost=hddaq::cout ) const;
   void   RegisterHits( FLHit* hit )   { m_hit_container.push_back(hit);   }

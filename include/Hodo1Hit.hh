@@ -36,10 +36,12 @@ protected:
 
 public:
   HodoRawHit* GetRawHit( void ) { return m_raw; }
-  bool   Calculate( void );
+  //bool   Calculate( void );
+  bool   Calculate( bool tdc_flag = true );
   bool   IsCalculated( void ) const { return m_is_calculated; }
   int    GetNumOfHit(int sel=0) const { return sel==0 ? m_multi_hit_l : m_multi_hit_t; };
-  double GetA( int n=0 )   const { return m_a.at(n); }
+  double GetA( int n=0 )   const { if (n<m_a.size()) return m_a.at(n); 
+                                   else return -9999.;}
   double GetT( int n=0 )   const { return m_t.at(n); }
   double GetCT( int n=0 )  const { return m_ct.at(n); }
 
@@ -76,6 +78,10 @@ public:
   int PlaneId( void )    const { return m_raw->PlaneId(); }
   virtual
   int SegmentId( void )  const { return m_raw->SegmentId(); }
+
+  // For BGO
+  void   ClearACont( void )  { m_a.clear(); }
+  void   SetE( double energy )  { m_a.push_back(energy); }
 
   void   SetJoined( int m )           { m_flag_join.at(m) = true;         }
   bool   Joined( int m )        const { return m_flag_join.at(m);         }

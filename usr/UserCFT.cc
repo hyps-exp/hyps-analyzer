@@ -32,6 +32,8 @@
 #include "Kinematics.hh"
 #include "EventDisplayCFT.hh"
 #include "CFTParticle.hh"
+#include "CFTPedCorMan.hh"
+#include "BGOAnalyzer.hh"
 
 #define HodoCut 0 // with BH1/BH2
 #define TimeCut 0 // in cluster analysis
@@ -65,6 +67,7 @@ private:
   RawData      *rawData;
   DCAnalyzer   *DCAna;
   HodoAnalyzer *hodoAna;
+  BGOAnalyzer  *bgoAna;
 
 public:
         EventCFT( void );
@@ -81,7 +84,8 @@ EventCFT::EventCFT( void )
   : VEvent(),
     rawData(0),
     DCAna( new DCAnalyzer ),
-    hodoAna( new HodoAnalyzer )
+    hodoAna( new HodoAnalyzer ),
+    bgoAna( new BGOAnalyzer )
 {
 }
 
@@ -96,6 +100,12 @@ EventCFT::~EventCFT( void )
     delete DCAna;
     DCAna   = NULL;
   }
+
+  if ( bgoAna ){
+    delete bgoAna;
+    bgoAna = 0;
+  }
+
   if ( rawData ){
     delete rawData;
     rawData = NULL;
@@ -176,6 +186,7 @@ struct Event
   int segBGO[NumOfSegBGO];
   double adcbgo[NumOfSegBGO];
   double tdcbgo[NumOfSegBGO];
+  double energybgo[NumOfSegBGO];
 
 
 };
@@ -239,21 +250,39 @@ EventCFT::ProcessingNormal( void )
      
     }
   }
-  hodoAna->DecodeBGOHits(rawData);
+
+
+  bgoAna->DecodeBGO(rawData);
+  bgoAna->PulseSearch();
+
+  hodoAna->DecodeBGOHits(rawData, bgoAna);
+  //hodoAna->DecodeBGOHits(rawData);
+
   int nhBGO = hodoAna->GetNHitsBGO();
   event.nhBGO = nhBGO;
   for(int i=0; i<nhBGO; ++i){
     Hodo1Hit *hit = hodoAna->GetHitBGO(i);
     int seg = hit->SegmentId();
     int nh = hit->GetNumOfHit();
-    double adc = hit->GetAUp();
+    //double adc = hit->GetAUp();
+    double energy = hit->DeltaE();
 
     event.segBGO[i] = seg;
-    event.adcbgo[seg] = adc;
 
+    double adc = -999;
+    HodoRawHit *rhit = hit->GetRawHit();
+    if (rhit->SizeAdc2()>0)
+      adc = rhit->GetAdc2();
+
+    event.adcbgo[seg] = adc;
+    event.energybgo[seg] = energy;
+
+    double time0 = -999.;
     for(int m=0; m<nh; ++m){
       double cmt = hit->CMeanTime(m);
-      event.tdcbgo[seg] = cmt;
+      if (fabs(time0)>fabs(cmt))
+	time0 = cmt;
+
       HF2 (110, seg, cmt);
       if(-50<cmt&&cmt<50){
 	HF2 (111, seg, adc);
@@ -267,6 +296,7 @@ EventCFT::ProcessingNormal( void )
       }
       
     }
+    event.tdcbgo[seg] = time0;
   }
 
   // PiID counter
@@ -996,6 +1026,7 @@ EventCFT::InitializeEvent( void )
     event.segBGO[i] = -1;
     event.segBGOt[i]  = -1;
     event.adcbgo[i] = -999; 
+    event.energybgo[i] = -999; 
     event.tdcbgo[i] = -999;
   }
 
@@ -1228,6 +1259,7 @@ ConfMan:: InitializeHistograms( void )
   tree->Branch("segBGO",    event.segBGO,    "segBGO[nhBGO]/I");
   tree->Branch("segBGOt",   event.segBGOt,   "segBGOt[24]/I");
   tree->Branch("adcBGO",    event.adcbgo,    "adcbgo[24]/D");
+  tree->Branch("energyBGO", event.energybgo, "energybgo[24]/D");
   tree->Branch("tdcBGO",    event.tdcbgo,    "adcbgo[24]/D");
 
   // BGO
@@ -1245,7 +1277,10 @@ ConfMan::InitializeParameterFiles( void )
     ( InitializeParameter<DCGeomMan>("DCGEO")    &&
       InitializeParameter<HodoParamMan>("HDPRM") &&
       InitializeParameter<HodoPHCMan>("HDPHC")   &&
-      InitializeParameter<UserParamMan>("USER")  );
+      InitializeParameter<UserParamMan>("USER")  &&
+      InitializeParameter<CFTPedCorMan>("CFTPED")      &&
+      InitializeParameter<BGOTemplateManager>("BGOTEMP")  &&
+      InitializeParameter<BGOCalibMan>("BGOCALIB")  );
 }
 
 //______________________________________________________________________________

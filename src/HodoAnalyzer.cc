@@ -25,6 +25,8 @@
 #include "HodoCluster.hh"
 #include "RawData.hh"
 #include "UserParamMan.hh"
+#include "CFTPedCorMan.hh"
+#include "BGOAnalyzer.hh"
 
 namespace
 {
@@ -42,6 +44,8 @@ namespace
   const double MaxTimeDifFBT2= 10.0;
 
   const int MaxSizeCl =  8;
+
+  const CFTPedCorMan& gPed = CFTPedCorMan::GetInstance();
 }
 
 #define Cluster 1
@@ -518,7 +522,15 @@ HodoAnalyzer::DecodeCFTHits( RawData* rawData )
       
       FiberHit *hp = new FiberHit(hit, pname);
       if(!hp) continue;
-      if(hp->Calculate()){
+
+      /*Pedestal Correction value for High and Low*/
+      double deltaHG, deltaLG;
+      int seg = hit->SegmentId();
+      gPed.PedestalCorrection(p, seg, deltaHG, deltaLG, rawData);
+      hp->SetPedestalCor(deltaHG, deltaLG);
+
+      //std::cout << "layer " << p << ", seg " << seg << ", deltaHG " << deltaHG << ", deltaLG " <<  deltaLG << std::endl;
+      if(hp->Calculate() && hp->GetAdcHi()>10){
 	m_CFTCont.at(p).push_back(hp);
       }
       else{
@@ -560,6 +572,44 @@ HodoAnalyzer::DecodeBGOHits( RawData *rawData )
 
   return true;
 }
+
+//______________________________________________________________________________
+bool
+HodoAnalyzer::DecodeBGOHits( RawData *rawData, BGOAnalyzer *bgoAna )
+{
+  ClearBGOHits();
+  const HodoRHitContainer &cont = rawData->GetBGORawHC();
+  int nh = cont.size();
+  for( int i=0; i<nh; ++i ){
+    HodoRawHit *hit = cont[i];
+    if( !hit ) continue;
+    Hodo1Hit *hp = new Hodo1Hit( hit );
+    //Hodo2Hit *hp = new Hodo2Hit( hit );
+    if( !hp ) continue;
+    bool tdc_flag = false;
+    if( hp->Calculate(tdc_flag) ) {
+      int seg = hp->SegmentId();
+
+      hp->ClearACont();
+      if (bgoAna->GetNPulse(seg)>0) {
+	BGOData bgoData;
+	if (bgoAna->GetBGOData0(seg, bgoData)) {
+	  if (bgoData.time> -0.05 && bgoData.time < 0.1) {
+	    hp->SetE(bgoData.energy);
+	    hp->GetRawHit()->SetAdc2(bgoData.pulse_height);
+	  }
+	}
+      }
+
+      m_BGOCont.push_back(hp);
+    }
+    else
+      delete hp;
+  }//for(i)
+
+  return true;
+}
+
 
 //______________________________________________________________________________
 bool

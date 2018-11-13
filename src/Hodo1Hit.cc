@@ -46,7 +46,8 @@ Hodo1Hit::~Hodo1Hit( void )
 
 //______________________________________________________________________________
 bool
-Hodo1Hit::Calculate( void )
+//Hodo1Hit::Calculate( void )
+Hodo1Hit::Calculate( bool tdc_flag )
 {
   static const std::string func_name("["+class_name+"::"+__func__+"()]");
 
@@ -55,7 +56,7 @@ Hodo1Hit::Calculate( void )
     return false;
   }
 
-  if( m_raw->GetNumOfTdcHits()!=1 )
+  if( tdc_flag && m_raw->GetNumOfTdcHits()!=1 )
     return false;
 
   if( !gHodo.IsReady() ){

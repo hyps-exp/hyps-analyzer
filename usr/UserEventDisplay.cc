@@ -25,6 +25,8 @@
 #include "UnpackerManager.hh"
 #include "VEvent.hh"
 #include "BH2Filter.hh"
+#include "CFTPedCorMan.hh"
+#include "BGOAnalyzer.hh"
 
 namespace
 {
@@ -57,6 +59,7 @@ private:
   RawData      *rawData;
   DCAnalyzer   *DCAna;
   HodoAnalyzer *hodoAna;
+  BGOAnalyzer  *bgoAna;
 public:
         UserEventDisplay( void );
        ~UserEventDisplay( void );
@@ -71,7 +74,8 @@ UserEventDisplay::UserEventDisplay( void )
   : VEvent(),
     rawData(0),
     DCAna( new DCAnalyzer ),
-    hodoAna( new HodoAnalyzer )
+    hodoAna( new HodoAnalyzer ),
+    bgoAna( new BGOAnalyzer )
 {
 }
 
@@ -80,6 +84,7 @@ UserEventDisplay::~UserEventDisplay( void )
 {
   if (DCAna)   delete DCAna;
   if (hodoAna) delete hodoAna;
+  if (bgoAna)  delete bgoAna;
   if (rawData) delete rawData;
 }
 
@@ -1428,6 +1433,31 @@ UserEventDisplay::ProcessingNormal( void )
     }    
   }
 
+  bgoAna->DecodeBGO(rawData);
+  bgoAna->PulseSearch();
+
+  int nhitBGO = bgoAna->GetNHitBGO();
+  gEvDisp.SetBGOWaveformCanvas(nhitBGO);
+  int nc = 1;
+  for (int seg=2; seg<NumOfSegBGO; seg++) {
+    int ngr = bgoAna->GetNGraph(seg);
+    for (int i=0; i<ngr; i++) {
+      TGraphErrors *gr = bgoAna->GetTGraph(seg, i);
+      gEvDisp.DrawBGOWaveform(nc, i, seg, gr);      
+    }
+    int nfunc = bgoAna->GetNFunc(seg);
+    for (int i=0; i<nfunc; i++) {
+      TF1 *func = bgoAna->GetTF1(seg, i);
+      gEvDisp.DrawBGOFitFunc(nc, i, seg, func);      
+    }
+
+    if (ngr>0)
+      nc++;
+  }
+
+
+
+
   gEvDisp.UpdateHist();
 
   if ( 1 )
@@ -1475,6 +1505,9 @@ ConfMan::InitializeParameterFiles( void )
       InitializeParameter<K18TransMatrix>("K18TM")   &&
       InitializeParameter<BH2Filter>("BH2FLT")       &&
       InitializeParameter<UserParamMan>("USER")      &&
+      InitializeParameter<CFTPedCorMan>("CFTPED")      &&
+      InitializeParameter<BGOTemplateManager>("BGOTEMP")      &&
+      InitializeParameter<BGOCalibMan>("BGOCALIB")      &&
       InitializeParameter<EventDisplay>()            );
 }
 

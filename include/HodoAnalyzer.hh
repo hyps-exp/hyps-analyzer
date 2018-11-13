@@ -21,6 +21,7 @@ class FLHit;
 class HodoCluster;
 class BH2Cluster;
 class FiberCluster;
+class BGOAnalyzer;
 
 typedef std::vector <Hodo1Hit*> Hodo1HitContainer;
 typedef std::vector <Hodo2Hit*> Hodo2HitContainer;
@@ -92,6 +93,7 @@ public:
   bool DecodeSFTHits( RawData* rawData );
   bool DecodeCFTHits( RawData* rawData );
   bool DecodeBGOHits( RawData* rawData );
+  bool DecodeBGOHits( RawData *rawData, BGOAnalyzer *bgoAna );
   bool DecodePiIDHits( RawData* rawData );
   bool DecodeSCHHits( RawData* rawData );
   bool DecodeFBT1Hits( RawData* rawData );

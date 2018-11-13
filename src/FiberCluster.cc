@@ -25,7 +25,7 @@ namespace
 
 //______________________________________________________________________________
 FiberCluster::FiberCluster( void )
-  : m_cluster_size(0)
+  : m_cluster_size(0), m_max_adcHi(0.), m_max_adcLow(0.), m_max_mipLow(0.), m_max_dELow(0.), m_max_cluster_id(-1)
 {
   for ( int i=0; i<sizeFlagsFiber; ++i ){
     m_flag[i] = false;
@@ -107,6 +107,7 @@ FiberCluster::calc( void )
   int    cluster_id     = 0;
 
   double max_seg        = 0.;
+  double max_adcHi     = 0.;
   double max_adcLow     = 0.;
   double max_mipLow     = 0.;
   double max_dELow      = 0.;
@@ -141,8 +142,10 @@ FiberCluster::calc( void )
     }
 
     if( max_adcLow <= m_hit_container.at(i)->GetAdcLow() ){
+      max_adcHi = m_hit_container.at(i)->GetAdcHi();       
       max_adcLow = m_hit_container.at(i)->GetAdcLow();       
       max_seg = m_hit_container.at(i)->SegmentId();
+      m_max_cluster_id = i;
     }
 
     if( max_mipLow <= m_hit_container.at(i)->GetMIPLow() )
@@ -171,6 +174,7 @@ FiberCluster::calc( void )
   m_sum_mipLow     = sum_mipLow;
   m_sum_dELow      = sum_dELow;
 
+  m_max_adcHi      = max_adcHi;
   m_max_adcLow     = max_adcLow;
   m_max_mipLow     = max_mipLow;
   m_max_dELow      = max_dELow;

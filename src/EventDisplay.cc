@@ -24,8 +24,10 @@
 #include <TFile.h>
 #include <TGeometry.h>
 #include <TGraph.h>
+#include <TGraphErrors.h>
 #include <TH1.h>
 #include <TH2.h>
+#include <TF1.h>
 #include <TLatex.h>
 #include <TMarker.h>
 #include <TMarker3DBox.h>
@@ -120,7 +122,8 @@ namespace
 //const double p1_FBT = gHodo.GetGain(DetIdFBT1, 0, 0, 0);
 //const double p0_FBT = 526.;
 //const double p1_FBT = -1;
-  const double offsetCATCH = 180;
+  //const double offsetCATCH = 180;
+  const double offsetCATCH = 155;
   const double offsetBGO   = 60; // offset from CFT
 }
 
@@ -140,6 +143,7 @@ EventDisplay::EventDisplay( void )
     m_canvas_hist6(0),
     m_canvas_hist7(0),
     m_canvas_hist8(0),
+    m_canvas_hist9(0),
     m_canvas_catch(0),
     m_canvas_catch3d(0),
     m_hist_vertex_x(0),
@@ -905,6 +909,11 @@ EventDisplay::Initialize( void )
     }
 
   }
+
+  m_canvas_hist9 = new TCanvas( "canvas_hist9", "EventDisplay Detector BGO waveform (CATCH)", 1000, 1000 );
+  m_canvas_hist9->Divide(4,6);  
+  for (int npad = 0; npad<24; npad++)
+    m_canvas_hist9->cd(npad+1)->SetGrid();
 
   ConstructCATCH();
   ConstructCATCH3d();
@@ -3782,6 +3791,7 @@ EventDisplay::ResetHist(  )
     hp_hi->Reset();
     hp_lo->Reset();
   }
+
 #endif
 
 }
@@ -4124,6 +4134,72 @@ EventDisplay::DrawBGO(int seg, int tdc )
   //m_canvas_hist2->cd(1);
   //gPad->Modified();
   //gPad->Update();
+#endif
+}
+
+//______________________________________________________________________________
+void
+EventDisplay::SetBGOWaveformCanvas(int nhit )
+{
+#if CATCH
+  m_canvas_hist9->Clear();
+
+  if (nhit == 2)
+    m_canvas_hist9->Divide(2, 1);
+  else if (nhit>= 3 && nhit<=4)
+    m_canvas_hist9->Divide(2, 2);
+  else if (nhit>= 5 && nhit<=6)
+    m_canvas_hist9->Divide(2, 3);
+  else if (nhit>= 7 && nhit<=8)
+    m_canvas_hist9->Divide(2, 4);
+  else if (nhit>= 9 && nhit<=12)
+    m_canvas_hist9->Divide(3, 4);
+  else if (nhit>= 13 && nhit<=16)
+    m_canvas_hist9->Divide(4, 4);
+  else if (nhit>= 17 && nhit<=20)
+    m_canvas_hist9->Divide(5, 4);
+  else if (nhit>= 21 && nhit<=24)
+    m_canvas_hist9->Divide(6, 4);
+
+
+#endif
+}
+
+//______________________________________________________________________________
+void
+EventDisplay::DrawBGOWaveform(int nc, int ngraph, int seg, TGraphErrors* gr )
+{
+#if CATCH
+  m_canvas_hist9->cd(nc);
+
+  gr->SetNameTitle(Form("gra_%d_%d", seg, ngraph),
+		  Form("Segment %d", seg));
+
+  if (ngraph == 0) {
+    gr->SetMarkerSize(1.);
+    gr->SetMarkerStyle(20);
+    gr->Draw("ap");
+  } else {
+    gr->SetMarkerSize(1.);
+    gr->SetMarkerStyle(20);
+    gr->SetMarkerColor(kRed);
+    gr->Draw("p");
+
+  }
+
+#endif
+}
+
+
+//______________________________________________________________________________
+void
+EventDisplay::DrawBGOFitFunc(int nc, int ngraph, int seg, TF1* func )
+{
+#if CATCH
+  m_canvas_hist9->cd(nc);
+
+  func->Draw("same");
+
 #endif
 }
 
@@ -4717,7 +4793,7 @@ void EventDisplay::ShowHitFiber(int layer, int segment, double pe)// const
 {
   static const std::string func_name("["+class_name+"::"+__func__+"()]");
 
-  printf("ShowHitFiber : layer %d, seg %d, pe %f\n", layer, segment, pe);
+  //printf("ShowHitFiber : layer %d, seg %d, pe %f\n", layer, segment, pe);
 
   Color_t colorPallet[5] = {kAzure, kTeal, kSpring, kOrange, kPink};
   Color_t color = kBlack;
@@ -5093,6 +5169,16 @@ EventDisplay::UpdateHist( )
     gPad->Modified();
     gPad->Update();
   }
+
+  m_canvas_hist9->cd();
+  m_canvas_hist9->Update();
+  /*
+  for (int i=0; i<24; i++) {
+    m_canvas_hist9->cd(i+1);
+    gPad->Modified();
+    gPad->Update();
+  }
+  */
 
   UpdateCATCH();
 #endif

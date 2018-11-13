@@ -165,6 +165,7 @@ RawData::RawData( void )
     m_SFTRawHC(NumOfPlaneSFT),
     m_CFTRawHC(NumOfPlaneCFT),
     m_BGORawHC(),
+    m_BGOFadcRawHC(NumOfSegBGO),
     m_PiIDRawHC(),
     m_SCHRawHC(),
     m_FBT1RawHC(2*NumOfLayersFBT1),
@@ -205,6 +206,14 @@ RawData::ClearAll( void )
   del::ClearContainerAll( m_SFTRawHC );
   del::ClearContainerAll( m_CFTRawHC );
   del::ClearContainer( m_BGORawHC );
+  //del::ClearContainerAll( m_BGOFadcRawHC );
+  for (int i=0; i<NumOfSegBGO; i++) {
+    m_BGOFadcRawHC[i].clear();
+    m_BGOFadcRawHC[i].shrink_to_fit();
+  }
+
+
+
   del::ClearContainer( m_PiIDRawHC );
   del::ClearContainerAll( m_FBT1RawHC );
   del::ClearContainerAll( m_FBT2RawHC );
@@ -349,6 +358,9 @@ RawData::DecodeHits( void )
     if( nhit_a>0 ){
       for(int i = 0; i<nhit_a; ++i){
 	unsigned int fadc = gUnpacker.get(DetIdBGO, 0, seg, 0, 0 ,i);	
+
+	m_BGOFadcRawHC[seg].push_back(fadc);
+
 	if( fadc == 0xffff ){
 	}else{
 	  if( ped == 0 ){ped = fadc;} // 1st value is seemed to be pedestal

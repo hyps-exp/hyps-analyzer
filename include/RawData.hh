@@ -15,7 +15,7 @@ class DCRawHit;
 
 typedef std::vector<HodoRawHit*> HodoRHitContainer;
 typedef std::vector<DCRawHit*>   DCRHitContainer;
-
+typedef std::vector <int>        FADCRHitContainer;
 //______________________________________________________________________________
 class RawData
 {
@@ -39,6 +39,7 @@ private:
   std::vector<HodoRHitContainer> m_SFTRawHC;
   std::vector<HodoRHitContainer> m_CFTRawHC;
   HodoRHitContainer m_BGORawHC;
+  std::vector<FADCRHitContainer> m_BGOFadcRawHC;
   HodoRHitContainer m_PiIDRawHC;
   HodoRHitContainer m_SCHRawHC;
   std::vector<HodoRHitContainer> m_FBT1RawHC;
@@ -72,6 +73,7 @@ public:
 
   const HodoRHitContainer& GetCFTRawHC( int plane ) const;
   const HodoRHitContainer& GetBGORawHC( void ) const;
+  const FADCRHitContainer& GetBGOFAdcRawHC( int segment ) const;
   const HodoRHitContainer& GetPiIDRawHC( void ) const;
 
   const HodoRHitContainer& GetSCHRawHC( void ) const;
@@ -160,6 +162,14 @@ inline const HodoRHitContainer&
 RawData::GetBGORawHC( void ) const
 {
   return m_BGORawHC;
+}
+
+//______________________________________________________________________________
+inline const FADCRHitContainer&
+RawData::GetBGOFAdcRawHC( int segment ) const
+{
+  if( segment<0 || segment>NumOfSegBGO ) segment=0;
+  return m_BGOFadcRawHC[segment];
 }
 
 //______________________________________________________________________________

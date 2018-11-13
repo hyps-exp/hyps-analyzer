@@ -69,7 +69,8 @@ bool CFTParticle::Calculate()
     Hodo1Hit* hit = hodoAna.GetHitBGO(i);
     int seg = hit->SegmentId();
     int nh = hit->GetNumOfHit();
-    double adc = hit->GetAUp();
+    //double adc = hit->GetAUp();
+    double adc = hit->DeltaE();
     bool hit_flag = false;
 
     if(adc>0){

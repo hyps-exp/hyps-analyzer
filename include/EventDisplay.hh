@@ -20,8 +20,10 @@ class TCanvas;
 class TFile;
 class TGeometry;
 class TGraph;
+class TGraphErrors;
 class TH1;
 class TH2;
+class TF1;
 class TLatex;
 class TMarker;
 class TMarker3DBox;
@@ -75,6 +77,7 @@ private:
   TCanvas                   *m_canvas_hist6;
   TCanvas                   *m_canvas_hist7;
   TCanvas                   *m_canvas_hist8;
+  TCanvas                   *m_canvas_hist9;
   TCanvas                   *m_canvas_catch;
   TH1                       *m_hist_vertex_x;
   TH1                       *m_hist_vertex_y;
@@ -358,6 +361,10 @@ public:
   void DrawCFT_AdcCor( int layer, int seg, int HorL, int adc );
   void DrawPiID(int seg, int LorT, int tdc );
   void DrawBGO(int seg, int tdc );
+  void SetBGOWaveformCanvas(int nhit );
+  void DrawBGOWaveform(int nc, int ngraph, int seg, TGraphErrors* gr );
+  void DrawBGOFitFunc(int nc, int ngraph, int seg, TF1* func );
+  
   void DrawTOF( int seg, int tdc );
   void DrawBcOutHit(int layer,  int wire, int tdc );
   void DrawBC3( int wire, int tdc );

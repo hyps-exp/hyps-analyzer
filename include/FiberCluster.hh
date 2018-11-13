@@ -28,6 +28,7 @@ protected:
   HitContainer m_hit_container;
   int          m_cluster_size;
   int          m_cluster_id;
+  int          m_max_cluster_id;
   double       m_mean_time;
   double       m_real_mean_time; // real mean (not a closest value of CTime)
   double       m_max_width;
@@ -40,6 +41,7 @@ protected:
   double       m_sum_mipLow;
   double       m_sum_dELow;
 
+  double       m_max_adcHi;
   double       m_max_adcLow;
   double       m_max_mipLow;
   double       m_max_dELow;
@@ -53,6 +55,7 @@ public:
   int    VectorSize( void )      const { return m_hit_container.size();    }
   int    ClusterId( void )       const { return m_cluster_id;      }
   int    ClusterSize( void )     const { return m_cluster_size;    }
+  int    GetMaxClusterId( void )     const { return m_max_cluster_id;    }
   double CMeanTime( void )       const { return m_mean_time;       }
   double RCMeanTime( void )      const { return m_real_mean_time;  }
   double Width( void )           const { return m_max_width;       }
@@ -67,6 +70,7 @@ public:
   double SumdELow( void )        const { return m_sum_dELow;       }
   double MeanSeg( void )         const { return m_mean_seg;        }
 
+  double MaxAdcHi( void )        const { return m_max_adcHi;      }
   double MaxAdcLow( void )       const { return m_max_adcLow;      }
   double MaxMIPLow( void )       const { return m_max_mipLow;      }
   double MaxdELow( void )        const { return m_max_dELow;       }
