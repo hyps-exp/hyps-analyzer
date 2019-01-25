@@ -31,6 +31,13 @@ namespace
   using namespace root;
   const std::string& class_name("EventHodoscope");
   RMAnalyzer& gRM = RMAnalyzer::GetInstance();
+
+  const int TofSegForThTOF[NumOfSegHtTOF][2] =  {
+    {19, -1}, {4, 21}, {17, -1}, {3, 9}, {1, 10}, 
+    {7, -1},  {5, 8}, {6, -1}, {11, -1}, {18, -1}, 
+    {12, -1}, {13, -1}, {14, -1},{15, -1}, {2, 20},
+    {16, -1}  };
+
 }
 
 //______________________________________________________________________________
@@ -1065,8 +1072,8 @@ EventHodoscope::ProcessingNormal( void )
 	HF1( TOFHid+100*seg+13, mt );      
 	HF1( TOFHid+100*seg+17, ctu );     HF1( TOFHid+100*seg+18, ctd );
 	HF1( TOFHid+100*seg+19, cmt );     HF1( TOFHid+100*seg+20, ctu-ctd );
-	HF2( TOFHid+100*seg+21, tu, au );  HF2( TOFHid+100*seg+22, td, ad );
-	HF2( TOFHid+100*seg+23, ctu, au ); HF2( TOFHid+100*seg+24, ctd, ad );
+	//HF2( TOFHid+100*seg+21, tu, au );  HF2( TOFHid+100*seg+22, td, ad );
+	//HF2( TOFHid+100*seg+23, ctu, au ); HF2( TOFHid+100*seg+24, ctd, ad );
 	HF1( TOFHid+12, cmt );             
 
 	dst.utTofSeg[seg-1][m]  = tu; dst.dtTofSeg[seg-1][m]  = td;
@@ -1173,6 +1180,44 @@ EventHodoscope::ProcessingNormal( void )
 	}// for(seg2)
       }// for(m1)
     }// for(seg1)
+
+
+    for( int i=0; i<nh; ++i ){
+      Hodo1Hit *hit = hodoAna->GetHitHtTOF(i);
+      if(!hit) continue;
+      int seg = hit->SegmentId();
+      HF1( 20051, seg );
+
+      int n_mhit = hit->GetNumOfHit();
+      bool flagTimeCut = false;
+      for(int m = 0; m<n_mhit; ++m){
+	double time  = hit->Time(m);
+	//event.tofhtmt[seg-1][m]  = mt;
+	if (time>-40&&time<40) {
+	  flagTimeCut = true;
+	}
+	HF1( 20052, time );
+
+	
+      }// for(m)
+
+      int nhTof = hodoAna->GetNHitsTOF();
+      if (flagTimeCut && nhTof==1) {
+	Hodo2Hit *hitTof = hodoAna->GetHitTOF(0);
+	int segTof = (int)hitTof->SegmentId();
+	HF2(HtTOFHid + 6, seg, segTof);
+
+	if (segTof == TofSegForThTOF[seg][0] ||
+	    segTof == TofSegForThTOF[seg][1]) {
+	  double de   = hitTof->DeltaE();
+	  int histId = TOFHid + 100*(segTof+1) +21;
+	  HF1(histId, de);
+	  //TofHtHit[segTof] = true;	  
+	}
+      }
+
+    }
+
 
     int nc = hodoAna->GetNClustersHtTOF();
     HF1( HtTOFHid+30, double(nc) );
@@ -1578,9 +1623,9 @@ namespace
   const double MinTdc  =    0.;
   const double MaxTdc  = 4096.;
 
-  const int    NbinTdcHr = 4e5/20;
+  const int    NbinTdcHr = 8e5/20;
   const double MinTdcHr  =  0.;
-  const double MaxTdcHr  = 4e5;
+  const double MaxTdcHr  = 8e5;
 }
 
 //______________________________________________________________________________
@@ -1941,6 +1986,7 @@ ConfMan::InitializeHistograms( void )
     TString title18 = Form("TOF-%d Down CTime", i);
     TString title19 = Form("TOF-%d CMeanTime", i);
     TString title20 = Form("TOF-%d Tup-Tdown", i);
+    TString title21 = Form("TOF-%d dE (w/ TOF-HT)", i);
     HB1( TOFHid +100*i +11, title11, 500, -5., 45. );
     HB1( TOFHid +100*i +12, title12, 500, -5., 45. );
     HB1( TOFHid +100*i +13, title13, 500, -5., 45. );
@@ -1951,6 +1997,7 @@ ConfMan::InitializeHistograms( void )
     HB1( TOFHid +100*i +18, title18, 500, -5., 45. );
     HB1( TOFHid +100*i +19, title19, 500, -5., 45. );
     HB1( TOFHid +100*i +20, title20, 200, -10.0, 10.0 );
+    HB1( TOFHid +100*i +21, title21, 200, -0.5, 4.5 );
   }
 
   HB2( TOFHid +21, "TofHitPat%TofHitPat[HodoGood]", NumOfSegTOF,   0., double(NumOfSegTOF),
@@ -1974,6 +2021,7 @@ ConfMan::InitializeHistograms( void )
   HB1( HtTOFHid +3, "Hitpat HtTOF(Tor)",  NumOfSegTOF,   0., double(NumOfSegTOF)   );
   HB1( HtTOFHid +4, "#Hits HtTOF(Tand)",  NumOfSegTOF+1, 0., double(NumOfSegTOF+1) );
   HB1( HtTOFHid +5, "Hitpat HtTOF(Tand)", NumOfSegTOF,   0., double(NumOfSegTOF)   );
+  HB2( HtTOFHid +6, "TOF % TOF-HT segment", NumOfSegHtTOF, 0, NumOfSegHtTOF, NumOfSegTOF, 0, NumOfSegTOF);
 
   for( int i=1; i<=NumOfSegTOF; ++i ){
     TString title1 = Form("HtTOF-%d UpAdc", i);
