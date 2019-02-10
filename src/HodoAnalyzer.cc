@@ -35,6 +35,7 @@ namespace
   const double MaxTimeDifBH2 =  2.0;
   const double MaxTimeDifSAC = -1.0;
   const double MaxTimeDifTOF = -1.0;
+  const double MaxTimeDifLAC = -1.0;
   const double MaxTimeDifLC  = -1.0;
   const double MaxTimeDifBFT =  8.0;
   const double MaxTimeDifSFT =  8.0;
@@ -65,6 +66,7 @@ HodoAnalyzer::~HodoAnalyzer( void )
   ClearTOFHits();
   ClearHtTOFHits();
   ClearLCHits();
+  ClearLACHits();
   ClearBFTHits();
   ClearSFTHits();
   ClearCFTHits();
@@ -114,6 +116,14 @@ HodoAnalyzer::ClearHtTOFHits( void )
 {
   del::ClearContainer( m_HtTOFCont );
   del::ClearContainer( m_HtTOFClCont );
+}
+
+//______________________________________________________________________________
+void
+HodoAnalyzer::ClearLACHits( void )
+{
+  del::ClearContainer( m_LACCont );
+  del::ClearContainer( m_LACClCont );
 }
 
 //______________________________________________________________________________
@@ -214,6 +224,7 @@ HodoAnalyzer::DecodeRawHits( RawData *rawData )
   DecodeSACHits( rawData );
   DecodeTOFHits( rawData );
   DecodeHtTOFHits( rawData );
+  DecodeLACHits( rawData );
   DecodeLCHits( rawData );
   DecodeBFTHits( rawData );
   DecodeSFTHits( rawData );
@@ -355,6 +366,30 @@ HodoAnalyzer::DecodeHtTOFHits( RawData *rawData )
   return true;
 }
 
+//______________________________________________________________________________
+bool
+HodoAnalyzer::DecodeLACHits( RawData *rawData )
+{
+  ClearLACHits();
+  const HodoRHitContainer &cont = rawData->GetLACRawHC();
+  int nh = cont.size();
+  for( int i=0; i<nh; ++i ){
+    HodoRawHit *hit = cont[i];
+    if( !hit ) continue;
+    Hodo1Hit *hp = new Hodo1Hit( hit );
+    if( !hp ) continue;
+    if( hp->Calculate() )
+      m_LACCont.push_back(hp);
+    else
+      delete hp;
+  }//for(i)
+
+#if Cluster
+  MakeUpClusters( m_LACCont, m_LACClCont, MaxTimeDifLAC );
+#endif
+
+  return true;
+}
 
 //______________________________________________________________________________
 bool
@@ -530,7 +565,7 @@ HodoAnalyzer::DecodeCFTHits( RawData* rawData )
       hp->SetPedestalCor(deltaHG, deltaLG);
 
       //std::cout << "layer " << p << ", seg " << seg << ", deltaHG " << deltaHG << ", deltaLG " <<  deltaLG << std::endl;
-      if(hp->Calculate() && hp->GetAdcHi()>10){
+      if(hp->Calculate() && hp->GetAdcHigh()>10){
 	m_CFTCont.at(p).push_back(hp);
       }
       else{
@@ -1459,6 +1494,18 @@ HodoAnalyzer::ReCalcHtTOFHits( bool applyRecursively )
 
 //______________________________________________________________________________
 bool
+HodoAnalyzer::ReCalcLACHits( bool applyRecursively )
+{
+  int n = m_LACCont.size();
+  for( int i=0; i<n; ++i ){
+    Hodo1Hit *hit = m_LACCont[i];
+    if(hit) hit->ReCalc(applyRecursively);
+  }
+  return true;
+}
+
+//______________________________________________________________________________
+bool
 HodoAnalyzer::ReCalcLCHits( bool applyRecursively )
 {
   int n = m_LCCont.size();
@@ -1496,6 +1543,18 @@ HodoAnalyzer::ReCalcBH2Clusters( bool applyRecursively )
 
 //______________________________________________________________________________
 bool
+HodoAnalyzer::ReCalcSACClusters( bool applyRecursively )
+{
+  int n = m_SACClCont.size();
+  for( int i=0; i<n; ++i ){
+    HodoCluster *cl = m_SACClCont[i];
+    if(cl) cl->ReCalc(applyRecursively);
+  }
+  return true;
+}
+
+//______________________________________________________________________________
+bool
 HodoAnalyzer::ReCalcTOFClusters( bool applyRecursively )
 {
   int n = m_TOFClCont.size();
@@ -1513,6 +1572,18 @@ HodoAnalyzer::ReCalcHtTOFClusters( bool applyRecursively )
   int n = m_HtTOFClCont.size();
   for( int i=0; i<n; ++i ){
     HodoCluster *cl = m_HtTOFClCont[i];
+    if(cl) cl->ReCalc(applyRecursively);
+  }
+  return true;
+}
+
+//______________________________________________________________________________
+bool
+HodoAnalyzer::ReCalcLACClusters( bool applyRecursively )
+{
+  int n = m_LACClCont.size();
+  for( int i=0; i<n; ++i ){
+    HodoCluster *cl = m_LACClCont[i];
     if(cl) cl->ReCalc(applyRecursively);
   }
   return true;
@@ -1539,11 +1610,14 @@ HodoAnalyzer::ReCalcAll( void )
   ReCalcSACHits();
   ReCalcTOFHits();
   ReCalcHtTOFHits();
+  ReCalcLACHits();
   ReCalcLCHits();
   ReCalcBH1Clusters();
   ReCalcBH2Clusters();
+  ReCalcSACClusters();
   ReCalcTOFClusters();
   ReCalcHtTOFClusters();
+  ReCalcLACClusters();
   ReCalcLCClusters();
   return true;
 }

@@ -17,12 +17,14 @@ const int DetIdTOF      =  8;
 const int DetIdSAC      =  9;
 const int DetIdLC       = 10;
 const int DetIdHtTOF    = 11; // high threshold TOF
+const int DetIdLAC      = 12;
 const int NumOfSegBH1   = 11;
 const int NumOfSegBH2   =  8;
 const int NumOfSegSCH   = 64;
 const int NumOfSegTOF   = 24;
 const int NumOfSegSAC   = 4;
 const int NumOfSegLC    = 28;
+const int NumOfSegLAC   = 15;
 const int NumOfSegHtTOF = 16;
 
 // Misc _______________________________________________________________
@@ -110,7 +112,7 @@ const int PlOffsSdcIn      =   0;
 const int PlOffsSft        =   6;
 const int PlOffsSdcOut     =  30;
 const int PlOffsVP         =  20;
-const int PlOffsFbt        =  80;
+const int PlOffsFht        =  80;
 
 const int NumOfLayersBc     = 6;
 const int NumOfLayersSFT    = 3;

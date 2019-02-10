@@ -281,11 +281,15 @@ DCAnalyzer::DecodeBcOutHits( RawData *rawData )
     for( int i=0; i<nh; ++i ){
       DCRawHit *rhit  = RHitCont[i];
       DCHit    *hit   = new DCHit( rhit->PlaneId()+PlOffsBc, rhit->WireId() );
-      int       nhtdc = rhit->GetTdcSize();
+      int       nhtdc      = rhit->GetTdcSize();
+	  int       nhtrailing = rhit->GetTrailingSize();
       if(!hit) continue;
       for( int j=0; j<nhtdc; ++j ){
 	hit->SetTdcVal( rhit->GetTdc(j) );
       }
+	  for( int j=0; j<nhtrailing; ++j ){
+	    hit->SetTdcTrailing( rhit->GetTrailing(j) );
+	  }
 
       if( hit->CalcDCObservables() )
 	m_BcOutHC[layer].push_back(hit);
@@ -355,10 +359,14 @@ DCAnalyzer::DecodeSdcInHits( RawData *rawData )
 	DCRawHit *rhit  = RHitCont[i];
 	DCHit    *hit   = new DCHit( rhit->PlaneId(), rhit->WireId() );
 	// DCHit    *hit   = new DCHit( rhit->PlaneId() + NumOfLayersSFT, rhit->WireId() );
-	int       nhtdc = rhit->GetTdcSize();
+	int       nhtdc      = rhit->GetTdcSize();
+	int       nhtrailing = rhit->GetTrailingSize();
 	if(!hit) continue;
 	for( int j=0; j<nhtdc; ++j ){
 	  hit->SetTdcVal( rhit->GetTdc(j) );
+	}
+	for( int j=0; j<nhtrailing; ++j ){
+	  hit->SetTdcTrailing( rhit->GetTrailing(j) );
 	}
 	if( hit->CalcDCObservables() ) {
 	  m_SdcInHC[layer].push_back(hit);
@@ -412,7 +420,7 @@ DCAnalyzer::DecodeSdcOutHits( RawData *rawData , double ofs_dt)
       }
     }
   }
-  
+ //* 
   // FBT1                                                                  
   {
     HodoAnalyzer hodoAna;
@@ -431,7 +439,7 @@ DCAnalyzer::DecodeSdcOutHits( RawData *rawData , double ofs_dt)
         double posU  = clU->MeanPosition();
         double timeU = clU->CMeanTime();
 
-        DCHit *hitU = new DCHit( 1+2*l+PlOffsFbt, segU );
+        DCHit *hitU = new DCHit( 1+2*l+PlOffsFht, segU );
         hitU->SetTdcVal( static_cast<int>( timeU ) );
 
         int layer = NumOfLayersSdcOut-7 + 1 + 2*l;
@@ -449,7 +457,7 @@ DCAnalyzer::DecodeSdcOutHits( RawData *rawData , double ofs_dt)
         double posD  = clD->MeanPosition();
         double timeD = clD->CMeanTime();
 
-        DCHit *hitD = new DCHit( 2*l+PlOffsFbt, segD );
+        DCHit *hitD = new DCHit( 2*l+PlOffsFht, segD );
         hitD->SetTdcVal( static_cast<int>( timeD ) );
 
         int layer = NumOfLayersSdcOut-7 + 2*l;
@@ -481,8 +489,8 @@ DCAnalyzer::DecodeSdcOutHits( RawData *rawData , double ofs_dt)
         double posU  = clU->MeanPosition();
         double timeU = clU->CMeanTime();
 
-        DCHit *hitU = new DCHit( 5+2*l+PlOffsFbt, segU );
-	hitU->SetTdcVal( static_cast<int>( timeU ) );
+        DCHit *hitU = new DCHit( 5+2*l+PlOffsFht, segU );
+	hitU->SetTdcVal( timeU );
 
         int layer = NumOfLayersSdcOut-3 + 1 + 2*l;
         if ( hitU->CalcFiberObservables() ) {
@@ -499,8 +507,8 @@ DCAnalyzer::DecodeSdcOutHits( RawData *rawData , double ofs_dt)
 	double posD  = clD->MeanPosition();
         double timeD = clD->CMeanTime();
 
-        DCHit *hitD = new DCHit( 4+2*l+PlOffsFbt, segD );
-        hitD->SetTdcVal( static_cast<int>( timeD ) );
+        DCHit *hitD = new DCHit( 4+2*l+PlOffsFht, segD );
+        hitD->SetTdcVal( timeD );
         
 	int layer = NumOfLayersSdcOut-3 + 2*l;
         if ( hitD->CalcFiberObservables() ) {
@@ -512,6 +520,7 @@ DCAnalyzer::DecodeSdcOutHits( RawData *rawData , double ofs_dt)
       }
     }
   }
+
   m_is_decoded[k_SdcOut] = true;
   return true;
 }
@@ -560,7 +569,7 @@ DCAnalyzer::DecodeCFTHits( RawData *rawData )
 
 	DCHit *hit = new DCHit(l);
 
-	hit->SetTdcCFT( static_cast<int>( time ) );      	
+	hit->SetTdcCFT( time );      	
 	if ( hit->CalcCFTObservables() ) {
 	  hit->SetMeanSeg    ( mean_seg);
 	  hit->SetMaxSeg     ( max_seg );
@@ -1723,6 +1732,24 @@ DCAnalyzer::ChiSqrCut( DCLocalTrackContainer& TrackCont,
   TrackCont.resize( ValidCand.size() );
   std::copy( ValidCand.begin(), ValidCand.end(), TrackCont.begin() );
   ValidCand.clear();
+}
+
+//______________________________________________________________________________
+void
+DCAnalyzer::TotCutBCOut(double min_tot)
+{
+  for(int i = 0; i<NumOfLayersBcOut; ++i){
+    TotCut(m_BcOutHC[i + 1], min_tot, false);
+  }// for(i)
+}
+
+//______________________________________________________________________________
+void
+DCAnalyzer::TotCutSDC1(double min_tot)
+{
+  for(int i = 0; i<NumOfLayersSdcIn - NumOfLayersSFT; ++i){
+    TotCut(m_SdcInHC[i + NumOfLayersSFT +1], min_tot, false);
+  }// for(i)
 }
 
 //______________________________________________________________________________

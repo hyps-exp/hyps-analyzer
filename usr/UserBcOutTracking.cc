@@ -159,6 +159,7 @@ EventBcOutTracking::ProcessingNormal( void )
   static const double MaxBeamToF = gUser.GetParameter("BTOF",  1);
 #endif
   static const double MaxMultiHitBcOut = gUser.GetParameter("MaxMultiHitBcOut");
+  static const double MinTotBcOut = gUser.GetParameter("MinTotBcOut", 0);
 
   rawData = new RawData;
   rawData->DecodeHits();
@@ -264,8 +265,9 @@ EventBcOutTracking::ProcessingNormal( void )
 
   //////////////BC3&4 number of hit layer
   DCAna->DecodeRawHits( rawData );
-  DCAna->DriftTimeCutBC34(-10, 50);
-  //  DCAna->MakeBH2DCHit(event.Time0Seg-1);
+  DCAna->TotCutBCOut( MinTotBcOut );
+  // DCAna->DriftTimeCutBC34(-10, 50);
+  // DCAna->MakeBH2DCHit(event.Time0Seg-1);
 
   //BC3&BC4
   double multi_BcOut=0.;

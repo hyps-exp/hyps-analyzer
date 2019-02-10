@@ -54,6 +54,7 @@ private:
   Hodo1HitContainer     m_SACCont;
   Hodo2HitContainer     m_TOFCont;
   Hodo1HitContainer     m_HtTOFCont;
+  Hodo1HitContainer     m_LACCont;
   Hodo1HitContainer     m_LCCont;
   Hodo1HitContainer     m_BGOCont;
   MultiPlaneFiberHitContainer m_BFTCont;
@@ -71,6 +72,7 @@ private:
   HodoClusterContainer  m_SACClCont;
   HodoClusterContainer  m_TOFClCont;
   HodoClusterContainer  m_HtTOFClCont;
+  HodoClusterContainer  m_LACClCont;
   HodoClusterContainer  m_LCClCont;
   FiberClusterContainer m_BFTClCont;
   FiberClusterContainer m_SCHClCont;
@@ -88,6 +90,7 @@ public:
   bool DecodeSACHits( RawData* rawData );
   bool DecodeTOFHits( RawData* rawData );
   bool DecodeHtTOFHits( RawData* rawData );
+  bool DecodeLACHits( RawData* rawData );
   bool DecodeLCHits( RawData* rawData );
   bool DecodeBFTHits( RawData* rawData );
   bool DecodeSFTHits( RawData* rawData );
@@ -103,6 +106,7 @@ public:
   int  GetNHitsSAC( void )  const { return m_SACCont.size();  };
   int  GetNHitsTOF( void )  const { return m_TOFCont.size();  };
   int  GetNHitsHtTOF( void )const { return m_HtTOFCont.size();  };
+  int  GetNHitsLAC( void )   const { return m_LACCont.size();  };
   int  GetNHitsLC( void )   const { return m_LCCont.size();  };
   int  GetNHitsBFT( int plane)  const { return m_BFTCont.at( plane ).size(); };
   int  GetNHitsSFT( int plane ) const { return m_SFTCont.at( plane ).size(); };
@@ -120,6 +124,7 @@ public:
   inline Hodo1Hit * GetHitSAC( std::size_t i )  const;
   inline Hodo2Hit * GetHitTOF( std::size_t i )  const;
   inline Hodo1Hit * GetHitHtTOF( std::size_t i )const;
+  inline Hodo1Hit * GetHitLAC( std::size_t i )   const;
   inline Hodo1Hit * GetHitLC( std::size_t i )   const;
   inline FiberHit * GetHitBFT( int plane, std::size_t seg ) const;
   inline FiberHit * GetHitSFT( int plane, std::size_t seg ) const;
@@ -132,10 +137,11 @@ public:
 
   int GetNClustersBH1( void ) const { return m_BH1ClCont.size(); };
   int GetNClustersBH2( void ) const { return m_BH2ClCont.size(); };
+  int GetNClustersSAC( void ) const { return m_SACClCont.size(); }
   int GetNClustersTOF( void ) const { return m_TOFClCont.size(); }
   int GetNClustersHtTOF( void )const{ return m_HtTOFClCont.size(); }
+  int GetNClustersLAC( void ) const { return m_LACClCont.size(); }
   int GetNClustersLC( void )  const { return m_LCClCont.size(); }
-  int GetNClustersSAC( void ) const { return m_SACClCont.size(); }
   int GetNClustersBFT( void ) const { return m_BFTClCont.size(); };
   int GetNClustersSFT( int layer ) const { return m_SFTClCont.at( layer ).size(); };
   int GetNClustersCFT( int layer ) const { return m_CFTClCont.at( layer ).size(); };
@@ -147,10 +153,11 @@ public:
 
   inline HodoCluster  * GetClusterBH1( std::size_t i ) const;
   inline BH2Cluster   * GetClusterBH2( std::size_t i ) const;
+  inline HodoCluster  * GetClusterSAC( std::size_t i ) const;
   inline HodoCluster  * GetClusterTOF( std::size_t i ) const;
   inline HodoCluster  * GetClusterHtTOF( std::size_t i ) const;
+  inline HodoCluster  * GetClusterLAC( std::size_t i ) const;
   inline HodoCluster  * GetClusterLC( std::size_t i ) const;
-  inline HodoCluster  * GetClusterSAC( std::size_t i ) const;
   inline FiberCluster * GetClusterBFT( std::size_t i ) const;
   inline FiberCluster * GetClusterSFT( int layer, std::size_t i ) const;
   inline FiberCluster * GetClusterCFT( int layer, std::size_t i ) const;
@@ -163,11 +170,14 @@ public:
   bool ReCalcSACHits( bool applyRecursively=false );
   bool ReCalcTOFHits( bool applyRecursively=false );
   bool ReCalcHtTOFHits( bool applyRecursively=false );
+  bool ReCalcLACHits( bool applyRecursively=false );
   bool ReCalcLCHits( bool applyRecursively=false );
   bool ReCalcBH1Clusters( bool applyRecursively=false );
   bool ReCalcBH2Clusters( bool applyRecursively=false );
+  bool ReCalcSACClusters( bool applyRecursively=false );
   bool ReCalcTOFClusters( bool applyRecursively=false );
   bool ReCalcHtTOFClusters( bool applyRecursively=false );
+  bool ReCalcLACClusters( bool applyRecursively=false );
   bool ReCalcLCClusters( bool applyRecursively=false );
   bool ReCalcFBT1Clusters( bool applyRecursively=false );
   bool ReCalcFBT2Clusters( bool applyRecursively=false );
@@ -201,6 +211,7 @@ private:
   void ClearSACHits( void );
   void ClearTOFHits( void );
   void ClearHtTOFHits( void );
+  void ClearLACHits( void );
   void ClearLCHits( void );
   void ClearBFTHits();
   void ClearSFTHits();
@@ -301,6 +312,16 @@ HodoAnalyzer::GetClusterHtTOF( std::size_t i ) const
 {
   if( i<m_HtTOFClCont.size() )
     return m_HtTOFClCont[i];
+  else
+    return 0;
+}
+
+//______________________________________________________________________________
+inline HodoCluster*
+HodoAnalyzer::GetClusterLAC( std::size_t i ) const
+{
+  if( i<m_LACClCont.size() )
+    return m_LACClCont[i];
   else
     return 0;
 }
@@ -431,6 +452,16 @@ HodoAnalyzer::GetHitHtTOF( std::size_t i ) const
 {
   if( i<m_HtTOFCont.size() )
     return m_HtTOFCont[i];
+  else
+    return 0;
+}
+
+//______________________________________________________________________________
+inline Hodo1Hit*
+HodoAnalyzer::GetHitLAC( std::size_t i ) const
+{
+  if( i<m_LACCont.size() )
+    return m_LACCont[i];
   else
     return 0;
 }
