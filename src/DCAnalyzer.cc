@@ -282,7 +282,7 @@ DCAnalyzer::DecodeBcOutHits( RawData *rawData )
       DCRawHit *rhit  = RHitCont[i];
       DCHit    *hit   = new DCHit( rhit->PlaneId()+PlOffsBc, rhit->WireId() );
       int       nhtdc      = rhit->GetTdcSize();
-	  int       nhtrailing = rhit->GetTrailingSize();
+      int       nhtrailing = rhit->GetTrailingSize();
       if(!hit) continue;
       for( int j=0; j<nhtdc; ++j ){
 	hit->SetTdcVal( rhit->GetTdc(j) );
