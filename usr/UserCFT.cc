@@ -164,6 +164,7 @@ struct Event
   double Total_dE[MaxDepth],    Total_dE_max[MaxDepth];
   double Total_dEphi[MaxDepth], Total_dEphi_max[MaxDepth];
   double Total_dEuv[MaxDepth],  Total_dEuv_max[MaxDepth];
+  int nhit_phi[MaxDepth], nhit_uv[MaxDepth];
   // BGO
   int segBGOt[NumOfSegBGO];// matched to track
   // PiID counter
@@ -499,8 +500,8 @@ EventCFT::ProcessingNormal( void )
   // Fiber Cluster
   for(int p = 0; p<NumOfPlaneCFT; ++p){
     hodoAna->TimeCutCFT(p, -30, 30); // CATCH@J-PARC  
-    //hodoAna->AdcCutCFT(p, 0, 4000); // CATCH@J-PARC  
-    hodoAna->AdcCutCFT(p, 50, 4000); // CATCH@J-PARC  for proton
+    hodoAna->AdcCutCFT(p, 0, 4000); // CATCH@J-PARC  
+    //hodoAna->AdcCutCFT(p, 50, 4000); // CATCH@J-PARC  for proton
     //hodoAna->WidthCutCFT(p, 60, 300); // pp scattering
     hodoAna->WidthCutCFT(p, 30, 300); // cosmic ray
 
@@ -556,7 +557,9 @@ EventCFT::ProcessingNormal( void )
     else if(i==1){tpp[1]=tp;}
 
     int nh   = tp->GetNHit();
+    event.nhit_phi[i]=nh;
     int nhUV = tp->GetNHitUV();
+    event.nhit_uv[i]=nhUV;
     double chisqrXY=tp->GetChiSquareXY();
     double chisqrXYZ=tp->GetChiSquareZ();
     double vtx_z =tp->GetVtxZ();
