@@ -567,7 +567,7 @@ RawData::DecodeHits( void )
     for( int seg=0; seg<NumOfSegScaler; ++seg ){
       int nhit = gUnpacker.get_entries( DetIdScaler, l, 0, seg, 0 );
       if( nhit>0 ){
-	int data = gUnpacker.get( DetIdScaler, 0, 0, seg, 0 );
+	int data = gUnpacker.get( DetIdScaler, l, 0, seg, 0 );
 	AddHodoRawHit( m_ScalerRawHC, DetIdScaler, l, seg, 0, 0, data );
       }
     }
