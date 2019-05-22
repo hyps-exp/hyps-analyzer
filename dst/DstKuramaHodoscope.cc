@@ -20,6 +20,7 @@
 #include "MathTools.hh"
 #include "RootHelper.hh"
 #include "UserParamMan.hh"
+#include "HodoPHCMan.hh" 
 
 #include "DstHelper.hh"
 
@@ -31,6 +32,7 @@ namespace
   ConfMan&            gConf = ConfMan::GetInstance();
   const DCGeomMan&    gGeom = DCGeomMan::GetInstance();
   const UserParamMan& gUser = UserParamMan::GetInstance();
+  const HodoPHCMan&   gPHC  = HodoPHCMan::GetInstance(); 
 }
 
 namespace dst
@@ -106,6 +108,7 @@ struct Event
   int    m2Combi;
   double beta[MaxHits];
   double stof[MaxHits];
+  double cstof[MaxHits]; 
   double m2[MaxHits];
 
   enum eParticle { Pion, Kaon, Proton, nParticle };
@@ -292,6 +295,7 @@ dst::InitializeEvent( void )
   for( int i=0; i<MaxHits; ++i ){
     event.beta[i]  = -9999.;
     event.stof[i]  = -9999.;
+    event.cstof[i] = -9999.; 
     event.m2[i]    = -9999.;
   }
   return true;
@@ -382,11 +386,13 @@ dst::DstRead( int ievent )
   }
 
   ////////// for BeamTof
+  double btof = -9999.; 
   for( int i=0; i<src.nhBh1; ++i ){
     event.Bh1Seg[i] = src.Bh1Seg[i];
     event.tBh1[i]   = src.tBh1[i];
     event.deBh1[i]  = src.deBh1[i];
     event.btof[i]   = src.tBh1[i] - time0;
+    if(i==0) btof = src.tBh1[i] - time0; 
   }
 
   for( int i=0; i<src.nhSac; ++i ){
@@ -445,11 +451,14 @@ dst::DstRead( int ievent )
 
       ////////// TimeCut
       double stof = event.tTof[itof] - time0 + OffsetToF;
-      double beta = event.path[it]/stof/math::C();
+      double cstof = -9999.; 
+      gPHC.DoStofCorrection( 8, 0, tofseg-1, 2, stof, btof, cstof );  
+	  double beta = event.path[it]/cstof/math::C();
       event.beta[mm] = beta;
       event.stof[mm] = stof;// - event.tTofCalc[0];
+      event.cstof[mm]= cstof; 
       event.m2[mm]   =
-	Kinematics::MassSquare( event.pKurama[it], event.path[it], stof );
+		Kinematics::MassSquare( event.pKurama[it], event.path[it], cstof );
 
 #if 0
       std::cout << "#D DebugPrint() Event : " << ievent << std::endl
@@ -458,8 +467,8 @@ dst::DstRead( int ievent )
 #endif
 
       for( int ip=0; ip<Event::nParticle; ++ip ){
-	HF2( 10000+ip+1, tofseg, stof-event.tTofCalc[ip] );
-	HF1( 10000+tofseg*100+ip+1, stof-event.tTofCalc[ip] );
+	HF2( 10000+ip+1, tofseg, cstof-event.tTofCalc[ip] );
+	HF1( 10000+tofseg*100+ip+1, cstof-event.tTofCalc[ip] );
       }
 
       HF1( 11, event.m2[mm] );
@@ -573,6 +582,7 @@ ConfMan::InitializeHistograms( void )
   tree->Branch("m2Combi", &event.m2Combi, "m2Combi/I");
   tree->Branch("beta",     event.beta,    "beta[m2Combi]/D");
   tree->Branch("stof",     event.stof,    "stof[m2Combi]/D");
+  tree->Branch("cstof",    event.cstof,   "cstof[m2Combi]/D"); 
   tree->Branch("m2",       event.m2,      "m2[m2Combi]/D");
 
   ////////// Bring Address From Dst
@@ -683,7 +693,8 @@ ConfMan::InitializeParameterFiles( void )
 {
   return
     ( InitializeParameter<DCGeomMan>("DCGEO")   &&
-      InitializeParameter<UserParamMan>("USER") );
+      InitializeParameter<UserParamMan>("USER") &&
+	  InitializeParameter<HodoPHCMan>("HDPHC") ); 
 }
 
 //_____________________________________________________________________
