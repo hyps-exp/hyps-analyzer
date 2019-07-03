@@ -70,16 +70,30 @@ private:
   double m_theta;
   ThreeVector m_Dir, m_Pos0;
   double m_meanseg[NumOfPlaneCFT*2];
-  // phi
+  // phi before pos. calib.
+  double m_phi_ini_before[NumOfPlaneCFT*2];  //initial phi from segNo
+  double m_phi_track_before[NumOfPlaneCFT*2];// phi from tracking
+  double m_dphi_before[NumOfPlaneCFT*2];     // delta phi (ini - calc)
+  double m_dist_phi_before[NumOfPlaneCFT*2]; // residual of XY plane
+  // phi after 
   double m_phi_ini[NumOfPlaneCFT*2];  //initial phi from segNo
   double m_phi_track[NumOfPlaneCFT*2];// phi from tracking
   double m_dphi[NumOfPlaneCFT*2];     // delta phi (ini - calc)
   double m_dist_phi[NumOfPlaneCFT*2]; // residual of XY plane
-  // z
+  // z before pos. calib.
+  double m_z_ini_before[NumOfPlaneCFT*2];    //initial z from segNo&phi
+  double m_z_track_before[NumOfPlaneCFT*2];  // z from tracking
+  double m_dz_before[NumOfPlaneCFT*2];     // delta z (ini - calc)
+  double m_dist_uv_before[NumOfPlaneCFT*2]; // residual of Z_XY plane
+  // z after 
   double m_z_ini[NumOfPlaneCFT*2];    //initial z from segNo&phi
   double m_z_track[NumOfPlaneCFT*2];  // z from tracking
   double m_dz[NumOfPlaneCFT*2];     // delta z (ini - calc)
   double m_dist_uv[NumOfPlaneCFT*2]; // residual of Z_XY plane
+  // dr
+  double m_dr[NumOfPlaneCFT*2];     // delta r (org - tracked r)
+  double m_r[NumOfPlaneCFT*2];     // cariblated r 
+
   // dE value
   double m_sum_adc[NumOfPlaneCFT*2]; double m_max_adc[NumOfPlaneCFT*2];
   double m_sum_mip[NumOfPlaneCFT*2]; double m_max_mip[NumOfPlaneCFT*2];
@@ -168,8 +182,9 @@ public:
   // for CFT
   bool   DoFitPhi ( void );
   bool   DoFitPhi2nd( void );
+  bool   DoFitPhi16pp( void );
   bool   DoFitUV ( void );
-  bool   DoFitUV2nd( void );
+  bool   DoFitUV2nd( int calib ); //0:w/o, 1:w/ UV calib.
   bool   SetCalculatedValueCFT();
   bool   GetCrossPointR(double r, double *phi, int layer);
   void   SetAxy( double Axy){ m_Axy= Axy;}
@@ -185,12 +200,22 @@ public:
   int    GetCFTxyFlag( void ) const { return m_xyFitFlag;  }
   int    GetCFTzFlag ( void ) const { return m_zTrackFlag; }
 
-  double GetPhiIni(  int layer) const {return m_phi_ini[layer];   }
-  double GetPhiTrack(int layer) const {return m_phi_track[layer]; }
-  double GetdPhi(    int layer) const {return m_dphi[layer]     ; }
-  double GetZIni(    int layer) const {return m_z_ini[layer]    ; }
-  double GetZTrack(  int layer) const {return m_z_track[layer]  ; }
-  double GetdZ(      int layer) const {return m_dz[layer]     ; }
+  double GetPhiIniBefore(  int layer) const {return m_phi_ini_before[layer]  ;}
+  double GetPhiTrackBefore(int layer) const {return m_phi_track_before[layer];}
+  double GetdPhiBefore(    int layer) const {return m_dphi_before[layer]     ;}
+  double GetPhiIni(  int layer) const {return m_phi_ini[layer]  ;}
+  double GetPhiTrack(int layer) const {return m_phi_track[layer];}
+  double GetdPhi(    int layer) const {return m_dphi[layer]     ;}
+
+  double GetZIniBefore(    int layer) const {return m_z_ini_before[layer]    ;}
+  double GetZTrackBefore(  int layer) const {return m_z_track_before[layer]  ;}
+  double GetdZBefore(      int layer) const {return m_dz_before[layer]       ;}
+  double GetZIni(    int layer) const {return m_z_ini[layer]    ;}
+  double GetZTrack(  int layer) const {return m_z_track[layer]  ;}
+  double GetdZ(      int layer) const {return m_dz[layer]       ;}
+  double GetdR(      int layer) const {return m_dr[layer]     ; }
+  double GetR(       int layer) const {return m_r[layer]     ; }
+
   ThreeVector GetPos0( void ) const { return m_Pos0; }
   ThreeVector GetDir( void )  const { return m_Dir; }
   double GetSumAdc(  int layer) const {return m_sum_adc[layer];   }
@@ -439,5 +464,21 @@ struct DCLTrackCompCFT
   }
 };
 
+//______________________________________________________________________________
+struct DCLTrackCompCFT16pp
+  : public std::binary_function <DCLocalTrack *, DCLocalTrack *, bool>
+{
+  bool operator()( const DCLocalTrack * const p1,
+		   const DCLocalTrack * const p2 ) const
+  {
+    
+    int n1=p1->GetNHit(), n2=p2->GetNHit();
+    double chi1=p1->GetChiSquare(), chi2=p2->GetChiSquare();
+    if( n1 > n2 ) return true;
+    if( n2 > n1 ) return false;
+    return ( chi1 <= chi2 );
+    
+  }
+};
 
 #endif

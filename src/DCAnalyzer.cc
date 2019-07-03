@@ -132,6 +132,7 @@ DCAnalyzer::DCAnalyzer( void )
     m_TempBcInHC(NumOfLayersBcIn+1),
     m_CFTHC(NumOfPlaneCFT),
     m_CFT16HC(NumOfPlaneCFT*2+1),
+    m_CFT16ppHC(NumOfPlaneCFT*2+1),
     m_BcInHC(NumOfLayersBcIn+1),
     m_BcOutHC(NumOfLayersBcOut+2),
     m_SdcInHC(NumOfLayersSdcIn+1),
@@ -161,10 +162,12 @@ DCAnalyzer::~DCAnalyzer( void )
   ClearTracksSdcInSdcOut();
   ClearTracksCFT();
   ClearTracksCFT16();
+  ClearTracksCFT16pp();
   ClearDCHits();
   ClearVtxHits();
   ClearCFTHits();
   ClearCFT16Hits();
+  ClearCFT16ppHits();
   debug::ObjectCounter::decrease(class_name);
 }
 
@@ -686,6 +689,129 @@ DCAnalyzer::DecodeCFT16Hits( RawData* rawData ,DCLocalTrack* tp , int i )
 
   if(i==0){m_is_decoded[k_CFT16_1st] = true;}
   else if(i==1){m_is_decoded[k_CFT16_2nd] = true;}
+  return true;
+}
+
+//______________________________________________________________________________
+bool
+DCAnalyzer::DecodeCFT16ppHits( RawData* rawData ,DCLocalTrack* tp , int i )
+{
+  static const std::string func_name("["+class_name+"::"+__func__+"()]");
+  
+  if( m_is_decoded[k_CFT16pp_1st] && m_is_decoded[k_CFT16pp_2nd]  ){
+    hddaq::cout << "#D " << func_name << " "
+		<< "already decoded" 
+		<< ", i=" << i 
+		<< ", 1st = " << m_is_decoded[k_CFT16pp_1st]
+		<< ", 2nd = " << m_is_decoded[k_CFT16pp_2nd] << std::endl;
+    return true;
+  }  
+  if(i==0){ClearCFT16ppHits();}
+
+  HodoAnalyzer hodoAna;
+  hodoAna.DecodeCFTHits( rawData );    
+    
+  int nh   = tp->GetNHit();
+  int nhUV = tp->GetNHitUV();
+  // straight layer
+  for ( int ip = 0; ip < nh; ++ip ) {
+    DCLTrackHit *hitp = tp->GetHit(ip);
+    int layer = hitp->GetLayer();
+    int ll = layer;
+    if(i==1)ll += 8 ;
+    int seg = (int)hitp->GetMeanSeg();
+
+    //double phi_ini   = tp->GetPhiIni(ll);      
+    //double z_track   = tp->GetZTrack(ll);
+    double phi_ini   = tp->GetPhiIni(layer);      
+    double z_track   = tp->GetZTrack(layer);
+    double r         = tp->GetR(layer);
+
+    //std::cout << "Decode" << i << ": layer" << ll <<  ",seg" << seg
+    //	      <<  ", z=" << z_track <<  ", phi_ini = " << phi_ini  << std::endl;
+
+    int ncl = hodoAna.GetNClustersCFT( layer );    
+    for ( int j = 0; j < ncl; ++j ) {
+      FiberCluster* cl = hodoAna.GetClusterCFT( layer, j );
+      int    segCl  = (int)cl->MeanSeg();
+      double size  = cl->ClusterSize();
+      double posR   = cl->MeanPositionR();
+      double posPhi = cl->MeanPositionPhi();
+      double time   = cl->CMeanTime();
+      double adcLow   = cl->SumAdcLow();
+      if(seg == segCl){
+	DCHit *hit = new DCHit(ll);
+	hit->SetTdcCFT( static_cast<int>( 0 ) );
+	if ( hit->CalcCFTObservables() ) {
+	  hit->SetLayer      (ll);
+	  hit->SetMeanSeg    (seg);
+	  hit->SetWirePosition(0.);
+	  hit->SetPositionR  ( posR   );
+	  hit->SetPositionPhi( posPhi );
+
+	  hit->SetPosPhi  ( phi_ini );
+	  hit->SetPosZ    ( z_track );
+	  hit->SetPosR    ( r );
+
+	  m_CFT16ppHC[ll].push_back( hit );
+	}else {
+	  delete hit;      
+	}  
+      }      
+    }   
+  }
+  // spiral layer
+  
+  for ( int ip = 0; ip < nhUV; ++ip ) {
+    DCLTrackHit *hitp = tp->GetHitUV(ip);
+    int layer = hitp->GetLayer();
+    int ll = layer;
+    if(i==1)ll += 8 ;
+    int seg = (int)hitp->GetMeanSeg();
+
+    //double phi_track = tp->GetPhiTrack(ll);      
+    //double z_ini     = tp->GetZIni(ll);      
+    double phi_track = tp->GetPhiTrack(layer);      
+    double z_ini     = tp->GetZIni(layer);      
+    double r     = tp->GetR(layer);      
+
+    int ncl = hodoAna.GetNClustersCFT( layer );    
+    for ( int j = 0; j < ncl; ++j ) {      
+      FiberCluster* cl = hodoAna.GetClusterCFT( layer, j );
+      int    segCl  = (int)cl->MeanSeg();
+      double size  = cl->ClusterSize();
+      double posR   = cl->MeanPositionR();
+      double posPhi = cl->MeanPositionPhi();
+      double time   = cl->CMeanTime();
+      double adcLow   = cl->SumAdcLow();
+      if(seg == segCl){	
+	DCHit *hit = new DCHit(ll);
+	hit->SetTdcCFT( static_cast<int>( 0 ) ); 
+	
+	if ( hit->CalcCFTObservables() ) {
+	  hit->SetLayer      (ll);      
+	  hit->SetMeanSeg    ( seg    );      
+	  hit->SetWirePosition(0.);            
+	  hit->SetPositionR  ( posR   );
+	  hit->SetPositionPhi( posPhi );
+
+	  hit->SetPosPhi  ( phi_track );
+	  hit->SetPosZ    ( z_ini );
+	  hit->SetPosR    ( r );
+
+	  m_CFT16ppHC[ll].push_back( hit );	  
+	}else {
+	  delete hit;      
+	}  
+	}
+      
+    }
+      
+  }
+  
+
+  if(i==0){m_is_decoded[k_CFT16pp_1st] = true;}
+  else if(i==1){m_is_decoded[k_CFT16pp_2nd] = true;}
   return true;
 }
 
@@ -1241,6 +1367,16 @@ DCAnalyzer::TrackSearchCFT16( void )
   return true;
 }
 
+//______________________________________________________________________________
+bool
+DCAnalyzer::TrackSearchCFT16pp( void )
+{
+  static const int MinLayer = gUser.GetParameter("MinLayerCFT16");
+
+  track::LocalTrackSearchCFTppPhi( m_CFT16ppHC, PPInfoCFT16, NPPInfoCFT16, m_CFT16ppTC, MinLayer );
+  return true;
+}
+
 
 
 //______________________________________________________________________________
@@ -1256,6 +1392,7 @@ DCAnalyzer::ClearDCHits( void )
   ClearTOFHits();
   ClearCFTHits();
   ClearCFT16Hits();
+  ClearCFT16ppHits();
 }
 
 //______________________________________________________________________________
@@ -1316,6 +1453,13 @@ void
 DCAnalyzer::ClearCFT16Hits( void )
 {
   del::ClearContainerAll( m_CFT16HC );
+}
+
+//______________________________________________________________________________
+void
+DCAnalyzer::ClearCFT16ppHits( void )
+{
+  del::ClearContainerAll( m_CFT16ppHC );
 }
 
 //______________________________________________________________________________
@@ -1399,6 +1543,13 @@ void
 DCAnalyzer::ClearTracksCFT16( void )
 {
   del::ClearContainer( m_CFT16TC );
+}
+
+//______________________________________________________________________________
+void
+DCAnalyzer::ClearTracksCFT16pp( void )
+{
+  del::ClearContainer( m_CFT16ppTC );
 }
 
 //______________________________________________________________________________

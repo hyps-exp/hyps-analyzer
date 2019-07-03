@@ -16,6 +16,7 @@
 #include <std_ostream.hh>
 
 #include "DebugCounter.hh"
+#include "ThreeVector.hh"
 
 //typedef std::vector<bool>   BoolVec;
 typedef std::deque<bool>    BoolVec;
@@ -90,6 +91,10 @@ protected:
   double m_r;
   double m_phi;
   BoolVec m_belong_track;
+  ThreeVector m_vtx;
+  double m_pos_phi;
+  double m_pos_z;
+  double m_pos_r;
 
   mutable std::vector <DCLTrackHit *> m_register_container;
 
@@ -127,13 +132,17 @@ public:
   void SetMaxSeg     ( double seg ) { m_maxseg     = seg;   }
   void SetAdcLow     ( double adc ) { m_adc_low    = adc;   }
   void SetMIPLow     ( double mip ) { m_mip_low    = mip;   }
-  void SetdELow      ( double dE )  { m_dE_low     = dE;   }
+  void SetdELow      ( double dE  ) { m_dE_low     = dE;   }
   void SetMaxAdcLow  ( double adc ) { max_adc_low    = adc;   }
   void SetMaxMIPLow  ( double mip ) { max_mip_low    = mip;   }
-  void SetMaxdELow   ( double dE )  { max_dE_low     = dE;   }
+  void SetMaxdELow   ( double dE  ) { max_dE_low     = dE;   }
   void SetPositionR  ( double r   ) { m_r    = r;   }
   void SetPositionPhi( double phi ) { m_phi  = phi; }
+  void SetPosPhi     ( double phi ) { m_pos_phi  = phi; }
+  void SetPosZ       ( double z   ) { m_pos_z    = z;   }
+  void SetPosR       ( double r   ) { m_pos_r    = r;   }
   void SetTdcCFT( int tdc );
+  void SetVtx( ThreeVector vtx ) { m_vtx  = vtx; }
 
 
   void GateDriftTime(double min, double max, bool select_1st);
@@ -186,6 +195,10 @@ public:
 
   double GetPositionR  ( void ) const { return m_r;        } 
   double GetPositionPhi( void ) const { return m_phi;      } 
+  double GetPosPhi     ( void ) const { return m_pos_phi;  } 
+  double GetPosZ       ( void ) const { return m_pos_z;    } 
+  double GetPosR       ( void ) const { return m_pos_r;    } 
+  ThreeVector GetVtx   ( void ) const { return m_vtx;      } 
 
   void JoinTrack( int nh=0 ) { m_pair_cont.at(nh).belong_track = true; }
   void QuitTrack( int nh=0 ) { m_pair_cont.at(nh).belong_track = false;}

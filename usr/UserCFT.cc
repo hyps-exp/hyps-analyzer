@@ -38,6 +38,9 @@
 #define HodoCut 0 // with BH1/BH2
 #define TimeCut 0 // in cluster analysis
 
+#define ModeCosmic 0 // 1:cosmic 16 layer tracking
+#define ModePP     0 // 1:pp 16 layer only phi tracking
+
 const double Deg2Rad = acos(-1.)/180.;
 const double Rad2Deg = 180./acos(-1.);
 
@@ -128,7 +131,7 @@ struct Event
 
   // CFT
   int ntCFT;
-  int ncl;
+  int ncl[NumOfPlaneCFT];
   double phi[MaxDepth];
   double theta[MaxDepth];
 
@@ -171,16 +174,36 @@ struct Event
   int segPiIDt[MaxDepth];// matched to track
 
   // for cosmic ray tracking
+  double phi16;
+  double theta16;
   int seg16[NumOfPlaneCFT][2];
+  int nhit16_phi, nhit16_uv;
+  double chi2_phi16;
+  double chi2_uv16;
 
+  // bet. cosmic line & (0,0)
+  double vtx16_x, vtx16_y, vtx16_z;
+  double dist16;
+
+  //before pos. calib.
+  double dphi16_before[NumOfPlaneCFT][2];
+  double phi16_ini_before[NumOfPlaneCFT][2];
+  double phi16_track_before[NumOfPlaneCFT][2];
+  double phi16__track_before[NumOfPlaneCFT][2];
+  double dz16_before[NumOfPlaneCFT][2];
+  double z16_ini_before[NumOfPlaneCFT][2];
+  double z16_track_before[NumOfPlaneCFT][2];
+
+  // after pos. calib.
   double dphi16[NumOfPlaneCFT][2];
   double phi16_ini[NumOfPlaneCFT][2];
   double phi16_track[NumOfPlaneCFT][2];
   double phi16__track[NumOfPlaneCFT][2];
-
   double dz16[NumOfPlaneCFT][2];
   double z16_ini[NumOfPlaneCFT][2];
   double z16_track[NumOfPlaneCFT][2];
+  double dr16[NumOfPlaneCFT][2];
+
 
   // BGO
   int nhBGO;
@@ -507,6 +530,7 @@ EventCFT::ProcessingNormal( void )
 
     int ncl = hodoAna->GetNClustersCFT(p);
     HF1 (1000*(p+1)+12, ncl);      
+    event.ncl[p]=ncl;
     
     for(int i=0; i<ncl; ++i){
       FiberCluster *cl = hodoAna->GetClusterCFT(p,i);
@@ -781,10 +805,9 @@ EventCFT::ProcessingNormal( void )
   }
 #endif 
 
-
-#if 0
-  if(ntCFT>1){
     // conbine to 16 layers tracking    
+#if ModeCosmic
+  if(ntCFT>1){
     double d_phi = fabs(event.phi[0]-event.phi[1]);
     if(d_phi>0){
       DCAna->DecodeCFT16Hits(rawData,tpp[0],0); // 1st track
@@ -796,29 +819,88 @@ EventCFT::ProcessingNormal( void )
       for( int it=0; it<ntCFT16; ++it ){
 
 	DCLocalTrack *tp=DCAna->GetTrackCFT16(it);
+	double theta =tp->GetThetaCFT();
 	int nh   = tp->GetNHit();
-	int nhUV = tp->GetNHitUV();
-	
+	int nhUV = tp->GetNHitUV();	
+	double chisqrXY=tp->GetChiSquareXY();
+	double chisqrXYZ=tp->GetChiSquareZ();
+	int xyFlag = tp->GetCFTxyFlag();
+	int zFlag  = tp->GetCFTzFlag() ;    
+
+	event.theta16=theta;
+	event.nhit16_phi=nh;
+	event.nhit16_uv=nhUV;
+	event.chi2_phi16 = chisqrXY;
+	event.chi2_uv16  = chisqrXYZ;	
+
+	ThreeVector Pos16 = tp->GetPos0();
+	ThreeVector Dir16 = tp->GetDir();
+	double A16=(Dir16.x()*Dir16.x()+Dir16.y()*Dir16.y());
+	double D16=(Dir16.x()*Dir16.x()+Dir16.y()*Dir16.y()+Dir16.z()*Dir16.z());
+	double phi16 = -999.;
+	if(Dir16.x()>=0 && Dir16.y()>=0){
+	  phi16 = acos(Dir16.x()/sqrt(A16))*Rad2Deg;
+	}//0~90
+	else if (Dir16.x()<0 && Dir16.y()>=0){
+	  phi16 = acos(Dir16.x()/sqrt(A16))*Rad2Deg;
+	}//90~180
+	else if (Dir16.x()<0 && Dir16.y()<0){
+	  phi16 = 360. - acos(Dir16.x()/sqrt(A16))*Rad2Deg;
+	}//180~270
+	else if (Dir16.x()>=0 && Dir16.y()<0){
+	  phi16 = 360. - acos(Dir16.x()/sqrt(A16))*Rad2Deg; ;
+	}//270~360
+	else{}
+	event.phi16=phi16;
+
+	// dist from center point
+	ThreeVector  bPos(0., 0., 0.);
+	ThreeVector  bdir(0., 0., 1.);
+	double dist = 1000.;
+	if(Pos16.x()>-500.){
+	  ThreeVector vtx = Kinematics::VertexPoint3D(bPos, Pos16, bdir, Dir16, dist);
+	  event.vtx16_x = vtx.x();
+	  event.vtx16_y = vtx.y();
+	  event.vtx16_z = vtx.z();
+	  event.dist16 = dist;
+	}
+
 	// straight layer
 	int i=0;
 	for(int ip=0; ip<nh; ip++){
 	  DCLTrackHit *hit = tp->GetHit(ip);
 	  int layer16 = hit->GetLayer();
 	  int seg = (int)hit->GetMeanSeg();	  
+
+	  double phi_ini_before   = tp->GetPhiIniBefore(layer16);      
+	  double phi_track_before = tp->GetPhiTrackBefore(layer16);      
+	  double z_track_before   = tp->GetZTrackBefore(layer16);
+	  double dphi_before      = tp->GetdPhiBefore(layer16);
+
 	  double phi_ini   = tp->GetPhiIni(layer16);      
 	  double phi_track = tp->GetPhiTrack(layer16);      
 	  double z_track   = tp->GetZTrack(layer16);
 	  double dphi      = tp->GetdPhi(layer16);
 	  
+	  double dr      = tp->GetdR(layer16);	    
+
 	  int layer = layer16;
 	  if(layer<8){i=0;}
 	  else if(layer>=8){layer-=8;i=1;}
 	  event.seg16[layer][i]      = seg;
+
+	  event.phi16_ini_before[layer][i]   = phi_ini_before;
+	  event.phi16_track_before[layer][i] = phi_track_before;
+	  event.dphi16_before[layer][i]      = dphi_before;
+	  event.z16_track_before[layer][i]   = z_track_before;
+
 	  event.phi16_ini[layer][i]   = phi_ini;
 	  event.phi16_track[layer][i] = phi_track;
 	  event.dphi16[layer][i]      = dphi;
 	  event.z16_track[layer][i]   = z_track;
-	  
+
+	  event.dr16[layer][i]      = dr;
+
 	  if (FlagEvDisp) {
 	    std::cout << "16 layer tracking : i=" << ip << ", layer=" << layer16 << ", seg=" << seg
 		      << ", ini_phi=" << phi_ini << std::endl;	    
@@ -830,24 +912,38 @@ EventCFT::ProcessingNormal( void )
 	  DCLTrackHit *hit = tp->GetHitUV(ip);
 	  int layer = hit->GetLayer();
 	  int seg = (int)hit->GetMeanSeg();	  
+	  double phi_track_before = tp->GetPhiTrackBefore(layer);      
+	  double z_track_before   = tp->GetZTrackBefore(layer);
+	  double z_ini_before     = tp->GetZIniBefore(layer);      
+	  double dz_before        = tp->GetdZBefore(layer);
+
 	  double phi_track = tp->GetPhiTrack(layer);      
 	  double z_track   = tp->GetZTrack(layer);
 	  double z_ini     = tp->GetZIni(layer);      
 	  double dz        = tp->GetdZ(layer);
+
+	  double dr      = tp->GetdR(layer);	    
 
 	  if(layer<8){i=0;}
 	  else if(layer>=8){layer-=8;i=1;}
 
 	  event.seg16[layer][i] = seg;
 	  event.phi16_track[layer][i] = phi_track;
-	  if(phi_track<180){
-	    event.phi16__track[layer][i] = phi_track;
-	  }else{
-	    event.phi16__track[layer][i] = phi_track+360;
-	  }
+
+	  if(phi_track_before<180){event.phi16__track_before[layer][i] = phi_track_before;}
+	  else                    {event.phi16__track_before[layer][i] = phi_track_before -360;}
+
+	  if(phi_track<180){event.phi16__track[layer][i] = phi_track;}
+	  else             {event.phi16__track[layer][i] = phi_track -360;}
+
+	  event.z16_ini_before[layer][i]   = z_ini_before;
+	  event.z16_track_before[layer][i] = z_track_before;
+	  event.dz16_before[layer][i]      = dz_before;
+	  
 	  event.z16_ini[layer][i] = z_ini;
 	  event.z16_track[layer][i] = z_track;
 	  event.dz16[layer][i] = dz;
+	  event.dr16[layer][i]      = dr;
 
 	  if (FlagEvDisp) {
 	    std::cout << "16 layer tracking layer=" << layer << ", seg=" << seg
@@ -904,6 +1000,116 @@ EventCFT::ProcessingNormal( void )
   }
 #endif
 
+  // conbine to 16 layers phi tracking for pp    
+#if ModePP
+  if(ntCFT>1){
+    double d_phi = fabs(event.phi[0]-event.phi[1]);
+    if(d_phi>0){
+      DCAna->DecodeCFT16ppHits(rawData,tpp[0],0); // 1st track
+      DCAna->DecodeCFT16ppHits(rawData,tpp[1],1); // 2nd track
+      
+      DCAna->TrackSearchCFT16pp();
+      int ntCFT16pp=DCAna->GetNtracksCFT16pp();
+      for( int it=0; it<ntCFT16pp; ++it ){
+	
+	DCLocalTrack *tp=DCAna->GetTrackCFT16pp(it);
+	double theta =tp->GetThetaCFT();
+	int nh   = tp->GetNHit();
+	int nhUV = tp->GetNHitUV();	
+	double chisqrXY=tp->GetChiSquareXY();
+	double chisqrXYZ=tp->GetChiSquareZ();
+	int xyFlag = tp->GetCFTxyFlag();
+	int zFlag  = tp->GetCFTzFlag() ;    
+
+	event.theta16=theta;
+	event.nhit16_phi=nh;
+	event.nhit16_uv=nhUV;
+	event.chi2_phi16 = chisqrXY;
+	event.chi2_uv16  = chisqrXYZ;	
+
+	ThreeVector Pos16 = tp->GetPos0();
+	ThreeVector Dir16 = tp->GetDir();
+	double A16=(Dir16.x()*Dir16.x()+Dir16.y()*Dir16.y());
+	double D16=(Dir16.x()*Dir16.x()+Dir16.y()*Dir16.y()+Dir16.z()*Dir16.z());
+	double phi16 = -999.;
+	if(Dir16.x()>=0 && Dir16.y()>=0){
+	  phi16 = acos(Dir16.x()/sqrt(A16))*Rad2Deg;
+	}//0~90
+	else if (Dir16.x()<0 && Dir16.y()>=0){
+	  phi16 = acos(Dir16.x()/sqrt(A16))*Rad2Deg;
+	}//90~180
+	else if (Dir16.x()<0 && Dir16.y()<0){
+	  phi16 = 360. - acos(Dir16.x()/sqrt(A16))*Rad2Deg;
+	}//180~270
+	else if (Dir16.x()>=0 && Dir16.y()<0){
+	  phi16 = 360. - acos(Dir16.x()/sqrt(A16))*Rad2Deg; ;
+	}//270~360
+	else{}
+	event.phi16=phi16;
+
+	// straight layer
+	int i=0;
+	for(int ip=0; ip<nh; ip++){
+	  DCLTrackHit *hit = tp->GetHit(ip);
+	  int layer16 = hit->GetLayer();
+	  int seg = (int)hit->GetMeanSeg();	  
+	  
+	  double phi_ini   = tp->GetPhiIni(layer16);      
+	  double phi_track = tp->GetPhiTrack(layer16);      
+	  double z_track   = tp->GetZTrack(layer16);
+	  double dphi      = tp->GetdPhi(layer16);	    
+
+	  double dr      = tp->GetdR(layer16);	    
+	  
+	  // Virtual l6 layer ==> 8 layer
+	  int layer = layer16;
+	  if(layer<8){i=0;}
+	  else if(layer>=8){layer-=8;i=1;}
+	  event.seg16[layer][i]      = seg;
+	  
+	  event.phi16_ini[layer][i]   = phi_ini;
+	  event.phi16_track[layer][i] = phi_track;
+	  event.dphi16[layer][i]      = dphi;
+	  event.z16_track[layer][i]   = z_track;
+	  
+	  event.dr16[layer][i]      = dr;
+	}	
+	// spiral layer
+	for(int ip=0; ip<nhUV; ip++){
+	  DCLTrackHit *hit = tp->GetHitUV(ip);
+	  int layer = hit->GetLayer();
+	  int seg = (int)hit->GetMeanSeg();	  
+
+	  double phi_track = tp->GetPhiTrack(layer);      
+	  double z_track   = tp->GetZTrack(layer);
+	  double z_ini     = tp->GetZIni(layer);      
+	  double dz        = tp->GetdZ(layer);
+	  double dr      = tp->GetdR(layer);
+
+	  if(layer<8){i=0;}
+	  else if(layer>=8){layer-=8;i=1;}
+	  
+	  event.seg16[layer][i] = seg;
+	  event.phi16_track[layer][i] = phi_track;
+	  
+	  event.z16_ini[layer][i]   = z_ini;
+	  event.z16_track[layer][i] = z_track;
+	  event.dz16[layer][i]      = dz;	  
+	  event.dr16[layer][i]      = dr;
+	}	     
+	
+	ThreeVector Pos0 = tp->GetPos0();
+	ThreeVector Dir = tp->GetDir();
+	double A=(Dir.x()*Dir.x()+Dir.y()*Dir.y());
+	double D=(Dir.x()*Dir.x()+Dir.y()*Dir.y()+Dir.z()*Dir.z());
+		
+      }
+      
+    }
+    
+  }  
+#endif
+
 
   // Trigger Flag
   {
@@ -950,13 +1156,16 @@ EventCFT::InitializeEvent( void )
   event.nhits  = 0;
   event.unhits = 0;
   event.dnhits = 0;
-  event.ncl    = 0;
+  //event.ncl    = 0;
 
   for( int it=0; it<NumOfSegTrig; ++it ){
     event.trigpat[it]  = -1;
     event.trigflag[it] = -1;
   }
 
+  for(int p = 0; p<NumOfPlaneCFT; ++p){
+    event.ncl[p]    = 0;
+  }
 
   event.ntCFT  = -1;  
   for(int i = 0; i<MaxDepth; ++i){
@@ -1011,18 +1220,37 @@ EventCFT::InitializeEvent( void )
   event.vtxAB_y = -999.; 
   event.vtxAB_z = -999.;
 
+  //for 16 layer tracking
+#if ModeCosmic + ModePP
+  event.phi16    = -999.;
+  event.theta16  = -999.;
+  event.nhit16_phi=0;
+  event.nhit16_uv=0;
+  event.chi2_phi16=-999;
+  event.chi2_uv16 =-999;
+
+  event.vtx16_x = -999.;
+  event.vtx16_y = -999.; 
+  event.vtx16_z = -999.;
+  event.dist16   = -999.;
   for( int p=0; p<NumOfPlaneCFT; ++p ){      
     for(int i = 0; i<2; ++i){
       event.seg16[p][i]       = -999;
-      event.dphi16[p][i]       = -999.;
-      event.phi16_ini[p][i]    = -999.;
-      event.phi16_track[p][i]  = -999.;
-      event.phi16__track[p][i]  = -999.;
-      event.dz16[p][i]       = -999.;
-      event.z16_ini[p][i]    = -999.;
-      event.z16_track[p][i]  = -999.;
+      // before pos. calib.
+      event.dphi16_before[p][i]   = -999.; event.phi16_ini_before[p][i]   = -999.;
+      event.dphi16[p][i]          = -999.; event.phi16_ini[p][i]          = -999.;
+
+      event.phi16_track_before[p][i]   = -999.; event.phi16__track_before[p][i]   = -999.;
+      event.phi16_track[p][i]          = -999.; event.phi16__track[p][i]          = -999.;
+
+      event.dz16_before[p][i]   = -999.; event.z16_ini_before[p][i]   = -999.; event.z16_track_before[p][i]   = -999.;
+      event.dz16[p][i]          = -999.; event.z16_ini[p][i]          = -999.; event.z16_track[p][i]          = -999.;
+      event.dr16[p][i]   = -999.;
     }
   }
+
+#endif
+
 
   event.nhBGO  = -1; 
   for( int i=0; i<NumOfSegBGO; ++i ){      
@@ -1196,7 +1424,8 @@ ConfMan:: InitializeHistograms( void )
   HB1( 10000, "nhvalid", 10,0,10);
 
   //Tree
-  HBTree( "tree","tree of Counter" );
+  //HBTree( "tree","tree of Counter" );
+  HBTree( "cft","tree of Counter" );
   tree->Branch("evnum",    &event.evnum,    "evnum/I");
   tree->Branch("trigpat",   event.trigpat,  Form("trigpat[%d]/I", NumOfSegTrig));
   tree->Branch("trigflag",  event.trigflag, Form("trigflag[%d]/I", NumOfSegTrig));
@@ -1245,17 +1474,37 @@ ConfMan:: InitializeHistograms( void )
   tree->Branch("adc_raw_h",  event.adc_raw_h,  Form("adc_raw_h[%d][%d]/D", NumOfPlaneCFT, NumOfSegCFT_PHI4 ) );
   tree->Branch("adc_raw_l",  event.adc_raw_l,  Form("adc_raw_l[%d][%d]/D", NumOfPlaneCFT, NumOfSegCFT_PHI4 ) );
 
+#if ModeCosmic + ModePP
   // for 16 layer tracking
+  tree->Branch("theta16",    &event.theta16,    "theta16/D");
+  tree->Branch("phi16",      &event.phi16,      "phi16/D");
+  tree->Branch("nhit16_phi", &event.nhit16_phi, "nhit16_phi/I");
+  tree->Branch("nhit16_uv",  &event.nhit16_uv,  "nhit16_uv/I");
+  tree->Branch("chi2_phi16", &event.chi2_phi16, "chi2_phi16/D");
+  tree->Branch("chi2_uv16",  &event.chi2_uv16,  "chi2_uv16/D");
   tree->Branch("seg16",      event.seg16,      Form("seg16[%d][%d]/I", NumOfPlaneCFT, 2 ) );
 
-  tree->Branch("dphi16",     event.dphi16,     Form("dphi16[%d][%d]/D", NumOfPlaneCFT, 2 ) );
-  tree->Branch("phi16_ini",  event.phi16_ini,  Form("phi16_ini[%d][%d]/D", NumOfPlaneCFT, 2 ) );
-  tree->Branch("phi16_track",event.phi16_track,Form("phi16_track[%d][%d]/D", NumOfPlaneCFT, 2 ) );
-  tree->Branch("phi16__track",event.phi16__track,Form("phi16__track[%d][%d]/D", NumOfPlaneCFT, 2 ) );
+  tree->Branch("dist16",     &event.dist16,     "dist16/D");
+  tree->Branch("vtx16_x",    &event.vtx16_x,    "vtx16_x/D");
+  tree->Branch("vtx16_y",    &event.vtx16_y,    "vtx16_y/D");
+  tree->Branch("vtx16_z",    &event.vtx16_z,    "vtx16_z/D");
 
-  tree->Branch("dz16",      event.dz16,      Form("dz16[%d][%d]/D", NumOfPlaneCFT, 2 ) );
-  tree->Branch("z16_ini",   event.z16_ini,   Form("z16_ini[%d][%d]/D", NumOfPlaneCFT, 2 ) );
-  tree->Branch("z16_track", event.z16_track, Form("z16_track[%d][%d]/D", NumOfPlaneCFT, 2 ) );
+  tree->Branch("dphi16_before",      event.dphi16_before,      Form("dphi16_before[%d][%d]/D", NumOfPlaneCFT, 2 ) );
+  tree->Branch("phi16_ini_before",   event.phi16_ini_before,   Form("phi16_ini_before[%d][%d]/D", NumOfPlaneCFT, 2 ) );
+  tree->Branch("phi16_track_before", event.phi16_track_before, Form("phi16_track_before[%d][%d]/D", NumOfPlaneCFT, 2 ) );
+  tree->Branch("dz16_before",        event.dz16_before,        Form("dz16_before[%d][%d]/D", NumOfPlaneCFT, 2 ) );
+  tree->Branch("z16_ini_before",     event.z16_ini_before,     Form("z16_ini_before[%d][%d]/D", NumOfPlaneCFT, 2 ) );
+  tree->Branch("z16_track_before",   event.z16_track_before,   Form("z16_track_before[%d][%d]/D", NumOfPlaneCFT, 2 ) );
+  
+  tree->Branch("dphi16",      event.dphi16,      Form("dphi16[%d][%d]/D", NumOfPlaneCFT, 2 ) );
+  tree->Branch("phi16_ini",   event.phi16_ini,   Form("phi16_ini[%d][%d]/D", NumOfPlaneCFT, 2 ) );
+  tree->Branch("phi16_track", event.phi16_track, Form("phi16_track[%d][%d]/D", NumOfPlaneCFT, 2 ) );
+  tree->Branch("dz16",        event.dz16,        Form("dz16[%d][%d]/D", NumOfPlaneCFT, 2 ) );
+  tree->Branch("z16_ini",     event.z16_ini,     Form("z16_ini[%d][%d]/D", NumOfPlaneCFT, 2 ) );
+  tree->Branch("z16_track",   event.z16_track,   Form("z16_track[%d][%d]/D", NumOfPlaneCFT, 2 ) );
+  
+  tree->Branch("dr16",        event.dr16,        Form("dr16[%d][%d]/D", NumOfPlaneCFT, 2 ) );
+#endif
 
   // BGO
   tree->Branch("nhBGO",     &event.nhBGO,    "nhBGO/I");

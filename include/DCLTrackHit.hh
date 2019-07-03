@@ -10,6 +10,7 @@
 #include "DCHit.hh"
 
 #include "MathTools.hh"
+#include "ThreeVector.hh"
 
 class DCAnalyzer;
 
@@ -78,12 +79,16 @@ public:
   ///// for CFT
   double GetPositionR( void )   const { return m_hit->GetPositionR();  }
   double GetPositionPhi( void ) const { return m_hit->GetPositionPhi();}
+  double GetPosPhi( void )   const { return m_hit->GetPosPhi();  }
+  double GetPosZ  ( void )   const { return m_hit->GetPosZ();}
+  double GetPosR  ( void )   const { return m_hit->GetPosR();}
   double GetAdcLow( void )   const { return m_hit->GetAdcLow();  }
   double GetMIPLow( void )   const { return m_hit->GetMIPLow();  }
   double GetdELow( void )    const { return m_hit->GetdELow();  }
   double GetMaxAdcLow( void ) const { return m_hit->GetMaxAdcLow();}
   double GetMaxMIPLow( void ) const { return m_hit->GetMaxMIPLow();  }
   double GetMaxdELow ( void ) const { return m_hit->GetMaxdELow();  }
+  ThreeVector GetVtx ( void ) const { return m_hit->GetVtx();  }
 
   void JoinTrack( void ) { m_hit->JoinTrack(m_nth_hit); }
   void QuitTrack( void ) { m_hit->QuitTrack(m_nth_hit); }

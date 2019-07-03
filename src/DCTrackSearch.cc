@@ -2021,7 +2021,7 @@ namespace track
 	   // CFT 2nd tracking (position correction)
 	   && track->DoFitPhi2nd() 
 	   && track->GetChiSquareXY ()<Chi2nd
-	   && track->DoFitUV2nd() 
+	   && track->DoFitUV2nd(1) //0:w/o, 1:w/ UV calib.
 	   && track->GetChiSquareZ ()<Chi2nd
 	   && fabs(track->GetVtxZ()-z_center)<cut_range // vtx cut
 	   ){
@@ -2047,7 +2047,7 @@ namespace track
 	   // CFT 2nd tracking (position correction)
 	   && track->DoFitPhi2nd() 
 	   && track->GetChiSquareXY ()<Chi2nd
-	   && track->DoFitUV2nd() 
+	   && track->DoFitUV2nd(1) //0:w/o, 1:w/ UV calib.
 	   && track->GetChiSquareZ ()<Chi2nd
 	   && fabs(track->GetVtxZ()-z_center)<cut_range // vtx cut
 	   ){
@@ -2125,7 +2125,135 @@ namespace track
     return status? TrackCont.size() : -1;      
   }
 
+  //______________________________________________________________________________
+  int /* Local Track Search CFT */
+  LocalTrackSearchCFTppPhi( const std::vector<DCHitContainer>& HC,
+		       const DCPairPlaneInfo *PpInfo,
+		       int npp, std::vector<DCLocalTrack*>& TrackCont,
+		       int MinNumOfHits )
+  {
+    static const std::string func_name("["+class_name+"::"+__func__+"()]");
+    // for vertex cut
+    double z_center  = 150.;//CFT Local
+    //double cut_range = 250.; // center-250~center+250
+    double cut_range = 300.; // center-250~center+250
 
+    std::vector<ClusterList> CandCont(npp);
+
+    for( int i=0; i<npp; ++i ){
+      bool ppFlag    = PpInfo[i].pair;
+      bool honeycomb = PpInfo[i].honeycomb;
+      int  layer1    = PpInfo[i].id1;
+      int  layer2    = PpInfo[i].id2;
+
+      MakeCFTHitCluster( HC[layer1], CandCont[i],  honeycomb);
+    }
+
+    IndexList nCombi(npp);
+    for ( int i=0; i<npp; ++i ) {
+      int n = CandCont[i].size();
+      nCombi[i] = n>MaxNumOfClusterCFT ? 0 : n;
+    }
+
+    bool status = true;
+    std::vector<IndexList> CombiIndex = MakeIndex( npp, nCombi, status );
+
+    //double Chi1st = MaxChi2CFT1st;
+    //double Chi2nd = MaxChi2CFT2nd;
+    double Chi1st = MaxChi2CFTcosmic;
+    double Chi2nd = MaxChi2CFTcosmic;
+    if(MinNumOfHits>4){// 16 layer tracking
+      Chi1st = MaxChi2CFTcosmic;
+      Chi2nd = MaxChi2CFTcosmic;
+    }
+
+    if(MinNumOfHits<=4){// normal 8 layer tracking
+    }else{ // 16 layer tracking for cosmic ray
+
+      for( int i=0, n=CombiIndex.size(); i<n; ++i ){
+	DCLocalTrack *track = MakeTrackCFT( CandCont, CombiIndex[i] );
+	if( !track ) continue;
+	if(true 
+	   && track->GetNHit()>=MinNumOfHits 
+	   && track->GetNHitUV()>=MinNumOfHits 
+	   //&& track->DoFitPhi() 
+	   //&& track->GetChiSquareXY()<Chi1st
+	   && track->DoFitPhi16pp() 
+	   && track->GetChiSquareXY()<Chi1st
+	   ){
+	  
+	  TrackCont.push_back(track);
+	  
+	}else{delete track;}
+      }
+
+    }
+
+    // Clear Flags        
+    ClearFlagsCFT(TrackCont);
+
+    partial_sort( TrackCont.begin(), TrackCont.end(), 
+		  TrackCont.end(), DCLTrackCompCFT16pp() );
+
+    // Delete Duplicated Tracks
+    for( int i=0; i<int(TrackCont.size()); ++i ){
+      DCLocalTrack *tp=TrackCont[i];
+      
+      int nh=tp->GetNHit();
+      for( int j=0; j<nh; ++j ){
+	tp->GetHit(j)->JoinTrackCFT();
+      }      
+            
+      int nhUV=tp->GetNHitUV();
+      for( int j=0; j<nhUV; ++j ){
+	tp->GetHitUV(j)->JoinTrackCFT();
+      }            
+
+      for( int i2=TrackCont.size()-1; i2>i; --i2 ){
+	int flag1=0, flag2=0, flag=0;     
+
+	DCLocalTrack *tp2=TrackCont[i2];
+	int nh2=tp2->GetNHit();
+	
+	for( int j=0; j<nh2; ++j ){
+	  if( tp2->GetHit(j)->BelongToTrackCFT() ==true ){++flag1; ++flag;}
+	}
+		
+	int nhUV2=tp2->GetNHitUV();
+	for( int j=0; j<nhUV2; ++j ){
+	  if( tp2->GetHitUV(j)->BelongToTrackCFT() ==true ){ ++flag2; ++flag;}
+	}
+	
+	if(flag>0){
+	  delete tp2;
+	  TrackCont.erase(TrackCont.begin()+i2);
+	}
+	
+      }
+    } 
+    
+    
+    int nn=TrackCont.size();
+    for(int i=0; i<nn; ++i ){
+      DCLocalTrack *tp=TrackCont[i];
+      tp->SetCalculatedValueCFT();
+    }
+    
+    for(int i=0; i<nn; ++i ){
+      DCLocalTrack *tp=TrackCont[i];
+      int nh=tp->GetNHit();
+      for( int j=0; j<nh; ++j ){
+	int lnum = tp->GetHit(j)->GetLayer();
+	int ll = lnum;
+	if(lnum>7){ll -= 8;}
+      }                    
+    }
+
+    //FinalizeTrackCFT( func_name, TrackCont, DCLTrackCompCFT(), CandCont );
+    FinalizeTrackCFT( func_name, TrackCont, DCLTrackCompCFT16pp(), CandCont );
+ 
+    return status? TrackCont.size() : -1;      
+  }
 
   //For MWPC
   //_____________________________________________________________________________

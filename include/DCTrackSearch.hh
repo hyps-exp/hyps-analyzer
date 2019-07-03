@@ -92,11 +92,10 @@ namespace track
 			   int MinNumOfHits=3 );
   
   //______________________________________________________________________________
-  int LocalTrackSearchCFT16( const std::vector<DCHitContainer>& HC,
-			     const DCPairPlaneInfo *PpInfo,
-			     int npp, std::vector<DCLocalTrack*>& trackCont,
-			     int MinNumOfHits=6 );
-  
+  int LocalTrackSearchCFTppPhi( const std::vector<DCHitContainer>& HC,
+			   const DCPairPlaneInfo *PpInfo,
+			   int npp, std::vector<DCLocalTrack*>& trackCont,
+			   int MinNumOfHits=3 );  
 
 
 }
