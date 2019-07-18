@@ -108,3 +108,10 @@ MinTotSDC3 80.
 MinLayerCFT 3
 ### CFT 16 layer tracking
 MinLayerCFT16 6
+### CFT tracking
+MaxChi2CFT1st 150
+MaxChi2CFT2nd  30
+MaxChi2CFTcosmic    300
+MaxChi2CFTcosmic2nd 100
+MinCFTz -150
+MaxCFTz  450

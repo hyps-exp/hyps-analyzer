@@ -34,6 +34,7 @@ namespace
 {
   const std::string& class_name("DCTrackSearch");
   DCGeomMan& gGeom = DCGeomMan::GetInstance();
+  const UserParamMan& gUser = UserParamMan::GetInstance();
   const double& zTarget    = gGeom.LocalZ("Target");
   const double& zK18Target = gGeom.LocalZ("K18Target");
   const double& zBH2       = gGeom.LocalZ("BH2");
@@ -59,11 +60,14 @@ namespace
 					    19.0  + localPosBh2X_dX,
 					    41.5  + localPosBh2X_dX};
 
-  // for CFT
-  const double MaxChi2CFT1st  = 150.; 
-  const double MaxChi2CFT2nd  = 100.; 
-  const double MaxChi2CFTcosmic  = 300.; 
-
+  // for CFT --> go to USER param 
+  //const double MaxChi2CFT1st  = 150.; 
+  //const double MaxChi2CFT2nd  =  30.; 
+  //const double MaxChi2CFTcosmic     = 300.; 
+  //const double MaxChi2CFTcosmic2nd  = 100.;   
+  // for vertex cut  
+  //const double MinCFTz  = -150.; 
+  //const double MaxCFTz  =  450.;   
 
   //_____________________________________________________________________
   // Local Functions ____________________________________________________
@@ -1974,9 +1978,12 @@ namespace track
 		       int MinNumOfHits )
   {
     static const std::string func_name("["+class_name+"::"+__func__+"()]");
-    // for vertex cut
-    double z_center  = 150.;
-    double cut_range = 250.; // center-250~center+250
+    const double MaxChi2CFT1st = gUser.GetParameter("MaxChi2CFT1st");
+    const double MaxChi2CFT2nd = gUser.GetParameter("MaxChi2CFT2nd");
+    const double MaxChi2CFTcosmic    = gUser.GetParameter("MaxChi2CFTcosmic");
+    const double MaxChi2CFTcosmic2nd = gUser.GetParameter("MaxChi2CFTcosmic2nd");
+    const double MinCFTz = gUser.GetParameter("MinCFTz");
+    const double MaxCFTz = gUser.GetParameter("MaxCFTz");
 
     std::vector<ClusterList> CandCont(npp);
 
@@ -2002,7 +2009,7 @@ namespace track
     double Chi2nd = MaxChi2CFT2nd;
     if(MinNumOfHits>4){// 16 layer tracking
       Chi1st = MaxChi2CFTcosmic;
-      Chi2nd = MaxChi2CFTcosmic;
+      Chi2nd = MaxChi2CFTcosmic2nd;
     }
 
     if(MinNumOfHits<=4){// 16 layer tracking
@@ -2017,13 +2024,13 @@ namespace track
 	   && track->GetChiSquareXY()<Chi1st
 	   && track->DoFitUV() 
 	   && track->GetChiSquareZ ()<Chi1st
-	   && fabs(track->GetVtxZ()-z_center)<cut_range // vtx cut
+	   && track->GetVtxZ()>MinCFTz && track->GetVtxZ()<MaxCFTz // vtx cut
 	   // CFT 2nd tracking (position correction)
 	   && track->DoFitPhi2nd() 
 	   && track->GetChiSquareXY ()<Chi2nd
 	   && track->DoFitUV2nd(1) //0:w/o, 1:w/ UV calib.
 	   && track->GetChiSquareZ ()<Chi2nd
-	   && fabs(track->GetVtxZ()-z_center)<cut_range // vtx cut
+	   && track->GetVtxZ()>MinCFTz && track->GetVtxZ()<MaxCFTz // vtx cut
 	   ){
 	  
 	  TrackCont.push_back(track);
@@ -2043,13 +2050,13 @@ namespace track
 	   && track->GetChiSquareXY()<Chi1st
 	   && track->DoFitUV() 
 	   && track->GetChiSquareZ ()<Chi1st
-	   && fabs(track->GetVtxZ()-z_center)<cut_range // vtx cut
+	   && track->GetVtxZ()>MinCFTz && track->GetVtxZ()>MaxCFTz // vtx cut
 	   // CFT 2nd tracking (position correction)
 	   && track->DoFitPhi2nd() 
 	   && track->GetChiSquareXY ()<Chi2nd
 	   && track->DoFitUV2nd(1) //0:w/o, 1:w/ UV calib.
 	   && track->GetChiSquareZ ()<Chi2nd
-	   && fabs(track->GetVtxZ()-z_center)<cut_range // vtx cut
+	   && track->GetVtxZ()>MinCFTz && track->GetVtxZ()>MaxCFTz // vtx cut
 	   ){
 	  
 	  TrackCont.push_back(track);
@@ -2133,10 +2140,12 @@ namespace track
 		       int MinNumOfHits )
   {
     static const std::string func_name("["+class_name+"::"+__func__+"()]");
-    // for vertex cut
-    double z_center  = 150.;//CFT Local
-    //double cut_range = 250.; // center-250~center+250
-    double cut_range = 300.; // center-250~center+250
+    const double MaxChi2CFT1st = gUser.GetParameter("MaxChi2CFT1st");
+    const double MaxChi2CFT2nd = gUser.GetParameter("MaxChi2CFT2nd");
+    const double MaxChi2CFTcosmic    = gUser.GetParameter("MaxChi2CFTcosmic");
+    const double MaxChi2CFTcosmic2nd = gUser.GetParameter("MaxChi2CFTcosmic2nd");
+    const double MinCFTz = gUser.GetParameter("MinCFTz");
+    const double MaxCFTz = gUser.GetParameter("MaxCFTz");
 
     std::vector<ClusterList> CandCont(npp);
 

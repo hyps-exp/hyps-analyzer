@@ -135,6 +135,9 @@ struct Event
   double phi[MaxDepth];
   double theta[MaxDepth];
 
+  double chi2_phi[MaxDepth];
+  double chi2_uv[MaxDepth];
+
   int seg[NumOfPlaneCFT][MaxDepth];
   int seg_max[NumOfPlaneCFT][MaxDepth];
 
@@ -617,6 +620,9 @@ EventCFT::ProcessingNormal( void )
     HF1(6, theta);
     event.theta[i] = theta;
     event.phi[i] = phi;
+
+    event.chi2_phi[i] = chisqrXY;
+    event.chi2_uv[i]  = chisqrXYZ;	
 
     event.Pos[i] = Pos0;
     event.Dir[i] = Dir;
@@ -1171,6 +1177,13 @@ EventCFT::InitializeEvent( void )
   for(int i = 0; i<MaxDepth; ++i){
     event.phi[i]  = -999.;
     event.theta[i]  = -999.;
+
+    event.chi2_phi[i]=-999;
+    event.chi2_uv[i] =-999;
+
+    event.nhit_phi[i] = -1;
+    event.nhit_uv[i]  = -1;
+
     event.vtx_x[i]  = -999.;
     event.vtx_y[i]  = -999.;
     event.vtx_z[i]  = -999.;
@@ -1434,6 +1447,13 @@ ConfMan:: InitializeHistograms( void )
   tree->Branch("ntCFT",     &event.ntCFT,    "ntCFT/I");
   tree->Branch("theta",     event.theta,    "theta[ntCFT]/D");
   tree->Branch("phi",       event.phi,      "phi[ntCFT]/D");
+
+  tree->Branch("chi2_phi",  event.chi2_phi, "chi2_phi[ntCFT]/D");
+  tree->Branch("chi2_uv",   event.chi2_uv, "chi2_uv[ntCFT]/D");
+
+  tree->Branch("nhit_phi",  event.nhit_phi, "nhit_phi[ntCFT]/I");
+  tree->Branch("nhit_uv",   event.nhit_uv,  "nhit_uv[ntCFT]/I");
+
   tree->Branch("vtx_x",     event.vtx_x,    "vtx_x[ntCFT]/D");
   tree->Branch("vtx_y",     event.vtx_y,    "vtx_y[ntCFT]/D");
   tree->Branch("vtx_z",     event.vtx_z,    "vtx_z[ntCFT]/D");

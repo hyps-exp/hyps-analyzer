@@ -226,6 +226,20 @@ struct Event
   double Total_dE[MaxDepth],    Total_dE_max[MaxDepth];
   double Total_dEphi[MaxDepth], Total_dEphi_max[MaxDepth];
   double Total_dEuv[MaxDepth],  Total_dEuv_max[MaxDepth];
+  /*
+  //CFTEx using vtx point
+  int ntCFTEx;
+  double phiEx[MaxDepth];
+  double thetaEx[MaxDepth];
+  int nhVtxEx[MaxDepth];
+
+  double dphiEx[NumOfPlaneCFT][MaxDepth];
+  double phiEx_track[NumOfPlaneCFT][MaxDepth];
+  double dzEx[NumOfPlaneCFT][MaxDepth];
+  double zEx_track[NumOfPlaneCFT][MaxDepth];
+  */
+
+
   // BGO
   int segBGOt[NumOfSegBGO];// matched to track
   // PiID counter
@@ -240,6 +254,7 @@ struct Event
   double adcbgo[NumOfSegBGO];
   double tdcbgo[NumOfSegBGO];
   double energybgo[NumOfSegBGO];
+  double energybgot[MaxDepth]; // belongs to CFT track#
   double timebgo[NumOfSegBGO];
 
   double vtx_2p_x;
@@ -258,6 +273,13 @@ struct Event
   double missmom[MaxHits];
   double theta_pp[MaxHits];
   double cdist_pp[MaxHits];
+
+  // Beam * CFT
+  double vtx_BeamCft_x[MaxHits];
+  double vtx_BeamCft_y[MaxHits];
+  double vtx_BeamCft_z[MaxHits];
+  double cdist_BeamCft[MaxHits];
+  double theta_BeamCft[MaxHits];
 
 };
 
@@ -293,6 +315,7 @@ EventPPScat::ProcessingNormal( void )
 #endif
   static const double MinTimeBFT = gUser.GetParameter("TimeBFT", 0);
   static const double MaxTimeBFT = gUser.GetParameter("TimeBFT", 1);
+  static const double MinTotBcOut = gUser.GetParameter("MinTotBcOut", 0);
 
   rawData = new RawData;
   rawData->DecodeHits();
@@ -404,7 +427,8 @@ EventPPScat::ProcessingNormal( void )
 
   HF1( 1, 21. );
   DCAna->DecodeBcOutHits( rawData );
-  DCAna->DriftTimeCutBC34(-50, 150);
+  DCAna->TotCutBCOut( MinTotBcOut );
+  DCAna->DriftTimeCutBC34(-20, 60);
 
   int ntBcOut = 0;
   
@@ -545,7 +569,8 @@ EventPPScat::ProcessingNormal( void )
     ThreeVector Pos( xt, yt, 0. );
     ThreeVector Mom( pt*ut, pt*vt, pt );
 
-    if (std::abs(p-0.6) <= std::abs(p0-0.6)) {
+    //    if (std::abs(p-0.6) <= std::abs(p0-0.6)) {
+    if (std::abs(p-0.65) <= std::abs(p0-0.65)) {
       p0 = p;
       Pos0 = Pos;
       Mom0 = Mom;
@@ -641,12 +666,15 @@ EventPPScat::ProcessingNormal( void )
 
   int ntCFT=DCAna->GetNtracksCFT();// vtx limit ver.
   event.ntCFT = ntCFT;
-
+  DCLocalTrack *tpp[2];
+  ThreeVector vtx[2];
   std::vector<ThreeVector> ScatPCont, ScatXCont;
 
   for( int i=0; i<ntCFT; ++i ){
 
     DCLocalTrack *tp=DCAna->GetTrackCFT(i);
+    if(i==0){tpp[0]=tp;}
+    else if(i==1){tpp[1]=tp;}
 
     int nh   = tp->GetNHit();
     int nhUV = tp->GetNHitUV();
@@ -797,6 +825,7 @@ EventPPScat::ProcessingNormal( void )
 
     event.segBGOt[i]  = segBGOt;
     event.segPiIDt[i] = segPiIDt;
+    event.energybgot[i]  = event.energybgo[event.segBGOt[i]];
 
     double BGO_energy = 0;
     if (segBGOt>=2 && segBGOt<=23)
@@ -811,7 +840,135 @@ EventPPScat::ProcessingNormal( void )
     ThreeVector Mom = event.P[i]/Dir.Mag()*Dir;
     ScatPCont.push_back(Mom);
     ScatXCont.push_back(PosT0);
+
+
+    // vtx Beam*Cft
+#if 1
+    if(BeamPCont.size()>0){
+      ThreeVector pBeam ;
+      ThreeVector xBeam ;
+      ThreeVector pCft = ScatPCont[i];
+      ThreeVector xCft = ScatXCont[i];
+      double cdist_bc=999, cdist_min=999; 
+      int min_k = 0; // Beam of min. cdist 
+      for(int k=0; k<BeamPCont.size(); k++){
+	ThreeVector pBeam_ = BeamPCont[k];
+	ThreeVector xBeam_ = BeamXCont[k];	
+	double cdist_;
+	ThreeVector vertex_ = Kinematics::VertexPoint( xBeam_, xCft, pBeam_, pCft, cdist_ );	
+	if(cdist_<cdist_min){
+	  min_k = k;
+	  cdist_min = cdist_;
+	}	
+
+      }      
+      if(cdist_min<999){
+	pBeam = BeamPCont[min_k];
+	xBeam = BeamXCont[min_k];
+	ThreeVector vertex = Kinematics::VertexPoint( xBeam, xCft, pBeam, pCft, cdist_bc);        
+	double cost_bc = pBeam*pCft/(pBeam.Mag()*pCft.Mag());
+	double theta_bc = std::acos(cost_bc)*math::Rad2Deg();      
+	
+	event.vtx_BeamCft_x[i] = vertex.x();
+	event.vtx_BeamCft_y[i] = vertex.y();
+	event.vtx_BeamCft_z[i] = vertex.z();
+	event.cdist_BeamCft[i] = cdist_bc;
+	event.theta_BeamCft[i] = theta_bc;
+	if(ntCFT==2){vtx[i] = vertex;}
+      }
+    }
+#endif
+
   }
+  
+#if 0
+  // ReTracking using vtx obtained from oposite track
+  if(ntCFT==2){    
+    ThreeVector vtx0_(vtx[0].x(), vtx[0].y(), vtx[0].z()+offsetCATCH);
+    ThreeVector vtx1_(vtx[1].x(), vtx[1].y(), vtx[1].z()+offsetCATCH);
+
+    for(int iEx=0; iEx<2; iEx++){
+
+      if(iEx==0){
+	DCAna->DecodeCFTExHits(rawData,tpp[0],vtx1_);
+	DCAna->TrackSearchCFTEx();
+      }else if(iEx==1){
+	DCAna->DecodeCFTExHits(rawData,tpp[1],vtx0_);
+	DCAna->TrackSearchCFTEx();
+      }
+
+      int ntCFTEx = DCAna->GetNtracksCFTEx();
+      event.ntCFTEx += ntCFTEx;      
+      for( int i=0; i<ntCFTEx; ++i ){      
+	DCLocalTrack *tp=DCAna->GetTrackCFTEx(i);
+	int nh   = tp->GetNHit();
+	int nhUV = tp->GetNHitUV();
+	int nhVtx = tp->GetNHitVtx();
+	double chisqrXY=tp->GetChiSquareXY();
+	double chisqrXYZ=tp->GetChiSquareZ();
+	double theta =tp->GetThetaCFT();
+	
+	ThreeVector Pos0 = tp->GetPos0();
+	ThreeVector Dir = tp->GetDir();      
+	// CATCH z origin --> target center origin
+	double x0 = Pos0.x() + (offsetCATCH - Pos0.z())*Dir.x()/Dir.z();
+	double y0 = Pos0.y() + (offsetCATCH - Pos0.z())*Dir.y()/Dir.z();
+	ThreeVector PosT0(x0, y0, 0);      
+	double A=(Dir.x()*Dir.x()+Dir.y()*Dir.y());      
+	double phi = -999.;
+	if(Dir.x()>=0 && Dir.y()>=0){
+	  phi = acos(Dir.x()/sqrt(A))*math::Rad2Deg();
+	}//0~90
+	else if (Dir.x()<0 && Dir.y()>=0){
+	  phi = acos(Dir.x()/sqrt(A))*math::Rad2Deg();
+	}//90~180
+	else if (Dir.x()<0 && Dir.y()<0){
+	  phi = 360. - acos(Dir.x()/sqrt(A))*math::Rad2Deg();
+	}//180~270
+	else if (Dir.x()>=0 && Dir.y()<0){
+	  phi = 360. - acos(Dir.x()/sqrt(A))*math::Rad2Deg(); ;
+	}//270~360
+
+	event.thetaEx[iEx] = theta;
+	event.phiEx[iEx] = phi;
+	event.nhVtxEx[iEx] = nhVtx;
+
+	// straight layer
+	for(int ip=0; ip<nh; ip++){
+	  DCLTrackHit *hit = tp->GetHit(ip);
+	  int layer = hit->GetLayer();
+	  int seg = (int)hit->GetMeanSeg();
+	  int seg_max = (int)hit->GetMaxSeg();
+	  
+	  double dphi  = tp->GetdPhi(layer);
+	  double phi_track   = tp->GetPhiTrack(layer);      
+	  double z_track = tp->GetZTrack(layer);
+	  
+	  event.dphiEx[layer][iEx] = dphi;
+	  event.phiEx_track[layer][iEx] = phi_track;
+	  event.zEx_track[layer][iEx] = z_track;
+	}
+
+	// spiral layer
+	for(int ip=0; ip<nhUV; ip++){
+	  DCLTrackHit *hit = tp->GetHitUV(ip);
+	  int layer = hit->GetLayer();
+	  int seg = (int)hit->GetMeanSeg();
+	  int seg_max = (int)hit->GetMaxSeg();
+
+	  double dz    = tp->GetdZ(layer);	  
+	  double phi_track   = tp->GetPhiTrack(layer);      
+	  double z_track = tp->GetZTrack(layer);
+	  
+	  event.dzEx[layer][iEx] = dz;	  
+	  event.phiEx_track[layer][iEx] = phi_track;
+	  event.zEx_track[layer][iEx] = z_track;
+	}
+      }
+    }
+  }
+#endif
+
 
   if (ScatPCont.size() == 2) {
     ThreeVector pScat1 = ScatPCont[0];
@@ -947,6 +1104,7 @@ EventPPScat::InitializeEvent( void )
   }
 
   event.ntCFT  = 0;  
+  //event.ntCFTEx  = 0;  
   for(int i = 0; i<MaxDepth; ++i){
     event.phi[i]  = -999.;
     event.theta[i]  = -999.;
@@ -954,7 +1112,10 @@ EventPPScat::InitializeEvent( void )
       event.Pos[i][j]  = -999.;
       event.Dir[i][j]  = -999.;
     }
-    
+
+    //event.phiEx[i]  = -999.;
+    //event.thetaEx[i]  = -999.;    
+    //event.nhVtxEx[i]  = -1;    
     for( int p=0; p<NumOfPlaneCFT; ++p ){      
       event.seg[p][i]        = -999;
       event.seg_max[p][i]    = -999;
@@ -964,7 +1125,12 @@ EventPPScat::InitializeEvent( void )
       event.dz[p][i]       = -999.;
       event.z_ini[p][i]    = -999.;
       event.z_track[p][i]  = -999.;
-
+      /*
+      event.dphiEx[p][i]       = -999.;
+      event.phiEx_track[p][i]  = -999.;
+      event.dzEx[p][i]       = -999.;
+      event.zEx_track[p][i]  = -999.;
+      */
       event.adc[p][i] = -999.; event.adc_max[p][i] = -999.;
       event.mip[p][i] = -999.; event.mip_max[p][i] = -999.;
       event.dE[p][i]  = -999.; event.dE_max[p][i]  = -999.;
@@ -978,16 +1144,18 @@ EventPPScat::InitializeEvent( void )
     event.Total_E[i]    = -999.; event.Total_E_max[i]    = -999.;
     event.P[i]    = -999.; event.P_max[i]    = -999.;
 
+    event.energybgot[i] = -999; 
+    event.segBGOt[i]  = -1;
     event.segPiIDt[i] = -1;
   }
 
   event.nhBGO  = 0; 
   for( int i=0; i<NumOfSegBGO; ++i ){      
-    event.segBGO[i] = -1;
-    event.segBGOt[i]  = -1;
-    event.adcbgo[i] = -999; 
+    event.segBGO[i]    = -1;
+    event.segBGOt[i]   = -1;
+    event.adcbgo[i]    = -999; 
     event.energybgo[i] = -999; 
-    event.tdcbgo[i] = -999;
+    event.tdcbgo[i]    = -999;
   }
 
   event.vtx_2p_x  =  -999.;
@@ -1005,6 +1173,12 @@ EventPPScat::InitializeEvent( void )
     event.missmass[i]  =  -999.;
     event.missmom[i]  =  -999.;
     event.theta_pp[i]  =  -999.;
+
+    event.vtx_BeamCft_x[i]  =  -999.;
+    event.vtx_BeamCft_y[i]  =  -999.;
+    event.vtx_BeamCft_z[i]  =  -999.;
+    event.cdist_BeamCft[i]  =  -999.;
+    event.theta_BeamCft[i]  =  -999.;
   }
 
 
@@ -1043,6 +1217,7 @@ ConfMan:: InitializeHistograms( void )
 
   // Consume too many memories 
   // use only when the each channnel study is necessary 
+#if 0
   for (int l=0; l<NumOfPlaneCFT; l++) {
     int NumOfSeg = NumOfSegCFT[l];
     for (int seg=0; seg<NumOfSeg; seg++ ) {
@@ -1071,7 +1246,7 @@ ConfMan:: InitializeHistograms( void )
 
     }
   }
-
+#endif
 
   ////////////////////////////////////////////
   //Tree
@@ -1177,10 +1352,25 @@ ConfMan:: InitializeHistograms( void )
   tree->Branch("P",    event.P,    "P[ntCFT]/D");
   tree->Branch("P_max",    event.P_max,    "P_max[ntCFT]/D");
 
+  tree->Branch("energyBGOt", event.energybgot, "energybgot[ntCFT]/D");
+
+  // CFTEx
+  /*
+  tree->Branch("ntCFTEx",     &event.ntCFTEx,    "ntCFTEx/I");  
+  tree->Branch("thetaEx",     event.thetaEx,    "thetaEx[ntCFTEx]/D");
+  tree->Branch("phiEx",       event.phiEx,      "phiEx[ntCFTEx]/D");
+  tree->Branch("nhVtxEx",     event.nhVtxEx,    "nhVtxEx[ntCFTEx]/I");
+  
+  tree->Branch("dphiEx",     event.dphiEx,     Form("dphiEx[%d][%d]/D", NumOfPlaneCFT, MaxDepth ) );
+  tree->Branch("phiEx_track",event.phi_track,Form("phi_track[%d][%d]/D", NumOfPlaneCFT, MaxDepth ) );
+  tree->Branch("dzEx",      event.dzEx,      Form("dzEx[%d][%d]/D", NumOfPlaneCFT, MaxDepth ) );
+  tree->Branch("zEx_track", event.zEx_track, Form("zEx_track[%d][%d]/D", NumOfPlaneCFT, MaxDepth ) );
+  */
+
   // BGO
   tree->Branch("nhBGO",     &event.nhBGO,    "nhBGO/I");
   tree->Branch("segBGO",    event.segBGO,    "segBGO[nhBGO]/I");
-  tree->Branch("segBGOt",   event.segBGOt,   "segBGOt[24]/I");
+  tree->Branch("segBGOt",   event.segBGOt,   "segBGOt[ntCFT]/I");
   tree->Branch("adcBGO",    event.adcbgo,    "adcbgo[24]/D");
   tree->Branch("energyBGO", event.energybgo, "energybgo[24]/D");
   tree->Branch("tdcBGO",    event.tdcbgo,    "adcbgo[24]/D");
@@ -1204,6 +1394,12 @@ ConfMan:: InitializeHistograms( void )
   tree->Branch("missmom",   event.missmom, "missmom[nPP]/D");
   tree->Branch("theta_pp",   event.theta_pp, "theta_pp[nPP]/D");
   tree->Branch("cdist_pp",   event.cdist_pp, "cdist_pp[nPP]/D");
+
+  tree->Branch("vtx_BeamCft_x",   event.vtx_BeamCft_x, "vtx_BeamCft_x[ntCFT]/D");
+  tree->Branch("vtx_BeamCft_y",   event.vtx_BeamCft_y, "vtx_BeamCft_y[ntCFT]/D");
+  tree->Branch("vtx_BeamCft_z",   event.vtx_BeamCft_z, "vtx_BeamCft_z[ntCFT]/D");
+  tree->Branch("theta_BeamCft",   event.theta_BeamCft, "theta_BeamCft[ntCFT]/D");
+  tree->Branch("cdist_BeamCft",   event.cdist_BeamCft, "cdist_BeamCft[ntCFT]/D");
 
   HPrint();
   return true;
