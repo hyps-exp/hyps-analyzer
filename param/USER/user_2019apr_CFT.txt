@@ -115,3 +115,6 @@ MaxChi2CFTcosmic    300
 MaxChi2CFTcosmic2nd 100
 MinCFTz -150
 MaxCFTz  450
+
+### CATCH PID(nanamura)
+CatchPID 0.1346 114.068
