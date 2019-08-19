@@ -25,7 +25,7 @@ namespace
 
 //______________________________________________________________________________
 FiberCluster::FiberCluster( void )
-  : m_cluster_size(0), m_max_adcHi(0.), m_max_adcLow(0.), m_max_mipLow(0.), m_max_dELow(0.), m_max_cluster_id(-1)
+  : m_cluster_size(0), m_max_time(-999.), m_max_adcHi(0.), m_max_adcLow(0.), m_max_mipLow(0.), m_max_dELow(0.), m_max_cluster_id(-1)
 {
   for ( int i=0; i<sizeFlagsFiber; ++i ){
     m_flag[i] = false;
@@ -101,6 +101,7 @@ FiberCluster::calc( void )
   double sum_mipLow     = 0.;
   double sum_dELow      = 0.;
   double mean_time      = std::numeric_limits<double>::quiet_NaN();
+  double max_time       = std::numeric_limits<double>::quiet_NaN();
   double max_width      = 0.;
   double min_width      = 0.;
   double real_mean_time = 0.;
@@ -146,6 +147,7 @@ FiberCluster::calc( void )
       max_adcLow = m_hit_container.at(i)->GetAdcLow();       
       max_seg = m_hit_container.at(i)->SegmentId();
       m_max_cluster_id = i;
+      max_time = m_hit_container.at(i)->GetCTime();
     }
 
     if( max_mipLow <= m_hit_container.at(i)->GetMIPLow() )
@@ -179,6 +181,7 @@ FiberCluster::calc( void )
   m_max_mipLow     = max_mipLow;
   m_max_dELow      = max_dELow;
   m_max_seg        = max_seg;
+  m_max_time       = max_time;
 
   m_real_mean_time = real_mean_time;
   m_cluster_id     = (m_cluster_size == 1) ? 2*cluster_id : cluster_id;

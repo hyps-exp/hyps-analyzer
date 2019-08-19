@@ -89,6 +89,7 @@ public:
   double GetMaxMIPLow( void ) const { return m_hit->GetMaxMIPLow();  }
   double GetMaxdELow ( void ) const { return m_hit->GetMaxdELow();  }
   ThreeVector GetVtx ( void ) const { return m_hit->GetVtx();  }
+  double GetTime  ( void )   const { return m_hit->GetTime();  }
 
   void JoinTrack( void ) { m_hit->JoinTrack(m_nth_hit); }
   void QuitTrack( void ) { m_hit->QuitTrack(m_nth_hit); }

@@ -95,6 +95,7 @@ protected:
   double m_pos_phi;
   double m_pos_z;
   double m_pos_r;
+  double m_time;
 
   mutable std::vector <DCLTrackHit *> m_register_container;
 
@@ -141,7 +142,8 @@ public:
   void SetPosPhi     ( double phi ) { m_pos_phi  = phi; }
   void SetPosZ       ( double z   ) { m_pos_z    = z;   }
   void SetPosR       ( double r   ) { m_pos_r    = r;   }
-  void SetTdcCFT( int tdc );
+  void SetTdcCFT     ( int tdc    ); // not used
+  void SetTime       ( double time) { m_time     = time;   }
   void SetVtx( ThreeVector vtx ) { m_vtx  = vtx; }
 
 
@@ -198,6 +200,7 @@ public:
   double GetPosPhi     ( void ) const { return m_pos_phi;  } 
   double GetPosZ       ( void ) const { return m_pos_z;    } 
   double GetPosR       ( void ) const { return m_pos_r;    } 
+  double GetTime       ( void ) const { return m_time;     } 
   ThreeVector GetVtx   ( void ) const { return m_vtx;      } 
 
   void JoinTrack( int nh=0 ) { m_pair_cont.at(nh).belong_track = true; }

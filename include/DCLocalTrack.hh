@@ -19,6 +19,7 @@
 class DCLTrackHit;
 class DCAnalyzer;
 
+//const double MaxChi2CFT  = 300.;
 const double MaxChi2CFT  = 150.;
 
 //______________________________________________________________________________
@@ -93,6 +94,8 @@ private:
   // dr
   double m_dr[NumOfPlaneCFT*2];     // delta r (org - tracked r)
   double m_r[NumOfPlaneCFT*2];     // cariblated r 
+
+  double m_time[NumOfPlaneCFT*2];
 
   // dE value
   double m_sum_adc[NumOfPlaneCFT*2]; double m_max_adc[NumOfPlaneCFT*2];
@@ -224,6 +227,8 @@ public:
   double GetMaxAdc(  int layer) const {return m_max_adc[layer];   }
   double GetMaxMIP(  int layer) const {return m_max_mip[layer];   }
   double GetMaxdE (  int layer) const {return m_max_dE[layer];   }
+
+  double GetTime  (  int layer) const {return m_time[layer];   }
 
   double GetTotalSumAdc( void ) const {return m_total_adc;   }
   double GetTotalSumMIP( void ) const {return m_total_mip;   }
@@ -436,14 +441,33 @@ struct DCLTrackCompCFT
   bool operator()( const DCLocalTrack * const p1,
 		   const DCLocalTrack * const p2 ) const
   {
+    /*
+    int n1=p1->GetNHit(), n2=p2->GetNHit();
+    double chi1=p1->GetChiSquare(), chi2=p2->GetChiSquare();
+    if( n1 > n2 ) return true;
+    if( n2 > n1 ) return false;
+    return ( chi1 <= chi2 );
+    */
     int nphi1=p1->GetNHit(), nphi2=p2->GetNHit();
     int nuv1=p1->GetNHitUV(), nuv2=p2->GetNHitUV();
     int n1=nphi1+nuv1, n2=nphi2+nuv2;
+    
+    //double chi1=p1->GetChiSquareXY(),chi2=p2->GetChiSquareXY();// zantei
     
     double chiXY1=p1->GetChiSquareXY(),chiZ1=p2->GetChiSquareZ();
     double chiXY2=p2->GetChiSquareXY(),chiZ2=p2->GetChiSquareZ();
     double chi1=sqrt(chiXY1*chiXY1+chiZ1*chiZ1);
     double chi2=sqrt(chiXY2*chiXY2+chiZ2*chiZ2);
+
+    /*    
+    if( (n1>n2)&&(chi1<MaxChi2CFT*sqrt(2.))){
+      return true;
+    }else if( (n2>n1)&&(chi2<MaxChi2CFT*sqrt(2.))){
+      return false;
+    }else{
+      return (chi1<=chi2);
+    }
+    */
     
     if( (n1==n2)&&(chi1<MaxChi2CFT)) return (chi1<=chi2);
     if( (n1>n2) &&(chi1<MaxChi2CFT)) return true;

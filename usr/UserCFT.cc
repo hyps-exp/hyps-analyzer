@@ -34,6 +34,7 @@
 #include "CFTParticle.hh"
 #include "CFTPedCorMan.hh"
 #include "BGOAnalyzer.hh"
+#include "FLHit.hh"
 
 #define HodoCut 0 // with BH1/BH2
 #define TimeCut 0 // in cluster analysis
@@ -130,8 +131,16 @@ struct Event
   int    dnhits;
 
   // CFT
-  int ntCFT;
   int ncl[NumOfPlaneCFT];
+  int seg_clmax[NumOfPlaneCFT][MaxDepth];
+  double tdc_clmax[NumOfPlaneCFT][MaxDepth];
+  double time_clmax[NumOfPlaneCFT][MaxDepth];
+  double ctime_clmax[NumOfPlaneCFT][MaxDepth];
+  double tot_clmax[NumOfPlaneCFT][MaxDepth];
+  double adc_h_clmax[NumOfPlaneCFT][MaxDepth];
+  double adc_l_clmax[NumOfPlaneCFT][MaxDepth];
+
+  int ntCFT;
   double phi[MaxDepth];
   double theta[MaxDepth];
 
@@ -162,6 +171,7 @@ struct Event
   double adc[NumOfPlaneCFT][MaxDepth], adc_max[NumOfPlaneCFT][MaxDepth];
   double mip[NumOfPlaneCFT][MaxDepth], mip_max[NumOfPlaneCFT][MaxDepth];
   double dE[NumOfPlaneCFT][MaxDepth] , dE_max[NumOfPlaneCFT][MaxDepth] ;
+  double time_max[NumOfPlaneCFT][MaxDepth];
 
   double Total_mip[MaxDepth],    Total_mip_max[MaxDepth];
   //double Total_mip_phi[MaxDepth], Total_mip_phi_max[MaxDepth];
@@ -214,6 +224,7 @@ struct Event
   double adcbgo[NumOfSegBGO];
   double tdcbgo[NumOfSegBGO];
   double energybgo[NumOfSegBGO];
+  double energybgot[MaxDepth];
 
 
 };
@@ -366,7 +377,6 @@ EventCFT::ProcessingNormal( void )
     }
   }
 
-
   // CFT   
   {
     for(int p = 0; p<NumOfPlaneCFT; ++p){
@@ -483,6 +493,7 @@ EventCFT::ProcessingNormal( void )
 
 	HF2 (1000*(p+1) +102, seg_id, leading);
 	HF2 (1000*(p+1) +103, seg_id, ctime);
+	HF2 (1000*(p+1) +133, seg_id,  time);
 	HF2 (1000*(p+1) +144, seg_id, width);
 	
 	if(width>60){
@@ -525,7 +536,8 @@ EventCFT::ProcessingNormal( void )
 #if 1
   // Fiber Cluster
   for(int p = 0; p<NumOfPlaneCFT; ++p){
-    hodoAna->TimeCutCFT(p, -30, 30); // CATCH@J-PARC  
+    //hodoAna->TimeCutCFT(p, -30, 30); // CATCH@J-PARC  
+    hodoAna->TimeCutCFT(p, -15, 15); // CATCH@J-PARC  
     hodoAna->AdcCutCFT(p, 0, 4000); // CATCH@J-PARC  
     //hodoAna->AdcCutCFT(p, 50, 4000); // CATCH@J-PARC  for proton
     //hodoAna->WidthCutCFT(p, 60, 300); // pp scattering
@@ -539,7 +551,7 @@ EventCFT::ProcessingNormal( void )
       FiberCluster *cl = hodoAna->GetClusterCFT(p,i);
       if(!cl) continue;
       double size  = cl->ClusterSize();
-      double seg = cl->MeanSeg();
+      double seg   = cl->MeanSeg();
       double ctime = cl->CMeanTime();
       //double width = -cl->minWidth();
       double width = cl->Width();
@@ -549,6 +561,32 @@ EventCFT::ProcessingNormal( void )
       double r     = cl->MeanPositionR();
       double phi   = cl->MeanPositionPhi();
       HF2(4, r*cos(phi*Deg2Rad),r*sin(phi*Deg2Rad));      
+      
+      // max fiber in cluster
+      int max_cluster_id = cl->GetMaxClusterId(); 
+      if (max_cluster_id>0) {
+	FLHit *fhit = cl->GetHit(max_cluster_id);
+	int    seg_max = fhit->SegmentId();
+	double ftdc    = fhit->GetLeading();
+	double ftot    = fhit->GetWidth();
+	double ftime   = fhit->GetTime();
+	double fctime   = fhit->GetCTime();
+	double fadc_h  = fhit->GetAdcHi();
+	double fadc_l  = fhit->GetAdcLow();	
+
+	event.seg_clmax[p][i] = seg_max;
+	event.tdc_clmax[p][i]  = ftdc;
+	event.tot_clmax[p][i]  = ftot;
+	event.time_clmax[p][i] = ftime;
+	event.ctime_clmax[p][i] = fctime;
+	event.adc_h_clmax[p][i] = fadc_h;
+	event.adc_l_clmax[p][i] = fadc_l;
+	
+	//if(fadc_h<0)
+	//std::cout << "layer" << p << ", seg" << seg_max 
+	//	    << ", tdc=" << ftdc << ", adc_h=" << fadc_h << std::endl;	
+      }
+
 
       if (FlagEvDisp) {
 	/*
@@ -674,6 +712,12 @@ EventCFT::ProcessingNormal( void )
       event.mip_max[layer][i] = tp->GetMaxMIP(layer);
       event.dE_max[layer][i]  = tp->GetMaxdE (layer);
 
+      for(int icl=0; icl<event.ncl[layer]; icl++){
+	if(seg_max == event.seg_clmax[layer][icl]){
+	  event.time_max[layer][i] = event.ctime_clmax[layer][icl];
+	}
+      }      
+      
       if (FlagEvDisp) {
 	std::cout << "track#" << i << ", layer=" << layer << ", seg=" << seg
 		  << ", ini_phi=" << phi_ini << std::endl;
@@ -710,6 +754,12 @@ EventCFT::ProcessingNormal( void )
       event.mip_max[layer][i] = tp->GetMaxMIP(layer);
       event.dE_max[layer][i]  = tp->GetMaxdE (layer);
 
+      for(int icl=0; icl<event.ncl[layer]; icl++){
+	if(seg_max == event.seg_clmax[layer][icl] && seg_max>0){
+	  event.time_max[layer][i] = event.ctime_clmax[layer][icl];
+	}
+      }
+
       if (FlagEvDisp) {
 	const EvDispCFT & evDisp = EvDispCFT::GetInstance();
 	double rr = 49+10*(layer/2);
@@ -731,6 +781,7 @@ EventCFT::ProcessingNormal( void )
     int segPiIDt = CFTPart->GetTrackPiIDSeg();// PiID track segment
     event.segBGOt[i]  = segBGOt;
     event.segPiIDt[i] = segPiIDt;
+    event.energybgot[i]  = event.energybgo[segBGOt];
     
     // 2 track ver.
     if (FlagEvDisp) {
@@ -793,7 +844,6 @@ EventCFT::ProcessingNormal( void )
 		  << std::endl;  	
       }
     }
-
     
   }
   if(ntCFT>1){
@@ -1193,6 +1243,15 @@ EventCFT::InitializeEvent( void )
     }
     
     for( int p=0; p<NumOfPlaneCFT; ++p ){      
+
+      event.seg_clmax[p][i]   = -1;
+      event.tdc_clmax[p][i]   = -999;
+      event.time_clmax[p][i]  = -999;
+      event.ctime_clmax[p][i] = -999;
+      event.tot_clmax[p][i]   = -999;
+      event.adc_h_clmax[p][i] = -999;
+      event.adc_l_clmax[p][i] = -999;
+
       event.seg[p][i]        = -999;
       event.seg_max[p][i]    = -999;
       event.dphi[p][i]       = -999.;
@@ -1205,6 +1264,8 @@ EventCFT::InitializeEvent( void )
       event.adc[p][i] = -999.; event.adc_max[p][i] = -999.;
       event.mip[p][i] = -999.; event.mip_max[p][i] = -999.;
       event.dE[p][i]  = -999.; event.dE_max[p][i]  = -999.;
+      event.time_max[p][i] = -999.;
+
       /*
       for(int j = 0; j<60; ++j){// group
 	event.pede[p][j] = -999.;
@@ -1228,6 +1289,7 @@ EventCFT::InitializeEvent( void )
     //event.Total_mip_uv[i]  = -999.; event.Total_mip_uv_max[i]  = -999.;
 
     event.segPiIDt[i] = -1;
+    event.energybgot[i] = 0; 
   }
   event.vtxAB_x = -999.;
   event.vtxAB_y = -999.; 
@@ -1339,6 +1401,7 @@ ConfMan:: InitializeHistograms( void )
       title[8] << " CFT UV"<< layer << " : Time(Leading) vs seg (width>60)"; //122 
       title[25]<< " CFT UV"<< layer << " : Time(Leading) vs seg (width<=60)";//123  
       title[9] << " CFT UV"<< layer << " : CTime vs seg"; //103 
+      title[27] << " CFT UV"<< layer << " :  Time vs seg"; //133 
       title[10]<< " CFT UV"<< layer << " : width vs seg"; //104
       title[24]<< " CFT UV"<< layer << " : width vs seg (Fiber Hit)"; //144
       // ADC
@@ -1372,7 +1435,8 @@ ConfMan:: InitializeHistograms( void )
       title[7] << " CFT Phi"<< layer << " : Time(Leading) vs seg" ;  //102
       title[8] << " CFT Phi"<< layer << " : Time(Leading) vs seg (width>60)";//122  
       title[25]<< " CFT Phi"<< layer << " : Time(Leading) vs seg (width<=60)";//123  
-      title[9] << " CFT Phi"<< layer << " : CTime vs seg";  
+      title[9] << " CFT Phi"<< layer << " : CTime vs seg"; //103 
+      title[27] << " CFT Phi"<< layer << " :  Time vs seg"; //133 
       title[10]<< " CFT Phi"<< layer << " : width vs seg"; //104
       title[24]<< " CFT Phi"<< layer << " : width vs seg (Fiber Hit)"; //144
       // ADC
@@ -1407,7 +1471,8 @@ ConfMan:: InitializeHistograms( void )
     HB2( 1000*(i+1)+102, title[7].str().c_str(),  NumOfSegCFT[i], 0, NumOfSegCFT[i],1000,0,1000);
     HB2( 1000*(i+1)+122, title[8].str().c_str(),  NumOfSegCFT[i], 0, NumOfSegCFT[i],1000,0,1000);
     HB2( 1000*(i+1)+123, title[25].str().c_str(),  NumOfSegCFT[i], 0, NumOfSegCFT[i],1000,0,1000);
-    HB2( 1000*(i+1)+103, title[9].str().c_str(),  NumOfSegCFT[i], 0, NumOfSegCFT[i],1000,-500,500);
+    HB2( 1000*(i+1)+103, title[9].str().c_str(),  NumOfSegCFT[i], 0, NumOfSegCFT[i],400,-100,100);
+    HB2( 1000*(i+1)+133, title[27].str().c_str(), NumOfSegCFT[i], 0, NumOfSegCFT[i],400,-100,100);
     HB2( 1000*(i+1)+104, title[10].str().c_str(), NumOfSegCFT[i], 0, NumOfSegCFT[i],150,0,150);
     HB2( 1000*(i+1)+144, title[24].str().c_str(), NumOfSegCFT[i], 0, NumOfSegCFT[i],150,0,150);
 
@@ -1443,7 +1508,22 @@ ConfMan:: InitializeHistograms( void )
   tree->Branch("trigpat",   event.trigpat,  Form("trigpat[%d]/I", NumOfSegTrig));
   tree->Branch("trigflag",  event.trigflag, Form("trigflag[%d]/I", NumOfSegTrig));
   tree->Branch("nhits",     &event.nhits,        "nhits/I");
-  
+
+  // CFT clustering
+  /*
+  tree->Branch("ncl",         event.ncl,         Form("ncl[%d]/I",  NumOfPlaneCFT));
+  tree->Branch("seg_clmax",   event.seg_clmax,   Form("seg_clmax[%d][%d]/I", NumOfPlaneCFT, MaxDepth));
+  //tree->Branch("seg_clmax",   event.seg_clmax,   Form("seg_clmax[%d][ncl[%d]]/I", NumOfPlaneCFT,NumOfPlaneCFT));
+  //tree->Branch("seg_clmax",   event.seg_clmax,   "seg_clmax[ncl]/I");
+  tree->Branch("tdc_clmax",   event.tdc_clmax,   Form("tdc_clmax[%d][%d]/D", NumOfPlaneCFT, MaxDepth));
+  tree->Branch("tot_clmax",   event.tot_clmax,   Form("tot_clmax[%d][%d]/D", NumOfPlaneCFT, MaxDepth));
+  tree->Branch("time_clmax",  event.time_clmax,  Form("time_clmax[%d][%d]/D", NumOfPlaneCFT, MaxDepth));
+  tree->Branch("ctime_clmax", event.ctime_clmax, Form("ctime_clmax[%d][%d]/D", NumOfPlaneCFT, MaxDepth));
+  tree->Branch("adc_h_clmax", event.adc_h_clmax, Form("adc_h_clmax[%d][%d]/D", NumOfPlaneCFT, MaxDepth));
+  tree->Branch("adc_l_clmax", event.adc_l_clmax, Form("adc_l_clmax[%d][%d]/D", NumOfPlaneCFT, MaxDepth));
+  */
+
+  // CFT tracking
   tree->Branch("ntCFT",     &event.ntCFT,    "ntCFT/I");
   tree->Branch("theta",     event.theta,    "theta[ntCFT]/D");
   tree->Branch("phi",       event.phi,      "phi[ntCFT]/D");
@@ -1478,6 +1558,7 @@ ConfMan:: InitializeHistograms( void )
   tree->Branch("adc_max", event.adc_max,  Form("adc_max[%d][%d]/D", NumOfPlaneCFT, MaxDepth ) );
   tree->Branch("mip_max", event.mip_max,  Form("mip_max[%d][%d]/D", NumOfPlaneCFT, MaxDepth ) );
   tree->Branch("dE_max",  event.dE_max,   Form("dE_max[%d][%d]/D", NumOfPlaneCFT, MaxDepth ) );
+  tree->Branch("time_max",event.time_max, Form("time_max[%d][%d]/D", NumOfPlaneCFT, MaxDepth ) );
 
   tree->Branch("Total_mip",     event.Total_mip,    "total_mip/D");
   tree->Branch("Total_mip_max",    event.Total_mip_max,    "total_mip_max/D");
@@ -1491,8 +1572,8 @@ ConfMan:: InitializeHistograms( void )
 
   // pedestal correction
   //tree->Branch("pede",       event.pede,       Form("adc[%d][%d]/D", NumOfPlaneCFT, 60 ) );
-  tree->Branch("adc_raw_h",  event.adc_raw_h,  Form("adc_raw_h[%d][%d]/D", NumOfPlaneCFT, NumOfSegCFT_PHI4 ) );
-  tree->Branch("adc_raw_l",  event.adc_raw_l,  Form("adc_raw_l[%d][%d]/D", NumOfPlaneCFT, NumOfSegCFT_PHI4 ) );
+  //tree->Branch("adc_raw_h",  event.adc_raw_h,  Form("adc_raw_h[%d][%d]/D", NumOfPlaneCFT, NumOfSegCFT_PHI4 ) );
+  //tree->Branch("adc_raw_l",  event.adc_raw_l,  Form("adc_raw_l[%d][%d]/D", NumOfPlaneCFT, NumOfSegCFT_PHI4 ) );
 
 #if ModeCosmic + ModePP
   // for 16 layer tracking
@@ -1536,6 +1617,7 @@ ConfMan:: InitializeHistograms( void )
 
   // BGO
   tree->Branch("segPiIDt",   event.segPiIDt,   "segPiIDt[ntCFT]/I");
+  tree->Branch("energyBGOt", event.energybgot, "energybgot[ntCFT]/D");
 
   HPrint();
   return true;

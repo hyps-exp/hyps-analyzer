@@ -546,12 +546,10 @@ DCAnalyzer::DecodeCFTHits( RawData *rawData )
   hodoAna.DecodeCFTHits( rawData );
   
   for ( int l = 0; l < NumOfPlaneCFT; ++l ) {
-    hodoAna.TimeCutCFT( l, -30, 30 );
-    //hodoAna.AdcCutCFT( l, -100, 4000 );
+    // go to USER param
+    //hodoAna.TimeCutCFT( l, -30, 30 );
+    hodoAna.TimeCutCFT( l, -15, 15 );
     hodoAna.AdcCutCFT( l, 0, 4000 );
-    //hodoAna.AdcCutCFT( l, 50, 4000 ); // for proton
-    //hodoAna.WidthCutCFT( l, 60, 300 );//pp scattering
-    //hodoAna.WidthCutCFT( l, 30, 300 );// cosmic ray
     
     int ncl = hodoAna.GetNClustersCFT( l );    
     for ( int j = 0; j < ncl; ++j ) {
@@ -562,7 +560,8 @@ DCAnalyzer::DecodeCFTHits( RawData *rawData )
       double size     = cl->ClusterSize();
       double posR     = cl->MeanPositionR();
       double posPhi   = cl->MeanPositionPhi();
-      double time     = cl->CMeanTime();
+      //double time     = cl->CMeanTime();
+      double time     = cl->CMaxTime();
 
       double adcLow   = cl->SumAdcLow(); double max_adcLow  = cl->MaxAdcLow();
       double mipLow   = cl->SumMIPLow(); double max_mipLow  = cl->MaxMIPLow();
@@ -584,6 +583,7 @@ DCAnalyzer::DecodeCFTHits( RawData *rawData )
 
 	  hit->SetPositionR  ( posR    );
 	  hit->SetPositionPhi( posPhi  );
+	  hit->SetTime       ( time  );
 	  
 	  hit->SetWirePosition(0.);      
 	  m_CFTHC[l].push_back( hit );

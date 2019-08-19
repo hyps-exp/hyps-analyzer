@@ -115,6 +115,12 @@ MaxChi2CFTcosmic    300
 MaxChi2CFTcosmic2nd 100
 MinCFTz -150
 MaxCFTz  450
+### CFT tracking w/ time restriction
+### ctime vs z pos. line
+a3  0.01075  ##UV3
+b3  -2.9380  ##UV3
+a4  0.01052  ##UV4
+b4  -2.4507  ##UV4
 
 ### CATCH PID(nanamura)
 CatchPID 0.1346 114.068

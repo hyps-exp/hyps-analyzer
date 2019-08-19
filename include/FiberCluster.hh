@@ -30,6 +30,7 @@ protected:
   int          m_cluster_id;
   int          m_max_cluster_id;
   double       m_mean_time;
+  double       m_max_time;
   double       m_real_mean_time; // real mean (not a closest value of CTime)
   double       m_max_width;
   double       m_min_width;
@@ -57,6 +58,7 @@ public:
   int    ClusterSize( void )     const { return m_cluster_size;    }
   int    GetMaxClusterId( void )     const { return m_max_cluster_id;    }
   double CMeanTime( void )       const { return m_mean_time;       }
+  double CMaxTime( void )        const { return m_max_time;       }
   double RCMeanTime( void )      const { return m_real_mean_time;  }
   double Width( void )           const { return m_max_width;       }
   double minWidth( void )        const { return m_min_width;       }

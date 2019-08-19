@@ -24,10 +24,12 @@
 #include "MathTools.hh"
 #include "PrintHelper.hh"
 #include "HodoParamMan.hh"
+#include "UserParamMan.hh"
 
 namespace
 {
   const std::string& class_name("DCLocalTrack");
+  const UserParamMan& gUser = UserParamMan::GetInstance();
   const DCGeomMan& gGeom = DCGeomMan::GetInstance();
   const double& zK18tgt = gGeom.LocalZ("K18Target");
   const double& zTgt    = gGeom.LocalZ("Target");
@@ -87,6 +89,8 @@ DCLocalTrack::DCLocalTrack( void )
 
     m_dr[i]  = 0; 
     m_r[i]  = 0; 
+
+    m_time[i]  = -999; 
 
     m_sum_adc[i]=0;  m_max_adc[i]=0;
     m_sum_mip[i]=0;  m_max_mip[i]=0;
@@ -786,6 +790,13 @@ bool DCLocalTrack::DoFitUV()
   std::vector <double> z, xy, s;
   z.reserve(n); xy.reserve(n); s.reserve(n);  
 
+  // time restriction param --- ctime vs z pos. line
+  // --> go to USER param
+  const double a3 = gUser.GetParameter("a3");
+  const double b3 = gUser.GetParameter("b3");
+  const double a4 = gUser.GetParameter("a4");
+  const double b4 = gUser.GetParameter("b4");
+
   for( std::size_t i=0; i<n; ++i ){
     
     DCLTrackHit *hitp = m_hit_arrayUV[i];
@@ -804,6 +815,31 @@ bool DCLocalTrack::DoFitUV()
       }
 
       double z1 = CalculateZpos(phi, hitp);
+      // time restriction
+      double time = hitp->GetTime();
+      m_time[lnum] = time;
+#if 1
+      if( (z1<40 || z1>360) ){	
+	double zz1 = z1;
+	if(z1<40){zz1+=400;}
+	else if(z1>360){zz1-=400;}
+	if(lnum==6){//for UV4
+	  //double a = 0.01052, b= -2.4507; --> go to USER param
+	  double a = a4, b = b4; 
+
+	  double dt0 = (time-a*z1-b)/sqrt(1+a*a);
+	  double dt1 = (time-a*zz1-b)/sqrt(1+a*a);
+	  if( fabs(dt1)<fabs(dt0) ){z1 = zz1;}
+	}else if(lnum==4){//for UV3
+	  //double a = 0.010749, b= -2.9380;  --> go to USER param
+	  double a = a3, b = b3; 
+
+	  double dt0 = (time-a*z1-b)/sqrt(1+a*a);
+	  double dt1 = (time-a*zz1-b)/sqrt(1+a*a);
+	  if( fabs(dt1)<fabs(dt0) ){z1 = zz1;}
+	}
+      }
+#endif    
       m_z_ini_before[lnum] = z1; 
 
       double xy1=-999.;
@@ -972,6 +1008,9 @@ DCLocalTrack::DoFitPhi2nd( void )
       if(lnum>7){lnum -= 8;}
       int seg  = (int)hitp->GetMeanSeg();
       m_meanseg[lnum] = seg;
+
+      double time = hitp->GetTime();
+      m_time[ll] = time;
 
       double rr = hitp->GetPositionR();
       //double rr = hitp->GetPositionRMax();
@@ -1238,6 +1277,35 @@ bool DCLocalTrack::DoFitUV2nd(int calib)
       double z1 = CalculateZpos(phi, hitp);
       m_z_ini[ll] = z1;      
       m_phi_track[ll] = phi;    
+
+      double time = hitp->GetTime();
+      m_time[ll] = time;
+
+      // time restriction
+      //if(n==3 && (z1<40 || z1>360) ){	
+      if( (z1<40 || z1>360) ){	
+	//std::cout << "layer" << Layer[i] << " seg" << m_meanseg[Layer[i]]
+	//	  << ", time = " << m_time[Layer[i]] << ", z = " << zcal <<  std::endl;
+	double zz1 = z1;
+	if(z1<40){zz1+=400;}
+	else if(z1>360){zz1-=400;}
+
+	if(ll==6){//for UV4
+	  double a = 0.01052, b= -2.4507; 
+	  double dt0 = (time-a*z1-b)/sqrt(1+a*a);
+	  double dt1 = (time-a*zz1-b)/sqrt(1+a*a);
+	  //std::cout << "layer" << Layer[i] << " seg" << m_meanseg[Layer[i]]
+	  //	    << ", time = " << m_time[Layer[i]] << ", z = " << z1
+	  //	    << ", dt_org = " << dt0 << ", dt' = " << dt1 <<  std::endl;
+	  if( fabs(dt1)<fabs(dt0) ){z1 = zz1;}
+	}else if(lnum==4){
+	  double a = 0.010749, b= -2.9380; 
+	  double dt0 = (time-a*z1-b)/sqrt(1+a*a);
+	  double dt1 = (time-a*zz1-b)/sqrt(1+a*a);
+	  if( fabs(dt1)<fabs(dt0) ){z1 = zz1;}
+	}
+      }
+
 
       // parameter for position correction
       double par_z0, par_dz0, par_dr0;
