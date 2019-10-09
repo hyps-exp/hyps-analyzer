@@ -74,7 +74,7 @@ TdcSDC3 400 1200
 MaxMultiHitBcOut 16
 
 ### BCOUT plane multiplicity gate
-MinLayerBcOut 8
+MinLayerBcOut 10
 
 ###BC3,4 Sdc1 TOT cut 
 MinTotBcOut 15
@@ -115,6 +115,7 @@ MaxChi2CFTcosmic    300
 MaxChi2CFTcosmic2nd 100
 MinCFTz -150
 MaxCFTz  450
+
 ### CFT tracking w/ time restriction
 ### ctime vs z pos. line
 a3  0.01075  ##UV3
@@ -124,3 +125,6 @@ b4  -2.4507  ##UV4
 
 ### CATCH PID(nanamura)
 CatchPID 0.1346 114.068
+
+### TOF KID
+TOFKID 2.1 300 840

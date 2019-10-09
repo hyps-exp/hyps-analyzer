@@ -68,7 +68,8 @@ namespace dst
   const double u_off = 0.000;
   const double v_off = 0.000;
 }
-
+//function for Kid by TOF
+double calcCutLineByTOF( double M, double mom );
 //_____________________________________________________________________
 struct Event
 {
@@ -180,6 +181,8 @@ struct Event
   double utofKurama[MaxHits];
   double vtofKurama[MaxHits];
   double tofsegKurama[MaxHits];
+  double best_deTof[MaxHits];
+  double best_TofSeg[MaxHits];
 
   //Reaction
   int    nPi;
@@ -195,6 +198,7 @@ struct Event
   double MissMassCorrDE[MaxHits];
   double thetaCM[MaxHits];
   double costCM[MaxHits];
+  int Kflag[MaxHits];
 
   double xpi[MaxHits];
   double ypi[MaxHits];
@@ -499,6 +503,8 @@ dst::InitializeEvent( void )
     event.utofKurama[it]   = -9999.;
     event.vtofKurama[it]   = -9999.;
     event.tofsegKurama[it] = -9999.;
+	event.best_deTof[it]   = -9999.;
+	event.best_TofSeg[it]  = -9999.;
   }
 
   //Reaction
@@ -517,6 +523,7 @@ dst::InitializeEvent( void )
     event.MissMass[it]  = -9999.;
     event.MissMassCorr[it]  = -9999.;
     event.MissMassCorrDE[it]  = -9999.;
+	event.Kflag[it]     = 0;
 
     event.xpi[it] = -9999.0;
     event.ypi[it] = -9999.0;
@@ -564,6 +571,9 @@ dst::DstRead( int ievent )
   static const std::string func_name("["+class_name+"::"+__func__+"]");
 
   static const double OffsetToF  = gUser.GetParameter("OffsetToF");
+  static const double Mip2MeV           = gUser.GetParameter("TOFKID",0);
+  static const double PionCutMass       = gUser.GetParameter("TOFKID",1);
+  static const double ProtonCutMass     = gUser.GetParameter("TOFKID",2);
 
   static const double KaonMass    = pdg::KaonMass();
   static const double PionMass    = pdg::PionMass();
@@ -737,6 +747,8 @@ dst::DstRead( int ievent )
     double y = src.ytgtKurama[itKurama];
     double u = src.utgtKurama[itKurama];
     double v = src.vtgtKurama[itKurama];
+	double utof =src.utofKurama[itKurama];
+	double vtof =src.vtofKurama[itKurama];
     double theta = src.thetaKurama[itKurama];
     double pt = p/std::sqrt(1.+u*u+v*v);
     ThreeVector Pos( x, y, 0. );
@@ -761,37 +773,46 @@ dst::DstRead( int ievent )
     double m2   = -9999.;
     // w/  TOF
 
-    bool fl_matching = false;
-    for( int j=0; j<nhTof; ++j ){
-      double seg = src.TofSeg[j];
-      if( seg == TofSegKurama ){
-	// event.tTof[i]  = src.tTof[j];
-	// event.dtTof[i] = src.dtTof[j];
-	// event.deTof[i] = src.deTof[j];
-	stof  = src.tTof[j] - time0 + OffsetToF;
-	if(btof==-9999) cstof=stof; 
-	else gPHC.DoStofCorrection( 8, 0, seg-1, 2, stof, btof, cstof );  
-	m2 = Kinematics::MassSquare( pCorr, path, cstof );
-	fl_matching = true;
-      }
-    }
-    if ( !fl_matching ) {
-      for( int j=0; j<nhTof; ++j ){
-	double seg = src.TofSeg[j];
-	if ( seg == TofSegKurama ) { continue; }
-	if( std::abs( seg - TofSegKurama ) < 2 ){
-	  // event.tTof[i]  = src.tTof[j];
-	  // event.dtTof[i] = src.dtTof[j];
-	  // event.deTof[i] = src.deTof[j];
-	  stof  = src.tTof[j] - time0 + OffsetToF;
-	  if(btof==-9999) cstof=stof; 
-	  else gPHC.DoStofCorrection( 8, 0, seg-1, 2, stof, btof, cstof ); 
-	  m2 = Kinematics::MassSquare( pCorr, path, cstof );
+	bool correct_hit[src.nhTof];
+	for(int j=0; j<src.nhTof; ++j) correct_hit[j]=true;
+	for(int j=0; j<src.nhTof; ++j){
+	  double seg1=src.TofSeg[j]; double de1=src.deTof[j];
+	  for(int k=j+1; k<src.nhTof; ++k){
+		double seg2=src.TofSeg[k]; double de2=src.deTof[k];
+		if( std::abs( seg1 - seg2 ) < 2 && de1 > de2 ) correct_hit[k]=false;
+		if( std::abs( seg1 - seg2 ) < 2 && de2 > de1 ) correct_hit[j]=false;
+	  }
 	}
-      }
-    }
+	double best_de=-9999;
+	int correct_num=0;
+	int Dif=9999;
+	for(int j=0; j<src.nhTof; ++j){
+	  if(correct_hit[j]==false) continue;
+	  int dif = std::abs( src.TofSeg[j] - TofSegKurama );
+	  if( (dif < Dif) || ( dif==Dif&&src.deTof[j]>best_de )){
+		correct_num=j;
+		best_de=src.deTof[j];
+		Dif=dif;
+	  }
+	}
 
-    // w/o TOF
+	stof = event.tTof[correct_num] - time0 + OffsetToF;
+	m2 = Kinematics::MassSquare( pCorr, path, cstof );
+	if(btof==-9999.9){ 
+	  cstof=stof;
+    }else{
+	  gPHC.DoStofCorrection( 8, 0, src.TofSeg[correct_num]-1, 2, stof, btof, cstof );
+	  m2 = Kinematics::MassSquare( pCorr, path, cstof );
+	}	
+	event.best_deTof[itKurama] = best_de;
+	event.best_TofSeg[itKurama] = src.TofSeg[correct_num];
+	
+	///for Kflag///
+	int Kflag=0;
+	double dEdx = Mip2MeV*best_de/sqrt(1+utof*utof+vtof*vtof);
+	if( calcCutLineByTOF( PionCutMass, 1000*p ) <dEdx&&dEdx< calcCutLineByTOF( ProtonCutMass, 1000*p ) ) Kflag=1;
+
+	// w/o TOF
     // double minres = 1.0e10;
     // for( int j=0; j<nhTof; ++j ){
     //   double seg = src.TofSeg[j];
@@ -814,6 +835,7 @@ dst::DstRead( int ievent )
 	event.cstof[itKurama] = cstof; 
     event.path[itKurama] = path;
     event.m2[itKurama] = m2;
+	event.Kflag[itKurama] = Kflag;
     HF1( 3202, double(nh) );
     HF1( 3203, chisqr );
     HF1( 3204, xt ); HF1( 3205, yt );
@@ -1039,6 +1061,41 @@ dst::DstRead( int ievent )
   }
 
   return true;
+}
+//_____________________________________________________________________
+double calcCutLineByTOF( double M, double mom ){
+  
+  const double K  = 0.307075;//cosfficient [MeV cm^2/g]
+  const double ro = 1.032;//density of TOF [g/cm^3]
+  const double ZA = 0.5862;//atomic number to mass number ratio of TOF
+  const int    z  = 1;//charge of incident particle 
+  const double me = 0.511;//mass of electron [MeV/c^2]
+  const double I  = 0.0000647;//mean excitaton potential [MeV]
+
+  const double C0 = -3.20;
+  const double a  = 0.1610;
+  const double m  = 3.24;
+  const double X1 = 2.49;
+  const double X0 = 0.1464;
+
+  double p1 = ro*K*ZA*z*z/2;
+  double p2 = (2*me/I/M)*(2*me/I/M);
+  double p3 = 0.2414*K*z*z/ro;
+ 
+  double y = mom/M;
+  double X = log10(y);
+  double delta;
+  if( X < X0 )              delta = 0;
+  else if( X0 < X&&X < X1 ) delta = 4.6052*X+C0+a*pow(X1-X,m);
+  else                      delta = 4.6052*X+C0;
+
+  double C = (0.422377*pow(y,-2)+0.0304043*pow(y,-4)-0.00038106*pow(y,-6))*pow(10,-6)*pow(I,2)
+                  +(3.85019*pow(y,-2)-0.1667989*pow(y,-4)+0.00157955*pow(y,-6))*pow(10,-9)*pow(I,3);
+
+  double x = mom;
+  double dEdx = p1*((M/x)*(M/x)+1)*log(p2*x*x*x*x/(M*M+2*me*sqrt(M*M+x*x))+me*me)-2*p1-p1*delta-p3*C;  
+  
+  return dEdx;
 }
 
 //_____________________________________________________________________
@@ -1350,6 +1407,8 @@ ConfMan::InitializeHistograms( void )
   tree->Branch("utofKurama",    event.utofKurama,   "utofKurama[ntKurama]/D");
   tree->Branch("vtofKurama",    event.vtofKurama,   "vtofKurama[ntKurama]/D");
   tree->Branch("tofsegKurama",  event.tofsegKurama, "tofsegKurama[ntKurama]/D");
+  tree->Branch("best_deTof",    event.best_deTof,   "best_deTof[ntKurama]/D");
+  tree->Branch("best_TofSeg",   event.best_TofSeg,  "best_TofSeg[ntKurama]/D");
 
   //Reaction
   tree->Branch("nPi",           &event.nPi,            "nPi/I");
@@ -1365,6 +1424,7 @@ ConfMan::InitializeHistograms( void )
   tree->Branch("MissMassCorrDE", event.MissMassCorrDE, "MissMassCorrDE[nPiK]/D");
   tree->Branch("thetaCM", event.thetaCM,  "thetaCM[nPiK]/D");
   tree->Branch("costCM",  event.costCM,   "costCM[nPiK]/D");
+  tree->Branch("Kflag" ,  event.Kflag,    "Kflag[nPiK]/I");
 
   tree->Branch("xpi",        event.xpi,      "xpi[nPiK]/D");
   tree->Branch("ypi",        event.ypi,      "ypi[nPiK]/D");
