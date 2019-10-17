@@ -1,0 +1,19 @@
+/*---------SimulationValue---------*/
+const double Limit_Sim_Detectdp = -0.15;
+const double Limit_Sim_cdistLambdaNConv = 20;
+const double Limit_Sim_dz1 = -10;
+const double Limit_Sim_cdistLambdaDecay = 20;
+const double Limit_Sim_dz2 = -10;
+const double Limit_Sim_NPCut = 20;
+const double Limit_Sim_SigmaPCut = 20;
+const double Limit_Sim_Cutdp = 0.1;
+/*----------RealDataValue---------*/
+const double PeakValue = -10;
+const double Limit_Real_Detectdp = -0.15;
+const double Limit_Real_cdistLambdaNConv = 20;
+const double Limit_Real_dz1 = -10;
+const double Limit_Real_cdistLambdaDecay = 20;
+const double Limit_Real_dz2 = -10;
+const double Limit_Real_NPCut = 20;
+const double Limit_Real_SigmaPCut = 20;
+const double Limit_Real_Cutdp = 0.1;
