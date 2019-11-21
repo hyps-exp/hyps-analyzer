@@ -2050,13 +2050,13 @@ namespace track
 	   && track->GetChiSquareXY()<Chi1st
 	   && track->DoFitUV() 
 	   && track->GetChiSquareZ ()<Chi1st
-	   && track->GetVtxZ()>MinCFTz && track->GetVtxZ()>MaxCFTz // vtx cut
+	   && track->GetVtxZ()>MinCFTz && track->GetVtxZ()<MaxCFTz // vtx cut
 	   // CFT 2nd tracking (position correction)
 	   && track->DoFitPhi2nd() 
 	   && track->GetChiSquareXY ()<Chi2nd
 	   && track->DoFitUV2nd(1) //0:w/o, 1:w/ UV calib.
 	   && track->GetChiSquareZ ()<Chi2nd
-	   && track->GetVtxZ()>MinCFTz && track->GetVtxZ()>MaxCFTz // vtx cut
+	   && track->GetVtxZ()>MinCFTz && track->GetVtxZ()<MaxCFTz // vtx cut
 	   ){
 	  
 	  TrackCont.push_back(track);
