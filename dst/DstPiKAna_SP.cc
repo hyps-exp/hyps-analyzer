@@ -85,6 +85,8 @@ bool calc2BodyInelastic(double m1, double p1, double m2, double m3, double m4,
 ThreeVector Xproduct(ThreeVector vec1, ThreeVector vec2);
 bool calcBeamMomFrom2BodyKinema(double M1, double M2, double theta, double pScat,
 				double *beamMomCal1, double *beamMomCal2);
+bool calcScatMomFrom2BodyKinema(double M1, double M2, double theta, double pScat,
+				double *scatMomCal1, double *scatMomCal2);
 bool calcBeamMomFromDecay(double M1, double M2, double M3, double p2, double theta, 
 			  double *p1_1, double *p1_2);
 
@@ -164,6 +166,7 @@ struct Event
   double utgtK18[MaxHits];
   double vtgtK18[MaxHits];
   double thetaK18[MaxHits];
+  int priority_K18[MaxHits];
 
   //DC KURAMA
   int ntSdcIn;
@@ -236,6 +239,11 @@ struct Event
   int protonflagt[MaxHits];
   int BGOnohitt[MaxHits];
   int simKuramat[MaxHits];
+  int simKuramapartner[MaxHits];
+  int pipelasticflag[MaxHits];
+
+  double cdist_CFTpip[MaxHits];
+  //double energyBGO[NumOfSegBGO];
 
   //Reaction
   int    nPi;
@@ -248,6 +256,7 @@ struct Event
   double chisqrKuramapik[MaxHits];
   double pKuramapik[MaxHits];
   double closedist_KURAMA[MaxHits];
+  int priority_K18pik[MaxHits];
   double theta[MaxHits];
   double MissMass[MaxHits];
   double MissMassCorr[MaxHits];
@@ -338,6 +347,8 @@ struct Event
 
   //PiPScat assumption
   double DeltaP_PiPScat;
+  double DeltaPD_PiPScat;
+  double DeltaPD_PiPScatM;
   double DecayNeutronMom2;
   double DecayPionMom2;
   double vtx_Decay2pip;
@@ -381,6 +392,7 @@ struct Event
 
   //npi+ decay mode
   double DeltaE_SigmaPScat2npi;
+  double DeltaE2_SigmaPScat2npi;
   double ProtonMom_SigmaPScat2npi;
   double MissMassSigmaP_SigmaPScat2npi;
   double vtx_ScatSigmaDecay2npi;
@@ -390,6 +402,11 @@ struct Event
   double vdistance_SigmaPScat2npi;
   double theta_SigmaPScat2npi;
   double thetaCM_SigmaPScat2npi;
+  double dcostheta_SigmaL_SigmaPScat2npi;
+  double costheta_SigmaL_SigmaPScat2npi;
+  double dcostheta_SigmaL2_SigmaPScat2npi;
+  double costheta_SigmaL2_SigmaPScat2npi;
+
   int pikno_SigmaPScat2npi;
   int ptrno_SigmaPScat2npi;
   int pitrno_SigmaPScat2npi;
@@ -413,6 +430,8 @@ struct Event
   int ptrno_SigmaPScat2ppi;
   int p2trno_SigmaPScat2ppi;
   int priority_SigmaPScat2ppi;
+  double DeltaP_PPScatSP;
+  double theta_PPScatSP;
 
 };
 
@@ -560,7 +579,9 @@ struct Src
   int nhit_uv[MaxHits];
   int segBGOt[MaxHits];
   int segPiIDt[MaxHits];
+  int PiIDflagt[MaxHits];
   double energyBGO[NumOfSegBGO];
+  int PiIDflag[NumOfSegPiID];
 
 };
 
@@ -700,6 +721,7 @@ dst::InitializeEvent( void )
     event.vtgtK18[it] = -9999.;
     event.pK18[it]    = -9999.;
     event.thetaK18[it] = -9999.;
+    event.priority_K18[it]=0;
   }
 
   //KURAMA DC
@@ -771,7 +793,10 @@ dst::InitializeEvent( void )
     event.protonflagt[it]=0;
     event.BGOnohitt[it]=-1;
     event.simKuramat[it]=0;
-    }
+    event.simKuramapartner[it]=-1;
+    event.pipelasticflag[it]=0;
+    event.cdist_CFTpip[it]=-9999.;
+  }
 
   //Reaction & combination
   event.nPi = 0;
@@ -788,6 +813,7 @@ dst::InitializeEvent( void )
     event.chisqrKuramapik[it]  = -9999.;
     event.pKuramapik[it]       = -9999.;
     event.closedist_KURAMA[it] = -9999.;
+    event.priority_K18pik[it]  =0;
     event.theta[it]     = -9999.;
     event.thetaCM[it]   = -9999.;
     event.costCM[it]    = -9999.;
@@ -873,6 +899,8 @@ dst::InitializeEvent( void )
 
   //pip scattering assumption
   event.DeltaP_PiPScat = -9999.;
+  event.DeltaPD_PiPScat = -9999.;
+  event.DeltaPD_PiPScatM = -9999.;
   event.vtx_Decay2pip= -9999.;
   event.vty_Decay2pip= -9999.;
   event.vtz_Decay2pip= -9999.;
@@ -916,6 +944,7 @@ dst::InitializeEvent( void )
 
   //npi+ decay mode
   event.DeltaE_SigmaPScat2npi = -9999.;
+  event.DeltaE2_SigmaPScat2npi = -9999.;
   event.ProtonMom_SigmaPScat2npi =-9999.;
   event.MissMassSigmaP_SigmaPScat2npi=-9999.;
   event.vtx_ScatSigmaDecay2npi = -9999.;
@@ -925,6 +954,10 @@ dst::InitializeEvent( void )
   event.vdistance_SigmaPScat2npi = -9999.;
   event.theta_SigmaPScat2npi=-9999.;
   event.thetaCM_SigmaPScat2npi=-9999.;
+  event.dcostheta_SigmaL_SigmaPScat2npi = -9999.;
+  event.costheta_SigmaL_SigmaPScat2npi = -9999.;
+  event.dcostheta_SigmaL2_SigmaPScat2npi = -9999.;
+  event.costheta_SigmaL2_SigmaPScat2npi = -9999.;
   event.pikno_SigmaPScat2npi= -1;
   event.ptrno_SigmaPScat2npi= -1;
   event.pitrno_SigmaPScat2npi= -1;
@@ -948,6 +981,8 @@ dst::InitializeEvent( void )
   event.ptrno_SigmaPScat2ppi = -1;
   event.p2trno_SigmaPScat2ppi = -1;
   event.priority_SigmaPScat2ppi = 10;
+  event.DeltaP_PPScatSP=-9999.;
+  event.theta_PPScatSP =-9999.;
 
   return true;
 }
@@ -1000,7 +1035,7 @@ dst::DstRead( int ievent )
   GetEntry(ievent);
 
   event.runnum   = src.runnum;
-  event.evnum    = src.evnum;
+  event.evnum    = ievent;
   event.spill    = src.spill;
 
   event.bft_ncl  = src.bft_ncl;
@@ -1168,6 +1203,11 @@ dst::DstRead( int ievent )
   }
 
   //catch
+  /*
+  for( int it=0;it<NumOfSegBGO; ++it){
+    event.energyBGO[it]=src.energyBGO[it];
+  }
+  */
 
   for( int it=0; it<ntCFT; ++it){
     event.theta_cft[it]        = src.theta_cft[it];
@@ -1212,19 +1252,23 @@ dst::DstRead( int ievent )
     if(event.energyBGOt[it]<0){
       event.energyBGOt[it]=0.0;
       event.BGOnohitt[it]=0;
-      if((dirz>0 && pow(Pos_CFT.x()+(dirx/dirz)*190,2)+pow(Pos_CFT.y()+(diry/dirz)*190,2)<10000.0) ||(dirz<0 &&pow(Pos_CFT.x()+(dirx/dirz)*-210,2)+pow(Pos_CFT.y()+(diry/dirz)*-210,2)<10000.0)){
+      if((dirz>0 && pow(Pos_CFT.x()+(dirx/dirz)*275,2)+pow(Pos_CFT.y()+(diry/dirz)*275,2)<10000.0) ||(dirz<0 &&pow(Pos_CFT.x()+(dirx/dirz)*-125,2)+pow(Pos_CFT.y()+(diry/dirz)*-125,2)<10000.0)){
 	event.BGOnohitt[it]=1;
       }
-      if(event.BGOnohitt[it]==0 && event.Total_dEphi_max[it]*sin(event.theta_cft[it]*3.14/180)/event.nhit_phi[it]+event.Total_dEuv_max[it]/event.nhit_uv[it]>0.60){
+      if(event.BGOnohitt[it]==0 && event.Total_dEphi_max[it]*sin(event.theta_cft[it]*3.14/180)/event.nhit_phi[it]+event.Total_dEuv_max[it]/event.nhit_uv[it]>0.50){
 	event.protonflagt[it]=1;//stop in CFT
       }
     }
 
     //CATCH PID
     if(event.energyBGOt[it]>0){
-      if(event.Total_dEphi_max[it]*sin(event.theta_cft[it]*3.14/180)/event.nhit_phi[it]+event.Total_dEuv_max[it]/event.nhit_uv[it]>catchpidcurve(CatchPIDparam1,CatchPIDparam2,event.energyBGOt[it])){
+      if((event.Total_dEphi_max[it]*sin(event.theta_cft[it]*3.14/180)/event.nhit_phi[it]+event.Total_dEuv_max[it]/event.nhit_uv[it]>catchpidcurve(CatchPIDparam1,CatchPIDparam2,event.energyBGOt[it])) || (event.Total_dEphi_max[it]*sin(event.theta_cft[it]*3.14/180)/event.nhit_phi[it]+event.Total_dEuv_max[it]/event.nhit_uv[it]>0.5)){
 	event.protonflagt[it]=1;
       }
+    }
+
+    if(event.protonflagt[it]==1 && event.theta_cft[it]>64 && event.energyBGOt[it]<-9.0*event.theta_cft[it]+702+30 && event.energyBGOt[it]>-9.0*event.theta_cft[it]+702-30){
+      event.pipelasticflag[it]=1;
     }
 
   }
@@ -1368,6 +1412,8 @@ dst::DstRead( int ievent )
 
 
   ////////// pi
+  double dp=9999.;
+  int noofpriority=0;
   for( int itK18=0; itK18<ntK18; ++itK18 ){
     int nh = src.nhK18[itK18];
     double chisqr = src.chisqrK18[itK18];
@@ -1384,6 +1430,10 @@ dst::DstRead( int ievent )
     event.ytgtK18[itK18]   = y;
     event.utgtK18[itK18]   = u;
     event.vtgtK18[itK18]   = v;
+    if(fabs(event.pK18[itK18]-1.4175)<dp){
+      dp=fabs(event.pK18[itK18]-1.4175);
+      noofpriority=itK18;
+    }
     // double loss_bh2 = 1.09392e-3;
     // p = p - loss_bh2;
     double pt=p/std::sqrt(1.+u*u+v*v);
@@ -1396,6 +1446,7 @@ dst::DstRead( int ievent )
 
     PiPCont.push_back(Mom); PiXCont.push_back(Pos);
   }
+  event.priority_K18[noofpriority]=1;
 
   //MissingMass and combination
   int nK  = KPCont.size();
@@ -1435,6 +1486,11 @@ dst::DstRead( int ievent )
 	ThreeVector vertex_kurama = Kinematics::VertexPoint( xpi, xkp, ppi, pkp );
 	// std::cout << "vertex : " << vert << " " << vert.Mag() << std::endl;
 	double cdist_kurama = Kinematics::closeDist( xpi, xkp, ppi, pkp );
+
+	if(pow(vertex_kurama.x(),2)+pow(vertex_kurama.y(),2)<900 && -300<vertex_kurama.z() && vertex_kurama.z()<200 && event.priority_K18[ipi]==1){
+	//if(event.priority_K18[ipi]==1){
+	  event.priority_K18pik[npik]=1;
+	}
 
 	ThreeVector diffvtx=vertex_kurama-vertex_k18catch;
 
@@ -1481,6 +1537,7 @@ dst::DstRead( int ievent )
 	double MisMassPiP    = LvPiP.Mag();
 
 	ThreeVector MisMom =LvRc.Vect();
+	//ThreeVector MisMom =LvRcCorr.Vect();
 
 	ThreeVector vertex_Xcatch =Kinematics::VertexPoint( vertex_kurama, xcatch, MisMom, dcatch);
 	double cdist_Xcatch =Kinematics::closeDist(vertex_kurama, xcatch, MisMom,dcatch);
@@ -1571,6 +1628,7 @@ dst::DstRead( int ievent )
 	  event.vk[npik] = vs;
 	  if(pow(uc-us,2)+pow(vc-vs,2)<0.01){
 	    event.simKuramat[icatch]=1;
+	    event.simKuramapartner[icatch]=ikp;
 	  }
 
 	  event.xpi[npik] = xpi.x();
@@ -1589,7 +1647,7 @@ dst::DstRead( int ievent )
 	  event.closedist_XCatch[npik] =cdist_Xcatch;
 	  event.theta_XCatch[npik] =theta_Xcatch;
 	  
-	  if(chisqrKurama<50 && m2 <0.35 && 0.15 <m2 && pk0<1.0 && 0.8<pk0 && qKurama>0 && KaonMom>0){
+	  if(chisqrKurama<50 && m2 <0.40 && 0.15 <m2 && pk0<1.1 && 0.7<pk0 && qKurama>0 && KaonMom>0){
 	  event.KURAMAPID[npik] = 1; //sigma
 	  event.MissMomxcal[npik] = ppi.x() - pkp.x()*KaonMom/pk0;
 	  event.MissMomycal[npik] = ppi.y() - pkp.y()*KaonMom/pk0;
@@ -1633,7 +1691,18 @@ dst::DstRead( int ievent )
   }
 
   for( int it=0; it<ntCFT; ++it){
-    if(event.simKuramat[it]==1) continue;
+    if(event.simKuramat[it]==1){
+      /*
+      for(int icatch=0;icatch<event.nCatch;icatch++){
+	for(int ipi=0;ipi<event.nPi;ipi++){
+	  event.vtx_KURAMA[icatch*event.nPiK+ipi*event.nK+event.simKuramapartner[it]]=event.vtx_K18Catch[it*event.nPiK+ipi*event.nK+event.simKuramapartner[it]];
+	  event.vty_KURAMA[icatch*event.nPiK+ipi*event.nK+event.simKuramapartner[it]]=event.vty_K18Catch[it*event.nPiK+ipi*event.nK+event.simKuramapartner[it]];
+	  event.vtz_KURAMA[icatch*event.nPiK+ipi*event.nK+event.simKuramapartner[it]]=event.vtz_K18Catch[it*event.nPiK+ipi*event.nK+event.simKuramapartner[it]];
+	}
+      }
+      */
+      continue;
+    }
     if(event.protonflagt[it]==1 && event.segPiIDt[it]<0){
       event.tracknoproton[event.ntProton]=it;
       event.ntProton+=1;
@@ -1643,6 +1712,19 @@ dst::DstRead( int ievent )
 	event.tracknoother[event.ntOther]=it;
 	event.ntOther+=1;
       }
+    }
+  }
+
+  //cdistCFT_pip
+  int ppi=0;
+  for(int ip=0;ip<event.ntProton;ip++){
+    ThreeVector Pos_P(event.PosT0_x[event.tracknoproton[ip]],event.PosT0_y[event.tracknoproton[ip]],event.PosT0_z[event.tracknoproton[ip]]);
+    ThreeVector Dir_P(event.Dir_x[event.tracknoproton[ip]],event.Dir_y[event.tracknoproton[ip]],event.Dir_z[event.tracknoproton[ip]]);
+    for(int ipi=0;ipi<event.ntOther;ipi++){
+      ThreeVector Pos_Pi(event.PosT0_x[event.tracknoother[ipi]],event.PosT0_y[event.tracknoother[ipi]],event.PosT0_z[event.tracknoother[ipi]]);
+      ThreeVector Dir_Pi(event.Dir_x[event.tracknoother[ipi]],event.Dir_y[event.tracknoother[ipi]],event.Dir_z[event.tracknoother[ipi]]);      
+      event.cdist_CFTpip[ppi] =Kinematics::closeDist(Pos_P, Pos_Pi, Dir_P,Dir_Pi);
+      ppi++;
     }
   }
 
@@ -1726,7 +1808,7 @@ dst::DstRead( int ievent )
 	      if(VertNPScat.z()-VertSigmaDecay.z()<-10) priority++;
 	      //if(priority>event.priority_NPScat) continue;
 
-	      if( pow(DeltaE,2)<pow(event.DeltaE_NPScat,2)){
+	      if( pow(DeltaE+10,2)<pow(event.DeltaE_NPScat+10,2)){
 		event.DeltaE_NPScat =DeltaE;
 		event.ProtonMom_NPScat =ScatPpcor;
 		event.DecayNeutronMom =DecayNeutronMom.Mag();
@@ -1810,10 +1892,10 @@ dst::DstRead( int ievent )
 	DeltaE1 =(DecayPEtotcor-ProtonMass)*1000-DecayPEkincal1;
 	DeltaE2 =(DecayPEtotcor-ProtonMass)*1000-DecayPEkincal2;
 
-	if(pow(DeltaE1,2)<=pow(DeltaE2,2)){
+	if(pow(DeltaE1+7.75,2)<=pow(DeltaE2+7.75,2)){
 	  DeltaE=DeltaE1;
 	}
-	if(pow(DeltaE2,2)<pow(DeltaE1,2)){
+	if(pow(DeltaE2+7.75,2)<pow(DeltaE1+7.75,2)){
 	  DeltaE=DeltaE2;
 	}
 
@@ -1826,7 +1908,7 @@ dst::DstRead( int ievent )
 	if(VertSigmaDecay.z()-event.vtz_KURAMA[ipik]<-10) priority++;
 	//if(priority>event.priority_DecayP) continue;
 
-	if( pow(DeltaE,2)<pow(event.DeltaE_DecayP,2)){
+	if( pow(DeltaE+7.75,2)<pow(event.DeltaE_DecayP+7.75,2)){
 	  event.DeltaE_DecayP =DeltaE;
 	  event.ProtonMom_DecayP=DecayPEtotcor;
 	  event.MissMassSigmaP_DecayP=LvSigmaP.Mag2();
@@ -1880,9 +1962,51 @@ dst::DstRead( int ievent )
 	  ThreeVector SigmaPos(event.vtx_KURAMA[tracknopi*event.nPiK +ipik],event.vty_KURAMA[tracknopi*event.nPiK +ipik], event.vtz_KURAMA[tracknopi*event.nPiK +ipik]);
 	  //ThreeVector SigmaMom(event.MissMomx[tracknopi*event.nPiK +ipik], event.MissMomy[tracknopi*event.nPiK +ipik], event.MissMomz[tracknopi*event.nPiK +ipik]);//momentum measured w/KURAMA
 	  ThreeVector SigmaMom(event.MissMomxcal[tracknopi*event.nPiK +ipik], event.MissMomycal[tracknopi*event.nPiK +ipik], event.MissMomzcal[tracknopi*event.nPiK +ipik]);//momentum calculated w/KURAMA angle
+
+	    {//matsuda method for deltap (for Decay pion)
+	      double scatpimom1_M, scatpimom2_M;
+	      ThreeVector PiScatMom1_M, PiScatMom2_M, PiDecayMom_M;
+	      double costPiDecay_M, PiDecayMomCalfromSigma_M;
+	      double DeltaP_M=-999.;
+	      double DeltaP1_M=-999.;
+	      double DeltaP2_M=-999.;
+	      bool flagscatpimomcalc=calcScatMomFrom2BodyKinema(PionMass, ProtonMass, thetaPiPScat, ScatPpcor, &scatpimom1_M, &scatpimom2_M);
+	      if(flagscatpimomcalc){
+		if(scatpimom1_M>0){
+		  PiScatMom1_M=PiScatDir*(scatpimom1_M/PiScatDir.Mag());
+		  PiDecayMom_M=PiScatMom1_M + PScatDir*(ScatPpcor/PScatDir.Mag());
+		  costPiDecay_M = PiDecayMom_M*SigmaMom/(PiDecayMom_M.Mag()*SigmaMom.Mag());
+		  bool flagPiMomCalc_M1 =calcDecayPiMom(SigmaMom.Mag(), SigmaPMass, NeutronMass, PionMass, costPiDecay_M, &PiDecayMomCalfromSigma_M);
+		  if(flagPiMomCalc_M1){
+		    DeltaP1_M=scatpimom1_M-PiDecayMomCalfromSigma_M;
+		  }
+		}
+		if(scatpimom2_M>0){
+		  PiScatMom2_M=PiScatDir*(scatpimom2_M/PiScatDir.Mag());
+		  PiDecayMom_M=PiScatMom2_M+PScatDir*(ScatPpcor/PScatDir.Mag());
+		  costPiDecay_M = PiDecayMom_M*SigmaMom/(PiDecayMom_M.Mag()*SigmaMom.Mag());
+		  bool flagPiMomCalc_M2 =calcDecayPiMom(SigmaMom.Mag(), SigmaPMass, NeutronMass, PionMass, costPiDecay_M, &PiDecayMomCalfromSigma_M);
+	    
+		  if(flagPiMomCalc_M2){
+		    DeltaP2_M=scatpimom2_M-PiDecayMomCalfromSigma_M;
+		  }
+		}
+		if(fabs(DeltaP1_M+0.1)<=fabs(DeltaP2_M+0.1)) DeltaP_M=DeltaP1_M;
+		if(fabs(DeltaP2_M+0.1)<fabs(DeltaP1_M+0.1)) DeltaP_M=DeltaP2_M;
+
+		if(fabs(DeltaP_M+0.1)<fabs(event.DeltaPD_PiPScatM+0.1)){
+		  event.DeltaPD_PiPScatM=DeltaP_M;
+		}
+	      }
+	    }
+
 	  double DeltaP1min=-999.0;
+	  double theta1min=-999.0;
 	  double DeltaP2min=-999.0;
-	  for(double theta=0.; theta<=thetaPiPScat;theta+=0.1){//theta and deltap search end
+	  double theta2min=-999.0;
+	  double pidecaymom1=-999.0;
+	  double pidecaymom2=-999.0;
+	  for(double theta=0.; theta<=thetaPiPScat;theta+=0.5){//theta and deltap search end
 	    ThreeVector PiDecayMom = PScatDir;
 	    PiDecayMom.Rotate(theta*math::Deg2Rad(), NormalVector*(1/NormalVector.Mag()));
 
@@ -1927,16 +2051,33 @@ dst::DstRead( int ievent )
 	    if(PiDecayMomCal2>0) DeltaP2=PiDecayMomCal2-piMomcor;
 	    */
 
+
+	    if(pow(DeltaP1,2)<pow(DeltaP1min,2)){
+	      DeltaP1min =DeltaP1;
+	      theta1min=theta;
+	      pidecaymom1=PiDecayMomCal1;
+	    }
+
+	    if(pow(DeltaP2,2)<pow(DeltaP2min,2)){
+	      DeltaP2min =DeltaP2;
+	      theta2min=theta;
+	      pidecaymom2=PiDecayMomCal2;
+	    }
+
+	  }//theta and deltaP search end
+
 	    double DeltaP=-999.;
 	    double DeltaP1Scat=-999;
 	    double DeltaP2Scat=-999;
+	    double DeltaPD=-999.;
 	    double PiDecayMomCalc;
 	    double ScatPiMomCal1, ScatPiMomCal2;
 	    double ScatPiMomCalFromE1, ScatPiMomCalFromE2;
-	    if(pow(DeltaP1,2)<pow(DeltaP1min,2)){
-	      DeltaP1min =DeltaP1;
-	      double thetaPiScat = thetaPiPScat-theta;
+
+	  if(theta1min>=0){
+	      double thetaPiScat = thetaPiPScat-theta1min;
 	      double mom1, mom2, thetaPiCM;
+	      double PiDecayMomCal1 =pidecaymom1;
 	      bool flagPiScatcalc= calc2BodyInelastic(PionMass, PiDecayMomCal1,ProtonMass,PionMass, ProtonMass, thetaPiScat, &mom1, &mom2, &thetaPiCM);
 	      
 	      double E1 =sqrt(PiDecayMomCal1*PiDecayMomCal1+PionMass*PionMass);
@@ -1945,12 +2086,12 @@ dst::DstRead( int ievent )
 	      ScatPiMomCalFromE1 =sqrt(EScatPi*EScatPi-PionMass*PionMass);
 	      ScatPiMomCal1 =mom1;
 	      DeltaP1Scat=ScatPiMomCalFromE1-ScatPiMomCal1;
-
 	    }
-	    if(pow(DeltaP2,2)<pow(DeltaP2min,2)){
-	      DeltaP2min =DeltaP2;
-	      double thetaPiScat = thetaPiPScat-theta;
+	    
+	  if(theta2min>=0){
+	      double thetaPiScat = thetaPiPScat-theta2min;
 	      double mom1, mom2, thetaPiCM;
+	      double PiDecayMomCal2 =pidecaymom2;
 	      bool flagPiScatcalc= calc2BodyInelastic(PionMass, PiDecayMomCal2,ProtonMass,PionMass, ProtonMass, thetaPiScat, &mom1, &mom2, &thetaPiCM);
 	      
 	      double E1 =sqrt(PiDecayMomCal2*PiDecayMomCal2+PionMass*PionMass);
@@ -1960,15 +2101,28 @@ dst::DstRead( int ievent )
 	      ScatPiMomCal2 =mom1;
 	      DeltaP2Scat=ScatPiMomCalFromE2-ScatPiMomCal2;
 
-	    }
+	    }	    
 	    
-	    if(pow(DeltaP1Scat,2)<=pow(DeltaP2Scat,2)){
+	  ThreeVector PiDecayMom(-999.,-999.,-999.);
+	  ThreeVector VertDecay2pip(-999.,-999.,-999.);
+	  double cdistDecay2pip=-999.;
+
+	    if(pow(DeltaP1Scat-0.005,2)<=pow(DeltaP2Scat-0.005,2)){
 	      DeltaP=DeltaP1Scat;
-	      PiDecayMomCalc=PiDecayMomCal1;
+	      DeltaPD=DeltaP1min;
+	      PiDecayMomCalc=pidecaymom1;
+	      PiDecayMom = PScatDir;
+	      PiDecayMom.Rotate(theta1min*math::Deg2Rad(), NormalVector*(1/NormalVector.Mag()));
+	      VertDecay2pip =Kinematics::VertexPoint3D(VertPiPScat, SigmaPos, PiDecayMom, SigmaMom, cdistDecay2pip);
 	    }
-	    if(pow(DeltaP1Scat,2)>pow(DeltaP2Scat,2)){
+	    if(pow(DeltaP1Scat-0.005,2)>pow(DeltaP2Scat-0.005,2)){
 	      DeltaP=DeltaP2Scat;
-	      PiDecayMomCalc=PiDecayMomCal2;
+	      DeltaPD=DeltaP2min;
+	      PiDecayMomCalc=pidecaymom2;
+	      PiDecayMom = PScatDir;
+	      PiDecayMom.Rotate(theta2min*math::Deg2Rad(), NormalVector*(1/NormalVector.Mag()));
+	      cdistDecay2pip;
+	      VertDecay2pip =Kinematics::VertexPoint3D(VertPiPScat, SigmaPos, PiDecayMom, SigmaMom, cdistDecay2pip);
 	    }	    
 
 	    PiDecayMom =PiDecayMom*(PiDecayMomCalc/PiDecayMom.Mag());
@@ -1981,8 +2135,9 @@ dst::DstRead( int ievent )
 	    if(VertPiPScat.z()-VertDecay2pip.z()<-10) priority++;
 	    //if(priority>event.priority_PiPScat) continue;
 
-	    if(pow(DeltaP,2)<pow(event.DeltaP_PiPScat,2)){
+	    if(pow(DeltaP-0.005,2)<pow(event.DeltaP_PiPScat-0.005,2)){
 	      event.DeltaP_PiPScat =DeltaP;
+	      event.DeltaPD_PiPScat =DeltaPD;
 	      event.DecayNeutronMom2 = NeutronMom.Mag();
 	      event.DecayPionMom2 =PiDecayMom.Mag();
 	      event.vtx_Decay2pip =VertDecay2pip.x();
@@ -1998,8 +2153,10 @@ dst::DstRead( int ievent )
 	      event.pitrno_PiPScat =tracknopi;
 	      event.priority_PiPScat =priority;
 	    }
+	    
+
+	    
 	  
-	  }//theta and deltaP search end
 	}//reaction analysis end
       }// proton loop end
     }//pion loop end
@@ -2023,7 +2180,7 @@ dst::DstRead( int ievent )
 	ThreeVector PScat2PosT0(event.PosT0_x[tracknop2], event.PosT0_y[tracknop2], event.PosT0_z[tracknop2]);
 	ThreeVector PScat2Dir(event.Dir_x[tracknop2], event.Dir_y[tracknop2], event.Dir_z[tracknop2]);
 	double PScat2Ekin =event.Total_dE[tracknop2]+event.energyBGOt[tracknop2];
-	double PScat2Mom =sqrt(PScat1Ekin*PScat1Ekin+2*PScat1Ekin*ProtonMass*1000.)/1000.;
+	double PScat2Mom =sqrt(PScat2Ekin*PScat2Ekin+2*PScat2Ekin*ProtonMass*1000.)/1000.;
 
 
 	double cdistPPScat;
@@ -2091,8 +2248,8 @@ dst::DstRead( int ievent )
 	  }
 
 	  double DeltaP =-999.;
-	  if(pow(DeltaP1,2)<=pow(DeltaP2,2)) DeltaP=DeltaP1;
-	  if(pow(DeltaP2,2)<pow(DeltaP1,2)) DeltaP=DeltaP2;
+	  if(pow(DeltaP1+0.045,2)<=pow(DeltaP2+0.045,2)) DeltaP=DeltaP1;
+	  if(pow(DeltaP2+0.045,2)<pow(DeltaP1+0.045,2)) DeltaP=DeltaP2;
 
 	  int priority =0;
 	  if(cdistSigmaDecay2pp>20) priority++;
@@ -2102,7 +2259,7 @@ dst::DstRead( int ievent )
 	  //if(priority>event.priority_PPScat) continue;
 
 
-	  if(pow(DeltaP,2)<pow(event.DeltaP_PPScat,2)){
+	  if(pow(DeltaP+0.045,2)<pow(event.DeltaP_PPScat+0.045,2)){
 	    event.DeltaP_PPScat =DeltaP;
 	    event.theta_PPScat =thetaPPScat;
 	    event.vtx_Decay2pp =VertSigmaDecay2pp.x();
@@ -2151,6 +2308,8 @@ dst::DstRead( int ievent )
 	  int LH2Tag=0;
 	  caldE(SigmaMom.Mag(), SigmaPMass, SigmaLength.Mag(), &SigmaMomcor, &SigmaEcor, LH2Tag);
 	  //SigmaMom=SigmaMom*(SigmaMomcor/SigmaMom.Mag());
+	  double dcostheta_SigmaL=SigmaMom*SigmaLength/SigmaMom.Mag();
+	  double costheta_SigmaL=dcostheta_SigmaL/SigmaLength.Mag();
 	  
 	  if(thetaSigmaPScat>0. && thetaSigmaPScat<90.){
 	    double ScatPMomCal;
@@ -2182,7 +2341,7 @@ dst::DstRead( int ievent )
 	    //double DeltaE=ScatPEkinMeas-1000*ScatPEkinCal; //w/o proton energy correction
 	    double DeltaE=((ScatPEtotcor-ProtonMass)-ScatPEkinCal)*1000.0; //w/ proton energy correction
 	    double MisMassSigmaP1=LvSigmaP1.Mag2();
-	    if(pow(DeltaE,2)<pow(event.DeltaE_SigmaPScat,2)){
+	    if(pow(DeltaE+10,2)<pow(event.DeltaE_SigmaPScat+10,2)){
 	      event.DeltaE_SigmaPScat = DeltaE;
 	      event.MissMassSigmaP_SigmaPScat=MisMassSigmaP1;
 	      event.vtx_SigmaPScat=VertSigmaPScat.x();
@@ -2193,7 +2352,7 @@ dst::DstRead( int ievent )
 	      event.ptrno_SigmaPScat=tracknop;
 	    }
 	    
-	    if(event.ntOther>0){//npi+ Decay mode
+	    if(event.ntOther>0 && event.ntProton==1){//npi+ Decay mode
 	      for(int ipi=0;ipi<event.ntOther;ipi++){//pion loop
 		int tracknopi =event.tracknoother[ipi];
 		if(event.simKuramat[tracknopi]==1) continue;
@@ -2202,6 +2361,8 @@ dst::DstRead( int ievent )
 		double cdistScatSigmaDecay2npi;
 		ThreeVector VertScatSigmaDecay2npi =Kinematics::VertexPoint3D(VertSigmaPScat, PiDecayPosT0, SigmaScatMomCal, PiDecayDir, cdistScatSigmaDecay2npi);
 		ThreeVector VertDiff2npi=VertScatSigmaDecay2npi-VertSigmaPScat;
+		double dcostheta_SigmaL2=SigmaScatMomCal*VertDiff2npi/SigmaScatMomCal.Mag();
+		double costheta_SigmaL2=dcostheta_SigmaL2/VertDiff2npi.Mag();
 
 		double costDecayPi=SigmaScatMomCal*PiDecayDir/(SigmaScatMomCal.Mag()*PiDecayDir.Mag());
 		double thetaDecayPi=std::acos(costDecayPi)*math::Rad2Deg();
@@ -2210,6 +2371,10 @@ dst::DstRead( int ievent )
 		bool flagDecayCal = calcDecayPiMom(SigmaScatMomCal.Mag(), SigmaPMass, NeutronMass, PionMass, costDecayPi, &decayPiMomCal);
 		if(!flagDecayCal) continue;
 
+		double decayPiEkinCal =1000*(sqrt(decayPiMomCal*decayPiMomCal+PionMass*PionMass)-PionMass);
+		
+		double DeltaE2=event.Total_dE[tracknopi]+event.energyBGOt[tracknopi]-decayPiEkinCal;
+
 		int priority =0;
 		if(cdistSigmaPScat>20) priority++;
 		if(cdistScatSigmaDecay2npi>20) priority++;
@@ -2217,8 +2382,9 @@ dst::DstRead( int ievent )
 		if(VertScatSigmaDecay2npi.z()-VertSigmaPScat.z()<-10) priority++;
 		if(priority>event.priority_SigmaPScat2npi) continue;
 
-		if(pow(DeltaE,2)<pow(event.DeltaE_SigmaPScat2npi,2)){
+		if(pow(DeltaE+10.0,2)<pow(event.DeltaE_SigmaPScat2npi+10.0,2)){
 		  event.DeltaE_SigmaPScat2npi =DeltaE;
+		  event.DeltaE2_SigmaPScat2npi =DeltaE2;
 		  event.ProtonMom_SigmaPScat2npi =ScatPpcor;
 		  event.MissMassSigmaP_SigmaPScat2npi=MisMassSigmaP1;
 		  event.vtx_ScatSigmaDecay2npi=VertScatSigmaDecay2npi.x();
@@ -2228,6 +2394,10 @@ dst::DstRead( int ievent )
 		  event.vdistance_SigmaPScat2npi=VertDiff2npi.Mag();
 		  event.theta_SigmaPScat2npi=thetaSigmaPScat;
 		  event.thetaCM_SigmaPScat2npi=thetaSigmaPScatCM;
+		  event.dcostheta_SigmaL_SigmaPScat2npi=dcostheta_SigmaL;
+		  event.costheta_SigmaL_SigmaPScat2npi=costheta_SigmaL;
+		  event.dcostheta_SigmaL2_SigmaPScat2npi=dcostheta_SigmaL2;
+		  event.costheta_SigmaL2_SigmaPScat2npi=costheta_SigmaL2;
 		  event.pikno_SigmaPScat2npi=ipik;
 		  event.ptrno_SigmaPScat2npi=tracknop;
 		  event.pitrno_SigmaPScat2npi=tracknopi;
@@ -2292,8 +2462,8 @@ dst::DstRead( int ievent )
 		  DeltaE2_2=((DecayPEtotcor-ProtonMass)-(sqrt(ProtonMass*ProtonMass+momCalDecayP2*momCalDecayP2)-ProtonMass))*1000.0; //w/ proton dE correction
 		}
 		double DeltaE2 =-999.;
-		if(pow(DeltaE2_1,2)<=pow(DeltaE2_2,2)) DeltaE2=DeltaE2_1;
-		if(pow(DeltaE2_2,2)<pow(DeltaE2_1,2)) DeltaE2=DeltaE2_2;
+		if(pow(DeltaE2_1+10,2)<=pow(DeltaE2_2+10,2)) DeltaE2=DeltaE2_1;
+		if(pow(DeltaE2_2+10,2)<pow(DeltaE2_1+10,2)) DeltaE2=DeltaE2_2;
 
 		int priority =0;
 		if(cdistSigmaPScat>20) priority++;
@@ -2302,7 +2472,9 @@ dst::DstRead( int ievent )
 		if(VertScatSigmaDecay2ppi.z()-VertSigmaPScat.z()<-10) priority++;
 		//if(priority>event.priority_SigmaPScat2ppi) continue;
 
-		if(pow(DeltaE,2)<pow(event.DeltaE_SigmaPScat2ppi,2)){
+		//if(DeltaE2>50) continue; //for deltaE2 cut
+
+		if(pow(DeltaE+10,2)<pow(event.DeltaE_SigmaPScat2ppi+10,2)){
 		  event.DeltaE_SigmaPScat2ppi =DeltaE;
 		  event.DeltaE2_SigmaPScat2ppi =DeltaE2;
 		  event.ProtonMom_SigmaPScat2ppi =ScatPpcor;
@@ -2331,6 +2503,105 @@ dst::DstRead( int ievent )
   }
 
   //end of SigmaP scattering assumption
+
+
+  //ppscattering calculation for SigmaP scattering
+  if(event.pikno_SigmaPScat2ppi>-1){
+    for(int ip=0; ip<event.ntProton;ip++){//proton loop
+      if(!(ip==event.ptrno_SigmaPScat2ppi || ip==event.p2trno_SigmaPScat2ppi)) continue;
+      int tracknop =event.tracknoproton[ip];
+    //int tracknop =event.ptrno_SigmaPScat2ppi;
+      ThreeVector PScat1PosT0(event.PosT0_x[tracknop], event.PosT0_y[tracknop], event.PosT0_z[tracknop]);
+      ThreeVector PScat1Dir(event.Dir_x[tracknop], event.Dir_y[tracknop], event.Dir_z[tracknop]);
+      double PScat1Ekin =event.Total_dE[tracknop]+event.energyBGOt[tracknop];
+      double PScat1Mom =sqrt(PScat1Ekin*PScat1Ekin+2*PScat1Ekin*ProtonMass*1000.)/1000.;
+
+      for(int ip2=0; ip2<event.ntProton;ip2++){//proton loop2
+      	if(ip2==ip ||!(ip2==event.ptrno_SigmaPScat2ppi || ip2==event.p2trno_SigmaPScat2ppi)) continue;
+	int tracknop2 =event.p2trno_SigmaPScat2ppi;
+	ThreeVector PScat2PosT0(event.PosT0_x[tracknop2], event.PosT0_y[tracknop2], event.PosT0_z[tracknop2]);
+	ThreeVector PScat2Dir(event.Dir_x[tracknop2], event.Dir_y[tracknop2], event.Dir_z[tracknop2]);
+	double PScat2Ekin =event.Total_dE[tracknop2]+event.energyBGOt[tracknop2];
+	double PScat2Mom =sqrt(PScat2Ekin*PScat2Ekin+2*PScat2Ekin*ProtonMass*1000.)/1000.;
+
+
+	double cdistPPScat;
+	ThreeVector VertPPScat =Kinematics::VertexPoint3D(PScat1PosT0, PScat2PosT0, PScat1Dir, PScat2Dir, cdistPPScat);
+	double costPPScat =PScat1Dir*PScat2Dir/(PScat1Dir.Mag()*PScat2Dir.Mag());
+	double thetaPPScat =std::acos(costPPScat)*math::Rad2Deg();
+
+	//proton energy correction
+	double PScat1Etotcor;
+	double PScat1pcor;
+	double PScat2Etotcor;
+	double PScat2pcor;
+	CorrElossOutWithCFRP(&PScat1pcor, &PScat1Etotcor, PScat1Mom, PROTON, PScat1Dir*(1.0/PScat1Dir.Mag()), VertPPScat, PScat1PosT0);
+	CorrElossOutWithCFRP(&PScat2pcor, &PScat2Etotcor, PScat2Mom, PROTON, PScat2Dir*(1.0/PScat2Dir.Mag()), VertPPScat, PScat2PosT0);
+
+	//ThreeVector PScat1MomV =PScat1Dir*(PScat1Mom/PScat1Dir.Mag()); //w/o dE correction proton1
+	//ThreeVector PScat2MomV =PScat2Dir*(PScat2Mom/PScat2Dir.Mag()); // w/o dE correction proton2
+
+	ThreeVector PScat1MomV =PScat1Dir*(PScat1pcor/PScat1Dir.Mag()); // w/ dE correction proton1
+	ThreeVector PScat2MomV =PScat2Dir*(PScat2pcor/PScat2Dir.Mag()); // w/ dE correction proton2
+
+	ThreeVector DecayPMom =PScat1MomV+PScat2MomV;
+	
+	//for(int ipik=0;ipik<event.nPiK;ipik++){//reaction analysis
+	//if(event.KURAMAPID[tracknop*event.nPiK+ipik]!=1) continue;
+	int ipik=event.pikno_SigmaPScat2ppi;
+	ThreeVector SigmaPos(event.vtx_KURAMA[tracknop*event.nPiK +ipik],event.vty_KURAMA[tracknop*event.nPiK +ipik], event.vtz_KURAMA[tracknop*event.nPiK +ipik]);
+	//ThreeVector SigmaMom(event.MissMomx[tracknop*event.nPiK +ipik], event.MissMomy[tracknop*event.nPiK +ipik], event.MissMomz[tracknop*event.nPiK +ipik]);//momentum measured w/KURAMA
+	ThreeVector SigmaMom(event.MissMomxcal[tracknop*event.nPiK +ipik], event.MissMomycal[tracknop*event.nPiK +ipik], event.MissMomzcal[tracknop*event.nPiK +ipik]);//momentum calculated w/KURAMA angle
+
+	double cdistSigmaDecay2pp;
+	ThreeVector VertSigmaDecay2pp=Kinematics::VertexPoint3D(SigmaPos, VertPPScat, SigmaMom, DecayPMom, cdistSigmaDecay2pp);
+	double costDecayP =SigmaMom*DecayPMom/(SigmaMom.Mag()*DecayPMom.Mag());
+	double thetaDecayP =std::acos(costDecayP)*math::Rad2Deg();
+    
+	//sigma energy correction
+	ThreeVector SigmaLength =VertSigmaDecay2pp -SigmaPos;
+	double SigmaMomcor, SigmaEcor;
+	int LH2Tag=0;
+    
+	caldE(SigmaMom.Mag(), SigmaPMass, SigmaLength.Mag(), &SigmaMomcor, &SigmaEcor, LH2Tag);
+
+	double momCalDecayP = -999.;
+	double momCalDecayP2 =-999.;
+	double thetaCMDecayPPi0 =-999.;
+	
+	bool flagDecay2pp =calc2BodyInelastic(SigmaPMass, SigmaMom.Mag(), 0, ProtonMass, PiZeroMass, thetaDecayP, &momCalDecayP, &momCalDecayP2, &thetaCMDecayPPi0); //w/o sigma dE correction
+	//bool flagDecay2pp =calc2BodyInelastic(SigmaPMass, SigmaMomcor, 0, ProtonMass, PiZeroMass, thetaDecayP, &momCalDecayP, &momCalDecayP2, &thetaCMDecayPPi0); //w/ sigma dE correction
+
+	//proton dE correction
+	ThreeVector DiffVert =VertPPScat -VertSigmaDecay2pp;
+	double DecayPMomcor, DecayPEcor;
+
+	if(!flagDecay2pp) continue;
+	double DeltaP1 =-999.;
+	double DeltaP2 =-999.;
+	if(momCalDecayP>0){
+	  caldE(momCalDecayP, ProtonMass, DiffVert.Mag(), &DecayPMomcor, &DecayPEcor, LH2Tag);
+	  DeltaP1 =DecayPMom.Mag()-momCalDecayP; //w/o proton correction
+	  //DeltaP1 =DecayPMom.Mag()-DecayPMomcor; //w/ proton dE correction
+	}
+	if(momCalDecayP2>0){
+	  caldE(momCalDecayP2, ProtonMass, DiffVert.Mag(), &DecayPMomcor, &DecayPEcor, LH2Tag);
+	  DeltaP2=DecayPMom.Mag()-momCalDecayP2; //w/o proton correction
+	  //DeltaP2 =DecayPMom.Mag()-DecayPMomcor; //w/ proton dE correction
+	}
+
+	double DeltaP =-999.;
+	if(pow(DeltaP1+0.045,2)<=pow(DeltaP2+0.045,2)) DeltaP=DeltaP1;
+	if(pow(DeltaP2+0.045,2)<pow(DeltaP1+0.045,2)) DeltaP=DeltaP2;
+    
+	if(pow(DeltaP+0.045,2)<pow(event.DeltaP_PPScatSP+0.045,2)){
+	  event.DeltaP_PPScatSP =DeltaP;
+	  event.theta_PPScatSP =thetaPPScat;
+	}
+      }
+    }
+  }
+  //end of sigma decay(ppi0) to pp scattering assumption
 
 
   HF1( 1, 10. );
@@ -2572,6 +2843,39 @@ bool calcBeamMomFrom2BodyKinema(double M1, double M2, double theta, double pScat
 
     *beamMomCal1 = p1;
     *beamMomCal2 = p2;
+    return true;
+  }
+
+  return false;
+}
+
+//_____________________________________________________________________
+
+bool calcScatMomFrom2BodyKinema(double M1, double M2, double theta, double pScat,
+				double *scatMomCal1, double *scatMomCal2)
+/*
+  M1 : pi mass
+  M2 : proton mass
+  theta : angle between proton and pion
+  pScat : scat proton momentum
+*/
+{
+  double p3 = pScat;
+  double E3 = sqrt(M2*M2+p3*p3);
+
+  double A = (M2-E3)*(M2-E3)-p3*p3*cos(theta*math::Deg2Rad())*cos(theta*math::Deg2Rad());
+  double B = -(E3*M2-M2*M2)*p3*cos(theta*math::Deg2Rad());
+  double C = (M2-E3)*(M2-E3)*M1*M1-(E3*M2-M2*M2)*(E3*M2-M2*M2);
+
+  double hanbetsu = B*B-A*C;
+  if (hanbetsu>=0) {
+    double p1 = (-B+sqrt(hanbetsu))/A;
+    double p2 = (-B-sqrt(hanbetsu))/A;
+
+    //std::cout << "p1 : " << p1 << ", p2 : " << p2 << std::endl;
+
+    *scatMomCal1 = p1;
+    *scatMomCal2 = p2;
     return true;
   }
 
@@ -2940,6 +3244,12 @@ ConfMan::InitializeHistograms( void )
   //  tree->Branch("vtx_cft",        event.vtx_cft,        "vtx_cft[ntCFT]/D");
   //  tree->Branch("vty_cft",        event.vty_cft,        "vty_cft[ntCFT]/D");
   //  tree->Branch("vtz_cft",        event.vtz_cft,        "vtz_cft[ntCFT]/D");
+  tree->Branch("PosT0_x",        event.PosT0_x,          "PosT0_x[ntCFT]/D");
+  tree->Branch("PosT0_y",        event.PosT0_y,          "PosT0_y[ntCFT]/D");
+  tree->Branch("PosT0_z",        event.PosT0_z,          "PosT0_z[ntCFT]/D");
+  tree->Branch("Dir_x",          event.Dir_x,          "Dir_x[ntCFT]/D");
+  tree->Branch("Dir_y",          event.Dir_y,          "Dir_y[ntCFT]/D");
+  tree->Branch("Dir_z",          event.Dir_z,          "Dir_z[ntCFT]/D");
   tree->Branch("Total_dE",       event.Total_dE,       "Total_dE[ntCFT]/D");
   tree->Branch("Total_dEphi",    event.Total_dEphi,    "Total_dEphi[ntCFT]/D");
   tree->Branch("Total_dEuv",     event.Total_dEuv,     "Total_dEuv[ntCFT]/D");
@@ -2951,11 +3261,16 @@ ConfMan::InitializeHistograms( void )
   tree->Branch("segBGOt" ,       event.segBGOt,        "segBGOt[ntCFT]/I");
   tree->Branch("energyBGOt",     event.energyBGOt,     "energyBGOt[ntCFT]/D");
   tree->Branch("segPiIDt",       event.segPiIDt,       "segPiIDt[ntCFT]/I");
+  tree->Branch("PiIDflagt", src.PiIDflagt, "PiIDflagt[ntCFT]/I");
   tree->Branch("protonflagt",     event.protonflagt,     "protonflagt[ntCFT]/I");
   tree->Branch("BGOnohitt",      event.BGOnohitt,      "BGOnohitt[ntCFT]/I");
   tree->Branch("simKuramat",      event.simKuramat,      "simKuramat[ntCFT]/I");
+  tree->Branch("pipelasticflag", event.pipelasticflag, "pipelasticflag[ntCFT]/I");
   tree->Branch("tracknoproton",       event.tracknoproton,       "tracknoproton[ntProton]/I");
   tree->Branch("tracknoother",       event.tracknoother,       "tracknoother[ntOther]/I");
+  tree->Branch("energyBGO",     src.energyBGO,     "energyBGO[24]/D");
+  tree->Branch("PiIDflag", src.PiIDflag, "PiIDflag[32]/I");
+  tree->Branch("cdist_CFTpip",     event.cdist_CFTpip,     "cdist_CFTpip[20]/D");
 
   //Reaction
   tree->Branch("nPi",           &event.nPi,            "nPi/I");
@@ -2970,6 +3285,7 @@ ConfMan::InitializeHistograms( void )
   tree->Branch("ccm2",                  event.ccm2,                  "ccm2[nPiK]/D");
   tree->Branch("chisqrKuramapik",       event.chisqrKuramapik,       "chisqrKuramapik[nPiK]/D");
   tree->Branch("pKuramapik"     ,       event.pKuramapik,            "pKuramapik[nPiK]/D");
+  tree->Branch("priority_K18pik",       event.priority_K18pik,       "priority_K18pik[nPiK]/I");
   tree->Branch("closedist_KURAMA",      event.closedist_KURAMA,      "closedist_KURAMA[nPiKCatch]/D");
   tree->Branch("theta",          event.theta,          "theta[nPiK]/D");
   tree->Branch("MissMass",       event.MissMass,       "MissMass[nPiK]/D");
@@ -2988,6 +3304,9 @@ ConfMan::InitializeHistograms( void )
   tree->Branch("MissMomy", event.MissMomy, "MissMomy[nPiKCatch]/D");
   tree->Branch("MissMomz", event.MissMomz, "MissMomz[nPiKCatch]/D");
   tree->Branch("MissMomcal", event.MissMomcal, "MissMomcal[nPiKCatch]/D");
+  tree->Branch("MissMomxcal", event.MissMomxcal, "MissMomxcal[nPiKCatch]/D");
+  tree->Branch("MissMomycal", event.MissMomycal, "MissMomycal[nPiKCatch]/D");
+  tree->Branch("MissMomzcal", event.MissMomzcal, "MissMomzcal[nPiKCatch]/D");
   tree->Branch("SigmaBeta", event.SigmaBeta, "SigmaBeta[nPiKCatch]/D");
 
   tree->Branch("xpi",        event.xpi,      "xpi[nPiKCatch]/D");
@@ -3005,9 +3324,9 @@ ConfMan::InitializeHistograms( void )
   tree->Branch("pCorr",      event.pCorr,     "pCorr[nPiKCatch]/D");
   tree->Branch("pCorrDE",    event.pCorrDE,   "pCorrDE[nPiKCatch]/D");
 
-  //  tree->Branch("vtx_K18Catch", event.vtx_K18Catch ,"vtx_K18Catch[nPiKCatch]/D");
-  //  tree->Branch("vty_K18Catch", event.vty_K18Catch ,"vty_K18Catch[nPiKCatch]/D");
-  //  tree->Branch("vtz_K18Catch", event.vtz_K18Catch ,"vtz_K18Catch[nPiKCatch]/D");
+  tree->Branch("vtx_K18Catch", event.vtx_K18Catch ,"vtx_K18Catch[nPiKCatch]/D");
+  tree->Branch("vty_K18Catch", event.vty_K18Catch ,"vty_K18Catch[nPiKCatch]/D");
+  tree->Branch("vtz_K18Catch", event.vtz_K18Catch ,"vtz_K18Catch[nPiKCatch]/D");
   //  tree->Branch("closedist_K18Catch", event.closedist_K18Catch, "closedist_K18Catch[nPiKCatch]/D");
   tree->Branch("theta_K18Catch", event.theta_K18Catch, "theta_K18Catch[nPiKCatch]/D");
   tree->Branch("vertex_distance", event.vertex_distance, "vertex_distance[nPiKCatch]/D");
@@ -3050,6 +3369,8 @@ ConfMan::InitializeHistograms( void )
   tree->Branch("priority_DecayP", &event.priority_DecayP , "priority_DecayP/I");
 
   tree->Branch("DeltaP_PiPScat", &event.DeltaP_PiPScat, "DeltaP_PiPScat/D");
+  tree->Branch("DeltaPD_PiPScat", &event.DeltaPD_PiPScat, "DeltaPD_PiPScat/D");
+  tree->Branch("DeltaPD_PiPScatM", &event.DeltaPD_PiPScatM, "DeltaPD_PiPScatM/D");
   tree->Branch("DecayNeutronMom2", &event.DecayNeutronMom2, "DecayNeutronMom2/D");
   tree->Branch("DecayPionMom2", &event.DecayPionMom2, "DecayPionMom2/D");
   tree->Branch("vtx_Decay2pip", &event.vtx_Decay2pip, "vtx_Decay2pip/D");
@@ -3090,6 +3411,7 @@ ConfMan::InitializeHistograms( void )
   tree->Branch("pikno_SigmaPScat",  &event.pikno_SigmaPScat , "pikno_SigmaPScat/I");
 
   tree->Branch("DeltaE_SigmaPScat2npi", &event.DeltaE_SigmaPScat2npi, "DeltaE_SigmaPScat2npi/D");
+  tree->Branch("DeltaE2_SigmaPScat2npi", &event.DeltaE2_SigmaPScat2npi, "DeltaE2_SigmaPScat2npi/D");
   tree->Branch("ProtonMom_SigmaPScat2npi", &event.ProtonMom_SigmaPScat2npi, "ProtonMom_SigmaPScat2npi/D");
   tree->Branch("MissMassSigmaP_SigmaPScat2npi", &event.MissMassSigmaP_SigmaPScat2npi, "MissMassSigmaP_SigmaPScat2npi/D");
   tree->Branch("vtx_ScatSigmaDecay2npi", &event.vtx_ScatSigmaDecay2npi, "vtx_ScatSigmaDecay2npi/D");
@@ -3099,6 +3421,10 @@ ConfMan::InitializeHistograms( void )
   tree->Branch("vdistance_SigmaPScat2npi", &event.vdistance_SigmaPScat2npi, "vdistance_SigmaPScat2npi/D");
   tree->Branch("theta_SigmaPScat2npi", &event.theta_SigmaPScat2npi, "theta_SigmaPScat2npi/D");
   tree->Branch("thetaCM_SigmaPScat2npi", &event.thetaCM_SigmaPScat2npi, "thetaCM_SigmaPScat2npi/D");
+  tree->Branch("dcostheta_SigmaL_SigmaPScat2npi", &event.dcostheta_SigmaL_SigmaPScat2npi, "dcostheta_SigmaL_SigmaPScat2npi/D");
+  tree->Branch("costheta_SigmaL_SigmaPScat2npi", &event.costheta_SigmaL_SigmaPScat2npi, "costheta_SigmaL_SigmaPScat2npi/D");
+  tree->Branch("dcostheta_SigmaL2_SigmaPScat2npi", &event.dcostheta_SigmaL2_SigmaPScat2npi, "dcostheta_SigmaL2_SigmaPScat2npi/D");
+  tree->Branch("costheta_SigmaL2_SigmaPScat2npi", &event.costheta_SigmaL2_SigmaPScat2npi, "costheta_SigmaL2_SigmaPScat2npi/D");
   tree->Branch("ptrno_SigmaPScat2npi",  &event.ptrno_SigmaPScat2npi , "ptrno_SigmaPScat2npi/I");
   tree->Branch("pitrno_SigmaPScat2npi",  &event.pitrno_SigmaPScat2npi , "pitrno_SigmaPScat2npi/I");
   tree->Branch("pikno_SigmaPScat2npi",  &event.pikno_SigmaPScat2npi , "pikno_SigmaPScat2npi/I");
@@ -3121,6 +3447,8 @@ ConfMan::InitializeHistograms( void )
   tree->Branch("p2trno_SigmaPScat2ppi",  &event.p2trno_SigmaPScat2ppi , "p2trno_SigmaPScat2ppi/I");
   tree->Branch("pikno_SigmaPScat2ppi",  &event.pikno_SigmaPScat2ppi , "pikno_SigmaPScat2ppi/I");
   tree->Branch("priority_SigmaPScat2ppi", &event.priority_SigmaPScat2ppi , "priority_SigmaPScat2ppi/I");
+  tree->Branch("DeltaP_PPScatSP", &event.DeltaP_PPScatSP, "DeltaP_PPScatSP/D");
+  tree->Branch("theta_PPScatSP", &event.theta_PPScatSP, "theta_PPScatSP/D");
 
   ////////// Bring Address From Dst
   TTreeCont[kHodoscope]->SetBranchStatus("*", 0);
@@ -3343,6 +3671,8 @@ ConfMan::InitializeHistograms( void )
   TTreeCont[kCFT]->SetBranchStatus("segBGOt",    1);
   TTreeCont[kCFT]->SetBranchStatus("energyBGO",    1);
   TTreeCont[kCFT]->SetBranchStatus("segPiIDt",    1);
+  TTreeCont[kCFT]->SetBranchStatus("PiIDflagt",    1);
+  TTreeCont[kCFT]->SetBranchStatus("PiIDflag",    1);
 
   TTreeCont[kCFT]->SetBranchAddress("ntCFT",       &src.ntCFT);
   TTreeCont[kCFT]->SetBranchAddress("theta",       &src.theta_cft);
@@ -3367,6 +3697,8 @@ ConfMan::InitializeHistograms( void )
   TTreeCont[kCFT]->SetBranchAddress("segBGOt",     &src.segBGOt);
   TTreeCont[kCFT]->SetBranchAddress("energyBGO",  &src.energyBGO);
   TTreeCont[kCFT]->SetBranchAddress("segPiIDt",    &src.segPiIDt);
+  TTreeCont[kCFT]->SetBranchAddress("PiIDflagt",    &src.PiIDflagt);
+  TTreeCont[kCFT]->SetBranchAddress("PiIDflag",    &src.PiIDflag);
 
 
   return true;
