@@ -124,7 +124,7 @@ namespace
 //const double p1_FBT = -1;
   //const double offsetCATCH = 180;
   const double offsetCATCH = 155;
-  const double offsetBGO   = 30; // offset from CFT
+  const double offsetBGO   = 61.5; // offset from CFT
 }
 
 //______________________________________________________________________________
@@ -395,12 +395,12 @@ bool EventDisplayDST::ConstructCATCH(void)
   m_CFT_zx2->SetFillStyle(0);
   m_CFT_zx2->SetLineWidth(1);
   m_CFT_zx2->Draw("same");
-  m_BGO_zx1 = new TBox(-125,-125,-125+400,-100);
+  m_BGO_zx1 = new TBox(-155+offsetBGO,-125,-155+offsetBGO+400,-100);
   m_BGO_zx1->SetLineColor(kGray+3);
   m_BGO_zx1->SetFillStyle(0);
   m_BGO_zx1->SetLineWidth(1);
   m_BGO_zx1->Draw("same");
-  m_BGO_zx2 = new TBox(-125,100,-125+400,125);
+  m_BGO_zx2 = new TBox(-155+offsetBGO,100,-155+offsetBGO+400,125);
   m_BGO_zx2->SetLineColor(kGray+3);  
   m_BGO_zx2->SetFillStyle(0);
   m_BGO_zx2->SetLineWidth(1);
@@ -426,12 +426,12 @@ bool EventDisplayDST::ConstructCATCH(void)
   m_CFT_zy2->SetLineWidth(1);
   m_CFT_zy2->Draw("same");
 
-  m_BGO_zy1 = new TBox(-125,-125,-125+400,-100);
+  m_BGO_zy1 = new TBox(-155+offsetBGO,-125,-155+offsetBGO+400,-100);
   m_BGO_zy1->SetLineColor(kGray+3);
   m_BGO_zy1->SetFillStyle(0);
   m_BGO_zy1->SetLineWidth(1);
   m_BGO_zy1->Draw("same");
-  m_BGO_zy2 = new TBox(-125,100,-125+400,125);
+  m_BGO_zy2 = new TBox(-155+offsetBGO,100,-155+offsetBGO+400,125);
   m_BGO_zy2->SetLineColor(kGray+3);  
   m_BGO_zy2->SetFillStyle(0);
   m_BGO_zy2->SetLineWidth(1);

@@ -69,7 +69,8 @@ namespace dst
   const double y_off = 0.000;
   const double u_off = 0.000;
   const double v_off = 0.000;
-  const double offsetCATCH =155;
+  const double offsetCATCH =155;//distance between CFT upstream edge and center of target
+  const double offsetBGO=61.5; //offset from CFT
 }
 
 //function for catchpid
@@ -1252,7 +1253,7 @@ dst::DstRead( int ievent )
     if(event.energyBGOt[it]<0){
       event.energyBGOt[it]=0.0;
       event.BGOnohitt[it]=0;
-      if((dirz>0 && pow(Pos_CFT.x()+(dirx/dirz)*275,2)+pow(Pos_CFT.y()+(diry/dirz)*275,2)<10000.0) ||(dirz<0 &&pow(Pos_CFT.x()+(dirx/dirz)*-125,2)+pow(Pos_CFT.y()+(diry/dirz)*-125,2)<10000.0)){
+      if((dirz>0 && pow(Pos_CFT.x()+(dirx/dirz)*(-offsetCATCH+400+offsetBGO),2)+pow(Pos_CFT.y()+(diry/dirz)*(-offsetCATCH+400+offsetBGO),2)<10000.0) ||(dirz<0 &&pow(Pos_CFT.x()+(dirx/dirz)*(-offsetCATCH+offsetBGO),2)+pow(Pos_CFT.y()+(diry/dirz)*(-offsetCATCH+offsetBGO),2)<10000.0)){
 	event.BGOnohitt[it]=1;
       }
       if(event.BGOnohitt[it]==0 && event.Total_dEphi_max[it]*sin(event.theta_cft[it]*3.14/180)/event.nhit_phi[it]+event.Total_dEuv_max[it]/event.nhit_uv[it]>0.50){
