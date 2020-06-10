@@ -1298,7 +1298,8 @@ class RunManager( metaclass = Singleton.Singleton ) :
                             + self.__tag + '.lst.'\
                             + datetime.datetime.now().strftime( '%Y%m%d%H%M%S' )
 
-        if len( self.__stageList ) > 100:
+        if ( len( self.__stageList ) > 100 and
+             len( self.__stageList ) < 10000 ):
             with open( self.__fStageList, 'w' ) as f :
                 for item in self.__stageList :
                     f.write( item + '\n' )
