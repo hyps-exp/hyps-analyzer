@@ -102,7 +102,7 @@ class BJob( object ) :
             sys.stderr.write( proc.stderr )
 
         buff = proc.stdout.splitlines()[1].decode().split()
-    
+
         status = None
         if int( buff[0] ) == self.__jid :
             if buff[2] ==   'PEND' :
@@ -137,7 +137,7 @@ class BJob( object ) :
     #__________________________________________________
     @staticmethod
     def readJobId( buff ) :
-    
+
         jid = None
         fl = True
 
@@ -150,7 +150,7 @@ class BJob( object ) :
 
         if fl is True :
             jid = int( words[1][1:-1] )
-    
+
         return jid
 
 
@@ -187,11 +187,11 @@ class AnalysisJob( object ) :
 
         # True: success, False: failure,
         # 0: process thrown, 1: process return and bsub running, 2: killed, -1: unknown
-        self.__status   = None 
+        self.__status   = None
 
         # True: success, False: failure, 0: processing, 1: killed, -1: unknown
         self.__statProc = None # UNIX process.
-        self.__statBjob = None # bsub process. 
+        self.__statBjob = None # bsub process.
 
 
     #__________________________________________________
@@ -408,11 +408,11 @@ class SingleRunManager( object ) :
 
         # None: initial
         # True: success,      False: failure,
-        #   10: unstaged,        11: staged, 
+        #   10: unstaged,        11: staged,
         #   20: bjob running,    21: bjob complete
-        #   30: merging,      
+        #   30: merging,
         #   99: killed,          -1: unknown
-        self.__status = None 
+        self.__status = None
 
         # true: staged, false: unstaged
         self.__statStage = None
@@ -663,7 +663,7 @@ class SingleRunManager( object ) :
             sys.stderr.write( proc.stderr )
 
         buff = proc.stdout.decode().split()[0]
-    
+
         if buff == 'G' or buff == 'B' :
             return True
         else :
@@ -968,7 +968,7 @@ class SingleRunManager( object ) :
             with open( path_conf, 'w' ) as f :
                 for option in config.options( 'dummy' ) :
                     f.write( option + ':\t' + config.get( 'dummy', option ) + '\n' )
-            
+
             self.__fConfList.append( path_conf )
             self.__fUnpackList.append( path_unpack )
 
@@ -1210,12 +1210,12 @@ class SingleRunManager( object ) :
             second = int( data )
         elif isinstance( data, int ) :
             second = int( data )
-    
+
         hour    = second // 3600
         second -= hour    * 3600
         minute  = second // 60
         second -= minute  * 60
-    
+
         return '{}:{:02d}:{:02d}'.format( hour, minute, second )
 
 
@@ -1298,9 +1298,10 @@ class RunManager( metaclass = Singleton.Singleton ) :
                             + self.__tag + '.lst.'\
                             + datetime.datetime.now().strftime( '%Y%m%d%H%M%S' )
 
-        with open( self.__fStageList, 'w' ) as f :
-            for item in self.__stageList :
-                f.write( item + '\n' )
+        if len( self.__stageList ) > 100:
+            with open( self.__fStageList, 'w' ) as f :
+                for item in self.__stageList :
+                    f.write( item + '\n' )
 
 
     #__________________________________________________
@@ -1345,7 +1346,7 @@ class RunManager( metaclass = Singleton.Singleton ) :
             self.__runSingleCycle()
             self.dumpStatus()
             dtime = RUN_PERIOD - ( time.time() - ptime )
-            if dtime > 0 : 
+            if dtime > 0 :
                 time.sleep( dtime )
             ptime = time.time()
 
