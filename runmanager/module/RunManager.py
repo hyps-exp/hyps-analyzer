@@ -28,6 +28,8 @@ import json
 import configparser
 import xml.etree.ElementTree
 
+import utility
+
 #____________________________________________________
 
 import Singleton
@@ -54,6 +56,8 @@ BSUB_RESPONCE = 'Job <JobID> is submitted to queue <queue>'
 #____________________________________________________
 
 HSTAGE_PATH = '/ghi/fs02/hstage/requests'
+HSTAGE_NMIN = 20
+HSTAGE_NMAX = 10000
 
 #____________________________________________________
 
@@ -598,7 +602,7 @@ class SingleRunManager( object ) :
             self.__status = 10
         elif self.__statStage is True : # staged
             self.__status = 11
-        elif self.__statStage is 1 : # killed
+        elif self.__statStage is -1 : # killed
             pass
         else :  # unknown
             self.__status = -1
@@ -638,7 +642,7 @@ class SingleRunManager( object ) :
     #__________________________________________________
     def __updateStagingStatus( self ) :
 
-        if not self.__statStage is True :
+        if self.__statStage is not True :
             if self.isStaged() :
                 self.__statStage = True
             else :
@@ -676,7 +680,7 @@ class SingleRunManager( object ) :
         if self.__statStage is True :
             return
 
-        if not self.__procStage is None :
+        if self.__procStage is not None :
             return
 
         cmd = 'od {}'.format( self.__fDataPath )
@@ -826,13 +830,13 @@ class SingleRunManager( object ) :
             return
 
         if self.__procStage.poll() is None :
-            pid = procStage.pid()
+            pid = self.__procStage.pid
             self.__procStage.kill()
             buff = 'Process was killed [pid: {}]'\
                    .format( pid )
             self.__dumpLog( 'killStage', buff )
             self.__dumpLog( None,  64 * '_' )
-            self.__statStage = 1
+            self.__statStage = -1
 
 
     #__________________________________________________
@@ -1247,7 +1251,6 @@ class RunManager( metaclass = Singleton.Singleton ) :
 
         self.__stageList  = list()
 
-
     #__________________________________________________
     def setRunlistManager( self, runlistman ) :
 
@@ -1298,8 +1301,11 @@ class RunManager( metaclass = Singleton.Singleton ) :
                             + self.__tag + '.lst.'\
                             + datetime.datetime.now().strftime( '%Y%m%d%H%M%S' )
 
-        if ( len( self.__stageList ) > 100 and
-             len( self.__stageList ) < 10000 ):
+        if len( self.__stageList ) > HSTAGE_NMAX:
+            self.__flReady = False
+            utility.ExitFailure('too much runlist!!!')
+            return
+        if len( self.__stageList ) > HSTAGE_NMIN:
             with open( self.__fStageList, 'w' ) as f :
                 for item in self.__stageList :
                     f.write( item + '\n' )
@@ -1314,8 +1320,8 @@ class RunManager( metaclass = Singleton.Singleton ) :
             if status is None :
                 pass
             elif status is 10 :
-                # runJob.accessDataStream()
-                pass
+                if len( self.__stageList ) <= HSTAGE_NMIN:
+                    runJob.accessDataStream()
             elif status is 11 :
                 runJob.execute()
             elif status is 20 :
