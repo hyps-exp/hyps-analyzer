@@ -683,7 +683,8 @@ class SingleRunManager( object ) :
         if self.__procStage is not None :
             return
 
-        cmd = 'od {}'.format( self.__fDataPath )
+        cmd = 'head {}'.format( self.__fDataPath )
+        print(cmd)
         try :
             self.__procStage = subprocess.Popen( shlex.split( cmd ),
                                                  stdout = subprocess.DEVNULL,
@@ -1306,6 +1307,7 @@ class RunManager( metaclass = Singleton.Singleton ) :
             utility.ExitFailure('too much runlist!!!')
             return
         if len( self.__stageList ) > HSTAGE_NMIN:
+            print('put {}'.format(self.__fStageList))
             with open( self.__fStageList, 'w' ) as f :
                 for item in self.__stageList :
                     f.write( item + '\n' )
