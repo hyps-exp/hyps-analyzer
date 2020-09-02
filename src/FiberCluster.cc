@@ -1,14 +1,12 @@
-/**
- *  file: FiberCluster.cc
- *  date: 2017.04.10
- *
- */
+// -*- C++ -*-
 
 #include "FiberCluster.hh"
 
 #include <cmath>
 #include <string>
 #include <limits>
+
+#include <TMath.h>
 
 #include <std_ostream.hh>
 
@@ -114,11 +112,11 @@ FiberCluster::calc( void )
   double max_dELow      = 0.;
 
   for( int i=0; i<m_cluster_size; ++i ){
-    if(reject_nan && isnan(m_hit_container.at(i)->GetWidth())){
+    if(reject_nan && TMath::IsNaN(m_hit_container.at(i)->GetWidth())){
       --m_cluster_size;
       continue;
     }
-    
+
     mean_seg       += m_hit_container.at(i)->SegmentId();
     mean_pos       += m_hit_container.at(i)->GetPosition();
     mean_r         += m_hit_container.at(i)->GetPositionR();
@@ -129,7 +127,7 @@ FiberCluster::calc( void )
     real_mean_time += m_hit_container.at(i)->GetCTime();
     double time = m_hit_container.at(i)->GetCTime();
 
-    if(isnan(mean_time)){
+    if(TMath::IsNaN(mean_time)){
       mean_time = time;
     }else if( std::abs(time) < std::abs(mean_time) ){
       mean_time = time;
@@ -137,24 +135,24 @@ FiberCluster::calc( void )
 
     if( max_width < m_hit_container.at(i)->GetWidth() ){
       max_width = m_hit_container.at(i)->GetWidth();
-    }    
+    }
     if( min_width > m_hit_container.at(i)->GetWidth() ){
       min_width = m_hit_container.at(i)->GetWidth();
     }
 
     if( max_adcLow <= m_hit_container.at(i)->GetAdcLow() ){
-      max_adcHi = m_hit_container.at(i)->GetAdcHi();       
-      max_adcLow = m_hit_container.at(i)->GetAdcLow();       
+      max_adcHi = m_hit_container.at(i)->GetAdcHi();
+      max_adcLow = m_hit_container.at(i)->GetAdcLow();
       max_seg = m_hit_container.at(i)->SegmentId();
       m_max_cluster_id = i;
       max_time = m_hit_container.at(i)->GetCTime();
     }
 
     if( max_mipLow <= m_hit_container.at(i)->GetMIPLow() )
-      max_mipLow = m_hit_container.at(i)->GetMIPLow();           
+      max_mipLow = m_hit_container.at(i)->GetMIPLow();
 
     if( max_dELow <= m_hit_container.at(i)->GetdELow() )
-      max_dELow = m_hit_container.at(i)->GetdELow();           
+      max_dELow = m_hit_container.at(i)->GetdELow();
 
     cluster_id  += m_hit_container.at(i)->PairId();
   }
