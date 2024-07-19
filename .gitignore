@@ -7,6 +7,7 @@
 *.pcm
 *.pyc
 *.swp
+*.pdf
 \#*
 Makefile
 bin
