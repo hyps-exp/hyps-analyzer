@@ -323,18 +323,18 @@ ProcessingNormal()
     for(Int_t plane=0; plane<NumOfLayersSdcIn; ++plane){
       Int_t layer = plane + 1;
       const auto& contIn =DCAna.GetSdcInHC(plane);
-      Int_t nhIn = contIn.size();
-      event.nhit[layer-1] = nhIn;
-      if(nhIn>0) event.nlayer++;
-      multi_SdcIn += Double_t(nhIn);
-      HF1(100*layer, nhIn);
+      Int_t nhIn = 0;
       Int_t plane_eff = (layer-1)*3;
       Bool_t is_valid = false;
-      for(Int_t i=0; i<nhIn; ++i){
+      for(Int_t i=0; i<contIn.size(); ++i){
 	const auto& hit=contIn[i];
 	Double_t wire=hit->GetWire();
 	Int_t nhtdc = hit->GetTdcSize();
-	if( nhtdc != 0 ) HF1(100*layer+1, wire+0.5);
+	if( nhtdc != 0 ){
+	  nhIn++;
+	  HF1(100*layer+1, wire+0.5);
+	}
+
 	Int_t tdc1st = -1;
 	for(Int_t k=0; k<nhtdc; k++){
 	  Int_t tdc = hit->GetTdcVal(k);
@@ -381,6 +381,10 @@ ProcessingNormal()
       }
       if(is_valid) ++plane_eff;
       HF1(38, plane_eff);
+      event.nhit[layer-1] = nhIn;
+      if(nhIn>0) event.nlayer++;
+      multi_SdcIn += Double_t(nhIn);
+      HF1(100*layer, nhIn);
     }
   }
 
