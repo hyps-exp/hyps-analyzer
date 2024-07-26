@@ -197,7 +197,7 @@ const Int_t NumOfLayersVP     = PlMaxVP     - PlMinVP     + 1;
 const Int_t MaxWireBC3      =  64;
 const Int_t MaxWireBC4      =  64;
 
-const Int_t MaxWireSDC0     =  114;
+const Int_t MaxWireSDC0     =  111;
 const Int_t MaxWireSDC1     =  48;
 const Int_t MaxWireSDC2     =  104;
 const Int_t MaxWireSDC3     =  104;
@@ -208,9 +208,10 @@ const Int_t MaxWireSDC5Y     =  104;
 // MaxDriftLength = CellSize/2
 const Double_t CellSizeBC3 = 3.0;
 const Double_t CellSizeBC4 = 3.0;
+const Double_t CellSizeSDC0 =  6.0;
 const Double_t CellSizeSDC1 =  6.0;
-const Double_t CellSizeSDC2 =  5.0;
-const Double_t CellSizeSDC3 =  9.0;
+const Double_t CellSizeSDC2 =  10.0;
+const Double_t CellSizeSDC3 =  10.0;
 const Double_t CellSizeSDC4 =  9.0;
 const Double_t CellSizeSDC5 =  9.0;
 

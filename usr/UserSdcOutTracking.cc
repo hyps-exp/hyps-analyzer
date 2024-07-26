@@ -21,8 +21,8 @@
 #include "RawData.hh"
 
 #define HodoCut     0
-#define TdcCut      1
-#define TotCut      1
+#define TdcCut      0
+#define TotCut      0
 #define Chi2Cut     0
 #define MaxMultiCut 0
 #define UseTOF      0 // use or not TOF for tracking
@@ -370,28 +370,27 @@ ProcessingNormal()
 #endif
   DCAna.DecodeSdcOutHits();
 #if TotCut
-  DCAna.TotCutSDC3(MinTotSDC3);
-  DCAna.TotCutSDC4(MinTotSDC4);
-  DCAna.TotCutSDC5(MinTotSDC5);
+  DCAna.TotCutSDC3(MinTotSDC2);
+  DCAna.TotCutSDC4(MinTotSDC3);
+  DCAna.TotCutSDC5(MinTotSDC4);
 #endif
   Double_t multi_SdcOut = 0.;
   for(Int_t plane=0; plane<NumOfLayersSdcOut; ++plane){
     Int_t layer = plane + 1;
     const auto& contOut = DCAna.GetSdcOutHC(plane);
-    Int_t nhOut = contOut.size();
-    event.nhit[layer-1] = nhOut;
-    if(nhOut>0) event.nlayer++;
-    multi_SdcOut += Double_t(nhOut);
-    HF1(100*layer, nhOut);
+    Int_t nhOut = 0;
     Int_t plane_eff = (layer-1)*3;
     Bool_t fl_valid_sig = false;
     Int_t tdc1st_2 = -1;
-    for(Int_t i=0; i<nhOut; ++i){
+    for(Int_t i=0; i<contOut.size(); ++i){
       const auto& hit = contOut[i];
       Double_t wire=hit->GetWire();
       event.wire[layer-1][i] = wire+0.5;
       Int_t nhtdc = hit->GetTdcSize();
-      if( nhtdc != 0 ) HF1(100*layer+1, wire+0.5);
+      if( nhtdc != 0 ){
+	nhOut++;
+	HF1(100*layer+1, wire+0.5);
+      }
       Int_t tdc1st = -1;
       for(Int_t k=0; k<nhtdc; k++){
         Int_t tdc = hit->GetTdcVal(k);
@@ -445,6 +444,10 @@ ProcessingNormal()
     HF1(100*layer+9, tdc1st_2);
     if(fl_valid_sig) ++plane_eff;
     HF1(38, plane_eff);
+    event.nhit[layer-1] = nhOut;
+    if(nhOut>0) event.nlayer++;
+    multi_SdcOut += Double_t(nhOut);
+    HF1(100*layer, nhOut);
   }
 
 #if MaxMultiCut
@@ -636,6 +639,13 @@ ConfMan::InitializeHistograms()
   const Double_t MinSdcOutTdc  =    0.;
   const Double_t MaxSdcOutTdc  = 2000.;
 
+  const Int_t    NbinSDC2DT = 360;
+  const Double_t MinSDC2DT  = -50.;
+  const Double_t MaxSDC2DT  = 250.;
+  const Int_t    NbinSDC2DL =  90;
+  const Double_t MinSDC2DL  =  -2.;
+  const Double_t MaxSDC2DL  =   7.;
+
   const Int_t    NbinSDC3DT = 360;
   const Double_t MinSDC3DT  = -50.;
   const Double_t MaxSDC3DT  = 250.;
@@ -643,19 +653,12 @@ ConfMan::InitializeHistograms()
   const Double_t MinSDC3DL  =  -2.;
   const Double_t MaxSDC3DL  =   7.;
 
-  const Int_t    NbinSDC4DT = 360;
-  const Double_t MinSDC4DT  = -50.;
-  const Double_t MaxSDC4DT  = 250.;
-  const Int_t    NbinSDC4DL =  90;
-  const Double_t MinSDC4DL  =  -2.;
-  const Double_t MaxSDC4DL  =   7.;
-
-  const Int_t    NbinSDC5DT = 360;
-  const Double_t MinSDC5DT  = -50.;
-  const Double_t MaxSDC5DT  = 250.;
-  const Int_t    NbinSDC5DL =  90;
-  const Double_t MinSDC5DL  =  -2.;
-  const Double_t MaxSDC5DL  =   7.;
+  //  const Int_t    NbinSDC5DT = 360;
+  //const Double_t MinSDC5DT  = -50.;
+  //const Double_t MaxSDC5DT  = 250.;
+  //const Int_t    NbinSDC5DL =  90;
+  //const Double_t MinSDC5DL  =  -2.;
+  //const Double_t MaxSDC5DL  =   7.;
 
   HB1(1, "Status", 20, 0., 20.);
 
@@ -663,8 +666,17 @@ ConfMan::InitializeHistograms()
     TString tag;
     Int_t nwire = 0, nbindt = 1, nbindl = 1;
     Double_t mindt = 0., maxdt = 1., mindl = 0., maxdl = 1.;
-    if(i<=NumOfLayersSDC3){
-      tag    = "SDC3";
+    if(i<=NumOfLayersSDC2){
+      tag    = "SDC2";
+      nwire  = MaxWireSDC2;
+      nbindt = NbinSDC2DT;
+      mindt  = MinSDC2DT;
+      maxdt  = MaxSDC2DT;
+      nbindl = NbinSDC2DL;
+      mindl  = MinSDC2DL;
+      maxdl  = MaxSDC2DL;
+    }else if(i<=NumOfLayersSDC2+NumOfLayersSDC3){
+      tag = "SDC3";
       nwire  = MaxWireSDC3;
       nbindt = NbinSDC3DT;
       mindt  = MinSDC3DT;
@@ -672,33 +684,24 @@ ConfMan::InitializeHistograms()
       nbindl = NbinSDC3DL;
       mindl  = MinSDC3DL;
       maxdl  = MaxSDC3DL;
-    }else if(i<=NumOfLayersSDC3+NumOfLayersSDC4){
-      tag = "SDC4";
-      nwire  = MaxWireSDC4;
-      nbindt = NbinSDC4DT;
-      mindt  = MinSDC4DT;
-      maxdt  = MaxSDC4DT;
-      nbindl = NbinSDC4DL;
-      mindl  = MinSDC4DL;
-      maxdl  = MaxSDC4DL;
-    }else if(i<=NumOfLayersSdcOut){
-      tag = "SDC5";
-      nwire   = (i==9 || i==10) ? MaxWireSDC5Y : MaxWireSDC5X;
-      nbindt = NbinSDC5DT;
-      mindt  = MinSDC5DT;
-      maxdt  = MaxSDC5DT;
-      nbindl = NbinSDC5DL;
-      mindl  = MinSDC5DL;
-      maxdl  = MaxSDC5DL;
-    }else if(i<=NumOfLayersSdcOut+NumOfLayersTOF){
-      tag = "TOF";
-      nwire = NumOfSegTOF;
-      nbindt = NbinSDC4DT;
-      mindt  = MinSDC4DT;
-      maxdt  = MaxSDC4DT;
-      nbindl = NbinSDC4DL;
-      mindl  = MinSDC4DL;
-      maxdl  = MaxSDC4DL;
+      //    }else if(i<=NumOfLayersSdcOut){
+      //tag = "SDC5";
+      //nwire   = (i==9 || i==10) ? MaxWireSDC5Y : MaxWireSDC5X;
+      //nbindt = NbinSDC5DT;
+      //mindt  = MinSDC5DT;
+      //maxdt  = MaxSDC5DT;
+      //nbindl = NbinSDC5DL;
+      //mindl  = MinSDC5DL;
+      //maxdl  = MaxSDC5DL;
+      //    }else if(i<=NumOfLayersSdcOut+NumOfLayersTOF){
+      //tag = "TOF";
+      //nwire = NumOfSegTOF;
+      //nbindt = NbinSDC4DT;
+      //mindt  = MinSDC4DT;
+      //maxdt  = MaxSDC4DT;
+      //nbindl = NbinSDC4DL;
+      //mindl  = MinSDC4DL;
+      //maxdl  = MaxSDC4DL;
     }
 
     if(i<=NumOfLayersSdcOut){
