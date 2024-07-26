@@ -22,8 +22,8 @@
 #include "RootHelper.hh"
 
 #define HodoCut     0
-#define TdcCut      1
-#define TotCut      1
+#define TdcCut      0
+#define TotCut      0
 #define Chi2Cut     0
 #define MaxMultiCut 0
 #define BcOutCut    0
@@ -36,8 +36,8 @@ const auto qnan = TMath::QuietNaN();
 const auto& gUnpacker = GUnpacker::get_instance();
 const auto& gUser = UserParamMan::GetInstance();
 const auto& gGeom = DCGeomMan::GetInstance();
-const Double_t& zK18tgt = gGeom.LocalZ("K18Target");
-const Double_t& zBac    = gGeom.LocalZ("BAC1");
+const Double_t& zK18tgt = gGeom.LocalZ("Target");
+  //const Double_t& zBac    = gGeom.LocalZ("BAC1");
 }
 
 //_____________________________________________________________________________
@@ -431,12 +431,12 @@ ProcessingNormal()
     HF2(25, xtgt, utgt); HF2(26, ytgt, vtgt);
     HF2(27, xtgt, ytgt);
 
-    Double_t xbac=tp->GetX(zBac), ybac=tp->GetY(zBac);
-    Double_t ubac=u0, vbac=v0;
-    HF1(31, xbac); HF1(32, ybac);
-    HF1(33, ubac); HF1(34, vbac);
-    HF2(35, xbac, ubac); HF2(36, ybac, vbac);
-    HF2(37, xbac, ybac);
+    //    Double_t xbac=tp->GetX(zBac), ybac=tp->GetY(zBac);
+    //Double_t ubac=u0, vbac=v0;
+    //HF1(31, xbac); HF1(32, ybac);
+    //HF1(33, ubac); HF1(34, vbac);
+    //HF2(35, xbac, ubac); HF2(36, ybac, vbac);
+    //HF2(37, xbac, ybac);
 
     for(Int_t ih=0; ih<nh; ++ih){
       DCLTrackHit *hit=tp->GetHit(ih);
@@ -509,19 +509,19 @@ ConfMan:: InitializeHistograms()
   const Double_t MinSdcInTdc  =    0.;
   const Double_t MaxSdcInTdc  = 2000.;
 
-  const Int_t    NbinSDC1DT = 240;
-  const Double_t MinSDC1DT  = -30.;
-  const Double_t MaxSDC1DT  = 170.;
-  const Int_t    NbinSDC1DL = 55;
-  const Double_t MinSDC1DL  = -0.5;
-  const Double_t MaxSDC1DL  = 5.0;
+  const Int_t    NbinSDC0DT = 240;
+  const Double_t MinSDC0DT  = -30.;
+  const Double_t MaxSDC0DT  = 170.;
+  const Int_t    NbinSDC0DL = 55;
+  const Double_t MinSDC0DL  = -0.5;
+  const Double_t MaxSDC0DL  = 5.0;
 
-  const Int_t    NbinSDC2DT = 360;
-  const Double_t MinSDC2DT  = -50.;
-  const Double_t MaxSDC2DT  = 250.;
-  const Int_t    NbinSDC2DL = 85;
-  const Double_t MinSDC2DL  =  -0.5;
-  const Double_t MaxSDC2DL  =   8.;
+  const Int_t    NbinSDC1DT = 360;
+  const Double_t MinSDC1DT  = -50.;
+  const Double_t MaxSDC1DT  = 250.;
+  const Int_t    NbinSDC1DL = 85;
+  const Double_t MinSDC1DL  =  -0.5;
+  const Double_t MaxSDC1DL  =   8.;
 
   const Int_t NbinRes   =  200;
   const Double_t MinRes = -1.;
@@ -534,7 +534,16 @@ ConfMan:: InitializeHistograms()
     TString tag;
     Int_t nwire = 0, nbindt = 1, nbindl = 1;
     Double_t mindt = 0., maxdt = 1., mindl = 0., maxdl = 1.;
-    if(i<=NumOfLayersSDC1){
+    if(i<=NumOfLayersSDC0){
+      tag    = "SDC0";
+      nwire  = MaxWireSDC0;
+      nbindt = NbinSDC0DT;
+      mindt  = MinSDC0DT;
+      maxdt  = MaxSDC0DT;
+      nbindl = NbinSDC0DL;
+      mindl  = MinSDC0DL;
+      maxdl  = MaxSDC0DL;
+    }else if(i<=NumOfLayersSdcIn){
       tag    = "SDC1";
       nwire  = MaxWireSDC1;
       nbindt = NbinSDC1DT;
@@ -543,15 +552,6 @@ ConfMan:: InitializeHistograms()
       nbindl = NbinSDC1DL;
       mindl  = MinSDC1DL;
       maxdl  = MaxSDC1DL;
-    }else if(i<=NumOfLayersSdcIn){
-      tag    = "SDC2";
-      nwire  = MaxWireSDC2;
-      nbindt = NbinSDC2DT;
-      mindt  = MinSDC2DT;
-      maxdt  = MaxSDC2DT;
-      nbindl = NbinSDC2DL;
-      mindl  = MinSDC2DL;
-      maxdl  = MaxSDC2DL;
     }
 
     TString title0 = Form("#Hits %s#%2d", tag.Data(), i);

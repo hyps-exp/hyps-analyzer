@@ -2041,7 +2041,7 @@ EventDisplay::DrawHitWire(Int_t lid, Int_t hit_wire,
         Form("SDC2y1_Node_%d", hit_wire),
         Form("SDC2y2_Node_%d", hit_wire) };
 
-  const TString sdcout_node_name[NumOfLayersSdcOut]
+  const TString sdcout_node_name[]
     = { Form("SDC3x1_Node_%d", hit_wire),
         Form("SDC3x2_Node_%d", hit_wire),
         Form("SDC3y1_Node_%d", hit_wire),

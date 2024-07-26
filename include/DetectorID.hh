@@ -12,8 +12,8 @@
 const std::map<TString, std::vector<TString>> DCNameList =
 {
   {"BcOut", { "BC3", "BC4" }},
-  {"SdcIn", { "SDC1", "SDC2" }},
-  {"SdcOut", { "SDC3", "SDC4", "SDC5" }},
+  {"SdcIn", { "SDC0", "SDC1" }},
+  {"SdcOut", { "SDC2", "SDC3" }},
 };
 
 // Counters ___________________________________________________________
@@ -164,7 +164,7 @@ const Int_t PlMaxBcOut       = 124;
 const Int_t PlMinSdcIn       =   1;
 const Int_t PlMaxSdcIn       =  10;
 const Int_t PlMinSdcOut      =  31;
-const Int_t PlMaxSdcOut      =  42;
+const Int_t PlMaxSdcOut      =  40;
 const Int_t PlMinTOF         =  51; // need to change
 const Int_t PlMaxTOF         =  54; // need to change
 const Int_t PlMinVP          =  16;
@@ -178,11 +178,12 @@ const Int_t PlOffsVP         =  15;
 // const Int_t PlOffsTPCY       = 650;
 
 const Int_t NumOfLayersBc     = 6;
+const Int_t NumOfLayersSDC0   = 4;
 const Int_t NumOfLayersSDC1   = 6;
-const Int_t NumOfLayersSDC2   = 4;
-const Int_t NumOfLayersSDC3   = 4;
-const Int_t NumOfLayersSDC4   = 4;
-const Int_t NumOfLayersSDC5   = 4;
+const Int_t NumOfLayersSDC2   = 5;
+const Int_t NumOfLayersSDC3   = 5;
+const Int_t NumOfLayersSDC4   = 5;
+const Int_t NumOfLayersSDC5   = 5;
 const Int_t NumOfLayersBcIn   = PlMaxBcIn   - PlMinBcIn   + 1;
 const Int_t NumOfLayersBcOut  = PlMaxBcOut  - PlMinBcOut  + 1;
 const Int_t NumOfLayersSdcIn  = PlMaxSdcIn  - PlMinSdcIn  + 1;
@@ -196,12 +197,13 @@ const Int_t NumOfLayersVP     = PlMaxVP     - PlMinVP     + 1;
 const Int_t MaxWireBC3      =  64;
 const Int_t MaxWireBC4      =  64;
 
-const Int_t MaxWireSDC1     =  64;
-const Int_t MaxWireSDC2     =  44;
-const Int_t MaxWireSDC3     = 128;
-const Int_t MaxWireSDC4     = 128;
-const Int_t MaxWireSDC5X    = 128;
-const Int_t MaxWireSDC5Y    =  96;
+const Int_t MaxWireSDC0     =  114;
+const Int_t MaxWireSDC1     =  48;
+const Int_t MaxWireSDC2     =  104;
+const Int_t MaxWireSDC3     =  104;
+const Int_t MaxWireSDC4     =  104;
+const Int_t MaxWireSDC5X     =  104;
+const Int_t MaxWireSDC5Y     =  104;
 
 // MaxDriftLength = CellSize/2
 const Double_t CellSizeBC3 = 3.0;
