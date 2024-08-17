@@ -342,8 +342,9 @@ ProcessingNormal()
   dst.spill   = gRM.SpillNumber();
 
   HF1(1, 0);
-  //**************************************************************************
-  //****************** RawData
+
+
+  //*****************  RawData  *****************
 
   // Trigger Flag
   rawData.DecodeHits("TFlag");
@@ -528,9 +529,10 @@ ProcessingNormal()
     event.tofnhits = tof_nhits;
   }
 
+
+  //*****************  Normalzed Data  *****************
+
 #if 0 // Normalized
-  //**************************************************************************
-  //****************** NormalizedData
 
 #if 0 // BH2, BAC
   // BH2
