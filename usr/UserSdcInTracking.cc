@@ -22,7 +22,7 @@
 #include "RootHelper.hh"
 
 #define HodoCut     0
-#define TdcCut      0
+#define TdcCut      1
 #define TotCut      0
 #define Chi2Cut     0
 #define MaxMultiCut 0
@@ -150,7 +150,7 @@ Bool_t
 ProcessingNormal()
 {
 
-#if HodoCut
+ #if HodoCut
   static const auto MinDeBH2 = gUser.GetParameter("DeBH2", 0);
   static const auto MaxDeBH2 = gUser.GetParameter("DeBH2", 1);
   static const auto MinDeBH1 = gUser.GetParameter("DeBH1", 0);
@@ -169,12 +169,12 @@ ProcessingNormal()
 
   RawData rawData;
   rawData.DecodeHits("TFlag");
-  rawData.DecodeHits("BH1");
-  rawData.DecodeHits("BH2");
-  for(const auto& name: DCNameList.at("BcOut")) rawData.DecodeHits(name);
+  // rawData.DecodeHits("BH1");
+  // rawData.DecodeHits("BH2");
+  // for(const auto& name: DCNameList.at("BcOut")) rawData.DecodeHits(name);
   for(const auto& name: DCNameList.at("SdcIn")) rawData.DecodeHits(name);
 
-  HodoAnalyzer hodoAna(rawData);
+  // HodoAnalyzer hodoAna(rawData);
   DCAnalyzer   DCAna(rawData);
 
   event.evnum = gUnpacker.get_event_number();
@@ -198,7 +198,7 @@ ProcessingNormal()
 
   HF1(1, 1.);
 
-
+#if 0
   //////////////BH2 time 0
   hodoAna.DecodeHits("BH2");
   Int_t nhBh2 = hodoAna.GetNHits("BH2");
@@ -206,6 +206,7 @@ ProcessingNormal()
 #if HodoCut
   if(nhBh2==0) return true;
 #endif
+
   HF1(1, 2);
 
   //////////////BH2 Analysis
@@ -237,7 +238,7 @@ ProcessingNormal()
   }
 
   HF1(1, 3.);
-
+  
   //////////////BH1 Analysis
   hodoAna.DecodeHits("BH1");
   Int_t nhBh1 = hodoAna.GetNHits("BH1");
@@ -284,6 +285,7 @@ ProcessingNormal()
   if(multi_BcOut/Double_t(NumOfLayersBcOut) > MaxMultiHitBcOut){
     return true;
   }
+#endif
 #endif
 
 #if 0
@@ -334,6 +336,8 @@ ProcessingNormal()
 	  nhIn++;
 	  HF1(100*layer+1, wire+0.5);
 	}
+
+	std::cout << "mdepth = " << nhtdc << std::endl;
 
 	Int_t tdc1st = -1;
 	for(Int_t k=0; k<nhtdc; k++){
@@ -393,6 +397,7 @@ ProcessingNormal()
     return true;
 #endif
 
+#if 0
   HF1(1, 11.);
   // std::cout << "==========TrackSearch SdcIn============" << std::endl;
 #if 1
@@ -493,14 +498,13 @@ ProcessingNormal()
 
   HF1(1, 12.);
 #endif
-
+#endif
   return true;
 }
 
 //_____________________________________________________________________________
 Bool_t
-ProcessingEnd()
-{
+ProcessingEnd(){
   tree->Fill();
   return true;
 }
@@ -626,14 +630,13 @@ ConfMan:: InitializeHistograms()
     HB1(100*i+74, title74, 200, -5.0, 5.0);
     // HB2(1000*i, Form("Wire%%Tdc for LayerId = %d", i),
     // 	 NbinSdcOutTdc/4, MinSdcOutTdc, MaxSdcOutTdc,
-    // 	 MaxWire+1, 0., Double_t(MaxWire+1));
-
-    for (Int_t j=0; j<nwire; j++) {
-      TString title = Form("XT of Layer %2d Wire #%4d", i, j);
-      HBProf(100000*i+3000+j, title, 100, -maxdl, maxdl, -5, 50);
-      HB2(100000*i+4000+j, title, 100, -maxdl, maxdl, 40, -5., 50.);
-    }
+    // MaxWire+1, 0., Double_t(MaxWire+1));
+  for (Int_t j=0; j<nwire; j++) {
+    TString title = Form("XT of Layer %2d Wire #%4d", i, j);
+    HBProf(100000*i+3000+j, title, 100, -maxdl, maxdl, -5, 50);
+    HB2(100000*i+4000+j, title, 100, -maxdl, maxdl, 40, -5., 50.);
   }
+}
 
   // Tracking Histgrams
   HB1(10, "#Tracks SdcIn", 10, 0., 10.);
@@ -740,3 +743,7 @@ ConfMan::FinalizeProcess()
 {
   return true;
 }
+
+
+
+

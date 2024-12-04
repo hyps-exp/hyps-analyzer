@@ -21,7 +21,7 @@
 #include "RawData.hh"
 
 #define HodoCut     0
-#define TdcCut      0
+#define TdcCut      1
 #define TotCut      0
 #define Chi2Cut     0
 #define MaxMultiCut 0
@@ -192,8 +192,8 @@ ProcessingNormal()
 
   RawData rawData;
   rawData.DecodeHits("TFlag");
-  rawData.DecodeHits("BH1");
-  rawData.DecodeHits("BH2");
+  // rawData.DecodeHits("BH1");
+  // rawData.DecodeHits("BH2");
   rawData.DecodeHits("TOF");
   for(const auto& name: DCNameList.at("SdcIn")) rawData.DecodeHits(name);
   for(const auto& name: DCNameList.at("SdcOut")) rawData.DecodeHits(name);
@@ -227,6 +227,7 @@ ProcessingNormal()
 
   HF1(1, 1.);
 
+#if 0
   //////////////BH2 time 0
   hodoAna.DecodeHits("BH2");
   Int_t nhBh2 = hodoAna.GetNHits("BH2");
@@ -294,13 +295,14 @@ ProcessingNormal()
   event.btof = btof0;
 
   HF1(1, 5.);
-
+#endif
 
   //////////////Tof Analysis
   const auto& TOFCont = hodoAna.GetClusterContainer("TOF");
   hodoAna.DecodeHits("TOF");
   // hodoAna.TimeCut("TOF", 7, 25);
   Int_t nhTof = hodoAna.GetNClusters("TOF");
+#if 0  
 #if HodoCut
   if(nhTof!=0) return true;
 #endif
@@ -329,6 +331,7 @@ ProcessingNormal()
     if(nhOk==0) return true;
 #endif
   }
+#endif
 
   // if(event.nhTof==0) return true;
 
@@ -343,7 +346,7 @@ ProcessingNormal()
  // if(!common_stop_is_tof) return true;
 
   HF1(1, 7);
-
+  
   //////SdcIn
 #if 0
   static const Double_t MaxMultiHitSdcIn = gUser.GetParameter("MaxMultiHitSdcIn");
@@ -463,7 +466,8 @@ ProcessingNormal()
 #else
   DCAna.TrackSearchSdcOut();
 #endif
-
+  
+#if 0
 #if 1
 #if Chi2Cut
   DCAna.ChiSqrCutSdcOut(30.);
@@ -512,7 +516,7 @@ ProcessingNormal()
       HF1(34, chisqr1st-chisqr);
     if(40.<theta)
       HF1(35, chisqr1st-chisqr);
-
+#endif
     ///// TOF
 #if UseTOF
 #else

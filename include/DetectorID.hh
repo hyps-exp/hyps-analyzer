@@ -198,7 +198,7 @@ const Int_t NumOfLayersVP     = PlMaxVP     - PlMinVP     + 1;
 const Int_t MaxWireBC3      =  64;
 const Int_t MaxWireBC4      =  64;
 
-const Int_t MaxWireSDC0     =  111;
+const Int_t MaxWireSDC0     =  112;
 const Int_t MaxWireSDC1     =  48;
 const Int_t MaxWireSDC2     =  104;
 const Int_t MaxWireSDC3     =  104;
