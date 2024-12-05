@@ -182,9 +182,8 @@ ProcessingNormal()
   static const auto MaxStopTimingSdcOut = gUser.GetParameter("StopTimingSdcOut", 1);
   // static const auto StopTimeDiffSdcOut = gUser.GetParameter("StopTimeDiffSdcOut");
 #if TotCut
+  static const auto MinTotSDC2 = gUser.GetParameter("MinTotSDC2");
   static const auto MinTotSDC3 = gUser.GetParameter("MinTotSDC3");
-  static const auto MinTotSDC4 = gUser.GetParameter("MinTotSDC4");
-  static const auto MinTotSDC5 = gUser.GetParameter("MinTotSDC5");
 #endif
 #if MaxMultiCut
   static const auto MaxMultiHitSdcOut = gUser.GetParameter("MaxMultiHitSdcOut");
@@ -373,9 +372,8 @@ ProcessingNormal()
 #endif
   DCAna.DecodeSdcOutHits();
 #if TotCut
-  DCAna.TotCutSDC3(MinTotSDC2);
-  DCAna.TotCutSDC4(MinTotSDC3);
-  DCAna.TotCutSDC5(MinTotSDC4);
+  DCAna.TotCutSDC2(MinTotSDC2);
+  DCAna.TotCutSDC3(MinTotSDC3);
 #endif
   Double_t multi_SdcOut = 0.;
   for(Int_t plane=0; plane<NumOfLayersSdcOut; ++plane){
