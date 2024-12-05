@@ -1468,6 +1468,13 @@ DCAnalyzer::TotCutBCOut(Double_t min_tot)
 
 //_____________________________________________________________________________
 void
+DCAnalyzer::TotCutSDC0(Double_t min_tot)
+{
+  TotCut("SDC0", min_tot, true);
+}
+
+//_____________________________________________________________________________
+void
 DCAnalyzer::TotCutSDC1(Double_t min_tot)
 {
   TotCut("SDC1", min_tot, true);

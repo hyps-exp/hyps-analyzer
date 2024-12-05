@@ -159,8 +159,8 @@ ProcessingNormal()
   static const auto MaxBeamToF = gUser.GetParameter("BTOF", 1);
 #endif
 #if TotCut
+  static const auto MinTotSDC0 = gUser.GetParameter("MinTotSDC0");
   static const auto MinTotSDC1 = gUser.GetParameter("MinTotSDC1");
-  static const auto MinTotSDC2 = gUser.GetParameter("MinTotSDC2");
 #endif
 #if MaxMultiCut
   static const auto MaxMultiHitBcOut = gUser.GetParameter("MaxMultiHitBcOut");
@@ -316,8 +316,8 @@ ProcessingNormal()
 #endif
   DCAna.DecodeSdcInHits();
 #if TotCut
+  DCAna.TotCutSDC0(MinTotSDC0);
   DCAna.TotCutSDC1(MinTotSDC1);
-  DCAna.TotCutSDC2(MinTotSDC2);
 #endif
   HF1(1, 10.);
   Double_t multi_SdcIn=0.;

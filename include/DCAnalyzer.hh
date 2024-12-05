@@ -145,6 +145,7 @@ public:
   void ChiSqrCutSdcOut(Double_t chisqr);
 
   void TotCutBCOut(Double_t min_tot);
+  void TotCutSDC0(Double_t min_tot);
   void TotCutSDC1(Double_t min_tot);
   void TotCutSDC2(Double_t min_tot);
   void TotCutSDC3(Double_t min_tot);
