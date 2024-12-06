@@ -22,7 +22,7 @@
 
 #define HodoCut     0
 #define TdcCut      1
-#define TotCut      0
+#define TotCut      1
 #define Chi2Cut     0
 #define MaxMultiCut 0
 #define UseTOF      0 // use or not TOF for tracking
@@ -421,9 +421,12 @@ ProcessingNormal()
 
       Int_t nhdt = hit->GetEntries();
       Int_t tot1st = -1;
+      Double_t dt1st=1e10;
       for(Int_t k=0; k<nhdt; k++){
         Double_t dt = hit->DriftTime(k);
-        if(common_stop_is_tof) HF1(100*layer+3, dt);
+	if(dt<dt1st) dt1st=dt;
+        //if(common_stop_is_tof) HF1(100*layer+3, dt);
+	if(1) HF1(100*layer+3, dt);
         else                   HF1(100*layer+8, dt);
         HF1(10000*layer+1000+Int_t(wire), dt);
 
@@ -433,6 +436,7 @@ ProcessingNormal()
           tot1st = tot;
         }
       }
+      HF1(100*layer+30,dt1st);
       HF1(100*layer+7, tot1st);
       Int_t nhdl = hit->GetEntries();
       for(Int_t k=0; k<nhdl; k++){
@@ -458,6 +462,7 @@ ProcessingNormal()
 
   HF1(1, 11.);
 
+#if 0
   // std::cout << "==========TrackSearch SdcOut============" << std::endl;
 #if UseTOF
   DCAna.TrackSearchSdcOut(TOFCont);
@@ -465,7 +470,7 @@ ProcessingNormal()
   DCAna.TrackSearchSdcOut();
 #endif
   
-#if 0
+
 #if 1
 #if Chi2Cut
   DCAna.ChiSqrCutSdcOut(30.);
@@ -641,19 +646,19 @@ ConfMan::InitializeHistograms()
   const Double_t MinSdcOutTdc  =    0.;
   const Double_t MaxSdcOutTdc  = 2000.;
 
-  const Int_t    NbinSDC2DT = 360;
+  const Int_t    NbinSDC2DT = 400;
   const Double_t MinSDC2DT  = -50.;
-  const Double_t MaxSDC2DT  = 250.;
-  const Int_t    NbinSDC2DL =  90;
+  const Double_t MaxSDC2DT  = 350.;
+  const Int_t    NbinSDC2DL =  140;
   const Double_t MinSDC2DL  =  -2.;
-  const Double_t MaxSDC2DL  =   7.;
+  const Double_t MaxSDC2DL  =  12.;
 
-  const Int_t    NbinSDC3DT = 360;
+  const Int_t    NbinSDC3DT = 400;
   const Double_t MinSDC3DT  = -50.;
-  const Double_t MaxSDC3DT  = 250.;
-  const Int_t    NbinSDC3DL =  90;
+  const Double_t MaxSDC3DT  = 350.;
+  const Int_t    NbinSDC3DL =  140;
   const Double_t MinSDC3DL  =  -2.;
-  const Double_t MaxSDC3DL  =   7.;
+  const Double_t MaxSDC3DL  =  12.;
 
   //  const Int_t    NbinSDC5DT = 360;
   //const Double_t MinSDC5DT  = -50.;
@@ -718,6 +723,7 @@ ConfMan::InitializeHistograms()
       TString title8 = Form("Drift Time %s#%2d (BH2 timing)", tag.Data(), i);
       TString title9 = Form("Tdc 1st-2 %s#%2d", tag.Data(), i);
       TString title10 = Form("Trailing %s#%2d", tag.Data(), i);
+      TString title30 = Form("Drift Time 1st %s#%2d", tag.Data(), i);
       TString title51 = Form("Tdc vs wire %s#%2d", tag.Data(), i);
       TString title52 = Form("Tdc 1st vs wire %s#%2d", tag.Data(), i);
       TString title53 = Form("Tdc vs tot %s#%2d", tag.Data(), i);
@@ -733,6 +739,7 @@ ConfMan::InitializeHistograms()
       HB1(100*i+8, title8, nbindt, mindt, maxdt);
       HB1(100*i+9, title9, NbinSdcOutTdc, MinSdcOutTdc, MaxSdcOutTdc);
       HB1(100*i+10, title10, NbinSdcOutTdc, MinSdcOutTdc, MaxSdcOutTdc);
+      HB1(100*i+30, title30, nbindt, mindt, maxdt);
       HB2(100*i+51, title51, NbinSdcOutTdc, MinSdcOutTdc, MaxSdcOutTdc, nwire, 0., nwire);
       HB2(100*i+52, title52, NbinSdcOutTdc, MinSdcOutTdc, MaxSdcOutTdc, nwire, 0., nwire);
       HB2(100*i+53, title53, NbinSdcOutTdc, MinSdcOutTdc, MaxSdcOutTdc, 500, 0., 500);
