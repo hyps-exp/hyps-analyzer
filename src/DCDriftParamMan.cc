@@ -222,77 +222,47 @@ DCDriftParamMan::DriftLength6(Int_t PlaneId, Double_t dt,
                  + p4*dt*dt*dt*dt
                  + p5*dt*dt*dt*dt*dt);
   switch(PlaneId){
-    // BC3&4
-  case 113: case 114: case 115: case 116: case 117: case 118:
-  case 119: case 120: case 121: case 122: case 123: case 124:
-    //if(dt<-10. || dt>50.) // Tight drift time selection
-    if (dt<-10 || dt>80) // Loose drift time selection
+    // SDC0
+  case 1: case 2: case 3: case 4:
+    if(dt < -5. || 120 < dt)
       return qnan;
-    if(PlaneId==123 || PlaneId==124){
-      if(dt>35) dt=35.;
-      dl = dt*p1+dt*dt*p2+p3*TMath::Power(dt, 3.0)+p4*TMath::Power(dt, 4.0)+p5*TMath::Power(dt, 5.0);
-    }else if(dt>32.){
-      dt = 32.;
-    }
-    if(dl>1.5)
-      return 1.5;
-    if(dl<0.)
+    if(dl > 2.5 || dt > 100.)
+      return 2.5;
+    if(dl<0. || dt < 0.)
       return 0.;
     else
       return dl;
     break;
     // SDC1
-  case 1: case 2: case 3: case 4: case 5: case 6:
-    if(dt < -10 || 150 < dt)
+  case 5: case 6: case 7: case 8: case 9: case 10:
+    if(dt < -5. || dt > 220.)
       return qnan;
-    if(dl > 3.0 || dt > 120.)
-      return 3.0;
-    if(dl<0.)
+    if(dl > 6.0 || dt > 200.)
+      return 6.0;
+    if(dl < 0. || dt<0.)
       return 0.;
     else
       return dl;
     break;
     // SDC2
-  case 7: case 8: case 9: case 10:
-    if(dt < -10. || dt > 150.)
+  case 31: case 32: case 33: case 34: case 35:
+    if(dt < -5. || dt > 320.)
       return qnan;
-    if(dl > 2.5 || dt > 120.)
-      return 2.5;
-    if(dl < 0.)
+    if(dl < 0. || dt < 0.)
       return 0.;
+    else if(dl > 10.0 || dt > 300.)
+      return 10.0;
     else
       return dl;
     break;
     // SDC3
-  case 31: case 32: case 33: case 34:
-    if(dt < -20. || dt > 360.)
+  case 36: case 37: case 38: case 39: case 40:
+    if(dt < -5. || dt > 320.)
       return qnan;
-    if(dl < 0.)
+    if(dl < 0. || dt < 0.)
       return 0.;
-    else if(dl > 4.5 || dt > 300.)
-      return 4.5;
-    else
-      return dl;
-    break;
-    // SDC4
-  case 35: case 36: case 37: case 38:
-    if(dt < -20. || dt > 360.)
-      return qnan;
-    if(dl < 0.)
-      return 0.;
-    if(dl > 4.5 || dt > 300.)
-      return 4.5;
-    else
-      return dl;
-    break;
-    // SDC5
-  case 39: case 40: case 41: case 42:
-    if(dt < -20. || dt > 360.)
-      return qnan;
-    if(dl < 0.)
-      return 0.;
-    if(dl > 4.5 || dt > 300.)
-      return 4.5;
+    if(dl > 10.0 || dt > 300.)
+      return 10.0;
     else
       return dl;
     break;
