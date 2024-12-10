@@ -337,7 +337,7 @@ ProcessingNormal()
 	  HF1(100*layer+1, wire+0.5);
 	}
 
-	std::cout << "mdepth = " << nhtdc << std::endl;
+	// std::cout << "mdepth = " << nhtdc << std::endl;
 
 	Int_t tdc1st = -1;
 	for(Int_t k=0; k<nhtdc; k++){

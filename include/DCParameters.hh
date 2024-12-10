@@ -41,16 +41,15 @@ const DCPairPlaneInfo PPInfoBcOut[] = {
 
 const DCPairPlaneInfo PPInfoSdcIn[] = {
   // { pair_plane, honeycomb, fiber, id1, id2, CellSize }
-  { true, false, false, 0, 1,  6.0 }, { true, false, false, 2,  3,  6.0 },
-  { false, true, false, 4, 4,  6.0 },{ false, true, false, 5, 5, 6.0},
-  { true, false, false, 6, 7, 6.0 }, { true, false, false, 8, 9, 6.0 }
+  { true, false, false, 0, 1,  5.0 }, { true, false, false, 2,  3,  5.0 },//SDC0
+  { false, true, false, 4, 4,  12.0 },{ false, true, false, 5, 5, 12.0},//SDC1
+  { true, true, false, 6, 7, 12.0 }, { true, true, false, 8, 9, 12.0 },//SDC1
 };
 
 const DCPairPlaneInfo PPInfoSdcOut[] = {
   // { pair_plane, honeycomb, fiber, id1, id2, CellSize }
-  { false, true, false, 0, 0,  10.0 }, { true, true, false, 1, 2,  10.0 },{true, true, false, 3,4, 10.0}, //SDC3
-  { false, true, false, 5, 5,  10.0 }, { true, true, false, 6, 7,  10.0 }, //SDC4
-  { true, true, false, 8, 9,  9.0 },  //SDC5
+  { false, true, false, 0, 0,  20.0 }, { true, true, false, 1, 2,  20.0 },{true, true, false, 3,4, 20.0}, //SDC2
+  { false, true, false, 5, 5,  20.0 }, { true, true, false, 6, 7,  20.0 },{ true, true, false, 8, 9,  20.0 },//SDC3
 };
 
 const Int_t NPPInfoBcOut  = sizeof(PPInfoBcOut)/sizeof(DCPairPlaneInfo);
@@ -86,39 +85,32 @@ const Double_t MaxDLBc[25] = {
 
 const Double_t MinDLSdc[] = {
   0.0,
-  //SDC1
-  -0.5, -0.5, -0.5, -0.5, -0.5, -0.5,
-  //SDC2
+  //SDC0
   -0.5, -0.5, -0.5, -0.5,
+  //SDC1
+  -0.5, -0.5, -0.5, -0.5,-0.5, -0.5,
   // Dummy Id 11-30
   0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
   0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+  // SDC2
+  -0.5, -0.5, -0.5, -0.5, -0.5,
   // SDC3
-  -0.5, -0.5, -0.5, -0.5,
-  // SDC4
-  -0.5, -0.5, -0.5, -0.5,
-  // SDC5
-  -0.5, -0.5
+  -0.5, -0.5, -0.5, -0.5, -0.5,
 };
 
 const Double_t MaxDLSdc[] = {
   0.0,
+  // SDC0
+  3.0, 3.0, 3.0, 3.0,
   // SDC1
   6.5, 6.5, 6.5, 6.5, 6.5, 6.5,
-  // SDC2
-  6.5, 6.5, 6.5, 6.5,
   // Dummy Id 11-30
   0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
   0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+  // SDC2
+  10.5, 10.5, 10.5, 10.5, 10.5, 
   // SDC3
-  //  12.0, 12.0, 12.0, 12.0,
-  11.0, 11.0, 11.0, 11.0,
-  // SDC4
-  //  25.0, 25.0, 25.0, 25.0
-  //13.00, 13.00, 13.00, 13.00
-  11.0, 11.0, 11.0, 11.0,
-  // SDC5
-  11.0, 11.0,
+  10.5, 10.5, 10.5, 10.5, 10.5, 
 };
 
 #endif
