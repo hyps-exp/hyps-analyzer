@@ -56,6 +56,14 @@ struct Event
   Double_t bh2da[NumOfSegBH2];
   Double_t bh2dt[NumOfSegBH2][MaxDepth];
 
+
+  Int_t t0nhits;
+  Int_t t0hitpat[MaxHits];
+  Double_t t0la[NumOfSegT0];
+  Double_t t0lt[NumOfSegT0][MaxDepth];
+  Double_t t0ra[NumOfSegT0];
+  Double_t t0rt[NumOfSegT0][MaxDepth];
+
   Int_t sacnhits;
   Int_t sachitpat[MaxHits];
   Double_t saca[NumOfSegSAC];
@@ -114,6 +122,7 @@ Event::clear()
 {
   evnum     = 0;
   spill     = 0;
+  t0nhits  = 0;
   sacnhits  = 0;
   sac1nhits = 0;
   sac2nhits = 0;
@@ -131,6 +140,7 @@ Event::clear()
 
   for(Int_t it=0; it<MaxHits; ++it){
     bh2hitpat[it]   = -1;
+    t0hitpat[it]    = -1;
     sachitpat[it]   = -1;
     tofhitpat[it]   = -1;
   }
@@ -154,6 +164,17 @@ Event::clear()
       bh2hitpos[it][m] = qnan;
     }
   }
+
+
+  for(Int_t it=0; it<NumOfSegT0; it++){
+    t0la[it]  = qnan;
+    t0ra[it]  = qnan;
+    for(Int_t m=0; m<MaxDepth; ++m){
+      t0lt[it][m]  = qnan;
+      t0rt[it][m]  = qnan;
+    }
+  }
+
 
   for(Int_t it=0; it<NumOfSegSAC; it++){
     saca[it] = qnan;
@@ -198,6 +219,19 @@ struct Dst
   Double_t deBh2[NumOfSegBH2*MaxDepth];
   Double_t posBh2[NumOfSegBH2*MaxDepth];
 
+  Int_t    nhT0;
+  Int_t    csT0[NumOfSegT0*MaxDepth];
+  Double_t T0Seg[NumOfSegT0*MaxDepth];
+  Double_t tT0[NumOfSegT0*MaxDepth];
+
+  // for HodoParam
+  Double_t t0la[NumOfSegT0];
+  Double_t t0lt[NumOfSegT0][MaxDepth];
+  Double_t t0ra[NumOfSegT0];
+  Double_t t0rt[NumOfSegT0][MaxDepth];
+  Double_t ltT0Seg[NumOfSegT0][MaxDepth];
+  Double_t rtT0Seg[NumOfSegT0][MaxDepth];
+
   Int_t    nhSac;
   Int_t    csSac[NumOfSegSAC*MaxDepth];
   Double_t SacSeg[NumOfSegSAC*MaxDepth];
@@ -234,6 +268,7 @@ struct Dst
 void
 Dst::clear()
 {
+  nhT0     = 0;
   nhSac    = 0;
   nhBh2    = 0;
   nhTof    = 0;
@@ -258,6 +293,19 @@ Dst::clear()
       dtBh2[MaxDepth*it + m]  = qnan;
       deBh2[MaxDepth*it + m]  = qnan;
       posBh2[MaxDepth*it + m] = qnan;
+    }
+  }
+
+  for(Int_t it=0; it<NumOfSegT0; it++){
+    t0la[it]  = qnan;
+    t0ra[it]  = qnan;
+    T0Seg[it] = qnan;
+    for(Int_t m=0; m<MaxDepth; ++m){
+      t0lt[it][m]        = qnan;
+      t0rt[it][m]        = qnan;
+      tT0[MaxDepth*it+m] = qnan;
+      ltT0Seg[it][m]     = qnan;
+      rtT0Seg[it][m]     = qnan;
     }
   }
 
@@ -301,6 +349,7 @@ TTree* tree;
 enum eDetHid {
   BH1Hid  = 10000,
   BH2Hid  = 20000,
+  T0Hid   = 40000,
   SACHid  = 30000,
   TOFHid  = 60000,
 };
@@ -321,6 +370,8 @@ ProcessingNormal()
 {
   // static const auto MinTdcBH2 = gUser.GetParameter("TdcBH2", 0);
   // static const auto MaxTdcBH2 = gUser.GetParameter("TdcBH2", 1);
+  static const auto MinTdcT0  = gUser.GetParameter("TdcT0", 0);
+  static const auto MaxTdcT0  = gUser.GetParameter("TdcT0", 1);
   static const auto MinTdcSAC = gUser.GetParameter("TdcSAC", 0);
   static const auto MaxTdcSAC = gUser.GetParameter("TdcSAC", 1);
   static const auto MinTdcTOF = gUser.GetParameter("TdcTOF", 0);
@@ -420,6 +471,73 @@ ProcessingNormal()
     event.bh2nhits = bh2_nhits;
   }
 #endif
+
+  ///// T0
+  rawData.DecodeHits("T0");
+  {
+    Int_t t0_nhits = 0;
+    const auto& cont = rawData.GetHodoRawHC("T0");
+    Int_t nh = cont.size();
+    HF1(T0Hid, Double_t(nh));
+    Int_t nh1 = 0, nh2 = 0;
+    for(Int_t i=0; i<nh; ++i){
+      HodoRawHit *hit = cont[i];
+      Int_t seg = hit->SegmentId();
+      HF1(T0Hid+1, seg+0.5);
+
+      // Left
+      Int_t Al = hit->GetAdcLeft();
+      HF1(T0Hid+100*(seg+1)+1, Al);
+      event.t0la[seg] = Al;
+      dst.t0la[seg]   = Al;
+
+      Bool_t is_hit_l = false;
+      Int_t m_l = 0;
+      for(const auto& T: hit->GetArrayTdcLeft()){
+        HF1(T0Hid +100*(seg+1) +3, T);
+        if(m_l < MaxDepth){
+          event.t0lt[seg][m_l] = T;
+          dst.t0lt[seg][m_l]   = T;
+          ++m_l;
+        }
+        if(MinTdcT0 < T && T < MaxTdcT0) is_hit_l = true;
+      }
+      if(is_hit_l) HF1(T0Hid+100*(seg+1)+5, Al);
+      else         HF1(T0Hid+100*(seg+1)+7, Al);
+
+      // Right
+      Int_t Ar = hit->GetAdcRight();
+      HF1(T0Hid+100*(seg+1)+2, Ar);
+      event.t0ra[seg] = Ar;
+      dst.t0ra[seg]   = Ar;
+
+      Bool_t is_hit_r = false;
+      Int_t m_r = 0;
+      for(const auto& T: hit->GetArrayTdcRight()){
+        HF1(T0Hid +100*(seg+1) +4, T);
+        if(m_r < MaxDepth){
+          event.t0rt[seg][m_r] = T;
+          dst.t0rt[seg][m_r]   = T;
+          ++m_r;
+        }
+        if(MinTdcT0 < T && T < MaxTdcT0)  is_hit_r = true;
+      }
+      if(is_hit_r) HF1(T0Hid+100*(seg+1)+6, Ar);
+      else         HF1(T0Hid+100*(seg+1)+8, Ar);
+
+      // Hitpat
+      if(is_hit_l || is_hit_r){
+        ++nh1; HF1(T0Hid+3, seg+0.5);
+      }
+      if(is_hit_l && is_hit_r){
+        event.t0hitpat[t0_nhits++] = seg;
+        ++nh2; HF1(T0Hid+5, seg+0.5);
+      }
+    }
+    HF1(T0Hid+2, nh1); HF1(T0Hid+4, nh2);
+    event.t0nhits = t0_nhits;
+  }
+
 
 #if 1
   ///// SAC
@@ -1053,6 +1171,34 @@ ConfMan::InitializeHistograms()
   HB1(100, "BH2 MeanTime0", 400, -4, 4);
   HB1(101, "CTime0", 400, -4, 4);
 #endif
+
+  // TOF
+  HB1(T0Hid +0, "#Hits T0",        NumOfSegT0+1, 0., Double_t(NumOfSegT0+1));
+  HB1(T0Hid +1, "Hitpat T0",       NumOfSegT0,   0., Double_t(NumOfSegT0));
+  HB1(T0Hid +2, "#Hits T0(Tor)",   NumOfSegT0+1, 0., Double_t(NumOfSegT0+1));
+  HB1(T0Hid +3, "Hitpat T0(Tor)",  NumOfSegT0,   0., Double_t(NumOfSegT0));
+  HB1(T0Hid +4, "#Hits T0(Tand)",  NumOfSegT0+1, 0., Double_t(NumOfSegT0+1));
+  HB1(T0Hid +5, "Hitpat T0(Tand)", NumOfSegT0,   0., Double_t(NumOfSegT0));
+
+  for(Int_t i=0; i<NumOfSegT0; ++i){
+    TString title1 = Form("T0-%d LeftAdc", i);
+    TString title2 = Form("T0-%d RightAdc", i);
+    TString title3 = Form("T0-%d LeftTdc", i);
+    TString title4 = Form("T0-%d RightTdc", i);
+    TString title5 = Form("T0-%d LeftAdc(w Tdc)", i);
+    TString title6 = Form("T0-%d RightAdc(w Tdc)", i);
+    TString title7 = Form("T0-%d LeftAdc(w/o Tdc)", i);
+    TString title8 = Form("T0-%d RightAdc(w/o Tdc)", i);
+    HB1(T0Hid +100*(i+1) +1, title1, NbinAdc, MinAdc, MaxAdc);
+    HB1(T0Hid +100*(i+1) +2, title2, NbinAdc, MinAdc, MaxAdc);
+    HB1(T0Hid +100*(i+1) +3, title3, NbinTdcHr, MinTdcHr, MaxTdcHr);
+    HB1(T0Hid +100*(i+1) +4, title4, NbinTdcHr, MinTdcHr, MaxTdcHr);
+    HB1(T0Hid +100*(i+1) +5, title5, NbinAdc, MinAdc, MaxAdc);
+    HB1(T0Hid +100*(i+1) +6, title6, NbinAdc, MinAdc, MaxAdc);
+    HB1(T0Hid +100*(i+1) +7, title7, NbinAdc, MinAdc, MaxAdc);
+    HB1(T0Hid +100*(i+1) +8, title8, NbinAdc, MinAdc, MaxAdc);
+  }
+
 #if 1
   // SAC
   HB1(SACHid +0, "#Hits SAC",        NumOfSegSAC+1, 0., Double_t(NumOfSegSAC+1));
@@ -1174,6 +1320,13 @@ ConfMan::InitializeHistograms()
   // tree->Branch("bh2ut",       event.bh2ut,       Form("bh2ut[%d][%d]/D", NumOfSegBH2, MaxDepth));
   // tree->Branch("bh2da",       event.bh2da,       Form("bh2da[%d]/D", NumOfSegBH2));
   // tree->Branch("bh2dt",       event.bh2dt,       Form("bh2dt[%d][%d]/D", NumOfSegBH2, MaxDepth));
+  //T0
+  tree->Branch("t0nhits",   &event.t0nhits,   "t0nhits/I");
+  tree->Branch("t0hitpat",   event.t0hitpat,  Form("t0hitpat[%d]/I", NumOfSegT0));
+  tree->Branch("t0la",       event.t0la,      Form("t0la[%d]/D", NumOfSegT0));
+  tree->Branch("t0lt",       event.t0lt,      Form("t0lt[%d][%d]/D", NumOfSegT0, MaxDepth));
+  tree->Branch("t0ra",       event.t0ra,      Form("t0ra[%d]/D", NumOfSegT0));
+  tree->Branch("t0rt",       event.t0rt,      Form("t0rt[%d][%d]/D", NumOfSegT0, MaxDepth));
   // //SAC
   tree->Branch("sacnhits",   &event.sacnhits,   "sacnhits/I");
   tree->Branch("sachitpat",   event.sachitpat,  Form("sachitpat[%d]/I", NumOfSegSAC));
