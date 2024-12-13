@@ -706,6 +706,20 @@ DCAnalyzer::TrackSearchBcOutSdcIn()
 }
 
 //_____________________________________________________________________________
+Bool_t
+DCAnalyzer::TrackSearchSdcInSdcOut()
+{
+  static const Int_t MinLayer = gUser.GetParameter("MinLayerSdcInSdcOut");
+
+  track::LocalTrackSearchSdcInSdcOut(m_SdcInHC, PPInfoSdcIn,
+				    m_SdcOutHC, PPInfoSdcOut,
+                                    NPPInfoSdcIn, NPPInfoSdcOut,
+                                    m_SdcInSdcOutTC, MinLayer);
+
+  return true;
+}
+
+//_____________________________________________________________________________
 #if UseBcIn
 Bool_t
 DCAnalyzer::TrackSearchK18U2D()
