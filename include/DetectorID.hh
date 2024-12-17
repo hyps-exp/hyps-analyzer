@@ -50,6 +50,20 @@ const std::vector<int> NumOfSegAFTarr = { 32, 32, 16, 16,
 
 //const Int_t NumOfSegAFT[4]    = {NumOfSegAFTX, NumOfSegAFTX, NumOfSegAFTY, NumOfSegAFTY};
 
+// CFT
+const int NumOfPlaneCFT   =   8;
+enum CFT_PLANE{CFT_U1, CFT_PHI1, CFT_V2, CFT_PHI2, CFT_U3, CFT_PHI3, CFT_V4, CFT_PHI4};
+enum CFT_PLANE_{CFT_UV1, CFT_PHI1_, CFT_UV2, CFT_PHI2_, CFT_UV3, CFT_PHI3_, CFT_UV4, CFT_PHI4_};
+const int NumOfSegCFT_UV1   = 426;
+const int NumOfSegCFT_PHI1  = 584;
+const int NumOfSegCFT_UV2   = 472;
+const int NumOfSegCFT_PHI2  = 692;
+const int NumOfSegCFT_UV3   = 510;
+const int NumOfSegCFT_PHI3  = 800;
+const int NumOfSegCFT_UV4   = 538;
+const int NumOfSegCFT_PHI4  = 910;
+const std::vector<int> NumOfSegCFT = {426,584,472,692,510,800,538,910};
+
 // VMEEASIROC
 const Int_t DetIdVMEASIROC = 116;
 const Int_t NumOfPlaneVMEEASIROC = 96;
