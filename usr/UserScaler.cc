@@ -15,6 +15,7 @@
 #include "ConfMan.hh"
 #include "DetectorID.hh"
 #include "FuncName.hh"
+#include "RawData.hh"
 #include "RootHelper.hh"
 #include "ScalerAnalyzer.hh"
 #include "Unpacker.hh"
@@ -27,24 +28,201 @@
 namespace
 {
 using namespace root;
-using hddaq::unpacker::GUnpacker;
-auto& gScaler = ScalerAnalyzer::GetInstance();
-auto& gUnpacker = GUnpacker::get_instance();
+const auto qnan = TMath::QuietNaN();
+// using hddaq::unpacker::GUnpacker;
+auto& gUnpacker = hddaq::unpacker::GUnpacker::get_instance();
+auto& gScaler   = ScalerAnalyzer::GetInstance();
+// auto& gRM       = RMAnalyzer::GetInstance();
 }
 
 //_____________________________________________________________________________
 struct Event
 {
-  Int_t evnum;
-  // void clear();
+  Int_t    evnum;
+  Int_t    spill;
+  Int_t    L1req;
+  Int_t    L1acc;
+  Int_t    L2req;
+  Int_t    L2acc;
+  Int_t    realtime;
+  Int_t    livetime;
+  Double_t daqeff;
+  Double_t l2eff;
+  Double_t real_live;
+  Double_t duty;
+  Int_t    rf;
+  Int_t    tagger_or_1;
+  Int_t    tagger_or_2;
+  Int_t    tagger_coin;
+  Int_t    t0;
+  Int_t    t0_L;
+  Int_t    t0_R;
+  Int_t    sac_sum;
+  Int_t    eVeto;
+  Int_t    eVeto_L;
+  Int_t    eVeto_R;
+  Int_t    tof;
+  Int_t    tof_or_1;
+  Int_t    tof_or_2;
+  Int_t    coin_2nd;
+  Int_t    bgo;
+  Int_t    bgo_or_1;
+  Int_t    bgo_or_2;
+  Int_t    cft_phi1;
+  Int_t    cft_phi2;
+  Int_t    cft_phi3;
+  Int_t    cft_phi4;
+
+  void clear();
 };
+
+//_____________________________________________________________________________
+void
+Event::clear()
+{
+  evnum       = 0;
+  spill       = 0;
+  L1req       = 0;
+  L1acc       = 0;
+  L2req       = 0;
+  L2acc       = 0;
+  realtime    = 0;
+  livetime    = 0;
+  daqeff      = 0.;
+  l2eff       = 0.;
+  real_live   = 0.;
+  duty        = 0.;
+  rf          = 0;
+  tagger_or_1 = 0;
+  tagger_or_2 = 0;
+  tagger_coin = 0;
+  t0          = 0;
+  t0_L        = 0;
+  t0_R        = 0;
+  sac_sum     = 0;
+  eVeto       = 0;
+  eVeto_L     = 0;
+  eVeto_R     = 0;
+  tof         = 0;
+  tof_or_1    = 0;
+  tof_or_2    = 0;
+  coin_2nd    = 0;
+  bgo         = 0;
+  bgo_or_1    = 0;
+  bgo_or_2    = 0;
+  cft_phi1    = 0;
+  cft_phi2    = 0;
+  cft_phi3    = 0;
+  cft_phi4    = 0;
+}
+
+//_____________________________________________________________________________
+struct Spill
+{
+  Int_t    evnum;
+  Int_t    spill;
+  Int_t    L1req;
+  Int_t    L1acc;
+  Int_t    L2req;
+  Int_t    L2acc;
+  Int_t    realtime;
+  Int_t    livetime;
+  Double_t daqeff;
+  Double_t l2eff;
+  Double_t real_live;
+  Double_t duty;
+  Int_t    rf;
+  Int_t    tagger_or_1;
+  Int_t    tagger_or_2;
+  Int_t    tagger_coin;
+  Int_t    t0;
+  Int_t    t0_L;
+  Int_t    t0_R;
+  Int_t    sac_sum;
+  Int_t    eVeto;
+  Int_t    eVeto_L;
+  Int_t    eVeto_R;
+  Int_t    tof;
+  Int_t    tof_or_1;
+  Int_t    tof_or_2;
+  Int_t    coin_2nd;
+  Int_t    bgo;
+  Int_t    bgo_or_1;
+  Int_t    bgo_or_2;
+  Int_t    cft_phi1;
+  Int_t    cft_phi2;
+  Int_t    cft_phi3;
+  Int_t    cft_phi4;
+
+  void clear();
+};
+
+//_____________________________________________________________________________
+void
+Spill::clear()
+{
+  evnum       = 0;
+  spill       = 0;
+  L1req       = 0;
+  L1acc       = 0;
+  L2req       = 0;
+  L2acc       = 0;
+  realtime    = 0;
+  livetime    = 0;
+  daqeff      = 0.;
+  l2eff       = 0.;
+  real_live   = 0.;
+  duty        = 0.;
+  rf          = 0;
+  tagger_or_1 = 0;
+  tagger_or_2 = 0;
+  tagger_coin = 0;
+  t0          = 0;
+  t0_L        = 0;
+  t0_R        = 0;
+  sac_sum     = 0;
+  eVeto       = 0;
+  eVeto_L     = 0;
+  eVeto_R     = 0;
+  tof         = 0;
+  tof_or_1    = 0;
+  tof_or_2    = 0;
+  coin_2nd    = 0;
+  bgo         = 0;
+  bgo_or_1    = 0;
+  bgo_or_2    = 0;
+  cft_phi1    = 0;
+  cft_phi2    = 0;
+  cft_phi3    = 0;
+  cft_phi4    = 0;
+}
+
+//_____________________________________________________________________________
+// struct Dst
+// {
+//   Int_t evnum;
+//   Int_t spill;
+//   void clear();
+// };
+
+//_____________________________________________________________________________
+// void
+// Dst::clear()
+// {
+//   evnum = 0;
+//   spill = 0;
+// }
 
 //_____________________________________________________________________________
 namespace root
 {
-Event  event;
-TH1   *h[MaxHist];
-TTree *tree;
+// Event  event;
+Spill  spill;
+// Dst    dst;
+TH1*   h[MaxHist];
+// TTree* event;
+TTree* tree;
+Int_t  spill_cnt;
 }
 
 //_____________________________________________________________________________
@@ -52,6 +230,7 @@ Bool_t
 ProcessingBegin()
 {
   // event.clear();
+  // dst.clear();
   return true;
 }
 
@@ -59,18 +238,96 @@ ProcessingBegin()
 Bool_t
 ProcessingNormal()
 {
-  event.evnum++;
+  // RawData rawData;
+  // gRM.Decode();
+
   gScaler.Decode();
 
-#if !MAKE_LOG
-  if(event.evnum%400==0)
-    gScaler.Print();
-#endif
+  if( gScaler.SpillIncrement() ){
+    tree->Fill();
+    spill.clear();
+    spill_cnt++;
+  }
 
-#if SPILL_RESET
-  if(gScaler.SpillIncrement())
-    gScaler.Clear();
-#endif
+  // event.evnum       = gUnpacker.get_event_number();
+  // event.spill       = spill;
+  // event.L1req       += gScaler.Get("L1-Req");
+  // event.L1acc       += gScaler.Get("L1-Acc");
+  // event.L2req       += gScaler.Get("L2-Req");
+  // event.L2acc       += gScaler.Get("L2-Req"); // FastClear is not used
+  // event.realtime    += gScaler.Get("Real-Time");
+  // event.livetime    += gScaler.Get("Live-Time");
+  // event.daqeff      = static_cast<Double_t>event.L1acc / event.L1req;
+  // event.L2eff       = static_cast<Double_t>event.L2acc / event.L2req;
+  // event.real_live   = static_cast<Double_t>event.livetime / event.realtime;
+  // event.duty        = gScaler.Duty();
+  // event.rf          += gScaler.Get("RF");
+  // event.tagger_or_1 += gScaler.Get("Tagger_OR-1");
+  // event.tagger_or_2 += gScaler.Get("Tagger_OR-2");
+  // event.tagger_coin += gScaler.Get("Tagger_Coin");
+  // event.t0          += gScaler.Get("T0");
+  // event.t0_L        += gScaler.Get("T0-L");
+  // event.t0_R        += gScaler.Get("T0-R");
+  // event.sac_sum     += gScaler.Get("SAC-Sum");
+  // event.eVeto       += gScaler.Get("e-Veto");
+  // event.eVeto_L     += gScaler.Get("e-Veto-L");
+  // event.eVeto_R     += gScaler.Get("e-Veto-R");
+  // event.tof         += gScaler.Get("TOF");
+  // event.tof_or_1    += gScaler.Get("MT-TOF_OR-1");
+  // event.tof_or_2    += gScaler.Get("MT-TOF_OR-2");
+  // event.coin_2nd    += gScaler.Get("Coin-2nd-Stage");
+  // event.bgo         += gScaler.Get("BGO");
+  // event.bgo_or_1    += gScaler.Get("BGO_OR-1");
+  // event.bgo_or_2    += gScaler.Get("BGO_OR-2");
+  // event.cft_phi1    += gScaler.Get("CFT-Phi1");
+  // event.cft_phi2    += gScaler.Get("CFT-Phi2");
+  // event.cft_phi3    += gScaler.Get("CFT-Phi3");
+  // event.cft_phi4    += gScaler.Get("CFT-Phi4");
+
+  spill.evnum       = gUnpacker.get_event_number();
+  spill.spill       = spill_cnt;
+  spill.L1req       = gScaler.Get("L1-Req");
+  spill.L1acc       = gScaler.Get("L1-Acc");
+  spill.L2req       = gScaler.Get("L2-Req");
+  spill.L2acc       = gScaler.Get("L2-Req"); // FastClear is not used
+  spill.realtime    = gScaler.Get("Real-Time");
+  spill.livetime    = gScaler.Get("Live-Time");
+  spill.daqeff      = gScaler.Fraction("L1-Acc", "L1-Req");
+  spill.l2eff       = gScaler.Fraction("L2-Acc", "L2-Req");
+  spill.real_live   = gScaler.Fraction("Live-Time", "Real-Time");
+  spill.duty        = gScaler.Duty();
+  spill.rf          = gScaler.Get("RF");
+  spill.tagger_or_1 = gScaler.Get("Tagger_OR-1");
+  spill.tagger_or_2 = gScaler.Get("Tagger_OR-2");
+  spill.tagger_coin = gScaler.Get("Tagger_Coin");
+  spill.t0          = gScaler.Get("T0");
+  spill.t0_L        = gScaler.Get("T0-L");
+  spill.t0_R        = gScaler.Get("T0-R");
+  spill.sac_sum     = gScaler.Get("SAC-Sum");
+  spill.eVeto       = gScaler.Get("e-Veto");
+  spill.eVeto_L     = gScaler.Get("e-Veto-L");
+  spill.eVeto_R     = gScaler.Get("e-Veto-R");
+  spill.tof         = gScaler.Get("TOF");
+  spill.tof_or_1    = gScaler.Get("MT-TOF_OR-1");
+  spill.tof_or_2    = gScaler.Get("MT-TOF_OR-2");
+  spill.coin_2nd    = gScaler.Get("Coin-2nd-Stage");
+  spill.bgo         = gScaler.Get("BGO");
+  spill.bgo_or_1    = gScaler.Get("BGO_OR-1");
+  spill.bgo_or_2    = gScaler.Get("BGO_OR-2");
+  spill.cft_phi1    = gScaler.Get("CFT-Phi1");
+  spill.cft_phi2    = gScaler.Get("CFT-Phi2");
+  spill.cft_phi3    = gScaler.Get("CFT-Phi3");
+  spill.cft_phi4    = gScaler.Get("CFT-Phi4");
+
+// #if !MAKE_LOG
+//   if(event.evnum%400==0)
+//     gScaler.Print();
+// #endif
+
+// #if SPILL_RESET
+//   if(gScaler.SpillIncrement())
+//     gScaler.Clear();
+// #endif
 
   return true;
 }
@@ -79,6 +336,7 @@ ProcessingNormal()
 Bool_t
 ProcessingEnd()
 {
+  // event->Fill();
   return true;
 }
 
@@ -86,122 +344,132 @@ ProcessingEnd()
 Bool_t
 ConfMan::InitializeHistograms()
 {
-  HBTree("scaler", "tree of Scaler");
-  event.evnum = 0;
 
-  //////////////////// Set Channels
-  // ScalerAnalylzer::Set(Int_t column,
-  //                       Int_t raw,
-  //                       ScalerInfo(name, module, channel));
-  // scaler information is defined from here.
-  // please do not use a white space character.
-  {
+  spill_cnt = 0;
+
+  spill.clear();
+
+  { // hul01_scr-2
     Int_t c = ScalerAnalyzer::kLeft;
     Int_t r = 0;
-    gScaler.Set(c, r++, ScalerInfo("BH1",        0, 16));
-    gScaler.Set(c, r++, ScalerInfo("BH1-SUM",   -1, -1));
-    gScaler.Set(c, r++, ScalerInfo("BH1-01",     1,  0));
-    gScaler.Set(c, r++, ScalerInfo("BH1-02",     1,  1));
-    gScaler.Set(c, r++, ScalerInfo("BH1-03",     1,  2));
-    gScaler.Set(c, r++, ScalerInfo("BH1-04",     1,  3));
-    gScaler.Set(c, r++, ScalerInfo("BH1-05",     1,  4));
-    gScaler.Set(c, r++, ScalerInfo("BH1-06",     1,  5));
-    gScaler.Set(c, r++, ScalerInfo("BH1-07",     1,  6));
-    gScaler.Set(c, r++, ScalerInfo("BH1-08",     1,  7));
-    gScaler.Set(c, r++, ScalerInfo("BH1-09",     1,  8));
-    gScaler.Set(c, r++, ScalerInfo("BH1-10",     1,  9));
-    gScaler.Set(c, r++, ScalerInfo("BH1-11",     1, 10));
-    gScaler.Set(c, r++, ScalerInfo("BH2",        0, 17));
-    gScaler.Set(c, r++, ScalerInfo("BH2-SUM",   -1, -1));
-    gScaler.Set(c, r++, ScalerInfo("BH2-01",     0, 64));
-    gScaler.Set(c, r++, ScalerInfo("BH2-02",     0, 65));
-    gScaler.Set(c, r++, ScalerInfo("BH2-03",     0, 66));
-    gScaler.Set(c, r++, ScalerInfo("BH2-04",     0, 67));
-    gScaler.Set(c, r++, ScalerInfo("BH2-05",     0, 68));
-    gScaler.Set(c, r++, ScalerInfo("BH2-06",     0, 69));
-    gScaler.Set(c, r++, ScalerInfo("BH2-07",     0, 70));
-    gScaler.Set(c, r++, ScalerInfo("BH2-08",     0, 71));
-    gScaler.Set(c, r++, ScalerInfo("V792gate-1", 2, 2));
-    gScaler.Set(c, r++, ScalerInfo("V792gate-2", 2, 3));
-    gScaler.Set(c, r++, ScalerInfo("V792gate-3", 2, 4));
-    gScaler.Set(c, r++, ScalerInfo("AFT-01",   0, 80));
-    gScaler.Set(c, r++, ScalerInfo("AFT-02",   0, 81));
-    gScaler.Set(c, r++, ScalerInfo("AFT-03",   0, 82));
+    gScaler.Set( c, r++, ScalerInfo("1M-CLK",           1, 80) );
+    gScaler.Set( c, r++, ScalerInfo("RF",               1, 81) );
+    gScaler.Set( c, r++, ScalerInfo("Tagger_Coin",      1, 82) );
+    gScaler.Set( c, r++, ScalerInfo("T0-L",             1, 83) );
+    gScaler.Set( c, r++, ScalerInfo("T0-R",             1, 84) );
+    gScaler.Set( c, r++, ScalerInfo("SAC-Sum",          1, 85) );
+    gScaler.Set( c, r++, ScalerInfo("e-Veto-L",         1, 86) );
+    gScaler.Set( c, r++, ScalerInfo("e-Veto-R",         1, 87) );
+    gScaler.Set( c, r++, ScalerInfo("MT-TOF_OR-1",      1, 88) );
+    gScaler.Set( c, r++, ScalerInfo("MT-TOF_OR-2",      1, 89) );
+    gScaler.Set( c, r++, ScalerInfo("MT-T0",            1, 90) );
+    gScaler.Set( c, r++, ScalerInfo("MT-e-Veto",        1, 91) );
+    gScaler.Set( c, r++, ScalerInfo("BGO_OR-1",         1, 92) );
+    gScaler.Set( c, r++, ScalerInfo("BGO_OR-2",         1, 93) );
+    gScaler.Set( c, r++, ScalerInfo("Tagger_OR-1",      1, 94) );
+    gScaler.Set( c, r++, ScalerInfo("Tagger_OR-2",      1, 95) );
+
+    // hul03_scr-1
+    gScaler.Set( c, r++, ScalerInfo("Real-Time",        2,  0) );
+    gScaler.Set( c, r++, ScalerInfo("L1-Req",           2,  1) );
+    gScaler.Set( c, r++, ScalerInfo("L1-Acc",           2,  2) );
+    gScaler.Set( c, r++, ScalerInfo("L2-Req",           2,  3) );
+    gScaler.Set( c, r++, ScalerInfo("L2-Acc",           2,  3) ); // FastClear is not used
+    gScaler.Set( c, r++, ScalerInfo("T0",               2,  4) );
+    gScaler.Set( c, r++, ScalerInfo("TOF",              2,  5) );
+    gScaler.Set( c, r++, ScalerInfo("SAC",              2,  6) );
+    gScaler.Set( c, r++, ScalerInfo("e-Veto",           2,  7) );
+    gScaler.Set( c, r++, ScalerInfo("Coin-2nd-Stage",   2,  8) );
+    gScaler.Set( c, r++, ScalerInfo("BGO",              2,  9) );
+    gScaler.Set( c, r++, ScalerInfo("CFT-Phi1",         2, 10) );
+    gScaler.Set( c, r++, ScalerInfo("CFT-Phi2",         2, 11) );
+    gScaler.Set( c, r++, ScalerInfo("CFT-Phi3",         2, 12) );
+    gScaler.Set( c, r++, ScalerInfo("CFT-Phi4",         2, 13) );
+    gScaler.Set( c, r++, ScalerInfo("Live-Time",        2, 14) );
   }
 
-  {
-    Int_t c = ScalerAnalyzer::kCenter;
-    Int_t r = 0;
-    gScaler.Set(c, r++, ScalerInfo("10M-Clock",    0,  0));
-    gScaler.Set(c, r++, ScalerInfo("TM",           0,  9));
-    gScaler.Set(c, r++, ScalerInfo("SY",           0, 10));
-    gScaler.Set(c, r++, ScalerInfo("K-Beam",       0, 35));
-    gScaler.Set(c, r++, ScalerInfo("Pi-Beam",      0, 39));
-    gScaler.Set(c, r++, ScalerInfo("Beam",         0, 36));
-    gScaler.Set(c, r++, ScalerInfo("BH1-1/100-PS", 1, 11));
-    gScaler.Set(c, r++, ScalerInfo("BH1-1/1e5-PS", 1, 12));
-    gScaler.Set(c, r++, ScalerInfo("Mtx2D-1",      0, 32));
-    gScaler.Set(c, r++, ScalerInfo("Mtx2D-2",      0, 33));
-    gScaler.Set(c, r++, ScalerInfo("Mtx3D",        0, 34));
-    gScaler.Set(c, r++, ScalerInfo("Other3",       0, 27));
-    gScaler.Set(c, r++, ScalerInfo("Other4",       0, 28));
-    gScaler.Set(c, r++, ScalerInfo("BEAM-A",       0, 35));
-    gScaler.Set(c, r++, ScalerInfo("BEAM-B",       0, 36));
-    gScaler.Set(c, r++, ScalerInfo("BEAM-C",       0, 37));
-    gScaler.Set(c, r++, ScalerInfo("BEAM-D",       0, 38));
-    gScaler.Set(c, r++, ScalerInfo("BEAM-E",       0, 39));
-    gScaler.Set(c, r++, ScalerInfo("BEAM-F",       0, 40));
-    gScaler.Set(c, r++, ScalerInfo("BAC",        0, 18));
-    gScaler.Set(c, r++, ScalerInfo("TOF",        0, 22));
-    gScaler.Set(c, r++, ScalerInfo("AC1",        0, 23));
-    gScaler.Set(c, r++, ScalerInfo("WC",         0, 24));
-    gScaler.Set(c, r++, ScalerInfo("V792gate-4",    2, 5));
-    gScaler.Set(c, r++, ScalerInfo("V792gate-5",    2, 6));
-    gScaler.Set(c, r++, ScalerInfo("V792gate-6",    2, 7));
-    gScaler.Set(c, r++, ScalerInfo( "AFT-04",     0, 83));
-    gScaler.Set(c, r++, ScalerInfo( "AFT-05",     0, 84));
-    gScaler.Set(c, r++, ScalerInfo( "AFT-06",     0, 85));
-  }
+  //Tree
+  // HBTree("event", "tree of Scaler");
+  // tree->Branch("evnum",           &event.evnum,           "evnum/I");
+  // tree->Branch("spill",           &event.spill,           "spill/I");
+  // tree->Branch("L1req",           &event.L1req,           "L1req/I");
+  // tree->Branch("L1acc",           &event.L1acc,           "L1acc/I");
+  // tree->Branch("L2req",           &event.L2req,           "L2req/I");
+  // tree->Branch("L2acc",           &event.L2acc,           "L2acc/I");
+  // tree->Branch("realtime",        &event.realtime,        "realtime/I");
+  // tree->Branch("livetime",        &event.livetime,        "livetime/I");
+  // tree->Branch("daqeff",          &event.daqeff,          "daqeff/D");
+  // tree->Branch("l2eff",           &event.l2eff,           "l2eff/D");
+  // tree->Branch("real_live",       &event.real_live,       "real_live/D");
+  // tree->Branch("duty",            &event.duty,            "duty/D");
+  // tree->Branch("rf",              &event.rf,              "rf/I");
+  // tree->Branch("tagger_or_1",     &event.tagger_or_1,     "tagger_or_1/I");
+  // tree->Branch("tagger_or_2",     &event.tagger_or_2,     "tagger_or_2/I");
+  // tree->Branch("tagger_coin",     &event.tagger_coin,     "tagger_coin/I");
+  // tree->Branch("t0",              &event.t0,              "t0/I");
+  // tree->Branch("t0_L",            &event.t0_L,            "t0_L/I");
+  // tree->Branch("t0_R",            &event.t0_R,            "t0_R/I");
+  // tree->Branch("sac_sum",         &event.sac_sum,         "sac_sum/I");
+  // tree->Branch("eVeto",           &event.eVeto,           "eVeto/I");
+  // tree->Branch("eVeto_L",         &event.eVeto_L,         "eVeto_L/I");
+  // tree->Branch("eVeto_R",         &event.eVeto_R,         "eVeto_R/I");
+  // tree->Branch("tof",             &event.tof,             "tof/I");
+  // tree->Branch("tof_or_1",        &event.tof_or_1,        "tof_or_1/I");
+  // tree->Branch("tof_or_2",        &event.tof_or_2,        "tof_or_2/I");
+  // tree->Branch("coin_2nd",        &event.coin_2nd,        "coin_2nd/I");
+  // tree->Branch("bgo",             &event.bgo,             "bgo/I");
+  // tree->Branch("bgo_or_1",        &event.bgo_or_1,        "bgo_or_1/I");
+  // tree->Branch("bgo_or_2",        &event.bgo_or_2,        "bgo_or_2/I");
+  // tree->Branch("cft_phi1",        &event.cft_phi1,        "cft_phi1/I");
+  // tree->Branch("cft_phi2",        &event.cft_phi2,        "cft_phi2/I");
+  // tree->Branch("cft_phi3",        &event.cft_phi3,        "cft_phi3/I");
+  // tree->Branch("cft_phi4",        &event.cft_phi4,        "cft_phi4/I");
 
-  {
-    Int_t c = ScalerAnalyzer::kRight;
-    Int_t r = 0;
-    gScaler.Set(c, r++, ScalerInfo("Spill",        -1, -1));
-    gScaler.Set(c, r++, ScalerInfo("Real-Time",     0,  1));
-    gScaler.Set(c, r++, ScalerInfo("Live-Time",     0,  2));
-    gScaler.Set(c, r++, ScalerInfo("L1-Req",        0,  3));
-    gScaler.Set(c, r++, ScalerInfo("L1-Acc",        0,  4));
-    gScaler.Set(c, r++, ScalerInfo("L2-Req",        0,  7));
-    gScaler.Set(c, r++, ScalerInfo("L2-Acc",        0,  8));
-    gScaler.Set(c, r++, ScalerInfo("TRIG-A",        0, 41));
-    gScaler.Set(c, r++, ScalerInfo("TRIG-B",        0, 42));
-    gScaler.Set(c, r++, ScalerInfo("TRIG-C",        0, 43));
-    gScaler.Set(c, r++, ScalerInfo("TRIG-D",        0, 44));
-    gScaler.Set(c, r++, ScalerInfo("TRIG-E",        0, 45));
-    gScaler.Set(c, r++, ScalerInfo("TRIG-F",        0, 46));
-    gScaler.Set(c, r++, ScalerInfo("TRIG-A-PS",     0, 48));
-    gScaler.Set(c, r++, ScalerInfo("TRIG-B-PS",     0, 49));
-    gScaler.Set(c, r++, ScalerInfo("TRIG-C-PS",     0, 50));
-    gScaler.Set(c, r++, ScalerInfo("TRIG-D-PS",     0, 51));
-    gScaler.Set(c, r++, ScalerInfo("TRIG-E-PS",     0, 52));
-    gScaler.Set(c, r++, ScalerInfo("TRIG-F-PS",     0, 53));
-    gScaler.Set(c, r++, ScalerInfo("TRIG-PSOR-A",   0, 54));
-    gScaler.Set(c, r++, ScalerInfo("TRIG-PSOR-B",   0, 55));
-    gScaler.Set(c, r++, ScalerInfo("Clock-PS",      0, 56));
-    gScaler.Set(c, r++, ScalerInfo("Reserve2-PS",   0, 57));
-    gScaler.Set(c, r++, ScalerInfo("Level1-PS",     0, 58));
-    gScaler.Set(c, r++, ScalerInfo("V792gate-7",    2, 8));
-    gScaler.Set(c, r++, ScalerInfo("V792gate-8",    2, 9));
-    gScaler.Set( c, r++, ScalerInfo( "AFT-07",      0, 86));
-    gScaler.Set( c, r++, ScalerInfo( "AFT-08",      0, 87));
-    gScaler.Set( c, r++, ScalerInfo( "AFT-09",      0, 88));
-  }
+
+  HBTree("spill", "Scaler data in each spill");
+  tree->Branch("evnum",           &spill.evnum,           "evnum/I");
+  tree->Branch("spill",           &spill.spill,           "spill/I");
+  tree->Branch("L1req",           &spill.L1req,           "L1req/I");
+  tree->Branch("L1acc",           &spill.L1acc,           "L1acc/I");
+  tree->Branch("L2req",           &spill.L2req,           "L2req/I");
+  tree->Branch("L2acc",           &spill.L2acc,           "L2acc/I");
+  tree->Branch("realtime",        &spill.realtime,        "realtime/I");
+  tree->Branch("livetime",        &spill.livetime,        "livetime/I");
+  tree->Branch("daqeff",          &spill.daqeff,          "daqeff/D");
+  tree->Branch("l2eff",           &spill.l2eff,           "l2eff/D");
+  tree->Branch("real_live",       &spill.real_live,       "real_live/D");
+  tree->Branch("duty",            &spill.duty,            "duty/D");
+  tree->Branch("rf",              &spill.rf,              "rf/I");
+  tree->Branch("tagger_or_1",     &spill.tagger_or_1,     "tagger_or_1/I");
+  tree->Branch("tagger_or_2",     &spill.tagger_or_2,     "tagger_or_2/I");
+  tree->Branch("tagger_coin",     &spill.tagger_coin,     "tagger_coin/I");
+  tree->Branch("t0",              &spill.t0,              "t0/I");
+  tree->Branch("t0_L",            &spill.t0_L,            "t0_L/I");
+  tree->Branch("t0_R",            &spill.t0_R,            "t0_R/I");
+  tree->Branch("sac_sum",         &spill.sac_sum,         "sac_sum/I");
+  tree->Branch("eVeto",           &spill.eVeto,           "eVeto/I");
+  tree->Branch("eVeto_L",         &spill.eVeto_L,         "eVeto_L/I");
+  tree->Branch("eVeto_R",         &spill.eVeto_R,         "eVeto_R/I");
+  tree->Branch("tof",             &spill.tof,             "tof/I");
+  tree->Branch("tof_or_1",        &spill.tof_or_1,        "tof_or_1/I");
+  tree->Branch("tof_or_2",        &spill.tof_or_2,        "tof_or_2/I");
+  tree->Branch("coin_2nd",        &spill.coin_2nd,        "coin_2nd/I");
+  tree->Branch("bgo",             &spill.bgo,             "bgo/I");
+  tree->Branch("bgo_or_1",        &spill.bgo_or_1,        "bgo_or_1/I");
+  tree->Branch("bgo_or_2",        &spill.bgo_or_2,        "bgo_or_2/I");
+  tree->Branch("cft_phi1",        &spill.cft_phi1,        "cft_phi1/I");
+  tree->Branch("cft_phi2",        &spill.cft_phi2,        "cft_phi2/I");
+  tree->Branch("cft_phi3",        &spill.cft_phi3,        "cft_phi3/I");
+  tree->Branch("cft_phi4",        &spill.cft_phi4,        "cft_phi4/I");
+
 
 #if USE_COMMA
   gScaler.SetFlag(ScalerAnalyzer::kSeparateComma);
 #endif
 
-  gScaler.SetFlag(ScalerAnalyzer::kSpillOn);
+  // gScaler.SetFlag(ScalerAnalyzer::kSpillOn);
+
+  gScaler.SetFlag(ScalerAnalyzer::kSpillBySpill);
 
   gScaler.PrintFlags();
 
@@ -219,6 +487,7 @@ ConfMan::InitializeParameterFiles()
 Bool_t
 ConfMan::FinalizeProcess()
 {
+#if 0
   if(event.evnum==0) return true;
 
   gScaler.Print();
@@ -344,6 +613,8 @@ ConfMan::FinalizeProcess()
       << std::right << std::setw(12) << l1rate          << std::endl
       << std::left  << std::setw(18) << "L2-Acc/Spill"  << "\t"
       << std::right << std::setw(12) << l2rate          << std::endl;
+
+#endif
 
 #endif
 
