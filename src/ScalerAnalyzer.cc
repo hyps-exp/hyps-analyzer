@@ -170,69 +170,69 @@ ScalerAnalyzer::Decode()
     }
   }
 
-  //////////////////// for BH1 SUM
-  {
-    static const Int_t id = digit_info.get_device_id("BH1");
-    static const Int_t n_seg = digit_info.get_n_segment(id);
-    if(Has("BH1-SUM")){
-      static Channel ch = Find("BH1-SUM");
-      m_info[ch.first][ch.second].data = 0;
-      for(Int_t i=0; i<n_seg; ++i){
-	m_info[ch.first][ch.second].data += Get(Form("BH1-%02d", i+1));
-      }
-    }
-  }
-
-  //////////////////// for BH2 SUM
-  {
-    static const Int_t id = digit_info.get_device_id("BH2");
-    static const Int_t n_seg = digit_info.get_n_segment(id);
-    if(Has("BH2-SUM")){
-      static Channel ch = Find("BH2-SUM");
-      m_info[ch.first][ch.second].data = 0;
-      for(Int_t i=0; i<n_seg; ++i){
-	m_info[ch.first][ch.second].data += Get(Form("BH2-%02d", i+1));
-      }
-    }
-  }
-
-  //////////////////// for SCH SUM
-  {
-    if(Has("SCH-SUM")){
-      static Channel ch = Find("SCH-SUM");
-      m_info[ch.first][ch.second].data = 0;
-      for(Int_t i=0; i<NumOfSegSCH; ++i){
-	m_info[ch.first][ch.second].data += Get(Form("SCH-%02d", i+1));
-      }
-    }
-  }
-
-  //////////////////// for LAC SUM
+  // //////////////////// for BH1 SUM
   // {
-  //   if(Has("LAC-SUM")){
-  //     static Channel ch = Find("LAC-SUM");
+  //   static const Int_t id = digit_info.get_device_id("BH1");
+  //   static const Int_t n_seg = digit_info.get_n_segment(id);
+  //   if(Has("BH1-SUM")){
+  //     static Channel ch = Find("BH1-SUM");
   //     m_info[ch.first][ch.second].data = 0;
-  //     for(Int_t i=0; i<NumOfSegLAC/2; ++i){
-  //       m_info[ch.first][ch.second].data += Get(Form("LAC-%02d", i+1));
+  //     for(Int_t i=0; i<n_seg; ++i){
+  // 	m_info[ch.first][ch.second].data += Get(Form("BH1-%02d", i+1));
   //     }
   //   }
   // }
 
-  //////////////////// Spill
-  {
-    if(Has("Spill")){
-      static Bool_t first = true;
-      static Channel p = Find("Spill");
-      if(first && !m_flag[kScalerSheet]){
-	m_info[p.first][p.second].data++;
-	first = false;
-      }
-      if(m_spill_increment ||
-	  (m_flag[kScalerSheet] && m_is_spill_end)){
-	m_info[p.first][p.second].data++;
-      }
-    }
-  }
+  // //////////////////// for BH2 SUM
+  // {
+  //   static const Int_t id = digit_info.get_device_id("BH2");
+  //   static const Int_t n_seg = digit_info.get_n_segment(id);
+  //   if(Has("BH2-SUM")){
+  //     static Channel ch = Find("BH2-SUM");
+  //     m_info[ch.first][ch.second].data = 0;
+  //     for(Int_t i=0; i<n_seg; ++i){
+  // 	m_info[ch.first][ch.second].data += Get(Form("BH2-%02d", i+1));
+  //     }
+  //   }
+  // }
+
+  // //////////////////// for SCH SUM
+  // {
+  //   if(Has("SCH-SUM")){
+  //     static Channel ch = Find("SCH-SUM");
+  //     m_info[ch.first][ch.second].data = 0;
+  //     for(Int_t i=0; i<NumOfSegSCH; ++i){
+  // 	m_info[ch.first][ch.second].data += Get(Form("SCH-%02d", i+1));
+  //     }
+  //   }
+  // }
+
+  // //////////////////// for LAC SUM
+  // // {
+  // //   if(Has("LAC-SUM")){
+  // //     static Channel ch = Find("LAC-SUM");
+  // //     m_info[ch.first][ch.second].data = 0;
+  // //     for(Int_t i=0; i<NumOfSegLAC/2; ++i){
+  // //       m_info[ch.first][ch.second].data += Get(Form("LAC-%02d", i+1));
+  // //     }
+  // //   }
+  // // }
+
+  // //////////////////// Spill
+  // {
+  //   if(Has("Spill")){
+  //     static Bool_t first = true;
+  //     static Channel p = Find("Spill");
+  //     if(first && !m_flag[kScalerSheet]){
+  // 	m_info[p.first][p.second].data++;
+  // 	first = false;
+  //     }
+  //     if(m_spill_increment ||
+  // 	  (m_flag[kScalerSheet] && m_is_spill_end)){
+  // 	m_info[p.first][p.second].data++;
+  //     }
+  //   }
+  // }
   return true;
 }
 
