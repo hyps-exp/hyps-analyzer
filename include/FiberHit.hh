@@ -27,6 +27,11 @@ protected:
   Double_t m_position;
   Double_t m_dxdw;
 
+  data_t m_adccor_hi;
+  data_t m_adccor_low;  
+  data_t m_mip_hi;
+  data_t m_mip_low;  
+  
 public:
   Bool_t   Calculate();
   Double_t Position() const { return m_position; }
@@ -48,14 +53,33 @@ public:
   // Double_t CTOT(Int_t i, Int_t j=0) const
   //   { return CTimeOverThreshold(i, j); }
 
-  // Double_t GetAdcHG() const { return m_adc_hg; }
-  // Double_t GetAdcLG() const { return m_adc_lg; }
-  // Double_t GetMipHG() const { return m_mip_hg; }
-  // Double_t GetMipLG() const { return m_mip_lg; }
+  Double_t GetAdcCorHigh(Int_t i=0, Int_t j=0) const {
+    if (j<m_adccor_hi.at(i).size())
+      return m_adccor_hi.at(i).at(j);
+    else
+      return TMath::QuietNaN();}
+  
+  Double_t GetAdcCorLow(Int_t i=0, Int_t j=0) const {
+    if (j<m_adccor_low.at(i).size())
+      return m_adccor_low.at(i).at(j);
+    else
+      return TMath::QuietNaN();}
+
+  Double_t GetMipHigh(Int_t i=0, Int_t j=0) const {
+    if (j<m_mip_hi.at(i).size())
+      return m_mip_hi.at(i).at(j);
+    else
+      return TMath::QuietNaN();}
+
+  Double_t GetMipLow(Int_t i=0, Int_t j=0) const {
+    if (j<m_mip_low.at(i).size())
+      return m_mip_low.at(i).at(j);
+    else
+      return TMath::QuietNaN();}
+  
   // Double_t GetDeHG() const { return m_dE_hg; }
   // Double_t GetDeLG() const { return m_dE_lg; }
-  // void     SetPedestalCor(Double_t deltaHG, Double_t deltaLG)
-  // { m_pedcor_hg = deltaHG; m_pedcor_lg = deltaLG; }
+  // void     SetPedestalCor(Double_t deltaHG, Double_t deltaLG)  { m_pedcor_hg = deltaHG; m_pedcor_lg = deltaLG; }
   // void     RegisterHits(FLHit* hit) { m_hit_container.push_back(hit); }
 
   virtual void   Print(Option_t* arg="") const;

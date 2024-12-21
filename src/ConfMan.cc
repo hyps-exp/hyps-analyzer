@@ -32,6 +32,7 @@
 #include "MsTParamMan.hh"
 #include "UnpackerManager.hh"
 #include "UserParamMan.hh"
+#include "CFTPedCorMan.hh"
 
 namespace
 {

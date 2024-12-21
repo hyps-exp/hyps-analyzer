@@ -36,6 +36,8 @@ protected:
   Int_t             m_n_ch;
   Double_t          m_time_offset;
 
+  Double_t  m_pedcor_hg, m_pedcor_lg; // Corrected pedestal for CFT  
+
   using data_t = std::vector<std::vector<Double_t>>; // [ch][mhit]
 
   data_t m_de_high;
@@ -44,6 +46,7 @@ protected:
   data_t m_time_trailing;
   data_t m_ctime_leading;
   data_t m_ctime_trailing; // no use
+
   std::vector<Bool_t> m_is_clustered;
 
 public:
@@ -57,6 +60,8 @@ public:
   Bool_t            Calculate();
   Bool_t            IsCalculated() const { return m_is_calculated; }
 
+  void     SetPedestalCor(Double_t deltaHG, Double_t deltaLG)  { m_pedcor_hg = deltaHG; m_pedcor_lg = deltaLG; }
+  
   Int_t NumOfChannel() const { return m_n_ch; }
   Int_t GetEntries(Int_t i) const
     { return m_ctime_leading.at(i).size(); }

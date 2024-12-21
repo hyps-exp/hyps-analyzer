@@ -15,6 +15,7 @@
 #include "HodoHit.hh"
 #include "RawData.hh"
 #include "UserParamMan.hh"
+#include "CFTPedCorMan.hh"
 
 class RawData;
 class BH2Hit;
@@ -62,6 +63,8 @@ public:
   const T* GetCluster(const TString& name, Int_t i=0) const
     { return dynamic_cast<T*>(GetClusterContainer(name).at(i)); }
 
+  void CFTPedestalCor(const HodoRawHit* rhit, HodoHit* hit);
+  
   Bool_t ReCalcHit(const TString& name, Bool_t applyRecursively=false);
   Bool_t ReCalcCluster(const TString& name, Bool_t applyRecursively=false);
   Bool_t ReCalcAll();
@@ -141,7 +144,12 @@ HodoAnalyzer::DecodeHits(const TString& name, Double_t max_time_diff)
   std::vector<T*> CandCont;
   for(auto& rhit: m_raw_data->GetHodoRawHitContainer(name)){
     if(!rhit) continue;
+
     auto hit = new T(rhit);
+    if (name=="CFT") {
+      CFTPedestalCor(rhit, hit);
+    }
+    
     if(hit && hit->Calculate()){
       CandCont.push_back(hit);
     }else{

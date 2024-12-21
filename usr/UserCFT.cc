@@ -26,6 +26,7 @@
 #include "RootHelper.hh"
 #include "UserParamMan.hh"
 #include "DCGeomMan.hh"
+#include "CFTPedCorMan.hh"
 
 // #define TimeCut    1 // in cluster analysis
 #define FHitBranch 0 // make FiberHit branches (becomes heavy)
@@ -51,6 +52,10 @@ struct Event
 
   Int_t cftadc_h[NumOfPlaneCFT][NumOfSegCFT_PHI4];
   Int_t cftadc_l[NumOfPlaneCFT][NumOfSegCFT_PHI4];
+  Int_t cfttdc[NumOfPlaneCFT][NumOfSegCFT_PHI4];  
+
+  Int_t cftadc_cor_h[NumOfPlaneCFT][NumOfSegCFT_PHI4];
+  Int_t cftadc_cor_l[NumOfPlaneCFT][NumOfSegCFT_PHI4];
 
 
 
@@ -75,6 +80,10 @@ Event::clear()
     for(int m = 0; m<NumOfSegCFT_PHI4; ++m){
       cftadc_h[it][m] = qnan;
       cftadc_l[it][m] = qnan;
+      cfttdc[it][m] = qnan;      
+
+      cftadc_cor_h[it][m] = qnan;
+      cftadc_cor_l[it][m] = qnan;
     }
   }
 }
@@ -246,8 +255,8 @@ ProcessingBegin()
 Bool_t
 ProcessingNormal()
 {
-  // static const auto MinTdcBH2 = gUser.GetParameter("TdcBH2", 0);
-  // static const auto MaxTdcBH2 = gUser.GetParameter("TdcBH2", 1);
+  static const auto MinTdcCFT = gUser.GetParameter("TdcCFT", 0);
+  static const auto MaxTdcCFT = gUser.GetParameter("TdcCFT", 1);
   //static const auto MinTdcT0  = gUser.GetParameter("TdcT0", 0);
   //static const auto MaxTdcT0  = gUser.GetParameter("TdcT0", 1);
   //static const auto MinTdcSAC = gUser.GetParameter("TdcSAC", 0);
@@ -300,10 +309,9 @@ ProcessingNormal()
   rawData.DecodeHits("CFT");
   // CFT   
   {
-
     const auto& cont = rawData.GetHodoRawHC("CFT");
+    const auto& U = HodoRawHit::kUp;
     Int_t nh = cont.size();
-
     for(Int_t i=0; i<nh; ++i){
       HodoRawHit *hit = cont[i];
       Int_t plane = hit->PlaneId();
@@ -311,23 +319,74 @@ ProcessingNormal()
 
       Int_t NhitAH = hit->GetSizeAdcHigh();
       Int_t NhitAL = hit->GetSizeAdcLow();
+      Int_t NhitT  = hit->GetSizeTdcUp();
 
+      bool flag_tdc = false;      
+      for(Int_t m = 0; m<NhitT; ++m){	    
+	Int_t tdc_l = hit->GetTdcLeading(U, m);
+	Int_t tdc_t = hit->GetTdcTrailing(U, m);
+	HF2 (1000*(plane+1)+100, seg, tdc_l);  //TDC Nhits 
+	HF2 (1000*(plane+1)+101, seg, tdc_t);
+	
+	Int_t width = tdc_l - tdc_t;	  
+	HF2 (1000*(plane+1)+103, seg, width);
+
+
+	if (tdc_l>MinTdcCFT && tdc_l < MaxTdcCFT) {
+	  flag_tdc = true;
+	  event.cfttdc[plane][seg] = tdc_l;	
+	}
+      }
+      if (flag_tdc) {
+	HF1 (1000*(plane+1)+102, seg);
+      }
+
+      
       //ADC Hi
       for(Int_t m = 0; m<NhitAH; ++m){
 	Int_t adcH = hit->GetAdcHigh();	
-	HF2 (1000*(plane+1)+200, seg, adcH);
+	HF2 (1000*(plane+1)+104, seg, adcH);
 	event.cftadc_h[plane][seg] = adcH;
+
+	if (flag_tdc) {
+	  HF2 (1000*(plane+1)+106, seg, adcH);
+	}
       }
 	
       //ADC Low
       for(Int_t m = 0; m<NhitAL; ++m){	    
 	Int_t adcL = hit->GetAdcLow();	
-	HF2 (1000*(plane+1)+201, seg, adcL);
+	HF2 (1000*(plane+1)+105, seg, adcL);
 	event.cftadc_l[plane][seg] = adcL;	
       }
     }
   }
 
+  hodoAna.DecodeHits<FiberHit>("CFT");
+  {
+    Int_t nh=hodoAna.GetNHits("CFT");
+
+    for(Int_t i=0; i<nh; ++i){
+      const auto& hit = hodoAna.GetHit<FiberHit>("CFT", i);
+      if(!hit) continue;
+      Int_t seg   = hit->SegmentId();
+      Int_t plane = hit->PlaneId();
+
+
+      Double_t adccorHi  = hit->GetAdcCorHigh();
+      Double_t adccorLow = hit->GetAdcCorLow();      
+
+      HF2 (1000*(plane+1)+204, seg, adccorHi);
+      HF2 (1000*(plane+1)+205, seg, adccorLow);            
+      event.cftadc_cor_h[plane][seg]  = (int)adccorHi;
+      event.cftadc_cor_l[plane][seg] = (int)adccorLow;
+    }
+
+    
+  }
+
+
+  
   return true;
 }
 
@@ -369,19 +428,51 @@ ConfMan::InitializeHistograms()
   for(Int_t i=0; i<NumOfPlaneCFT; i++){
     //ADC
 
-    TString title11("");
-    TString title12("");
+    TString title1("");
+    TString title2("");
+    TString title3("");    
+    TString title4("");    
+    TString title5("");
+    TString title6("");
+    TString title7("");    
+    TString title15("");
+    TString title16("");
+    TString title17("");    
     if(i%2 == 0){// spiral layer
       Int_t layer = (Int_t)i/2 +1;
-      title11 = Form("CFT UV %d : Adc(High) vs seg", layer);
-      title12 = Form("CFT UV %d : Adc(Low) vs seg", layer);      
+      title1  = Form("CFT UV %d : Tdc(Leading) vs seg", layer);
+      title2  = Form("CFT UV %d : Tdc(Trailing) vs seg", layer);
+      title3  = Form("CFT UV %d : Hit pattern", layer);      
+      title4  = Form("CFT UV %d : TOT vs seg", layer);            
+      title5  = Form("CFT UV %d : Adc(High) vs seg", layer);
+      title6  = Form("CFT UV %d : Adc(Low) vs seg", layer);
+      title7  = Form("CFT UV %d : Adc(High) vs seg (w/ TDC)", layer);      
+      title15 = Form("CFT UV %d : AdcCor(High) vs seg", layer);
+      title16 = Form("CFT UV %d : AdcCor(Low) vs seg", layer);
+      title17 = Form("CFT UV %d : AdcCor(High) vs seg (w/ TDC)", layer);      
     }else if(i%2 == 1){// straight layer
       Int_t layer = (Int_t)i/2 +1;
-      title11 = Form("CFT Phi %d : Adc(High) vs seg", layer);
-      title12 = Form("CFT Phi %d : Adc(Low) vs seg", layer);      
+      title1  = Form("CFT Phi %d : Tdc(Leading) vs seg", layer);
+      title2  = Form("CFT Phi %d : Tdc(Trailing) vs seg", layer);
+      title3  = Form("CFT Phi %d : Hit pattern", layer);      
+      title4  = Form("CFT Phi %d : TOT vs seg", layer);            
+      title5  = Form("CFT Phi %d : Adc(High) vs seg", layer);
+      title6  = Form("CFT Phi %d : Adc(Low) vs seg", layer);
+      title7  = Form("CFT Phi %d : Adc(High) vs seg (w/ TDC)", layer);
+      title15 = Form("CFT Phi %d : AdcCor(High) vs seg", layer);
+      title16 = Form("CFT Phi %d : AdcCor(Low) vs seg", layer);
+      title17 = Form("CFT Phi %d : AdcCor(High) vs seg (w/ TDC)", layer);
     }
-    HB2( 1000*(i+1)+200, title11, NumOfSegCFT[i], 0, NumOfSegCFT[i], 4096,0,4096);
-    HB2( 1000*(i+1)+201, title12, NumOfSegCFT[i], 0, NumOfSegCFT[i], 4096,0,4096);
+    HB2( 1000*(i+1)+100, title1, NumOfSegCFT[i], 0, NumOfSegCFT[i], 1024,0,1024);
+    HB2( 1000*(i+1)+101, title2, NumOfSegCFT[i], 0, NumOfSegCFT[i], 1024,0,1024);
+    HB1( 1000*(i+1)+102, title3, NumOfSegCFT[i], 0, NumOfSegCFT[i]);   
+    HB2( 1000*(i+1)+103, title4, NumOfSegCFT[i], 0, NumOfSegCFT[i], 1024,0,1024);        
+    HB2( 1000*(i+1)+104, title5, NumOfSegCFT[i], 0, NumOfSegCFT[i], 1000,0,4000);
+    HB2( 1000*(i+1)+105, title6, NumOfSegCFT[i], 0, NumOfSegCFT[i], 1000,0,4000);
+    HB2( 1000*(i+1)+106, title7, NumOfSegCFT[i], 0, NumOfSegCFT[i], 1000,0,4000);    
+    HB2( 1000*(i+1)+204, title15, NumOfSegCFT[i], 0, NumOfSegCFT[i], 1000,-500,3500);
+    HB2( 1000*(i+1)+205, title16, NumOfSegCFT[i], 0, NumOfSegCFT[i], 1000,-500,3500);
+    HB2( 1000*(i+1)+206, title17, NumOfSegCFT[i], 0, NumOfSegCFT[i], 1000,-500,3500);    
   }
 
   
@@ -396,8 +487,12 @@ ConfMan::InitializeHistograms()
   tree->Branch("trigflag",   event.trigflag,  Form("trigflag[%d]/I", NumOfSegTrig));
 
   tree->Branch("cftadc_h",   event.cftadc_h,  Form("cftadc_h[%d][%d]/I", NumOfPlaneCFT, NumOfSegCFT_PHI4));
-  tree->Branch("cftadc_l",   event.cftadc_l,  Form("cftadc_l[%d][%d]/I", NumOfPlaneCFT, NumOfSegCFT_PHI4));  
+  tree->Branch("cftadc_l",   event.cftadc_l,  Form("cftadc_l[%d][%d]/I", NumOfPlaneCFT, NumOfSegCFT_PHI4));
+  tree->Branch("cfttdc",     event.cfttdc,    Form("cfttdc[%d][%d]/I", NumOfPlaneCFT, NumOfSegCFT_PHI4));    
 
+  tree->Branch("cftadc_cor_h",   event.cftadc_cor_h,  Form("cftadc_cor_h[%d][%d]/I", NumOfPlaneCFT, NumOfSegCFT_PHI4));
+  tree->Branch("cftadc_cor_l",   event.cftadc_cor_l,  Form("cftadc_cor_l[%d][%d]/I", NumOfPlaneCFT, NumOfSegCFT_PHI4));
+  
   // HPrint();
   return true;
 }
@@ -410,7 +505,8 @@ ConfMan::InitializeParameterFiles()
     (InitializeParameter<DCGeomMan>("DCGEO") &&
      InitializeParameter<HodoParamMan>("HDPRM") &&
      InitializeParameter<HodoPHCMan>("HDPHC")   &&
-     InitializeParameter<UserParamMan>("USER"));
+     InitializeParameter<UserParamMan>("USER")   &&
+     InitializeParameter<CFTPedCorMan>("CFTPED") );
 }
 
 //_____________________________________________________________________________
