@@ -17,19 +17,20 @@ const std::map<TString, std::vector<TString>> DCNameList =
 };
 
 // Counters ___________________________________________________________
-const Int_t NumOfSegBH1   = 11;
-const Int_t NumOfSegBH2   =  8;
-const Int_t NumOfSegT0    =  1;//HYPS
-const Int_t NumOfSegBAC   =  2;
-const Int_t NumOfSegSAC   =  5;
-const Int_t NumOfSegSCH   = 64;
-const Int_t NumOfSegTOF   = 48; // HYPS
-const Int_t NumOfSegHTOF  = 34;
-const Int_t NumOfSegBVH   =  4;
-const Int_t NumOfSegAC1   = 30;
-const Int_t NumOfSegWC    = 12;
-const Int_t NumOfSegSAC3  = 2;
-const Int_t NumOfSegSFV   = 6;
+const Int_t NumOfSegBH1    = 11;
+const Int_t NumOfSegBH2    =  8;
+const Int_t NumOfSegT0     =  1;//HYPS
+const Int_t NumOfSegBAC    =  2;
+const Int_t NumOfSegSAC    =  5;
+const Int_t NumOfSegSCH    = 64;
+const Int_t NumOfSegE_Veto =  1;//HYPS
+const Int_t NumOfSegTOF    = 48; // HYPS
+const Int_t NumOfSegHTOF   = 34;
+const Int_t NumOfSegBVH    =  4;
+const Int_t NumOfSegAC1    = 30;
+const Int_t NumOfSegWC     = 12;
+const Int_t NumOfSegSAC3   = 2;
+const Int_t NumOfSegSFV    = 6;
 
 // AFT
 const Int_t DetIdAFT      = 112;
