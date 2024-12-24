@@ -57,13 +57,11 @@ struct Event
   Double_t bh2dt[NumOfSegBH2][MaxDepth];
 
   Int_t rfnhits;
-  //  Int_t rfhitpat[MaxHits];
   Double_t rfa[NumOfSegRF];
   Double_t rft[NumOfSegRF][MaxDepth];
 
 
   Int_t t0nhits;
-  Int_t t0hitpat[MaxHits];
   Double_t t0la[NumOfSegT0];
   Double_t t0lt[NumOfSegT0][MaxDepth];
   Double_t t0ra[NumOfSegT0];
@@ -78,7 +76,6 @@ struct Event
   Int_t sac2nhits;
 
   Int_t e_vetonhits;
-  Int_t e_vetohitpat[MaxHits];
   Double_t e_vetola[NumOfSegE_Veto];
   Double_t e_vetolt[NumOfSegE_Veto][MaxDepth];
   Double_t e_vetora[NumOfSegE_Veto];
@@ -161,10 +158,7 @@ Event::clear()
 
   for(Int_t it=0; it<MaxHits; ++it){
     bh2hitpat[it]    = -1;
-    //    rfhitpat[it]     = -1;
-    t0hitpat[it]     = -1;
     sachitpat[it]    = -1;
-    e_vetohitpat[it] = -1;
     tofhitpat[it]    = -1;
   }
 
@@ -616,7 +610,6 @@ ProcessingNormal()
     for(Int_t i=0; i<nh; ++i){
       HodoRawHit *hit = cont[i];
       Int_t seg = hit->SegmentId();
-      HF1(T0Hid+1, seg+0.5);
 
       // Left
       Int_t Al = hit->GetAdcLeft();
@@ -660,11 +653,10 @@ ProcessingNormal()
 
       // Hitpat
       if(is_hit_l || is_hit_r){
-        ++nh1; HF1(T0Hid+3, seg+0.5);
+        ++nh1;
       }
       if(is_hit_l && is_hit_r){
-        event.t0hitpat[t0_nhits++] = seg;
-        ++nh2; HF1(T0Hid+5, seg+0.5);
+        ++nh2;
       }
     }
     HF1(T0Hid+2, nh1); HF1(T0Hid+4, nh2);
@@ -727,7 +719,6 @@ ProcessingNormal()
     for(Int_t i=0; i<nh; ++i){
       HodoRawHit *hit = cont[i];
       Int_t seg = hit->SegmentId();
-      HF1(E_VetoHid+1, seg+0.5);
 
       // Left
       Int_t Al = hit->GetAdcLeft();
@@ -771,11 +762,10 @@ ProcessingNormal()
 
       // Hitpat
       if(is_hit_l || is_hit_r){
-        ++nh1; HF1(E_VetoHid+3, seg+0.5);
+        ++nh1;
       }
       if(is_hit_l && is_hit_r){
-        event.e_vetohitpat[e_veto_nhits++] = seg;
-        ++nh2; HF1(E_VetoHid+5, seg+0.5);
+        ++nh2;
       }
     }
     HF1(E_VetoHid+2, nh1); HF1(E_VetoHid+4, nh2);
@@ -1388,11 +1378,8 @@ ConfMan::InitializeHistograms()
 
   // T0
   HB1(T0Hid +0, "#Hits T0",        NumOfSegT0+1, 0., Double_t(NumOfSegT0+1));
-  HB1(T0Hid +1, "Hitpat T0",       NumOfSegT0,   0., Double_t(NumOfSegT0));
   HB1(T0Hid +2, "#Hits T0(Tor)",   NumOfSegT0+1, 0., Double_t(NumOfSegT0+1));
-  HB1(T0Hid +3, "Hitpat T0(Tor)",  NumOfSegT0,   0., Double_t(NumOfSegT0));
   HB1(T0Hid +4, "#Hits T0(Tand)",  NumOfSegT0+1, 0., Double_t(NumOfSegT0+1));
-  HB1(T0Hid +5, "Hitpat T0(Tand)", NumOfSegT0,   0., Double_t(NumOfSegT0));
 
   for(Int_t i=0; i<NumOfSegT0; ++i){
     TString title1 = Form("T0-%d LeftAdc", i);
@@ -1445,11 +1432,8 @@ ConfMan::InitializeHistograms()
 
   // E_Veto
   HB1(E_VetoHid +0, "#Hits E_Veto",        NumOfSegE_Veto+1, 0., Double_t(NumOfSegE_Veto+1));
-  HB1(E_VetoHid +1, "Hitpat E_Veto",       NumOfSegE_Veto,   0., Double_t(NumOfSegE_Veto));
   HB1(E_VetoHid +2, "#Hits E_Veto(Tor)",   NumOfSegE_Veto+1, 0., Double_t(NumOfSegE_Veto+1));
-  HB1(E_VetoHid +3, "Hitpat E_Veto(Tor)",  NumOfSegE_Veto,   0., Double_t(NumOfSegE_Veto));
   HB1(E_VetoHid +4, "#Hits E_Veto(Tand)",  NumOfSegE_Veto+1, 0., Double_t(NumOfSegE_Veto+1));
-  HB1(E_VetoHid +5, "Hitpat E_Veto(Tand)", NumOfSegE_Veto,   0., Double_t(NumOfSegE_Veto));
 
   for(Int_t i=0; i<NumOfSegE_Veto; ++i){
     TString title1 = Form("E_Veto-%d LeftAdc", i);
@@ -1568,7 +1552,6 @@ ConfMan::InitializeHistograms()
   tree->Branch("rft",        event.rft,       Form("rft[%d][%d]/D", NumOfSegRF, MaxDepth));
   //T0
   tree->Branch("t0nhits",   &event.t0nhits,   "t0nhits/I");
-  tree->Branch("t0hitpat",   event.t0hitpat,  Form("t0hitpat[%d]/I", NumOfSegT0));
   tree->Branch("t0la",       event.t0la,      Form("t0la[%d]/D", NumOfSegT0));
   tree->Branch("t0lt",       event.t0lt,      Form("t0lt[%d][%d]/D", NumOfSegT0, MaxDepth));
   tree->Branch("t0ra",       event.t0ra,      Form("t0ra[%d]/D", NumOfSegT0));
@@ -1582,7 +1565,6 @@ ConfMan::InitializeHistograms()
   tree->Branch("sac2nhits",   &event.sac2nhits,   "sac2nhits/I");
   //E_Veto
   tree->Branch("e_vetonhits",   &event.e_vetonhits,   "e_vetonhits/I");
-  tree->Branch("e_vetohitpat",   event.e_vetohitpat,  Form("e_vetohitpat[%d]/I", NumOfSegE_Veto));
   tree->Branch("e_vetola",       event.e_vetola,      Form("e_vetola[%d]/D", NumOfSegE_Veto));
   tree->Branch("e_vetolt",       event.e_vetolt,      Form("e_vetolt[%d][%d]/D", NumOfSegE_Veto, MaxDepth));
   tree->Branch("e_vetora",       event.e_vetora,      Form("e_vetora[%d]/D", NumOfSegE_Veto));
