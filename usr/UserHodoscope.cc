@@ -432,13 +432,13 @@ TH1*   h[MaxHist];
 TTree* tree;
 // TTree* hodo;
 enum eDetHid {
-  BH1Hid    = 10000,
-  BH2Hid    = 20000,
-  RFHid     = 70000,
-  T0Hid     = 40000,
-  SACHid    = 30000,
-  E_VetoHid = 50000,
-  TOFHid    = 60000,
+  RFHid     = 10000,
+  //20000
+  //30000
+  T0Hid     = 50000,
+  SACHid    = 60000,
+  E_VetoHid = 70000,
+  TOFHid    = 80000,
 };
 }
 
