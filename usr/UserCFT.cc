@@ -12,6 +12,8 @@
 #include "BH2Hit.hh"
 #include "FiberCluster.hh"
 #include "FiberHit.hh"
+#include "CFTFiberHit.hh"
+#include "CFTFiberCluster.hh"
 #include "ConfMan.hh"
 #include "DetectorID.hh"
 #include "RMAnalyzer.hh"
@@ -362,12 +364,12 @@ ProcessingNormal()
     }
   }
 
-  hodoAna.DecodeHits<FiberHit>("CFT");
+  hodoAna.DecodeHits<CFTFiberHit>("CFT");
   {
+    const auto& U = HodoRawHit::kUp;
     Int_t nh=hodoAna.GetNHits("CFT");
-
     for(Int_t i=0; i<nh; ++i){
-      const auto& hit = hodoAna.GetHit<FiberHit>("CFT", i);
+      const auto& hit = hodoAna.GetHit<CFTFiberHit>("CFT", i);
       if(!hit) continue;
       Int_t seg   = hit->SegmentId();
       Int_t plane = hit->PlaneId();
@@ -375,14 +377,67 @@ ProcessingNormal()
 
       Double_t adccorHi  = hit->GetAdcCorHigh();
       Double_t adccorLow = hit->GetAdcCorLow();      
-
+      Double_t mipHi  = hit->GetMipHigh();
+      Double_t mipLow = hit->GetMipLow();      
+      Double_t deLow  = hit->DeltaELowGain();
+      
       HF2 (1000*(plane+1)+204, seg, adccorHi);
       HF2 (1000*(plane+1)+205, seg, adccorLow);            
+      HF2 (1000*(plane+1)+207, seg, mipHi);
+      HF2 (1000*(plane+1)+208, seg, mipLow);
+      HF2 (1000*(plane+1)+209, seg, deLow);                  
       event.cftadc_cor_h[plane][seg]  = (int)adccorHi;
       event.cftadc_cor_l[plane][seg] = (int)adccorLow;
+
+      Int_t NhitT = hit->GetEntries(U);
+      bool flagTime = false;
+      for(Int_t m = 0; m<NhitT; ++m){
+	Double_t time = hit->GetTUp(m);
+	HF2 (1000*(plane+1)+200, seg, time);            	
+	if (std::abs(time)<100)
+	  flagTime = true;
+      }
+      if (flagTime)
+	HF2 (1000*(plane+1)+206, seg, adccorHi);	
     }
 
+    Int_t nc=hodoAna.GetNClusters("CFT");
+
+    Int_t ncluster[NumOfPlaneCFT];
+    for (Int_t i=0; i<NumOfPlaneCFT; ++i)
+      ncluster[i]=0;
     
+    for(Int_t i=0; i<nc; ++i){
+      const auto& cl = hodoAna.GetCluster<CFTFiberCluster>("CFT", i);
+      if(!cl) continue;
+      Int_t plane = cl->PlaneId();
+      Int_t cs=cl->ClusterSize();
+      Double_t ms = cl->MeanSeg();
+      Double_t cmt= cl->CMeanTime();
+      Double_t total_de = cl->TotalDeltaE();
+      Double_t max_de = cl->MaxDeltaE();      
+
+      ncluster[plane]++;
+      HF1 (1000*(plane+1)+301, cs);
+      HF2 (1000*(plane+1)+302, ms, cmt);
+      HF2 (1000*(plane+1)+303, ms, total_de);
+      HF2 (1000*(plane+1)+304, ms, max_de);            
+      //std::cout << "Time : " << cmt << ", ";
+      for (Int_t m=0; m<cs; ++m) {
+	CFTFiberHit* hit = (CFTFiberHit*)cl->GetHit(m);
+	Int_t planeId = hit->PlaneId();
+	Int_t seg = hit->SegmentId();
+	Double_t adccorHi  = hit->GetAdcCorHigh();	
+	//std::cout << seg << " (" << planeId << ", " << adccorHi << "), ";
+	//if (m==cs-1)
+	//std::cout << std::endl;
+      }
+      
+    }
+    for (Int_t i=0; i<NumOfPlaneCFT; ++i)
+      HF1 (1000*(i+1)+300, ncluster[i]);
+    
+  
   }
 
 
@@ -428,51 +483,87 @@ ConfMan::InitializeHistograms()
   for(Int_t i=0; i<NumOfPlaneCFT; i++){
     //ADC
 
-    TString title1("");
-    TString title2("");
-    TString title3("");    
-    TString title4("");    
-    TString title5("");
-    TString title6("");
-    TString title7("");    
-    TString title15("");
-    TString title16("");
-    TString title17("");    
+    TString title100("");
+    TString title101("");
+    TString title102("");    
+    TString title103("");    
+    TString title104("");
+    TString title105("");
+    TString title106("");    
+    TString title200("");
+    TString title204("");
+    TString title205("");
+    TString title206("");
+    TString title207("");
+    TString title208("");
+    TString title209("");
+    TString title300("");
+    TString title301("");
+    TString title302("");
+    TString title303("");
+    TString title304("");                
     if(i%2 == 0){// spiral layer
       Int_t layer = (Int_t)i/2 +1;
-      title1  = Form("CFT UV %d : Tdc(Leading) vs seg", layer);
-      title2  = Form("CFT UV %d : Tdc(Trailing) vs seg", layer);
-      title3  = Form("CFT UV %d : Hit pattern", layer);      
-      title4  = Form("CFT UV %d : TOT vs seg", layer);            
-      title5  = Form("CFT UV %d : Adc(High) vs seg", layer);
-      title6  = Form("CFT UV %d : Adc(Low) vs seg", layer);
-      title7  = Form("CFT UV %d : Adc(High) vs seg (w/ TDC)", layer);      
-      title15 = Form("CFT UV %d : AdcCor(High) vs seg", layer);
-      title16 = Form("CFT UV %d : AdcCor(Low) vs seg", layer);
-      title17 = Form("CFT UV %d : AdcCor(High) vs seg (w/ TDC)", layer);      
+      title100  = Form("CFT UV %d : Tdc(Leading) vs seg", layer);
+      title101  = Form("CFT UV %d : Tdc(Trailing) vs seg", layer);
+      title102  = Form("CFT UV %d : Hit pattern", layer);      
+      title103  = Form("CFT UV %d : TOT vs seg", layer);            
+      title104  = Form("CFT UV %d : Adc(High) vs seg", layer);
+      title105  = Form("CFT UV %d : Adc(Low) vs seg", layer);
+      title106  = Form("CFT UV %d : Adc(High) vs seg (w/ TDC)", layer);      
+      title200 = Form("CFT UV %d : Time vs seg", layer);
+      title204 = Form("CFT UV %d : AdcCor(High) vs seg", layer);
+      title205 = Form("CFT UV %d : AdcCor(Low) vs seg", layer);
+      title206 = Form("CFT UV %d : AdcCor(High) vs seg (w/ TDC)", layer);
+      title207 = Form("CFT UV %d : Mip Calib(High) vs seg", layer);
+      title208 = Form("CFT UV %d : Mip Calib(Low) vs seg", layer);
+      title209 = Form("CFT UV %d : dE (Low) vs seg", layer);
+      title300 = Form("CFT UV %d : nCluster", layer);
+      title301 = Form("CFT UV %d : Cluster Size", layer);
+      title302 = Form("CFT UV %d (Cluster): Time vs seg", layer);
+      title303 = Form("CFT UV %d (Cluster): total dE vs seg", layer);
+      title304 = Form("CFT UV %d (Cluster): max dE vs seg", layer);                  
     }else if(i%2 == 1){// straight layer
       Int_t layer = (Int_t)i/2 +1;
-      title1  = Form("CFT Phi %d : Tdc(Leading) vs seg", layer);
-      title2  = Form("CFT Phi %d : Tdc(Trailing) vs seg", layer);
-      title3  = Form("CFT Phi %d : Hit pattern", layer);      
-      title4  = Form("CFT Phi %d : TOT vs seg", layer);            
-      title5  = Form("CFT Phi %d : Adc(High) vs seg", layer);
-      title6  = Form("CFT Phi %d : Adc(Low) vs seg", layer);
-      title7  = Form("CFT Phi %d : Adc(High) vs seg (w/ TDC)", layer);
-      title15 = Form("CFT Phi %d : AdcCor(High) vs seg", layer);
-      title16 = Form("CFT Phi %d : AdcCor(Low) vs seg", layer);
-      title17 = Form("CFT Phi %d : AdcCor(High) vs seg (w/ TDC)", layer);
+      title100  = Form("CFT Phi %d : Tdc(Leading) vs seg", layer);
+      title101  = Form("CFT Phi %d : Tdc(Trailing) vs seg", layer);
+      title102  = Form("CFT Phi %d : Hit pattern", layer);      
+      title103  = Form("CFT Phi %d : TOT vs seg", layer);            
+      title104  = Form("CFT Phi %d : Adc(High) vs seg", layer);
+      title105  = Form("CFT Phi %d : Adc(Low) vs seg", layer);
+      title106  = Form("CFT Phi %d : Adc(High) vs seg (w/ TDC)", layer);
+      title200 = Form("CFT Phi %d : Time vs seg", layer);
+      title204 = Form("CFT Phi %d : AdcCor(High) vs seg", layer);
+      title205 = Form("CFT Phi %d : AdcCor(Low) vs seg", layer);
+      title206 = Form("CFT Phi %d : AdcCor(High) vs seg (w/ TDC)", layer);
+      title207 = Form("CFT Phi %d : Mip Calib(High) vs seg", layer);
+      title208 = Form("CFT Phi %d : Mip Calib(Low) vs seg", layer);      
+      title209 = Form("CFT Phi %d : dE (Low) vs seg", layer);
+      title300 = Form("CFT Phi %d : nCluster", layer);
+      title301 = Form("CFT Phi %d : Cluster Size", layer);            
+      title302 = Form("CFT Phi %d (Cluster): Time vs seg", layer);      
+      title303 = Form("CFT Phi %d (Cluster): total dE vs seg", layer);
+      title304 = Form("CFT Phi %d (Cluster): max dE vs seg", layer);                        
     }
-    HB2( 1000*(i+1)+100, title1, NumOfSegCFT[i], 0, NumOfSegCFT[i], 1024,0,1024);
-    HB2( 1000*(i+1)+101, title2, NumOfSegCFT[i], 0, NumOfSegCFT[i], 1024,0,1024);
-    HB1( 1000*(i+1)+102, title3, NumOfSegCFT[i], 0, NumOfSegCFT[i]);   
-    HB2( 1000*(i+1)+103, title4, NumOfSegCFT[i], 0, NumOfSegCFT[i], 1024,0,1024);        
-    HB2( 1000*(i+1)+104, title5, NumOfSegCFT[i], 0, NumOfSegCFT[i], 1000,0,4000);
-    HB2( 1000*(i+1)+105, title6, NumOfSegCFT[i], 0, NumOfSegCFT[i], 1000,0,4000);
-    HB2( 1000*(i+1)+106, title7, NumOfSegCFT[i], 0, NumOfSegCFT[i], 1000,0,4000);    
-    HB2( 1000*(i+1)+204, title15, NumOfSegCFT[i], 0, NumOfSegCFT[i], 1000,-500,3500);
-    HB2( 1000*(i+1)+205, title16, NumOfSegCFT[i], 0, NumOfSegCFT[i], 1000,-500,3500);
-    HB2( 1000*(i+1)+206, title17, NumOfSegCFT[i], 0, NumOfSegCFT[i], 1000,-500,3500);    
+    HB2( 1000*(i+1)+100, title100, NumOfSegCFT[i], 0, NumOfSegCFT[i], 1024,0,1024);
+    HB2( 1000*(i+1)+101, title101, NumOfSegCFT[i], 0, NumOfSegCFT[i], 1024,0,1024);
+    HB1( 1000*(i+1)+102, title102, NumOfSegCFT[i], 0, NumOfSegCFT[i]);   
+    HB2( 1000*(i+1)+103, title103, NumOfSegCFT[i], 0, NumOfSegCFT[i], 1024,0,1024);        
+    HB2( 1000*(i+1)+104, title104, NumOfSegCFT[i], 0, NumOfSegCFT[i], 1000,0,4000);
+    HB2( 1000*(i+1)+105, title105, NumOfSegCFT[i], 0, NumOfSegCFT[i], 1000,0,4000);
+    HB2( 1000*(i+1)+106, title106, NumOfSegCFT[i], 0, NumOfSegCFT[i], 1000,0,4000);    
+    HB2( 1000*(i+1)+200, title200, NumOfSegCFT[i], 0, NumOfSegCFT[i], 1000,-500,500);
+    HB2( 1000*(i+1)+204, title204, NumOfSegCFT[i], 0, NumOfSegCFT[i], 1000,-500,3500);
+    HB2( 1000*(i+1)+205, title205, NumOfSegCFT[i], 0, NumOfSegCFT[i], 1000,-500,3500);
+    HB2( 1000*(i+1)+206, title206, NumOfSegCFT[i], 0, NumOfSegCFT[i], 1000,-500,3500);
+    HB2( 1000*(i+1)+207, title207, NumOfSegCFT[i], 0, NumOfSegCFT[i], 1000,-10,90);
+    HB2( 1000*(i+1)+208, title208, NumOfSegCFT[i], 0, NumOfSegCFT[i], 1000,-1,9);
+    HB2( 1000*(i+1)+209, title209, NumOfSegCFT[i], 0, NumOfSegCFT[i], 1000,-1,9);
+    HB1( 1000*(i+1)+300, title300, 20, 0, 20);
+    HB1( 1000*(i+1)+301, title301, 20, 0, 20);
+    HB2( 1000*(i+1)+302, title302, NumOfSegCFT[i], 0, NumOfSegCFT[i], 1000,-500,500);
+    HB2( 1000*(i+1)+303, title303, NumOfSegCFT[i], 0, NumOfSegCFT[i], 1000,-1,9);
+    HB2( 1000*(i+1)+304, title304, NumOfSegCFT[i], 0, NumOfSegCFT[i], 1000,-1,9);        
   }
 
   

@@ -69,9 +69,20 @@ public:
   { if(m_n_ch == HodoRawHit::kNChannel) return GetEntries(HodoRawHit::kExtra);
     else return GetEntries(HodoRawHit::kUp); }
   Double_t GetDeltaEHighGain(Int_t i, Int_t j=0) const
-    { return m_de_high.at(i).at(j); }
+    {
+      if (j<m_de_high.at(i).size())
+	return m_de_high.at(i).at(j);
+    else
+      return TMath::QuietNaN();
+    }
   Double_t GetDeltaELowGain(Int_t i, Int_t j=0) const
-    { return m_de_low.at(i).at(j); }
+    {
+      if (j<m_de_low.at(i).size())
+	return m_de_low.at(i).at(j);
+    else
+      return TMath::QuietNaN();
+    }
+  
   Double_t GetTimeLeading(Int_t i, Int_t j=0) const
     { return m_time_leading.at(i).at(j); }
   Double_t GetTimeTrailing(Int_t i, Int_t j=0) const

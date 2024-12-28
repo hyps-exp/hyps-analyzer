@@ -10,6 +10,7 @@
 #include "DeleteUtility.hh"
 #include "DetectorID.hh"
 #include "FiberCluster.hh"
+#include "CFTFiberCluster.hh"
 #include "FuncName.hh"
 #include "HodoCluster.hh"
 #include "HodoHit.hh"
@@ -20,6 +21,7 @@
 class RawData;
 class BH2Hit;
 class FiberHit;
+class CFTFiberHit;
 // class BH2Cluster;
 
 using HodoClusterContainer = std::vector<HodoCluster*>;
@@ -118,6 +120,9 @@ private:
   static Bool_t Connectable(const FiberHit* hitA, Int_t indexA,
                             const FiberHit* hitB, Int_t indexB,
                             Double_t MaxTimeDiff);
+  static Bool_t Connectable(const CFTFiberHit* hitA, Int_t indexA,
+			    const CFTFiberHit* hitB, Int_t indexB,
+			    Double_t MaxTimeDiff);
 
   // static Int_t MakeUpClusters(const BH2HitContainer& HitCont,
   //                             BH2ClusterContainer& ClusterCont,
@@ -250,6 +255,15 @@ HodoAnalyzer::AllocateCluster<FiberHit>(HodoHC& HitCont,
 }
 
 //_____________________________________________________________________________
+template <>
+inline HodoCluster*
+HodoAnalyzer::AllocateCluster<CFTFiberHit>(HodoHC& HitCont,
+					   index_t index)
+{
+  return new CFTFiberCluster(HitCont, index);
+}
+
+//_____________________________________________________________________________
 inline Bool_t
 HodoAnalyzer::Connectable(const HodoHit* hitA, Int_t indexA,
                           const HodoHit* hitB, Int_t indexB,
@@ -281,7 +295,7 @@ HodoAnalyzer::Connectable(const FiberHit* hitA, Int_t indexA,
   Double_t posA = hitA->Position();
   Double_t posB = hitB->Position();
 #if 0
-  hddaq::cout << FUNC_NAME << << std::endl
+  hddaq::cout << FUNC_NAME << std::endl
               << " " << planeA << " == " << planeB << std::endl
               << " " << cmtA << " - " << cmtB << " <= " << MaxTimeDiff
               << std::endl
@@ -293,6 +307,41 @@ HodoAnalyzer::Connectable(const FiberHit* hitA, Int_t indexA,
           && TMath::Abs(cmtA - cmtB) <= MaxTimeDiff
           && TMath::Abs(posA - posB) <= hitA->dXdW()
     );
+}
+
+//_____________________________________________________________________________
+inline Bool_t
+HodoAnalyzer::Connectable(const CFTFiberHit* hitA, Int_t indexA,
+                          const CFTFiberHit* hitB, Int_t indexB,
+                          Double_t MaxTimeDiff)
+{
+  TString planeA = hitA->PlaneName();
+  TString planeB = hitB->PlaneName();
+
+  Double_t cmtA = hitA->CMeanTime(indexA);
+  Double_t cmtB = hitB->CMeanTime(indexB);
+  //Double_t posA = hitA->Position();
+  //Double_t posB = hitB->Position();
+  Double_t segA = hitA->SegmentId();
+  Double_t segB = hitB->SegmentId();
+
+  //Double_t adccorHiA  = hitA->GetAdcCorHigh();
+  //Double_t adccorHiB  = hitB->GetAdcCorHigh();    
+  
+#if 0
+  hddaq::cout << FUNC_NAME << std::endl
+              << " " << planeA << " == " << planeB << std::endl
+              << " " << cmtA << " - " << cmtB << " <= " << MaxTimeDiff
+              << std::endl
+              << " " << posA << " - " << posB << " <= " << hitA->dXdW()
+              << std::endl;
+#endif
+  return (true
+          && planeA.EqualTo(planeB, TString::kIgnoreCase)
+          && TMath::Abs(cmtA - cmtB) <= MaxTimeDiff
+          //&& TMath::Abs(posA - posB) <= hitA->dXdW()
+          && TMath::Abs(segA - segB) <= 2
+	  );
 }
 
 #endif

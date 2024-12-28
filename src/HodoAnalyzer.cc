@@ -15,6 +15,8 @@
 #include "DeleteUtility.hh"
 #include "FiberCluster.hh"
 #include "FiberHit.hh"
+#include "CFTFiberHit.hh"
+#include "CFTFiberCluster.hh"
 // #include "FLHit.hh"
 #include "FuncName.hh"
 #include "HodoHit.hh"

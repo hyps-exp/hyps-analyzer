@@ -24,11 +24,14 @@
 #include "HodoParamMan.hh"
 #include "HodoRawHit.hh"
 #include "RawData.hh"
+#include "UserParamMan.hh"
 
 namespace
 {
   const std::string& class_name("CFTPedCorMan");
   const HodoParamMan& gHodo = HodoParamMan::GetInstance();
+
+  auto& gUser     = UserParamMan::GetInstance();
 }
 
 //______________________________________________________________________________
@@ -112,7 +115,11 @@ bool
 CFTPedCorMan::PedestalCorrection(Int_t layer, Int_t segment, Double_t &deltaHG, Double_t &deltaLG, const RawData *rawData ) const
 {
   static const std::string func_name("["+class_name+"::"+__func__+"()]");
+  const auto& U = HodoRawHit::kUp;
 
+  static const auto MinTdcCFT = gUser.GetParameter("TdcCFT", 0);
+  static const auto MaxTdcCFT = gUser.GetParameter("TdcCFT", 1);
+    
   deltaHG = -9999.;
   deltaLG = -9999.;
 
@@ -130,7 +137,7 @@ CFTPedCorMan::PedestalCorrection(Int_t layer, Int_t segment, Double_t &deltaHG, 
     Int_t cor_layer = m_container[layer][segment][i].cor_layer;
     Int_t cor_segment = m_container[layer][segment][i].cor_segment;
     Double_t thr = m_container[layer][segment][i].thr;
-    
+
     const auto& cont = rawData->GetHodoRawHC("CFT");
     //const HodoRHitContainer &cont = rawData->GetCFTRawHC(cor_layer);
     Int_t nh=cont.size();
@@ -142,11 +149,22 @@ CFTPedCorMan::PedestalCorrection(Int_t layer, Int_t segment, Double_t &deltaHG, 
 	continue;
       
       Int_t seg = hit->SegmentId();
+
       if (seg != cor_segment)
 	continue;
 
-      Int_t adcHi = hit->GetAdcHigh();	
-      if (adcHi > thr)
+      Int_t adcHi = hit->GetAdcHigh();
+      Int_t NhitT = hit->GetSizeTdcUp();
+      bool flag_tdc = false;      
+
+      for(Int_t m = 0; m<NhitT; ++m){	    
+	Int_t tdc_l = hit->GetTdcLeading(U, m);
+	if (tdc_l>MinTdcCFT && tdc_l < MaxTdcCFT) {
+	  flag_tdc = true;
+	}
+      }
+      
+      if (adcHi > thr && flag_tdc)
 	break;
       else {
 	//std::cout << "Corrected by ( " << cor_layer << ", " << cor_segment
