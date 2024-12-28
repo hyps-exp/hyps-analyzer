@@ -62,7 +62,12 @@ protected:
 public:
   Double_t MaxDeltaE() const { return m_max_de_low; }
   Double_t TotalDeltaE() const { return m_total_de_low; }  
-  
+  Double_t MeanX() const  { return m_mean_x; }
+  Double_t MeanY() const  { return m_mean_y; }
+  Double_t MeanPhi() const  { return m_mean_phi; }
+  Double_t MeanR() const  { return m_mean_r; }
+  Double_t MeanZ0() const  { return m_mean_z0; }
+  Double_t Slope() const  { return m_slope; }          
 protected:
   void Calculate();
 };

@@ -389,6 +389,10 @@ ProcessingNormal()
       event.cftadc_cor_h[plane][seg]  = (int)adccorHi;
       event.cftadc_cor_l[plane][seg] = (int)adccorLow;
 
+      if (adccorHi>1500) {
+	HF2 (1000*(plane+1)+201, seg, event.cfttdc[plane][seg]);
+      }
+      
       Int_t NhitT = hit->GetEntries(U);
       bool flagTime = false;
       for(Int_t m = 0; m<NhitT; ++m){
@@ -422,6 +426,17 @@ ProcessingNormal()
       HF2 (1000*(plane+1)+302, ms, cmt);
       HF2 (1000*(plane+1)+303, ms, total_de);
       HF2 (1000*(plane+1)+304, ms, max_de);            
+
+      if ((cl->PlaneName()).Contains("PHI")) {
+	//std::cout << "(x, y) = (" << cl->MeanX() << ", " << cl->MeanY() << ")" << std::endl;
+	double meanPhi = cl->MeanPhi();
+	HF1(1000*(plane+1)+305, meanPhi);
+      } else if ((cl->PlaneName()).Contains("UV")) {
+	//std::cout << "(r, z0) = (" << cl->MeanR() << ", " << cl->MeanZ0() << ")" << std::endl;
+	double meanZ0 = cl->MeanZ0();
+	HF1(1000*(plane+1)+305, meanZ0);	
+      }
+      
       //std::cout << "Time : " << cmt << ", ";
       for (Int_t m=0; m<cs; ++m) {
 	CFTFiberHit* hit = (CFTFiberHit*)cl->GetHit(m);
@@ -491,6 +506,7 @@ ConfMan::InitializeHistograms()
     TString title105("");
     TString title106("");    
     TString title200("");
+    TString title201("");    
     TString title204("");
     TString title205("");
     TString title206("");
@@ -501,7 +517,8 @@ ConfMan::InitializeHistograms()
     TString title301("");
     TString title302("");
     TString title303("");
-    TString title304("");                
+    TString title304("");
+    TString title305("");                    
     if(i%2 == 0){// spiral layer
       Int_t layer = (Int_t)i/2 +1;
       title100  = Form("CFT UV %d : Tdc(Leading) vs seg", layer);
@@ -512,6 +529,7 @@ ConfMan::InitializeHistograms()
       title105  = Form("CFT UV %d : Adc(Low) vs seg", layer);
       title106  = Form("CFT UV %d : Adc(High) vs seg (w/ TDC)", layer);      
       title200 = Form("CFT UV %d : Time vs seg", layer);
+      title201 = Form("CFT UV %d : TDC (w/ Large ADC) vs seg", layer);      
       title204 = Form("CFT UV %d : AdcCor(High) vs seg", layer);
       title205 = Form("CFT UV %d : AdcCor(Low) vs seg", layer);
       title206 = Form("CFT UV %d : AdcCor(High) vs seg (w/ TDC)", layer);
@@ -522,7 +540,8 @@ ConfMan::InitializeHistograms()
       title301 = Form("CFT UV %d : Cluster Size", layer);
       title302 = Form("CFT UV %d (Cluster): Time vs seg", layer);
       title303 = Form("CFT UV %d (Cluster): total dE vs seg", layer);
-      title304 = Form("CFT UV %d (Cluster): max dE vs seg", layer);                  
+      title304 = Form("CFT UV %d (Cluster): max dE vs seg", layer);
+      title305 = Form("CFT UV %d (Cluster): MeanZ0", layer);                        
     }else if(i%2 == 1){// straight layer
       Int_t layer = (Int_t)i/2 +1;
       title100  = Form("CFT Phi %d : Tdc(Leading) vs seg", layer);
@@ -533,6 +552,7 @@ ConfMan::InitializeHistograms()
       title105  = Form("CFT Phi %d : Adc(Low) vs seg", layer);
       title106  = Form("CFT Phi %d : Adc(High) vs seg (w/ TDC)", layer);
       title200 = Form("CFT Phi %d : Time vs seg", layer);
+      title201 = Form("CFT Phi %d : TDC (w/ Large ADC) vs seg", layer);      
       title204 = Form("CFT Phi %d : AdcCor(High) vs seg", layer);
       title205 = Form("CFT Phi %d : AdcCor(Low) vs seg", layer);
       title206 = Form("CFT Phi %d : AdcCor(High) vs seg (w/ TDC)", layer);
@@ -543,7 +563,8 @@ ConfMan::InitializeHistograms()
       title301 = Form("CFT Phi %d : Cluster Size", layer);            
       title302 = Form("CFT Phi %d (Cluster): Time vs seg", layer);      
       title303 = Form("CFT Phi %d (Cluster): total dE vs seg", layer);
-      title304 = Form("CFT Phi %d (Cluster): max dE vs seg", layer);                        
+      title304 = Form("CFT Phi %d (Cluster): max dE vs seg", layer);
+      title305 = Form("CFT Phi %d (Cluster): MeanPhi", layer);                              
     }
     HB2( 1000*(i+1)+100, title100, NumOfSegCFT[i], 0, NumOfSegCFT[i], 1024,0,1024);
     HB2( 1000*(i+1)+101, title101, NumOfSegCFT[i], 0, NumOfSegCFT[i], 1024,0,1024);
@@ -553,6 +574,7 @@ ConfMan::InitializeHistograms()
     HB2( 1000*(i+1)+105, title105, NumOfSegCFT[i], 0, NumOfSegCFT[i], 1000,0,4000);
     HB2( 1000*(i+1)+106, title106, NumOfSegCFT[i], 0, NumOfSegCFT[i], 1000,0,4000);    
     HB2( 1000*(i+1)+200, title200, NumOfSegCFT[i], 0, NumOfSegCFT[i], 1000,-500,500);
+    HB2( 1000*(i+1)+201, title201, NumOfSegCFT[i], 0, NumOfSegCFT[i], 1024,0,1024);
     HB2( 1000*(i+1)+204, title204, NumOfSegCFT[i], 0, NumOfSegCFT[i], 1000,-500,3500);
     HB2( 1000*(i+1)+205, title205, NumOfSegCFT[i], 0, NumOfSegCFT[i], 1000,-500,3500);
     HB2( 1000*(i+1)+206, title206, NumOfSegCFT[i], 0, NumOfSegCFT[i], 1000,-500,3500);
@@ -563,7 +585,8 @@ ConfMan::InitializeHistograms()
     HB1( 1000*(i+1)+301, title301, 20, 0, 20);
     HB2( 1000*(i+1)+302, title302, NumOfSegCFT[i], 0, NumOfSegCFT[i], 1000,-500,500);
     HB2( 1000*(i+1)+303, title303, NumOfSegCFT[i], 0, NumOfSegCFT[i], 1000,-1,9);
-    HB2( 1000*(i+1)+304, title304, NumOfSegCFT[i], 0, NumOfSegCFT[i], 1000,-1,9);        
+    HB2( 1000*(i+1)+304, title304, NumOfSegCFT[i], 0, NumOfSegCFT[i], 1000,-1,9);
+    HB1( 1000*(i+1)+305, title305, 500, -50, 450);    
   }
 
   

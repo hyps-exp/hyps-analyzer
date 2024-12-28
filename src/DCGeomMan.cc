@@ -211,6 +211,7 @@ DCGeomMan::CalcWirePosition(const TString& key, Double_t wire) const
   return CalcWirePosition(GetDetectorId(key), wire);
 }
 
+
 //_____________________________________________________________________________
 Int_t
 DCGeomMan::CalcWireNumber(Int_t lnum, Double_t pos) const

@@ -30,7 +30,15 @@ protected:
   data_t m_adccor_hi;
   data_t m_adccor_low;  
   data_t m_mip_hi;
-  data_t m_mip_low;  
+  data_t m_mip_low;
+
+  Double_t  m_phi;
+  Double_t  m_r;
+  Double_t  m_x;
+  Double_t  m_y;  
+  Double_t  m_z0;
+  Double_t  m_slope;  
+  
   
 public:
   Bool_t   Calculate();
@@ -77,6 +85,13 @@ public:
     else
       return TMath::QuietNaN();}
   
+  Double_t GetX() const { return m_x;}
+  Double_t GetY() const { return m_y;}
+  Double_t GetPhi() const { return m_phi;}
+  Double_t GetR() const { return m_r;}
+  Double_t GetZ0() const { return m_z0;}
+  Double_t GetSlope() const { return m_slope;}  
+
   // Double_t GetDeHG() const { return m_dE_hg; }
   // Double_t GetDeLG() const { return m_dE_lg; }
   // void     SetPedestalCor(Double_t deltaHG, Double_t deltaLG)  { m_pedcor_hg = deltaHG; m_pedcor_lg = deltaLG; }

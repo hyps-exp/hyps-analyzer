@@ -36,7 +36,13 @@ CFTFiberHit::CFTFiberHit(HodoRawHit *rhit)
     m_adccor_hi(m_n_ch),
     m_adccor_low(m_n_ch),
     m_mip_hi(m_n_ch),
-    m_mip_low(m_n_ch)
+    m_mip_low(m_n_ch),
+    m_phi(),
+    m_r(),
+    m_x(),
+    m_y(),  
+    m_z0(),
+    m_slope()  
 {
   debug::ObjectCounter::increase(ClassName());
 }
@@ -169,6 +175,34 @@ CFTFiberHit::Calculate()
       }
 #endif      
     }
+
+    Int_t layer = gGeom.GetDetectorId(DetectorName()+"-"+PlaneName());
+    
+    m_r = gGeom.GetLocalZ(layer);
+    if (seg%2 == 0)
+      m_r -= 0.4;
+    else
+      m_r += 0.4;
+    
+    if (PlaneName() == "PHI1" || PlaneName() == "PHI2" || PlaneName() == "PHI3" || PlaneName() == "PHI4") {
+      m_phi = gGeom.CalcWirePosition(layer, seg);
+      if (m_phi>=360)
+	m_phi = m_phi - 360.;
+      else if (m_phi < 0)
+	m_phi = 360. + m_phi;
+      
+      m_x = m_r * TMath::Cos(m_phi*TMath::DegToRad());
+      m_y = m_r * TMath::Sin(m_phi*TMath::DegToRad());
+    } else if (PlaneName() == "UV1" || PlaneName() == "UV2" || PlaneName() == "UV3" || PlaneName() == "UV4") {
+      m_z0 =  gGeom.CalcWirePosition(layer, seg);
+      if (m_z0 >= 400)
+	m_z0 = m_z0 - 400.;
+      else if (m_z0 < 0)
+	m_z0 = 400. + m_z0;
+      
+      m_slope =  gGeom.GetTiltAngle(layer);
+    }
+    
   }
 #endif
   m_is_calculated = true;
