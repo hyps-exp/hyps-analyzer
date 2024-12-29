@@ -32,6 +32,8 @@ std::vector<IndexList> MakeIndex_VXU(Int_t ndim, Int_t maximumHit, const Int_t *
 std::vector<IndexList> MakeIndex_VXU(Int_t ndim, Int_t maximumHit, const IndexList& index1);
 DCLocalTrack*          MakeTrack(const std::vector<ClusterList>& CandCont,
                                  const IndexList& combination);
+CFTLocalTrack*         MakeTrack(  const std::vector<CFTFiberCC>&  HC,
+				   const IndexList& combination);
 
 Int_t LocalTrackSearch(const std::vector<DCHC>& HC,
                        const DCPairPlaneInfo *PpInfo,
@@ -73,6 +75,13 @@ Int_t LocalTrackSearchSdcInSdcOut(const std::vector<DCHC>& SdcInHC,
                                   Int_t SdcInNpp, Int_t SdcOutNpp,
                                   std::vector<DCLocalTrack*>& TrackCont,
                                   Int_t MinNumOfHits=12);
+
+Int_t LocalTrackSearchCFT( const std::vector<CFTFiberCC>& HC,
+			   Int_t NPlane, CFTLocalTC& TrackCont,
+			   Int_t MinNumOfHitsPhi=3,  Int_t MinNumOfHitsU=3);
+Int_t LocalTrackSearchCFT_16layer( CFTLocalTC& TrackCont,
+				   CFTLocalTC& TrackCont_16layer);
+  
 Int_t MWPCLocalTrackSearch(const std::vector<DCHC>& HC,
                            std::vector<DCLocalTrack*>& TrackCont);
 Int_t MWPCLocalTrackSearch(const std::vector< std::vector<DCHC> >& hcList,

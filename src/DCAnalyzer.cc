@@ -25,6 +25,7 @@
 #include "DebugCounter.hh"
 #include "DebugTimer.hh"
 #include "FiberCluster.hh"
+#include "CFTFiberCluster.hh"
 #include "FuncName.hh"
 #include "HodoHit.hh"
 #include "HodoAnalyzer.hh"
@@ -138,6 +139,7 @@ DCAnalyzer::DCAnalyzer(const RawData& raw_data)
     m_BcOutHC(),
     m_SdcInHC(),
     m_SdcOutHC(),
+    m_CFTHC(),    
     m_SdcInExTC(NumOfLayersSdcIn),
     m_SdcOutExTC(NumOfLayersSdcOut+1),
     m_MWPCClCont(NumOfLayersBcIn+1)
@@ -155,6 +157,7 @@ DCAnalyzer::DCAnalyzer()
     m_BcOutHC(),
     m_SdcInHC(),
     m_SdcOutHC(),
+    m_CFTHC(),        
     m_SdcInExTC(NumOfLayersSdcIn),
     m_SdcOutExTC(NumOfLayersSdcOut+1),
     m_MWPCClCont(NumOfLayersBcIn+1)
@@ -179,8 +182,10 @@ DCAnalyzer::~DCAnalyzer()
   ClearTracksBcOut();
   ClearTracksBcOutSdcIn();
   ClearTracksSdcInSdcOut();
+  ClearTracksCFT();  
   ClearDCHits();
   ClearVtxHits();
+  ClearCFTHits();  
   debug::ObjectCounter::decrease(ClassName());
 }
 
@@ -325,6 +330,25 @@ DCAnalyzer::DecodeSdcOutHits(Double_t ofs_dt/*=0.*/)
     }
     plane_offset += n_plane;
   }
+  return true;
+}
+
+//_____________________________________________________________________________
+Bool_t
+DCAnalyzer::DecodeCFTHits(const HodoCC& HitCont)
+{
+  static const auto& digit_info =
+    hddaq::unpacker::GConfig::get_instance().get_digit_info();
+  m_CFTHC.clear();
+
+  Int_t id = digit_info.get_device_id("CFT");
+  Int_t n_plane = digit_info.get_n_plane(id);
+  m_CFTHC.resize(n_plane);  
+
+  for(const auto& hit: HitCont){
+    m_CFTHC[hit->PlaneId()].push_back(dynamic_cast<CFTFiberCluster*>(hit));
+  }
+
   return true;
 }
 
@@ -720,6 +744,28 @@ DCAnalyzer::TrackSearchSdcInSdcOut()
 }
 
 //_____________________________________________________________________________
+Bool_t
+DCAnalyzer::TrackSearchCFT()
+{
+  static const Int_t MinLayerPhi = gUser.GetParameter("MinLayerCFTPhi");
+  static const Int_t MinLayerUV = gUser.GetParameter("MinLayerCFTUV");  
+
+  track::LocalTrackSearchCFT(m_CFTHC, NumOfPlaneCFT,
+			     m_CFTTC, MinLayerPhi, MinLayerUV);
+
+  return true;
+}
+
+//_____________________________________________________________________________
+Bool_t
+DCAnalyzer::TrackSearchCFT_16layer()
+{
+  track::LocalTrackSearchCFT_16layer(m_CFTTC, m_CFT16TC);
+
+  return true;
+}
+
+//_____________________________________________________________________________
 #if UseBcIn
 Bool_t
 DCAnalyzer::TrackSearchK18U2D()
@@ -1042,6 +1088,15 @@ DCAnalyzer::ClearTOFHits()
 }
 
 //_____________________________________________________________________________
+void
+DCAnalyzer::ClearCFTHits()
+{
+  for (Int_t i=0; i<m_CFTHC.size(); ++i)
+    m_CFTHC[i].clear();
+  //del::ClearContainer(m_CFTHC);
+}
+
+//_____________________________________________________________________________
 #if UseBcIn
 void
 DCAnalyzer::ClearTracksBcIn()
@@ -1108,6 +1163,14 @@ void
 DCAnalyzer::ClearTracksSdcInSdcOut()
 {
   del::ClearContainer(m_SdcInSdcOutTC);
+}
+
+//_____________________________________________________________________________
+void
+DCAnalyzer::ClearTracksCFT()
+{
+  del::ClearContainer(m_CFTTC);
+  del::ClearContainer(m_CFT16TC);  
 }
 
 #if UseBcIn

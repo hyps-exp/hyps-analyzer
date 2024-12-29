@@ -12,6 +12,7 @@
 
 class DCHit;
 class DCLocalTrack;
+class CFTLocalTrack;
 class K18TrackU2D;
 class K18TrackD2U;
 class S2sTrack;
@@ -19,17 +20,21 @@ class RawData;
 class MWPCCluster;
 class FiberCluster;
 class HodoCluster;
+class CFTFiberCluster;
 
 class HodoHit;
 class HodoAnalyzer;
 
 using DCHC = std::vector<DCHit*>;
-using DCLocalTC = std::vector<DCLocalTrack*>;
+using DCLocalTC  = std::vector<DCLocalTrack*>;
+using CFTLocalTC = std::vector<CFTLocalTrack*>;
 using K18TC = std::vector<K18TrackD2U*>;
 using S2sTC = std::vector<S2sTrack*>;
 
 using HodoHC = std::vector<HodoHit*>;
 using HodoCC = std::vector<HodoCluster*>;
+
+using CFTFiberCC = std::vector<CFTFiberCluster*>;
 
 // no use
 using MWPCClusterContainer = std::vector<MWPCCluster*>;
@@ -50,26 +55,30 @@ private:
 
 private:
   template <typename T> using map_t = std::map<TString, T>;
-  const RawData*         m_raw_data;
-  map_t<DCHC>            m_dc_hit_collection;
-  Double_t               m_max_v0diff;
-  std::vector<DCHC>      m_TempBcInHC;
-  std::vector<DCHC>      m_BcInHC;
-  std::vector<DCHC>      m_BcOutHC;
-  std::vector<DCHC>      m_SdcInHC;
-  std::vector<DCHC>      m_SdcOutHC;
-  DCHC                   m_TOFHC;
-  DCHC                   m_VtxPoint;
-  DCLocalTC              m_BcInTC;
-  DCLocalTC              m_BcOutTC;
-  DCLocalTC              m_SdcInTC;
-  DCLocalTC              m_SdcOutTC;
-  K18TC                  m_K18D2UTC;
-  S2sTC                  m_S2sTC;
-  DCLocalTC              m_BcOutSdcInTC;
-  DCLocalTC              m_SdcInSdcOutTC;
-  std::vector<DCLocalTC> m_SdcInExTC;
-  std::vector<DCLocalTC> m_SdcOutExTC;
+  const RawData*          m_raw_data;
+  map_t<DCHC>             m_dc_hit_collection;
+  Double_t                m_max_v0diff;
+  std::vector<DCHC>       m_TempBcInHC;
+  std::vector<DCHC>       m_BcInHC;
+  std::vector<DCHC>       m_BcOutHC;
+  std::vector<DCHC>       m_SdcInHC;
+  std::vector<DCHC>       m_SdcOutHC;
+  DCHC                    m_TOFHC;
+  DCHC                    m_VtxPoint;
+  std::vector<CFTFiberCC> m_CFTHC;
+  DCLocalTC               m_BcInTC;
+  DCLocalTC               m_BcOutTC;
+  DCLocalTC               m_SdcInTC;
+  DCLocalTC               m_SdcOutTC;
+  K18TC                   m_K18D2UTC;
+  S2sTC                   m_S2sTC;
+  DCLocalTC               m_BcOutSdcInTC;
+  DCLocalTC               m_SdcInSdcOutTC;
+  std::vector<DCLocalTC>  m_SdcInExTC;
+  std::vector<DCLocalTC>  m_SdcOutExTC;
+
+  CFTLocalTC              m_CFTTC;
+  CFTLocalTC              m_CFT16TC;  
   // no use
   std::vector<MWPCClusterContainer>  m_MWPCClCont;
   K18TrackU2DContainer               m_K18U2DTC;
@@ -84,6 +93,7 @@ public:
   Bool_t DecodeBcOutHits();
   Bool_t DecodeSdcInHits();
   Bool_t DecodeSdcOutHits(Double_t ofs_dt=0.);
+  Bool_t DecodeCFTHits(const HodoCC& HitCont);
   Bool_t DecodeSdcInHitsGeant4(const std::vector<Int_t>& nhit,
 			       const std::vector<std::vector<TVector3>>& pos,
 			       const std::vector<std::vector<Double_t>>& de);
@@ -135,6 +145,13 @@ public:
   const DCLocalTrack* GetTrackSdcOutEx(Int_t l, Int_t i) const
     { return m_SdcOutExTC.at(l).at(i); }
 
+  Bool_t TrackSearchCFT();
+  Bool_t TrackSearchCFT_16layer();  
+  Int_t GetNtracksCFT() const { return m_CFTTC.size(); }
+  Int_t GetNtracksCFT_16layer() const { return m_CFT16TC.size(); }  
+  const CFTLocalTrack*  GetTrackCFT(Int_t l) const { return m_CFTTC.at(l); }
+  const CFTLocalTrack*  GetTrackCFT_16layer(Int_t l) const { return m_CFT16TC.at(l); }  
+  
   Bool_t TrackSearchK18U2D();
   Bool_t TrackSearchK18D2U(const std::vector<Double_t>& XinCont);
   Bool_t TrackSearchS2s(Double_t initial_momentum);
@@ -218,12 +235,15 @@ protected:
   void ClearTOFHits();
   void ClearVtxHits();
 
+  void ClearCFTHits();
+  
   void ClearTracksBcIn();
   void ClearTracksBcOut();
   void ClearTracksSdcIn();
   void ClearTracksSdcOut();
   void ClearTracksBcOutSdcIn();
   void ClearTracksSdcInSdcOut();
+  void ClearTracksCFT();  
   void ClearK18TracksU2D();
   void ClearK18TracksD2U();
   void ClearS2sTracks();

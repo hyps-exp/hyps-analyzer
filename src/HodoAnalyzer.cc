@@ -193,6 +193,13 @@ HodoAnalyzer::TotCut(std::vector<T>& cont,
 // }
 
 //_____________________________________________________________________________
+void
+HodoAnalyzer::AdcCut(const TString& name, Double_t min, Double_t max)
+{
+  AdcCut(m_hodo_cluster_collection[name], min, max);
+}
+
+//_____________________________________________________________________________
 // Implementation of ADC cut for the cluster container
 template <typename T>
 void
@@ -202,7 +209,7 @@ HodoAnalyzer::AdcCut(std::vector<T>& cont,
   std::vector<T> DeleteCand;
   std::vector<T> ValidCand;
   for(Int_t i=0, n=cont.size(); i<n; ++i){
-    Double_t adc = cont.at(i)->MaxAdcLow();
+    Double_t adc = dynamic_cast<CFTFiberCluster*>(cont.at(i))->MaxAdcLow();
     if(amin < adc && adc < amax){
       ValidCand.push_back(cont.at(i));
     }else{

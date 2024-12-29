@@ -74,6 +74,7 @@ public:
   void TimeCut(const TString& name, Double_t min, Double_t max);
   void TotCut(const TString& name, Double_t min, Double_t max,
               Bool_t adopt_nan=true);
+  void AdcCut(const TString& name, Double_t min, Double_t max);
   void DeCut(const TString& name, Double_t min, Double_t max);
 
   const HodoCluster* GetTime0BH2Cluster() const;
