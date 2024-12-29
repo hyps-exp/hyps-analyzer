@@ -57,7 +57,6 @@ struct Event
   Double_t bh2dt[NumOfSegBH2][MaxDepth];
 
   Int_t rfnhits;
-  Double_t rfa[NumOfSegRF];
   Double_t rft[NumOfSegRF][MaxDepth];
 
 
@@ -185,7 +184,6 @@ Event::clear()
   }
 
   for(Int_t it=0; it<NumOfSegRF; it++){
-    rfa[it]  = qnan;
     for(Int_t m=0; m<MaxDepth; ++m){
       rft[it][m]  = qnan;
     }
@@ -259,7 +257,6 @@ struct Dst
   Double_t tRF[NumOfSegRF*MaxDepth];
 
   // for HodoParam
-  Double_t rfa[NumOfSegRF];
   Double_t rft[NumOfSegRF][MaxDepth];
   Double_t tRFSeg[NumOfSegRF][MaxDepth];
 
@@ -358,7 +355,6 @@ Dst::clear()
   }
 
   for(Int_t it=0; it<NumOfSegRF; it++){
-    rfa[it]   = qnan;
     RFSeg[it] = qnan;
     for(Int_t m=0; m<MaxDepth; ++m){
       rft[it][m]           = qnan;
@@ -575,10 +571,6 @@ ProcessingNormal()
       HodoRawHit *hit = cont[i];
       Int_t seg = hit->SegmentId();
 
-      Int_t Al = hit->GetAdc();
-      HF1(RFHid+100*(seg+1)+1, Al);
-      event.rfa[seg] = Al;
-      dst.rfa[seg]   = Al;
 
       Bool_t is_hit = false;
       Int_t m_l = 0;
@@ -591,8 +583,6 @@ ProcessingNormal()
         }
         if(MinTdcRF < T && T < MaxTdcRF) is_hit = true;
       }
-      if(is_hit) HF1(RFHid+100*(seg+1)+5, Al);
-      else       HF1(RFHid+100*(seg+1)+7, Al);
 
 
     }
@@ -1366,14 +1356,8 @@ ConfMan::InitializeHistograms()
   HB1(RFHid +0, "#Hits RF",        NumOfSegRF+1, 0., Double_t(NumOfSegRF+1));
 
   for(Int_t i=0; i<NumOfSegRF; ++i){
-    TString title1 = Form("RF-%d Adc", i);
     TString title2 = Form("RF-%d Tdc", i);
-    TString title3 = Form("RF-%d Adc(w Tdc)", i);
-    TString title4 = Form("RF-%d Adc(w/o Tdc)", i);
-    HB1(RFHid +100*(i+1) +1, title1, NbinAdc, MinAdc, MaxAdc);
     HB1(RFHid +100*(i+1) +3, title2, NbinTdcHr, MinTdcHr, MaxTdcHr);
-    HB1(RFHid +100*(i+1) +5, title3, NbinAdc, MinAdc, MaxAdc);
-    HB1(RFHid +100*(i+1) +7, title4, NbinAdc, MinAdc, MaxAdc);
   }
 
   // T0
@@ -1548,7 +1532,6 @@ ConfMan::InitializeHistograms()
   // tree->Branch("bh2dt",       event.bh2dt,       Form("bh2dt[%d][%d]/D", NumOfSegBH2, MaxDepth));
   //RF
   tree->Branch("rfnhits",   &event.rfnhits,   "rfnhits/I");
-  tree->Branch("rfa",        event.rfa,       Form("rfa[%d]/D", NumOfSegRF));
   tree->Branch("rft",        event.rft,       Form("rft[%d][%d]/D", NumOfSegRF, MaxDepth));
   //T0
   tree->Branch("t0nhits",   &event.t0nhits,   "t0nhits/I");
