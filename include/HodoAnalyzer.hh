@@ -172,6 +172,9 @@ HodoAnalyzer::DecodeHits(const TString& name, Double_t max_time_diff)
   for(const auto& hit: CandCont)
     cont.push_back(hit);
 
+  if (name=="BGO")
+    return true;
+
 #if 1
   static const auto& gUser = UserParamMan::GetInstance();
   const auto MaxClusterSize = gUser.Get("MaxClusterSize"+name);

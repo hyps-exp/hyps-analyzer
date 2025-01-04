@@ -34,6 +34,8 @@
 #include "UserParamMan.hh"
 #include "CFTPedCorMan.hh"
 #include "CFTPosParamMan.hh"
+#include "TemplateFitMan.hh"
+#include "BGOCalibMan.hh"
 
 namespace
 {

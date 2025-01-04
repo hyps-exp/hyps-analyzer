@@ -66,6 +66,9 @@ const int NumOfSegCFT_UV4   = 538;
 const int NumOfSegCFT_PHI4  = 910;
 const std::vector<int> NumOfSegCFT = {426,584,472,692,510,800,538,910};
 
+// BGO
+const int NumOfSegBGO   = 24;
+
 // VMEEASIROC
 const Int_t DetIdVMEASIROC = 116;
 const Int_t NumOfPlaneVMEEASIROC = 96;

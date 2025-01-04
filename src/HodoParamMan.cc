@@ -151,7 +151,19 @@ HodoParamMan::Initialize()
         //       delete pre_param;
         //     }
         //   }
-      }else{
+      }
+      else if(at == kTdc2){
+	auto pre_param = m_T2PContainer[key];
+	auto param = new HodoTParam(p0, p1);
+	m_T2PContainer[key] = param;
+	if(pre_param){
+	  hddaq::cerr << FUNC_NAME << ": duplicated key "
+		      << " following record is deleted." << std::endl
+		      << " key = " << key << std::endl;
+	  delete pre_param;
+	}
+      }
+ else{
 	hddaq::cerr << FUNC_NAME << ": Invalid Input" << std::endl
 		    << " ===> (" << invalid << "a)" << line << " " << std::endl;
       } /* if(at) */
@@ -180,6 +192,17 @@ HodoParamMan::GetTime(Int_t cid, Int_t plid, Int_t seg,
                       Int_t ud, Int_t tdc, Double_t& time) const
 {
   HodoTParam* map = GetTmap(cid, plid, seg, ud);
+  if(!map) return false;
+  time = map->Time(tdc);
+  return true;
+}
+
+//_____________________________________________________________________________
+Bool_t
+HodoParamMan::GetTime2(Int_t cid, Int_t plid, Int_t seg,
+		       Int_t ud, Int_t tdc, Double_t& time) const
+{
+  HodoTParam* map = GetT2map(cid, plid, seg, ud);
   if(!map) return false;
   time = map->Time(tdc);
   return true;
@@ -268,6 +291,18 @@ HodoParamMan::GetTmap(Int_t cid, Int_t plid, Int_t seg, Int_t ud) const
   Int_t key = KEY(cid, plid, seg, ud);
   TIterator itr = m_TPContainer.find(key);
   if(itr != m_TPContainer.end())
+    return itr->second;
+  else
+    return nullptr;
+}
+
+//_____________________________________________________________________________
+HodoTParam*
+HodoParamMan::GetT2map(Int_t cid, Int_t plid, Int_t seg, Int_t ud) const
+{
+  Int_t key = KEY(cid, plid, seg, ud);
+  TIterator itr = m_T2PContainer.find(key);
+  if(itr != m_T2PContainer.end())
     return itr->second;
   else
     return nullptr;

@@ -397,7 +397,7 @@ ProcessingNormal()
     return true;
 #endif
 
-#if 0
+#if 1
   HF1(1, 11.);
   // std::cout << "==========TrackSearch SdcIn============" << std::endl;
 #if 1
@@ -532,8 +532,8 @@ ConfMan:: InitializeHistograms()
   const Double_t MaxSDC1DL  =   8.;
 
   const Int_t NbinRes   =  200;
-  const Double_t MinRes = -1.;
-  const Double_t MaxRes =  1.;
+  const Double_t MinRes = -2.;
+  const Double_t MaxRes =  2.;
 
   HB1(1, "Status", 20, 0., 20.);
 
@@ -618,7 +618,7 @@ ConfMan:: InitializeHistograms()
     HB1(100*i+15, title15, NbinRes, MinRes, MaxRes);
     HB2(100*i+16, title16, 250, -250., 250., NbinRes, MinRes, MaxRes);
     HB2(100*i+17, title17, 100, -250., 250., 100, -250., 250.);
-    HB2(100*i+18, title18, 100, -3., 3., NbinRes, MinRes, MaxRes);
+    HB2(100*i+18, title18, 100, -6.5, 6.6, NbinRes, MinRes, MaxRes);
     HB2(100*i+19, title19, nbindt, mindt, maxdt, Int_t(maxdl*20), -maxdl, maxdl);
     HBProf(100*i+20, title20, nbindt, mindt, maxdt, mindl, maxdl);
     HB2(100*i+22, title22, nbindt, mindt, maxdt, nbindl, mindl, maxdl);

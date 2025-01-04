@@ -62,7 +62,30 @@ struct Event
   Int_t cftadc_cor_h[NumOfPlaneCFT][NumOfSegCFT_PHI4];
   Int_t cftadc_cor_l[NumOfPlaneCFT][NumOfSegCFT_PHI4];
 
-
+  Int_t    ntCFT_16layer;
+  Int_t    nhXY_16layer[MaxDepth];
+  Int_t    nhZ_16layer[MaxDepth];
+  Double_t chisqrXY_16layer[MaxDepth];
+  Double_t chisqrZ_16layer[MaxDepth];
+  //Double_t u0_16layer[MaxDepth];
+  //Double_t v0_16layer[MaxDepth];
+  //Double_t x0_16layer[MaxDepth];
+  //Double_t y0_16layer[MaxDepth];
+  //Double_t z0_y_16layer[MaxDepth];
+  //Double_t z0_x_16layer[MaxDepth];
+  //Double_t dist_16layer[MaxDepth];
+  //Double_t theta_16layer[MaxDepth];
+  //Double_t cost_16layer[MaxDepth];
+  Int_t    nhPhi_16layer[4];
+  Double_t hitMeanSegPhi_16layer[4][MaxDepth];
+  Double_t phi_16layer[4][MaxDepth];
+  Double_t resPhi_16layer[4][MaxDepth];
+  Double_t calZPhi_16layer[4][MaxDepth];
+  Int_t    nhU_16layer[4];
+  Double_t hitMeanSegU_16layer[4][MaxDepth];
+  Double_t phiU_16layer[4][MaxDepth];
+  Double_t calZU_16layer[4][MaxDepth];
+  Double_t resZU_16layer[4][MaxDepth];
 
   ////////// Normalized
 
@@ -89,6 +112,39 @@ Event::clear()
 
       cftadc_cor_h[it][m] = qnan;
       cftadc_cor_l[it][m] = qnan;
+    }
+  }
+
+  ntCFT_16layer = 0;
+  for (Int_t j=0; j<4; j++) {
+    nhPhi_16layer[j] = 0;
+    nhU_16layer[j] = 0;
+  }
+
+  for (Int_t j=0; j<MaxDepth; j++) {
+    nhXY_16layer[j] = 0;
+    nhZ_16layer[j] = 0;
+    chisqrXY_16layer[j] = qnan;
+    chisqrZ_16layer[j] = qnan;
+    //x0_16layer[j] = qnan;
+    //y0_16layer[j] = qnan;
+    //u0_16layer[j] = qnan;
+    //v0_16layer[j] = qnan;
+    //z0_y_16layer[j] = qnan;
+    //z0_x_16layer[j] = qnan;
+    //dist_16layer[j] = qnan;
+    //theta_16layer[j] = qnan;
+    //cost_16layer[j] = qnan;
+    for (Int_t i=0; i<4; i++) {
+      hitMeanSegPhi_16layer[i][j] = qnan;
+      phi_16layer[i][j] = qnan;
+      resPhi_16layer[i][j] = qnan;
+      calZPhi_16layer[i][j] = qnan;
+
+      hitMeanSegU_16layer[i][j] = qnan;
+      phiU_16layer[i][j] = qnan;
+      calZU_16layer[i][j] = qnan;
+      resZU_16layer[i][j] = qnan;
     }
   }
 }
@@ -552,7 +608,8 @@ ProcessingNormal()
     // 16 layer tracking
     DCAna.TrackSearchCFT_16layer();
     Int_t ntCFT_16layer = DCAna.GetNtracksCFT_16layer();
-    //event.ntCFT_16layer = ntCFT_16layer;
+    event.ntCFT_16layer = ntCFT_16layer;
+    
     HF1(50, ntCFT_16layer);
     if (ntCFT_16layer == 1) {
       const auto& tp = DCAna.GetTrackCFT_16layer(0);
@@ -588,19 +645,19 @@ ProcessingNormal()
       HF2(65, max_dE, theta_cft);
       HF2(66, norm_max_dE, theta_cft);    
       
-      /*
-      event.nhXY_8layer[0]=nhXY;
-      event.nhZ_8layer[0]=nhZ;
-      event.chisqrXY_8layer[0]=chisqrXY;
-      event.chisqrZ_8layer[0]=chisqrZ;
-      event.x0_8layer[0]=x0;
-      event.y0_8layer[0]=y0;
-      event.u0_8layer[0]=u0;
-      event.v0_8layer[0]=v0;
-      event.z0_y_8layer[0]=-y0/v0;
-      event.z0_x_8layer[0]=-x0/u0;
-      event.dist_8layer[0]=fabs(v0*x0-u0*y0)/sqrt(u0*u0+v0*v0);
-      */
+
+      event.nhXY_16layer[0]=nhXY;
+      event.nhZ_16layer[0]=nhUV;
+      event.chisqrXY_16layer[0]=chisqrXY;
+      event.chisqrZ_16layer[0]=chisqrZ;
+      //event.x0_16layer[0]=x0;
+      //event.y0_16layer[0]=y0;
+      //event.u0_16layer[0]=u0;
+      //event.v0_16layer[0]=v0;
+      //event.z0_y_16layer[0]=-y0/v0;
+      //event.z0_x_16layer[0]=-x0/u0;
+      //event.dist_16layer[0]=fabs(v0*x0-u0*y0)/sqrt(u0*u0+v0*v0);
+
       for (Int_t ih=0; ih<nhXY; ih++) {
         CFTFiberCluster *cl = tp->GetHit(ih);
 	Int_t  plane = cl->PlaneId();
@@ -637,13 +694,13 @@ ProcessingNormal()
           HF2(hid+1+int(phi/10.)+1, calZ, res_phi);
         }
 	*/
-	/*
-        event.hitMeanSegPhi_8layer[layer2][event.nhPhi_8layer[layer2]]  = MeanSeg;
-        event.resPhi_8layer[layer2][event.nhPhi_8layer[layer2]]  = res_phi;
-        event.calZPhi_8layer[layer2][event.nhPhi_8layer[layer2]]  = calZ;
-        event.phi_8layer[layer2][event.nhPhi_8layer[layer2]]  = phi;
-        event.nhPhi_8layer[layer2]++;
-	*/
+        Int_t layer2 = (Int_t)(plane/2);
+        event.hitMeanSegPhi_16layer[layer2][event.nhPhi_16layer[layer2]]  = ms;
+        event.resPhi_16layer[layer2][event.nhPhi_16layer[layer2]]  = res_phi;
+        event.calZPhi_16layer[layer2][event.nhPhi_16layer[layer2]]  = z_cal;
+        event.phi_16layer[layer2][event.nhPhi_16layer[layer2]]  = phi;
+        event.nhPhi_16layer[layer2]++;
+
         /*   
 	     std::cout << "layer : " << layer2 << ", phi : " <<  phi         
 	     << ", int(phi) : " << int(phi)                                  
@@ -673,14 +730,14 @@ ProcessingNormal()
 	HF1 (100*(plane+1)+52, res_z);      
 	HF2 (100*(plane+1)+55, z_cal, res_z);
 	HF2 (100*(plane+1)+56, phi_cal, res_z);            
-	/*
-        int layer2 = (layer-layerId_U1)/2;
-        event.hitMeanSegU_8layer[layer2][event.nhU_8layer[layer2]]  = MeanSeg;
-        event.resZU_8layer[layer2][event.nhU_8layer[layer2]]  = res_z;
-        event.calZU_8layer[layer2][event.nhU_8layer[layer2]]  = z_cal;
-        event.phiU_8layer[layer2][event.nhU_8layer[layer2]]  = phi_cal;
-        event.nhU_8layer[layer2]++;
-	*/
+
+        Int_t layer2 = (Int_t)(plane/2);
+        event.hitMeanSegU_16layer[layer2][event.nhU_16layer[layer2]]  = ms;
+        event.resZU_16layer[layer2][event.nhU_16layer[layer2]]  = res_z;
+        event.calZU_16layer[layer2][event.nhU_16layer[layer2]]  = z_cal;
+        event.phiU_16layer[layer2][event.nhU_16layer[layer2]]  = phi_cal;
+        event.nhU_16layer[layer2]++;
+
         /* 
 	   std::cout << "layer : " << layer2 << ", phi : " <<  phi
 	   << ", int(phi) : " << int(phi) 
@@ -696,8 +753,8 @@ ProcessingNormal()
       double cost = Dir*bMom/(Dir.Mag()*bMom.Mag());
       double theta = acos(cost)*Rad2Deg;
 
-      event.theta_8layer[0]=theta;
-      event.cost_8layer[0]=cost;
+      event.theta_16layer[0]=theta;
+      event.cost_16layer[0]=cost;
       */
     }
   }
@@ -967,6 +1024,73 @@ ConfMan::InitializeHistograms()
 
   tree->Branch("cftadc_cor_h",   event.cftadc_cor_h,  Form("cftadc_cor_h[%d][%d]/I", NumOfPlaneCFT, NumOfSegCFT_PHI4));
   tree->Branch("cftadc_cor_l",   event.cftadc_cor_l,  Form("cftadc_cor_l[%d][%d]/I", NumOfPlaneCFT, NumOfSegCFT_PHI4));
+
+
+  // 16layer tracking
+  tree->Branch("ntCFT_16layer",   &event.ntCFT_16layer,  "ntCFT_16layer/I");
+  tree->Branch("nhXY_16layer",   event.nhXY_16layer,  "nhXY_16layer[ntCFT_16layer]/I");
+  tree->Branch("nhZ_16layer",   event.nhZ_16layer,  "nhZ_16layer[ntCFT_16layer]/I");
+  tree->Branch("chisqrXY_16layer",   event.chisqrXY_16layer,  "chisqrXY_16layer[ntCFT_16layer]/D");
+  tree->Branch("chisqrZ_16layer",   event.chisqrZ_16layer,  "chisqrZ_16layer[ntCFT_16layer]/D");
+  //tree->Branch("x0_16layer",   event.x0_16layer,  "x0_16layer[ntCFT_16layer]/D");
+  //tree->Branch("y0_16layer",   event.y0_16layer,  "y0_16layer[ntCFT_16layer]/D");
+  //tree->Branch("u0_16layer",   event.u0_16layer,  "u0_16layer[ntCFT_16layer]/D");
+  //tree->Branch("v0_16layer",   event.v0_16layer,  "v0_16layer[ntCFT_16layer]/D");
+  //tree->Branch("z0_y_16layer",   event.z0_y_16layer,  "z0_y_16layer[ntCFT_16layer]/D");
+  //tree->Branch("z0_x_16layer",   event.z0_x_16layer,  "z0_x_16layer[ntCFT_16layer]/D");
+  //tree->Branch("dist_16layer",   event.dist_16layer,  "dist_16layer[ntCFT_16layer]/D");
+  //tree->Branch("theta_16layer",   event.theta_16layer,  "theta_16layer[ntCFT_16layer]/D");
+  //tree->Branch("cost_16layer",   event.cost_16layer,  "cost_16layer[ntCFT_16layer]/D");
+  tree->Branch("nhPhi1_16layer", &event.nhPhi_16layer[0], "nhPhi1_16layer/I");
+  tree->Branch("nhPhi2_16layer", &event.nhPhi_16layer[1], "nhPhi2_16layer/I");
+  tree->Branch("nhPhi3_16layer", &event.nhPhi_16layer[2], "nhPhi3_16layer/I");
+  tree->Branch("nhPhi4_16layer", &event.nhPhi_16layer[3], "nhPhi4_16layer/I");
+
+  tree->Branch("hitMeanSegPhi1_16layer",   event.hitMeanSegPhi_16layer[0],  "hitMeanSegPhi1_16layer[nhPhi1_16layer]/D");
+  tree->Branch("hitMeanSegPhi2_16layer",   event.hitMeanSegPhi_16layer[1],  "hitMeanSegPhi2_16layer[nhPhi2_16layer]/D");
+  tree->Branch("hitMeanSegPhi3_16layer",   event.hitMeanSegPhi_16layer[2],  "hitMeanSegPhi3_16layer[nhPhi3_16layer]/D");
+  tree->Branch("hitMeanSegPhi4_16layer",   event.hitMeanSegPhi_16layer[3],  "hitMeanSegPhi4_16layer[nhPhi4_16layer]/D");
+
+  tree->Branch("phi1_16layer",   event.phi_16layer[0],  "phi1_16layer[nhPhi1_16layer]/D");
+  tree->Branch("phi2_16layer",   event.phi_16layer[1],  "phi2_16layer[nhPhi2_16layer]/D");
+  tree->Branch("phi3_16layer",   event.phi_16layer[2],  "phi3_16layer[nhPhi3_16layer]/D");
+  tree->Branch("phi4_16layer",   event.phi_16layer[3],  "phi4_16layer[nhPhi4_16layer]/D");
+
+  tree->Branch("resPhi1_16layer",   event.resPhi_16layer[0],  "resPhi1_16layer[nhPhi1_16layer]/D");
+  tree->Branch("resPhi2_16layer",   event.resPhi_16layer[1],  "resPhi2_16layer[nhPhi2_16layer]/D");
+  tree->Branch("resPhi3_16layer",   event.resPhi_16layer[2],  "resPhi3_16layer[nhPhi3_16layer]/D");
+  tree->Branch("resPhi4_16layer",   event.resPhi_16layer[3],  "resPhi4_16layer[nhPhi4_16layer]/D");
+
+  tree->Branch("calZPhi1_16layer",   event.calZPhi_16layer[0],  "calZPhi1_16layer[nhPhi1_16layer]/D");
+  tree->Branch("calZPhi2_16layer",   event.calZPhi_16layer[1],  "calZPhi2_16layer[nhPhi2_16layer]/D");
+  tree->Branch("calZPhi3_16layer",   event.calZPhi_16layer[2],  "calZPhi3_16layer[nhPhi3_16layer]/D");
+  tree->Branch("calZPhi4_16layer",   event.calZPhi_16layer[3],  "calZPhi4_16layer[nhPhi4_16layer]/D");
+
+  tree->Branch("nhU1_16layer", &event.nhU_16layer[0], "nhU1_16layer/I");
+  tree->Branch("nhU2_16layer", &event.nhU_16layer[1], "nhU2_16layer/I");
+  tree->Branch("nhU3_16layer", &event.nhU_16layer[2], "nhU3_16layer/I");
+  tree->Branch("nhU4_16layer", &event.nhU_16layer[3], "nhU4_16layer/I");
+
+  tree->Branch("hitMeanSegU1_16layer",   event.hitMeanSegU_16layer[0],  "hitMeanSegU1_16layer[nhU1_16layer]/D");
+  tree->Branch("hitMeanSegU2_16layer",   event.hitMeanSegU_16layer[1],  "hitMeanSegU2_16layer[nhU2_16layer]/D");
+  tree->Branch("hitMeanSegU3_16layer",   event.hitMeanSegU_16layer[2],  "hitMeanSegU3_16layer[nhU3_16layer]/D");
+  tree->Branch("hitMeanSegU4_16layer",   event.hitMeanSegU_16layer[3],  "hitMeanSegU4_16layer[nhU4_16layer]/D");
+
+  tree->Branch("phiU1_16layer",   event.phiU_16layer[0],  "phiU1_16layer[nhU1_16layer]/D");
+  tree->Branch("phiU2_16layer",   event.phiU_16layer[1],  "phiU2_16layer[nhU2_16layer]/D");
+  tree->Branch("phiU3_16layer",   event.phiU_16layer[2],  "phiU3_16layer[nhU3_16layer]/D");
+  tree->Branch("phiU4_16layer",   event.phiU_16layer[3],  "phiU4_16layer[nhU4_16layer]/D");
+
+  tree->Branch("resZU1_16layer",   event.resZU_16layer[0],  "resZU1_16layer[nhU1_16layer]/D");
+  tree->Branch("resZU2_16layer",   event.resZU_16layer[1],  "resZU2_16layer[nhU2_16layer]/D");
+  tree->Branch("resZU3_16layer",   event.resZU_16layer[2],  "resZU3_16layer[nhU3_16layer]/D");
+  tree->Branch("resZU4_16layer",   event.resZU_16layer[3],  "resZU4_16layer[nhU4_16layer]/D");
+
+  tree->Branch("calZU1_16layer",   event.calZU_16layer[0],  "calZU1_16layer[nhU1_16layer]/D");
+  tree->Branch("calZU2_16layer",   event.calZU_16layer[1],  "calZU2_16layer[nhU2_16layer]/D");
+  tree->Branch("calZU3_16layer",   event.calZU_16layer[2],  "calZU3_16layer[nhU3_16layer]/D");
+  tree->Branch("calZU4_16layer",   event.calZU_16layer[3],  "calZU4_16layer[nhU4_16layer]/D");
+
   
   // HPrint();
   return true;
