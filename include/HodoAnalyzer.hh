@@ -277,9 +277,17 @@ HodoAnalyzer::Connectable(const HodoHit* hitA, Int_t indexA,
   Double_t cmtB = hitB->CMeanTime(indexB);
   Double_t segA = hitA->SegmentId();
   Double_t segB = hitB->SegmentId();
+  Bool_t planeeq= true;
+
+  if(hitA->DetectorName()=="TAG-SF" && hitB->DetectorName()=="TAG-SF"){
+    TString planeA =hitA->PlaneName();
+    TString planeB =hitB->PlaneName();
+    planeeq=planeA.EqualTo(planeB);
+  }
+  
   return (true
           && TMath::Abs(segA - segB) <= 1
-          && TMath::Abs(cmtA - cmtB) < MaxTimeDiff);
+          && TMath::Abs(cmtA - cmtB) < MaxTimeDiff && planeeq);
 }
 
 //_____________________________________________________________________________

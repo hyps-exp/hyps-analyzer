@@ -1,7 +1,7 @@
 // -*- C++ -*-
 
-#ifndef BH1_MATHC_HH
-#define BH1_MATHC_HH
+#ifndef TAGPL_MATHC_HH
+#define TAGPL_MATHC_HH
 
 #include <bitset>
 #include <map>
@@ -9,17 +9,17 @@
 #include <TString.h>
 
 //_____________________________________________________________________________
-class BH1Match
+class TAGPLMatch
 {
 public:
   static const TString& ClassName();
-  static BH1Match&      GetInstance();
-  virtual ~BH1Match();
+  static TAGPLMatch&      GetInstance();
+  virtual ~TAGPLMatch();
 
 private:
-  BH1Match();
-  BH1Match(const BH1Match&);
-  BH1Match& operator =(const BH1Match&);
+  TAGPLMatch();
+  TAGPLMatch(const TAGPLMatch&);
+  TAGPLMatch& operator =(const TAGPLMatch&);
 
 private:
   struct Param
@@ -45,7 +45,7 @@ private:
 public:
   enum EParam
   {
-    kBH1Segment,
+    kTAGPLSegment,
     kXMin,
     kXMax,
     kNParam
@@ -58,23 +58,23 @@ public:
 
 //_____________________________________________________________________________
 inline const TString&
-BH1Match::ClassName()
+TAGPLMatch::ClassName()
 {
-  static TString s_name("BH1Match");
+  static TString s_name("TAGPLMatch");
   return s_name;
 }
 
 //_____________________________________________________________________________
-inline BH1Match&
-BH1Match::GetInstance()
+inline TAGPLMatch&
+TAGPLMatch::GetInstance()
 {
-  static BH1Match s_instance;
+  static TAGPLMatch s_instance;
   return s_instance;
 }
 
 //_____________________________________________________________________________
 inline void
-BH1Match::SetVerbose()
+TAGPLMatch::SetVerbose()
 {
   m_status.set(kVerbose);
 }

@@ -1,6 +1,6 @@
 // -*- C++ -*-
 
-#include "BH1Match.hh"
+#include "TAGPLMatch.hh"
 
 #include <iomanip>
 #include <iostream>
@@ -19,24 +19,24 @@
 #include "PrintHelper.hh"
 
 //_____________________________________________________________________________
-BH1Match::Param::Param()
+TAGPLMatch::Param::Param()
   : m_xmin(0.),
     m_xmax(0.)
 {
 }
 
 //_____________________________________________________________________________
-BH1Match::Param::~Param()
+TAGPLMatch::Param::~Param()
 {
 }
 
 //_____________________________________________________________________________
 void
-BH1Match::Param::Print() const
+TAGPLMatch::Param::Print() const
 {
   PrintHelper helper(1, std::ios::fixed);
   static const Int_t w = 5;
-  hddaq::cout << " BH1 seg " << std::right << std::setw(w) << m_seg << ":"
+  hddaq::cout << " TAGPL seg " << std::right << std::setw(w) << m_seg << ":"
               << " (" << std::right
               << std::setw(w) << m_xmin << ", "
               << std::setw(w) << m_xmax << ")"
@@ -44,7 +44,7 @@ BH1Match::Param::Print() const
 }
 
 //_____________________________________________________________________________
-BH1Match::BH1Match()
+TAGPLMatch::TAGPLMatch()
   : m_status(),
     m_param()
 {
@@ -52,13 +52,13 @@ BH1Match::BH1Match()
 }
 
 //_____________________________________________________________________________
-BH1Match::~BH1Match()
+TAGPLMatch::~TAGPLMatch()
 {
 }
 
 //_____________________________________________________________________________
 Bool_t
-BH1Match::Initialize(const TString& file_name)
+TAGPLMatch::Initialize(const TString& file_name)
 {
   std::ifstream ifs(file_name);
   if(!ifs.is_open()){
@@ -81,13 +81,13 @@ BH1Match::Initialize(const TString& file_name)
       throw Exception(FUNC_NAME + " invalid parameter.");
     }
 
-    const Double_t bh1seg = cont[kBH1Segment];
+    const Double_t tagplseg = cont[kTAGPLSegment];
     const Double_t xmin   = cont[kXMin];
     const Double_t xmax   = cont[kXMax];
 
-    m_param[bh1seg].m_seg = bh1seg;
-    m_param[bh1seg].m_xmin = xmin;
-    m_param[bh1seg].m_xmax = xmax;
+    m_param[tagplseg].m_seg = tagplseg;
+    m_param[tagplseg].m_xmin = xmin;
+    m_param[tagplseg].m_xmax = xmax;
   }// read line
 
   if(m_status[kVerbose]) Print();
@@ -98,21 +98,21 @@ BH1Match::Initialize(const TString& file_name)
 
 //_____________________________________________________________________________
 Bool_t
-BH1Match::Judge(Double_t bft_xpos, Double_t bh1seg)
+TAGPLMatch::Judge(Double_t bft_xpos, Double_t tagplseg)
 {
   if(!m_status[kReady])
     throw Exception(FUNC_NAME + " is not initialized.");
-  if(m_param.find(bh1seg) == m_param.end())
+  if(m_param.find(tagplseg) == m_param.end())
     return false;
 
-  const Double_t xmin  = m_param.at(bh1seg).m_xmin;
-  const Double_t xmax  = m_param.at(bh1seg).m_xmax;
+  const Double_t xmin  = m_param.at(tagplseg).m_xmin;
+  const Double_t xmax  = m_param.at(tagplseg).m_xmax;
 
   if(m_status[kVerbose]){
     hddaq::cout << FUNC_NAME << std::endl;
-    m_param.at(bh1seg).Print();
+    m_param.at(tagplseg).Print();
     PrintHelper helper(2, std::ios::fixed);
-    hddaq::cout << " BFT pos " << std::setw(7) << bft_xpos << " -> ";
+    hddaq::cout << " SF pos " << std::setw(7) << bft_xpos << " -> ";
     if(xmin < bft_xpos && bft_xpos < xmax){
       hddaq::cout << hddaq::unpacker::esc::k_green
                   << "accept"
@@ -129,7 +129,7 @@ BH1Match::Judge(Double_t bft_xpos, Double_t bh1seg)
 
 //_____________________________________________________________________________
 void
-BH1Match::Print() const
+TAGPLMatch::Print() const
 {
   hddaq::cout << FUNC_NAME << std::endl
               << "  seg: (xmin, xmax)" << std::endl;

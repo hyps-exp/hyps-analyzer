@@ -10,6 +10,7 @@
 
 // #include "BH2Cluster.hh"
 #include "BH2Hit.hh"
+#include "TAGPLMatch.hh"
 #include "FiberCluster.hh"
 #include "FiberHit.hh"
 #include "ConfMan.hh"
@@ -38,6 +39,7 @@ const auto qnan = TMath::QuietNaN();
 auto& gUnpacker = hddaq::unpacker::GUnpacker::get_instance();
 auto& gRM       = RMAnalyzer::GetInstance();
 auto& gUser     = UserParamMan::GetInstance();
+auto& gTAGPLMth = TAGPLMatch::GetInstance();
 }
 
 //_____________________________________________________________________________
@@ -49,15 +51,20 @@ struct Event
   Int_t trigpat[NumOfSegTrig];
   Int_t trigflag[NumOfSegTrig];
 
-  Int_t bh2nhits;
-  Int_t bh2hitpat[MaxHits];
-  Double_t bh2ua[NumOfSegBH2];
-  Double_t bh2ut[NumOfSegBH2][MaxDepth];
-  Double_t bh2da[NumOfSegBH2];
-  Double_t bh2dt[NumOfSegBH2][MaxDepth];
-
   Int_t rfnhits;
   Double_t rft[NumOfSegRF][MaxDepth];
+
+  Int_t tagsffnhits;
+  Int_t tagsffhitpat[MaxHits];
+  Double_t tagsfft[NumOfSegTagSF][MaxDepth];
+
+  Int_t tagsfbnhits;
+  Int_t tagsfbhitpat[MaxHits];
+  Double_t tagsfbt[NumOfSegTagSF][MaxDepth];
+
+  Int_t tagplnhits;
+  Int_t tagplhitpat[MaxHits];
+  Double_t tagplt[NumOfSegTagPL][MaxDepth];
 
 
   Int_t t0nhits;
@@ -90,17 +97,6 @@ struct Event
 
 
   ////////// Normalized
-  Double_t bh2mt[NumOfSegBH2][MaxDepth];
-  Double_t bh2cmt[NumOfSegBH2][MaxDepth];
-  Double_t bh2utime[NumOfSegBH2][MaxDepth];
-  Double_t bh2uctime[NumOfSegBH2][MaxDepth];
-  Double_t bh2dtime[NumOfSegBH2][MaxDepth];
-  Double_t bh2dctime[NumOfSegBH2][MaxDepth];
-  Double_t bh2hitpos[NumOfSegBH2][MaxDepth];
-  Double_t bh2de[NumOfSegBH2];
-  Double_t bh2ude[NumOfSegBH2];
-  Double_t bh2dde[NumOfSegBH2];
-
   Double_t rf[NumOfSegRF][MaxDepth];
   Double_t crf[NumOfSegRF][MaxDepth];
 
@@ -138,11 +134,13 @@ Event::clear()
   evnum       = 0;
   spill       = 0;
   rfnhits     = 0;
+  tagsffnhits=0;
+  tagsfbnhits=0;
+  tagplnhits=0;  
   t0nhits     = 0;
   sacnhits    = 0;
   sac1nhits   = 0;
   sac2nhits   = 0;
-  bh2nhits    = 0;
   e_vetonhits = 0;
   tofnhits    = 0;
   Time0Seg    = qnan;
@@ -156,36 +154,32 @@ Event::clear()
   }
 
   for(Int_t it=0; it<MaxHits; ++it){
-    bh2hitpat[it]    = -1;
+    tagsffhitpat[it]=-1;
+    tagsfbhitpat[it]=-1;
+    tagplhitpat[it]=-1;
     sachitpat[it]    = -1;
     tofhitpat[it]    = -1;
   }
 
-  for(Int_t it=0; it<NumOfSegBH2; ++it){
-    bh2ua[it]  = qnan;
-    bh2da[it]  = qnan;
-    bh2de[it]  = qnan;
-    bh2dde[it] = qnan;
-    bh2ude[it] = qnan;
+  for(Int_t it=0; it<NumOfSegRF; it++){
     for(Int_t m=0; m<MaxDepth; ++m){
-      bh2ut[it][m]     = qnan;
-      bh2dt[it][m]     = qnan;
-      bh2mt[it][m]     = qnan;
       rf[it][m]        = qnan;
       crf[it][m]       = qnan;
-      t0[it][m]        = qnan;
-      ct0[it][m]       = qnan;
-      bh2utime[it][m]  = qnan;
-      bh2dtime[it][m]  = qnan;
-      bh2uctime[it][m] = qnan;
-      bh2dctime[it][m] = qnan;
-      bh2hitpos[it][m] = qnan;
+      rft[it][m]  = qnan;
     }
   }
 
-  for(Int_t it=0; it<NumOfSegRF; it++){
+  for(Int_t it=0; it<NumOfSegTagSF; it++){
     for(Int_t m=0; m<MaxDepth; ++m){
-      rft[it][m]  = qnan;
+      tagsfft[it][m]  = qnan;
+      tagsfbt[it][m]  = qnan;
+    }
+  }
+
+  for(Int_t it=0; it<NumOfSegTagPL; it++){
+    for(Int_t m=0; m<MaxDepth; ++m){
+      tagplt[it][m]  = qnan;
+      tagplt[it][m]  = qnan;
     }
   }
 
@@ -195,6 +189,8 @@ Event::clear()
     for(Int_t m=0; m<MaxDepth; ++m){
       t0lt[it][m]  = qnan;
       t0rt[it][m]  = qnan;
+      t0[it][m]        = qnan;
+      ct0[it][m]       = qnan;
     }
   }
 
@@ -429,8 +425,8 @@ TTree* tree;
 // TTree* hodo;
 enum eDetHid {
   RFHid     = 10000,
-  //20000
-  //30000
+  TagSFHid  = 20000,
+  TagPLHid  = 30000,
   T0Hid     = 50000,
   SACHid    = 60000,
   E_VetoHid = 70000,
@@ -455,6 +451,10 @@ ProcessingNormal()
   // static const auto MaxTdcBH2 = gUser.GetParameter("TdcBH2", 1);
   static const auto MinTdcRF     = gUser.GetParameter("TdcRF", 0);
   static const auto MaxTdcRF     = gUser.GetParameter("TdcRF", 1);
+  static const auto MinTdcSF  = gUser.GetParameter("TdcSF", 0);
+  static const auto MaxTdcSF  = gUser.GetParameter("TdcSF", 1);
+  static const auto MinTdcPL  = gUser.GetParameter("TdcPL", 0);
+  static const auto MaxTdcPL  = gUser.GetParameter("TdcPL", 1);
   static const auto MinTdcT0     = gUser.GetParameter("TdcT0", 0);
   static const auto MaxTdcT0     = gUser.GetParameter("TdcT0", 1);
   static const auto MinTdcSAC    = gUser.GetParameter("TdcSAC", 0);
@@ -506,59 +506,6 @@ ProcessingNormal()
 
   HF1(1, 1);
 
-#if 0 // BH2, SAC
-  ///// BH2
-  rawData.DecodeHits("BH2");
-  {
-    Int_t bh2_nhits = 0;
-    const auto& cont = rawData.GetHodoRawHC("BH2");
-    Int_t nh = cont.size();
-    HF1(BH2Hid, nh);
-    Int_t nh1 = 0, nh2 = 0;
-    for(Int_t i=0; i<nh; ++i){
-      HodoRawHit *hit = cont[i];
-      Int_t seg = hit->SegmentId()+1;
-      HF1(BH2Hid +1, seg-0.5);
-      // Up
-      Int_t Au = hit->GetAdcUp();
-      HF1(BH2Hid +100*seg +1, Au);
-      event.bh2ua[seg-1] = Au;
-      Bool_t is_hit_u = false;
-      Int_t m_u = 0;
-      for(const auto& T: hit->GetArrayTdcUp()){
-        HF1(BH2Hid +100*seg +3, T);
-        if(m_u < MaxDepth) event.bh2ut[seg-1][m_u++] = T;
-        if(MinTdcBH2 < T && T < MaxTdcBH2) is_hit_u = true;
-      }
-      if(is_hit_u) HF1(BH2Hid +100*seg +5, Au);
-      else         HF1(BH2Hid +100*seg +7, Au);
-      // Down
-      Int_t Ad = hit->GetAdcDown();
-      HF1(BH2Hid +100*seg +2, Double_t(Ad));
-      event.bh2da[seg-1] = Ad;
-      Bool_t is_hit_d = false;
-      Int_t m_d = 0;
-      for(const auto& T: hit->GetArrayTdcDown()){
-        HF1(BH2Hid +100*seg +4, Double_t(T));
-        if(m_d < MaxDepth) event.bh2dt[seg-1][m_d++] = T;
-        if(MinTdcBH2 < T && T < MaxTdcBH2) is_hit_d = true;
-      }
-      if(is_hit_d) HF1(BH2Hid +100*seg +6, Ad);
-      else         HF1(BH2Hid +100*seg +8, Ad);
-      // HitPat
-      if(is_hit_u || is_hit_d){
-        ++nh1; HF1(BH2Hid +3, seg-0.5);
-      }
-      if(is_hit_u && is_hit_d){
-        event.bh2hitpat[bh2_nhits++] = seg;
-        ++nh2; HF1(BH2Hid +5, seg-0.5);
-      }
-    }
-    HF1(BH2Hid +2, nh1); HF1(BH2Hid +4, nh2);
-    event.bh2nhits = bh2_nhits;
-  }
-#endif
-
   ///// RF
   rawData.DecodeHits("RF");
   {
@@ -588,6 +535,233 @@ ProcessingNormal()
     }
     event.rfnhits = rf_nhits;
   }
+
+      ///// Tag-SF
+  rawData.DecodeHits("TAG-SF");
+  
+  {
+    Int_t tagsf_nhits = 0;
+    const auto& cont = rawData.GetHodoRawHC("TAG-SF");
+    const auto& U= HodoRawHit::kUp;
+    Int_t nh = cont.size();
+    //HF1(T0Hid, Double_t(nh));
+    Int_t sffnhits = 0, sfbnhits = 0;
+    for(Int_t i=0; i<nh; ++i){
+      HodoRawHit *hit = cont[i];
+      Int_t plane =hit->PlaneId();
+      Int_t seg = hit->SegmentId();
+      //HF1(TagSFHid+1, seg+0.5);
+      // Left
+      Bool_t is_hit_l = false;
+      Int_t m_l = hit->GetSizeTdcLeading();
+      for(Int_t j=0;j<m_l;++j){
+        Double_t leading =hit->GetTdcLeading(U,j);
+	HF1(TagSFHid + plane +3, leading);
+	HF1(TagSFHid + 100*(seg+1) + 3 + plane,leading);
+	if(plane ==0) event.tagsfft[seg][j]= leading;
+	if(plane ==1) event.tagsfbt[seg][j]= leading;
+	if(MinTdcSF<leading && leading<MaxTdcSF){
+	  HF1(TagSFHid + plane + 5, seg+0.5);
+	  if(plane ==0) event.tagsffhitpat[sffnhits++]= seg;
+	  if(plane ==1) event.tagsfbhitpat[sfbnhits++]= seg;
+	}
+
+      }
+
+    }
+    event.tagsffnhits = sffnhits;
+    event.tagsfbnhits = sfbnhits;
+  }
+  
+      ///// Tag-PL
+  
+  rawData.DecodeHits("TAG-PL");
+  
+  {
+    Int_t tagpl_nhits = 0;
+    const auto& cont = rawData.GetHodoRawHC("TAG-PL");
+    const auto& U= HodoRawHit::kUp;
+    Int_t nh = cont.size();
+    //HF1(TagPLHid+0, Double_t(nh));
+    //HF1(T0Hid, Double_t(nh));
+    for(Int_t i=0; i<nh; ++i){
+      HodoRawHit *hit = cont[i];
+      Int_t seg = hit->SegmentId();
+      HF1(TagPLHid+5, seg+0.5);
+      Bool_t is_hit_l = false;
+      Int_t m_l = hit->GetSizeTdcLeading();
+      for(Int_t j=0;j<m_l;++j){
+        Double_t leading =hit->GetTdcLeading(U,j);
+	HF1(TagPLHid +3, leading);
+	HF1(TagPLHid + 100*(seg+1) + 3 ,leading);
+	event.tagplt[seg][j]= leading;
+	if(MinTdcPL<leading && leading<MaxTdcPL){
+	  HF1(TagPLHid + 6, seg+0.5);
+	  event.tagplhitpat[tagpl_nhits++]= seg;
+	}
+
+      }
+
+    }
+    event.tagplnhits = tagpl_nhits;
+    HF1(TagPLHid+0, tagpl_nhits);
+  }
+
+  //Tag-Hodoana
+  std::vector<int> PLCand;
+  {  
+  hodoAna.DecodeHits("TAG-PL");
+  
+    Int_t nh=hodoAna.GetNHits("TAG-PL");
+    Int_t nseg_goodtime=0;
+    for(Int_t i=0;i<nh;++i){
+      const auto& hit =hodoAna.GetHit("TAG-PL",i);
+      if(!hit) continue;
+      Int_t seg =hit->SegmentId();
+      /*
+	Double_t a =hit->GetAUp();
+
+      */
+      bool is_hit_time =false;
+      Int_t n_mhit =hit->GetEntries();
+      for(Int_t m=0;m<n_mhit;++m){
+	Double_t t=hit->GetTUp(m);
+	//Double_t ct= hit->GetCTUp(m);
+	//HF1(TagPLHid +100*(seg+1) +13, t);
+	HF1(TagPLHid +13, t);
+	if(fabs(t)<5.0) is_hit_time=true;
+	//if(fabs(t)<300.0) is_hit_time=true;	
+      }
+      if(is_hit_time){
+	nseg_goodtime++;
+	HF1(TagPLHid +16, seg+0.5);
+	PLCand.push_back(seg);
+      }
+
+    }
+    HF1(TagPLHid+10, Double_t(PLCand.size()));
+
+  }
+
+  std::vector<double> SFFhit;
+  std::vector<double> SFBhit;
+  std::vector<double> SFFCand;
+  std::vector<double> SFBCand;
+    {  
+      hodoAna.DecodeHits("TAG-SF");
+
+      Int_t nh=hodoAna.GetNHits("TAG-SF");
+      Int_t nseg_goodtime=0;
+      for(Int_t i=0;i<nh;++i){
+	const auto& hit =hodoAna.GetHit("TAG-SF",i);
+	if(!hit) continue;
+	Int_t seg =hit->SegmentId();
+	Int_t plane =hit->PlaneId();
+	TString planename=hit->PlaneName();
+	//std::cout<<"(seg, plane) = ("<<seg<<", "<<planename<<")"<<std::endl;
+	/*
+	  Double_t a =hit->GetAUp();
+	  
+	*/
+	bool is_hit_time =false;
+	Int_t n_mhit =hit->GetEntries();
+	for(Int_t m=0;m<n_mhit;++m){
+	  Double_t t=hit->GetTUp(m);
+	  //Double_t ct= hit->GetCTUp(m);
+	  //HF1(TagPLHid +100*(seg+1) +13, t);
+	  if(fabs(t)<5) is_hit_time=true;
+	  HF1(TagSFHid +13 +plane, t);
+	}
+	if(is_hit_time){
+	  //if(plane==0) SFFhit.push_back(seg);
+	  //if(plane==1) SFBhit.push_back(seg);
+	}
+	
+      }
+
+      hodoAna.TimeCut("TAG-SF",-5,5);
+      //hodoAna.TimeCut("TAG-SF",-100,100);
+  
+      Int_t nc=hodoAna.GetNClusters("TAG-SF");
+      Int_t ncl1=0, ncl2=0;
+      for(Int_t i=0;i<nc;++i){
+	const auto& cl =hodoAna.GetCluster("TAG-SF",i);
+	if(!cl) continue;
+	Int_t plane=cl->PlaneId();
+	if(plane==0) ncl1++;
+	if(plane==1) ncl2++;
+	Double_t ms =cl->MeanSeg();
+	Double_t mt =cl->MeanTime();
+	HF1(TagSFHid+10+plane,cl->ClusterSize());
+
+	if(plane==0 && cl->ClusterSize()<4) SFFhit.push_back(ms);
+	if(plane==1 && cl->ClusterSize()<4) SFBhit.push_back(ms);
+
+	HF1(TagSFHid +15 +plane, ms);
+	bool is_plmth=false;
+	if(PLCand.size()==0) is_plmth=true;
+	for(Int_t j=0;j<PLCand.size();j++){
+	  if(gTAGPLMth.Judge(ms,PLCand[j])) is_plmth=true;	  
+	}
+	if(is_plmth && cl->ClusterSize()<4){
+	  HF1(TagSFHid +25 +plane, ms);
+	  if(plane==0) SFFCand.push_back(ms);
+	  if(plane==1) SFBCand.push_back(ms);
+	}
+
+
+      }
+      HF1(TagSFHid+0, Double_t(ncl1));
+      HF1(TagSFHid+1, Double_t(ncl2));
+      HF1(TagSFHid+20, Double_t(SFFCand.size()));
+      HF1(TagSFHid+21, Double_t(SFBCand.size()));
+
+    }
+
+    std::vector<double> SFFCand_final;
+    std::vector<double> SFBCand_final;
+
+    for(int i=0;i<SFFhit.size();i++){
+      for(int j=0;j<SFBhit.size();j++){
+    	HF2(TagSFHid+17,SFFhit[i],SFBhit[j]);
+      }
+    }
+
+    for(int i=0;i<SFFCand.size();i++){
+      for(int j=0;j<SFBCand.size();j++){
+	HF2(TagSFHid+27,SFFCand[i],SFBCand[j]);
+	if(fabs(SFFCand[i]-SFBCand[j])<3){
+	  SFFCand_final.push_back(SFFCand[i]);
+	  SFBCand_final.push_back(SFBCand[j]);
+	}
+      }
+    }
+    HF1(TagSFHid+30,Double_t(SFFCand_final.size()));
+    HF1(TagSFHid+31,Double_t(SFBCand_final.size()));
+
+    if(SFFCand_final.size()==1){
+      HF2(TagSFHid+37,SFFCand[0],SFBCand[0]);
+      const double eparf[3]={1.42893,0.0350856,-0.000132564};
+      const double eparb[3]={1.42415,0.0351546,-0.000136274};
+      const double offset_b=0.6421;
+
+      double egamf=eparf[0]+eparf[1]*SFFCand[0]+eparf[2]*SFFCand[0]*SFFCand[0];
+      double SFBpos=SFBCand[0]+offset_b;
+      double egamb=eparb[0]+eparb[1]*SFBpos+eparb[2]*SFBpos*SFBpos;
+
+      HF1(TagSFHid+35,egamf);
+      HF1(TagSFHid+36,egamb);
+
+    }
+
+    for(int i=0;i<PLCand.size();i++){
+      for(int j=0;j<SFFhit.size();j++){
+	HF2(TagSFHid+18,PLCand[i],SFFhit[j]);
+      }
+      for(int k=0;k<SFBhit.size();k++){
+	HF2(TagSFHid+19,PLCand[i],SFBhit[k]);
+      }
+    }
 
   ///// T0
   rawData.DecodeHits("T0");
@@ -1221,143 +1395,62 @@ ConfMan::InitializeHistograms()
     HB1(10+i+1, Form("Trigger Flag %d", i+1), 0x1000, 0, 0x1000);
   }
 
-#if 0 // BH2, SAC
-  // BH2
-  HB1(BH2Hid +0, "#Hits BH2",        NumOfSegBH2+1, 0., Double_t(NumOfSegBH2+1));
-  HB1(BH2Hid +1, "Hitpat BH2",       NumOfSegBH2,   0., Double_t(NumOfSegBH2));
-  HB1(BH2Hid +2, "#Hits BH2(Tor)",   NumOfSegBH2+1, 0., Double_t(NumOfSegBH2+1));
-  HB1(BH2Hid +3, "Hitpat BH2(Tor)",  NumOfSegBH2,   0., Double_t(NumOfSegBH2));
-  HB1(BH2Hid +4, "#Hits BH2(Tand)",  NumOfSegBH2+1, 0., Double_t(NumOfSegBH2+1));
-  HB1(BH2Hid +5, "Hitpat BH2(Tand)", NumOfSegBH2,   0., Double_t(NumOfSegBH2));
-
-  for(Int_t i=1; i<=NumOfSegBH2; ++i){
-    TString title1 = Form("BH2-%d UpAdc", i);
-    TString title2 = Form("BH2-%d DownAdc", i);
-    TString title3 = Form("BH2-%d UpTdc", i);
-    TString title4 = Form("BH2-%d DownTdc", i);
-    TString title5 = Form("BH2-%d UpAdc(w Tdc)", i);
-    TString title6 = Form("BH2-%d DownAdc(w Tdc)", i);
-    TString title7 = Form("BH2-%d UpAdc(w/o Tdc)", i);
-    TString title8 = Form("BH2-%d DownAdc(w/o Tdc)", i);
-    HB1(BH2Hid +100*i +1, title1, NbinAdc,   MinAdc,   MaxAdc);
-    HB1(BH2Hid +100*i +2, title2, NbinAdc,   MinAdc,   MaxAdc);
-    HB1(BH2Hid +100*i +3, title3, NbinTdcHr, MinTdcHr, MaxTdcHr);
-    HB1(BH2Hid +100*i +4, title4, NbinTdcHr, MinTdcHr, MaxTdcHr);
-    HB1(BH2Hid +100*i +5, title5, NbinAdc,   MinAdc,   MaxAdc);
-    HB1(BH2Hid +100*i +6, title6, NbinAdc,   MinAdc,   MaxAdc);
-    HB1(BH2Hid +100*i +7, title7, NbinAdc,   MinAdc,   MaxAdc);
-    HB1(BH2Hid +100*i +8, title8, NbinAdc,   MinAdc,   MaxAdc);
-  }
-  HB1(BH2Hid +10, "#Hits BH2[Hodo]",  NumOfSegBH2+1, 0., Double_t(NumOfSegBH2+1));
-  HB1(BH2Hid +11, "Hitpat BH2[Hodo]", NumOfSegBH2,   0., Double_t(NumOfSegBH2));
-  HB1(BH2Hid +12, "CMeanTime BH2", 200, -10., 10.);
-  HB1(BH2Hid +13, "dE BH2", 200, -0.5, 4.5);
-  HB1(BH2Hid +14, "#Hits BH2[HodoGood]",  NumOfSegBH2+1, 0., Double_t(NumOfSegBH2+1));
-  HB1(BH2Hid +15, "Hitpat BH2[HodoGood]", NumOfSegBH2,   0., Double_t(NumOfSegBH2));
-  HB1(BH2Hid +16, "CMeanTime BH2[HodoGood]", 200, -10., 10.);
-
-  for(Int_t i=1; i<=NumOfSegBH2; ++i){
-    TString title11 = Form("BH2-%d Up Time", i);
-    TString title12 = Form("BH2-%d Down Time", i);
-    TString title13 = Form("BH2-%d MeanTime", i);
-    TString title14 = Form("BH2-%d Up dE", i);
-    TString title15 = Form("BH2-%d Down dE", i);
-    TString title16 = Form("BH2-%d dE", i);
-    TString title17 = Form("BH2-%d Up CTime", i);
-    TString title18 = Form("BH2-%d Down CTime", i);
-    TString title19 = Form("BH2-%d CMeanTime", i);
-    TString title20 = Form("BH2-%d Tup-Tdown", i);
-    TString title21 = Form("BH2-%d Up Time0", i);
-    TString title22 = Form("BH2-%d Down Time0", i);
-    TString title23 = Form("BH2-%d Up CTime", i);
-    TString title24 = Form("BH2-%d Down CTime", i);
-    TString title25 = Form("BH2-%d MeanTime0", i);
-    TString title26 = Form("BH2-%d CMeanTime0", i);
-    TString title27 = Form("BH2-%d Up dE%%Time", i);
-    TString title28 = Form("BH2-%d Down dE%%Time", i);
-    TString title29 = Form("BH2-%d Up dE%%CTime", i);
-    TString title30 = Form("BH2-%d Down dE%%CTime", i);
-    HB1(BH2Hid +100*i +11, title11, 200, -10., 10.);
-    HB1(BH2Hid +100*i +12, title12, 200, -10., 10.);
-    HB1(BH2Hid +100*i +13, title13, 200, -10., 10.);
-    HB1(BH2Hid +100*i +14, title14, 200, -0.5, 4.5);
-    HB1(BH2Hid +100*i +15, title15, 200, -0.5, 4.5);
-    HB1(BH2Hid +100*i +16, title16, 200, -0.5, 4.5);
-    HB1(BH2Hid +100*i +17, title17, 200, -10., 10.);
-    HB1(BH2Hid +100*i +18, title18, 200, -10., 10.);
-    HB1(BH2Hid +100*i +19, title19, 200, -10., 10.);
-    HB1(BH2Hid +100*i +20, title20, 200, -5.0, 5.0);
-    HB1(BH2Hid +100*i +21, title21, 200, -10., 10.);
-    HB1(BH2Hid +100*i +22, title22, 200, -10., 10.);
-    HB1(BH2Hid +100*i +23, title23, 200, -10., 10.);
-    HB1(BH2Hid +100*i +24, title24, 200, -10., 10.);
-    HB1(BH2Hid +100*i +25, title25, 200, -10., 10.);
-    HB1(BH2Hid +100*i +26, title26, 200, -10., 10.);
-    HB2(BH2Hid +100*i +27, title27, 100, -10., 10., 100, -0.5, 4.5);
-    HB2(BH2Hid +100*i +28, title28, 100, -10., 10., 100, -0.5, 4.5);
-    HB2(BH2Hid +100*i +29, title29, 100, -10., 10., 100, -0.5, 4.5);
-    HB2(BH2Hid +100*i +30, title30, 100, -10., 10., 100, -0.5, 4.5);
-  }
-
-  HB2(BH2Hid +21, "BH2HitPat%BH2HitPat[HodoGood]", NumOfSegBH2,   0., Double_t(NumOfSegBH2),
-      NumOfSegBH2,   0., Double_t(NumOfSegBH2));
-  HB2(BH2Hid +22, "CMeanTimeBH2%CMeanTimeBH2[HodoGood]",
-      100, -2.5, 2.5, 100, -2.5, 2.5);
-  HB1(BH2Hid +23, "TDiff BH2[HodoGood]", 200, -10., 10.);
-  HB2(BH2Hid +24, "BH2HitPat%BH2HitPat[HodoGood2]", NumOfSegBH2,   0., Double_t(NumOfSegBH2),
-      NumOfSegBH2,   0., Double_t(NumOfSegBH2));
-
-  HB1(BH2Hid +30, "#Clusters BH2", NumOfSegBH2+1, 0., Double_t(NumOfSegBH2+1));
-  HB1(BH2Hid +31, "ClusterSize BH2", 5, 0., 5.);
-  HB1(BH2Hid +32, "HitPat Cluster BH2", 2*NumOfSegBH2, 0., Double_t(NumOfSegBH2));
-  HB1(BH2Hid +33, "CMeamTime Cluster BH2", 200, -10., 10.);
-  HB1(BH2Hid +34, "DeltaE Cluster BH2", 100, -0.5, 4.5);
-  HB1(BH2Hid +35, "#Clusters BH2(ADCGood)", NumOfSegBH2+1, 0., Double_t(NumOfSegBH2+1));
-  HB1(BH2Hid +36, "CMeamTime Cluster BH2(ADCGood)", 200, -10., 10.);
-
-  HB2(BH2Hid +41, "BH2ClP%BH2ClP", NumOfSegBH2,   0., Double_t(NumOfSegBH2),
-      NumOfSegBH2,   0., Double_t(NumOfSegBH2));
-  HB2(BH2Hid +42, "CMeanTimeBH2%CMeanTimeBH2[Cluster]",
-      100, -2.5, 2.5, 100, -2.5, 2.5);
-  HB1(BH2Hid +43, "TDiff BH2[Cluster]", 200, -10., 10.);
-  HB2(BH2Hid +44, "BH2ClP%BH2ClP(ADCGood)", NumOfSegBH2,   0., Double_t(NumOfSegBH2),
-      NumOfSegBH2,   0., Double_t(NumOfSegBH2));
-
-#if 0
-  // BH1-BH2 PHC
-  for(Int_t i=1; i<=NumOfSegBH1; ++i){
-    TString title1 = Form("BH1-%dU CT-TOF%%dE", i);
-    TString title2 = Form("BH1-%dD CT-TOF%%dE", i);
-    TString title3 = Form("BH1-%dU  T-TOF%%dE", i);
-    TString title4 = Form("BH1-%dD  T-TOF%%dE", i);
-    HB2(BH1Hid +100*i +81, title1, 200, -0.5, 4.5, 200, -10., 10.);
-    HB2(BH1Hid +100*i +82, title2, 200, -0.5, 4.5, 200, -10., 10.);
-    HB2(BH1Hid +100*i +83, title3, 200, -0.5, 4.5, 200, -10., 10.);
-    HB2(BH1Hid +100*i +84, title4, 200, -0.5, 4.5, 200, -10., 10.);
-  }
-  for(Int_t i=1; i<=NumOfSegBH2; ++i){
-    TString title1 = Form("BH2-%dU CT-TOF%%dE", i);
-    TString title2 = Form("BH2-%dD CT-TOF%%dE", i);
-    TString title3 = Form("BH2-%dU  T-TOF%%dE", i);
-    TString title4 = Form("BH2-%dD  T-TOF%%dE", i);
-    HB2(BH2Hid +100*i +81, title1, 200, -0.5, 4.5, 200, -10., 10.);
-    HB2(BH2Hid +100*i +82, title2, 200, -0.5, 4.5, 200, -10., 10.);
-    HB2(BH2Hid +100*i +83, title3, 200, -0.5, 4.5, 200, -10., 10.);
-    HB2(BH2Hid +100*i +84, title4, 200, -0.5, 4.5, 200, -10., 10.);
-  }
-#endif
-
-  // BTOF
-  HB1(100, "BH2 MeanTime0", 400, -4, 4);
-  HB1(101, "CTime0", 400, -4, 4);
-#endif
-
   // RF
   HB1(RFHid +0, "#Hits RF",        NumOfSegRF+1, 0., Double_t(NumOfSegRF+1));
 
   for(Int_t i=0; i<NumOfSegRF; ++i){
     TString title2 = Form("RF-%d Tdc", i);
     HB1(RFHid +100*(i+1) +3, title2, NbinTdcHr, MinTdcHr, MaxTdcHr);
+  }
+
+    //Tag-SF
+
+  HB1(TagSFHid +0, "#Cluster Tag-SFF", NumOfSegTagSF+1,0.,Double_t(NumOfSegTagSF+1));
+  HB1(TagSFHid +1, "#Cluster Tag-SFB", NumOfSegTagSF+1,0.,Double_t(NumOfSegTagSF+1));
+  HB1(TagSFHid +10, "#ClusterSize Tag-SFF", NumOfSegTagSF+1,0.,Double_t(NumOfSegTagSF+1));
+  HB1(TagSFHid +11, "#ClusterSize Tag-SFB", NumOfSegTagSF+1,0.,Double_t(NumOfSegTagSF+1));
+  HB1(TagSFHid +20, "#Cluster Tag-SFF PL matching", NumOfSegTagSF+1,0.,Double_t(NumOfSegTagSF+1));
+  HB1(TagSFHid +21, "#Cluster Tag-SFB PL matching", NumOfSegTagSF+1,0.,Double_t(NumOfSegTagSF+1));
+  HB1(TagSFHid +30, "#Cluster Tag-SFF all matching", NumOfSegTagSF+1,0.,Double_t(NumOfSegTagSF+1));
+  HB1(TagSFHid +31, "#Cluster Tag-SFB all matching", NumOfSegTagSF+1,0.,Double_t(NumOfSegTagSF+1));
+  HB1(TagSFHid +3, "SFF leading", NbinTdc, MinTdc, MaxTdc);
+  HB1(TagSFHid +4, "SFB leading", NbinTdc, MinTdc, MaxTdc);
+  HB1(TagSFHid +13, "Tag-SFF time", 20, -10, 10);
+  HB1(TagSFHid +14, "Tag-SFB time", 20, -10, 10);
+  HB1(TagSFHid +5, "HitPat SFF", NumOfSegTagSF, 0, Double_t(NumOfSegTagSF));
+  HB1(TagSFHid +6, "HitPat SFB", NumOfSegTagSF, 0, Double_t(NumOfSegTagSF));
+  HB1(TagSFHid +15, "HitPat SFF cluster", NumOfSegTagSF*2, 0, Double_t(NumOfSegTagSF));
+  HB1(TagSFHid +16, "HitPat SFB cluster", NumOfSegTagSF*2, 0, Double_t(NumOfSegTagSF));
+  HB2(TagSFHid +17, "HitPat 2D SFF-SFB cluster",  NumOfSegTagSF*2, 0, Double_t(NumOfSegTagSF), NumOfSegTagSF*2, 0, Double_t(NumOfSegTagSF));
+  //HB2(TagSFHid +17, "HitPat 2D SFF-SFB cluster",  NumOfSegTagSF, 0, Double_t(NumOfSegTagSF), NumOfSegTagSF, 0, Double_t(NumOfSegTagSF));
+  HB2(TagSFHid +18, "HitPat 2D PL-SFF cluster",  NumOfSegTagPL, 0, Double_t(NumOfSegTagPL), NumOfSegTagSF*2, 0, Double_t(NumOfSegTagSF));
+  //HB2(TagSFHid +18, "HitPat 2D PL-SFF cluster",  NumOfSegTagPL, 0, Double_t(NumOfSegTagPL), NumOfSegTagSF, 0, Double_t(NumOfSegTagSF));
+  HB2(TagSFHid +19, "HitPat 2D PL-SFB cluster",  NumOfSegTagPL, 0, Double_t(NumOfSegTagPL), NumOfSegTagSF*2, 0, Double_t(NumOfSegTagSF));
+  //HB2(TagSFHid +19, "HitPat 2D PL-SFB cluster",  NumOfSegTagPL, 0, Double_t(NumOfSegTagPL), NumOfSegTagSF, 0, Double_t(NumOfSegTagSF));
+  HB1(TagSFHid +25, "HitPat SFF cluster PL matching", NumOfSegTagSF*2, 0, Double_t(NumOfSegTagSF));
+  HB1(TagSFHid +26, "HitPat SFB cluster PL matching", NumOfSegTagSF*2, 0, Double_t(NumOfSegTagSF));
+  HB2(TagSFHid +27, "HitPat 2D SFF-SFB cluster PL matching",  NumOfSegTagSF*2, 0, Double_t(NumOfSegTagSF), NumOfSegTagSF*2, 0, Double_t(NumOfSegTagSF));
+  HB1(TagSFHid +35, "egamma-f", 40, 1.0, 3.0);
+  HB1(TagSFHid +36, "egamma-b", 40, 1.0, 3.0);
+  HB2(TagSFHid +37, "HitPat 2D SFF-SFB cluster final cand",  NumOfSegTagSF*2, 0, Double_t(NumOfSegTagSF), NumOfSegTagSF*2, 0, Double_t(NumOfSegTagSF));
+  for(Int_t i=1;i<=NumOfSegTagSF;++i){
+    TString title3 = Form("SFF-%d Tdc", i);
+    TString title4 = Form("SFB-%d Tdc", i);
+    HB1(TagSFHid +100*i +3, title3, NbinTdc, MinTdc, MaxTdc);
+    HB1(TagSFHid +100*i +4, title4, NbinTdc, MinTdc, MaxTdc);
+  }
+
+  //Tag-PL
+  HB1(TagPLHid +0, "#Hits Tag-PL w/o cut", NumOfSegTagPL+1,0.,Double_t(NumOfSegTagPL+1));
+  HB1(TagPLHid +10, "#Hits Tag-PL", NumOfSegTagPL+1,0.,Double_t(NumOfSegTagPL+1));
+  HB1(TagPLHid +3, "Tag-PL leading", NbinTdc, MinTdc, MaxTdc);
+  HB1(TagPLHid +13, "Tag-PL time", 20, -10, 10);
+  HB1(TagPLHid +5, "HitPat Tag-PL (w/o TDC cut)", NumOfSegTagPL, 0, Double_t(NumOfSegTagPL));
+  HB1(TagPLHid +6, "HitPat Tag-PL (w/ TDC cut)", NumOfSegTagPL, 0, Double_t(NumOfSegTagPL));
+  HB1(TagPLHid +16, "HitPat Tag-PL (w/ Time cut)", NumOfSegTagPL, 0, Double_t(NumOfSegTagPL));
+  for(Int_t i=1;i<=NumOfSegTagPL;++i){
+    TString title3 = Form("TagPL-%d Tdc", i);
+    HB1(TagPLHid +100*i +3, title3, NbinTdc, MinTdc, MaxTdc);
   }
 
   // T0
@@ -1523,13 +1616,6 @@ ConfMan::InitializeHistograms()
   tree->Branch("trigpat",    event.trigpat,   Form("trigpat[%d]/I", NumOfSegTrig));
   tree->Branch("trigflag",   event.trigflag,  Form("trigflag[%d]/I", NumOfSegTrig));
 
-  // //BH2
-  // tree->Branch("bh2nhits",   &event.bh2nhits,    "bh2nhits/I");
-  // tree->Branch("bh2hitpat",   event.bh2hitpat,   Form("bh2hitpat[%d]/I", NumOfSegBH2));
-  // tree->Branch("bh2ua",       event.bh2ua,       Form("bh2ua[%d]/D", NumOfSegBH2));
-  // tree->Branch("bh2ut",       event.bh2ut,       Form("bh2ut[%d][%d]/D", NumOfSegBH2, MaxDepth));
-  // tree->Branch("bh2da",       event.bh2da,       Form("bh2da[%d]/D", NumOfSegBH2));
-  // tree->Branch("bh2dt",       event.bh2dt,       Form("bh2dt[%d][%d]/D", NumOfSegBH2, MaxDepth));
   //RF
   tree->Branch("rfnhits",   &event.rfnhits,   "rfnhits/I");
   tree->Branch("rft",        event.rft,       Form("rft[%d][%d]/D", NumOfSegRF, MaxDepth));
@@ -1652,6 +1738,7 @@ ConfMan::InitializeParameterFiles()
     (InitializeParameter<DCGeomMan>("DCGEO") &&
      InitializeParameter<HodoParamMan>("HDPRM") &&
      InitializeParameter<HodoPHCMan>("HDPHC")   &&
+     InitializeParameter<TAGPLMatch>("TAGPLMTH") &&
      InitializeParameter<UserParamMan>("USER"));
 }
 

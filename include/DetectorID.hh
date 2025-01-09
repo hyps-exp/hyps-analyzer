@@ -19,6 +19,8 @@ const std::map<TString, std::vector<TString>> DCNameList =
 // Counters ___________________________________________________________
 const Int_t NumOfSegBH1    = 11;
 const Int_t NumOfSegBH2    =  8;
+const Int_t NumOfSegTagSF = 55;//HYPS
+const Int_t NumOfSegTagPL = 10;//HYPS
 const Int_t NumOfSegRF     =  1;//HYPS
 const Int_t NumOfSegT0     =  1;//HYPS
 const Int_t NumOfSegBAC    =  2;

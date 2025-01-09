@@ -17,7 +17,7 @@
 #include <std_ostream.hh>
 
 // #include "BH1Filter.hh"
-#include "BH1Match.hh"
+#include "TAGPLMatch.hh"
 #include "BH2Filter.hh"
 #include "DCGeomMan.hh"
 #include "DCTdcCalibMan.hh"
