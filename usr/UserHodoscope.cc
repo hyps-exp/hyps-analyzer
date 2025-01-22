@@ -64,6 +64,7 @@ struct Event
 
   Int_t tagplnhits;
   Int_t tagplhitpat[MaxHits];
+  Double_t tagpla[NumOfSegTagPL];
   Double_t tagplt[NumOfSegTagPL][MaxDepth];
 
 
@@ -177,6 +178,7 @@ Event::clear()
   }
 
   for(Int_t it=0; it<NumOfSegTagPL; it++){
+    tagpla[it]=qnan;
     for(Int_t m=0; m<MaxDepth; ++m){
       tagplt[it][m]  = qnan;
       tagplt[it][m]  = qnan;
@@ -588,6 +590,8 @@ ProcessingNormal()
       HodoRawHit *hit = cont[i];
       Int_t seg = hit->SegmentId();
       HF1(TagPLHid+5, seg+0.5);
+      Double_t a=hit->GetAdc();
+      event.tagpla[seg]=a;
       Bool_t is_hit_l = false;
       Int_t m_l = hit->GetSizeTdcLeading();
       for(Int_t j=0;j<m_l;++j){
@@ -1619,6 +1623,19 @@ ConfMan::InitializeHistograms()
   //RF
   tree->Branch("rfnhits",   &event.rfnhits,   "rfnhits/I");
   tree->Branch("rft",        event.rft,       Form("rft[%d][%d]/D", NumOfSegRF, MaxDepth));
+  //TagSF
+  tree->Branch("tagsffnhits", &event.tagsffnhits, "tagsffnhits/I");
+  tree->Branch("tagsffhitpat", event.tagsffhitpat, Form("tagsffhitpat[%d]/I",NumOfSegTagSF));
+  tree->Branch("tagsfft",event.tagsfft, Form("tagsfft[%d][%d]/D",NumOfSegTagSF,MaxDepth));
+  tree->Branch("tagsfbnhits", &event.tagsfbnhits, "tagsfbnhits/I");
+  tree->Branch("tagsfbhitpat", event.tagsfbhitpat, Form("tagsfbhitpat[%d]/I",NumOfSegTagSF));
+  tree->Branch("tagsfbt",event.tagsfbt, Form("tagsfbt[%d][%d]/D",NumOfSegTagSF,MaxDepth));
+  //TagPL
+  tree->Branch("tagplnhits", &event.tagplnhits, "tagplnhits/I");
+  tree->Branch("tagplhitpat", event.tagplhitpat, Form("tagplhitpat[%d]/I",NumOfSegTagPL));
+  tree->Branch("tagpla", event.tagpla, Form("tagpla[%d]/D",NumOfSegTagPL));
+  tree->Branch("tagplt",event.tagplt, Form("tagplt[%d][%d]/D",NumOfSegTagPL,MaxDepth));
+  
   //T0
   tree->Branch("t0nhits",   &event.t0nhits,   "t0nhits/I");
   tree->Branch("t0la",       event.t0la,      Form("t0la[%d]/D", NumOfSegT0));
