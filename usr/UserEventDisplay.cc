@@ -456,7 +456,7 @@ ProcessingNormal()
     // }
     gEvDisp.DrawSdcOutLocalTrack(track);
   }
-  if(ntSdcOut != 1){
+  if(ntSdcOut == 0){
     hddaq::cout << "[Warning] SdcOutTrack is empty!" << std::endl;
     return true;
   }
