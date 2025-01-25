@@ -633,7 +633,7 @@ ProcessingNormal()
     }
   }
 #endif
-  
+  is_good = true;
   gEvDisp.Update();
   //gEvDisp.GetCommand();
   hddaq::cout << "[Info] IsGood = " << is_good << std::endl;
