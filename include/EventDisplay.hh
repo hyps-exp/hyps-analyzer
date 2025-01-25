@@ -1,7 +1,7 @@
 // -*- C++ -*-
 
-#ifndef EVENT_DISPLAY_HH
-#define EVENT_DISPLAY_HH
+#ifndef EVENT_DISPLAY_HYPS_HH
+#define EVENT_DISPLAY_HYPS_HH
 
 #include <TROOT.h>
 
@@ -155,20 +155,26 @@ private:
   std::vector<TNode*>        m_BC4v2_node;
   std::vector<TNode*>        m_BC4x1_node;
   std::vector<TNode*>        m_BC4x2_node;
-  std::vector<TNode*>        m_SDC1v1_node;
-  std::vector<TNode*>        m_SDC1v2_node;
+  std::vector<TNode*>        m_SDC0x1_node;
+  std::vector<TNode*>        m_SDC0x2_node;
+  std::vector<TNode*>        m_SDC0u1_node;
+  std::vector<TNode*>        m_SDC0u2_node;
   std::vector<TNode*>        m_SDC1x1_node;
-  std::vector<TNode*>        m_SDC1x2_node;
+  std::vector<TNode*>        m_SDC1v1_node;
   std::vector<TNode*>        m_SDC1u1_node;
   std::vector<TNode*>        m_SDC1u2_node;
+  std::vector<TNode*>        m_SDC1x2_node;
+  std::vector<TNode*>        m_SDC1x3_node;
+  std::vector<TNode*>        m_SDC2v1_node;
+  std::vector<TNode*>        m_SDC2u1_node;
+  std::vector<TNode*>        m_SDC2u2_node;    
   std::vector<TNode*>        m_SDC2x1_node;
   std::vector<TNode*>        m_SDC2x2_node;
-  std::vector<TNode*>        m_SDC2y1_node;
-  std::vector<TNode*>        m_SDC2y2_node;
+  std::vector<TNode*>        m_SDC3v1_node;
+  std::vector<TNode*>        m_SDC3u1_node;
+  std::vector<TNode*>        m_SDC3u2_node;    
   std::vector<TNode*>        m_SDC3x1_node;
   std::vector<TNode*>        m_SDC3x2_node;
-  std::vector<TNode*>        m_SDC3y1_node;
-  std::vector<TNode*>        m_SDC3y2_node;
   std::vector<TNode*>        m_SDC4y1_node;
   std::vector<TNode*>        m_SDC4y2_node;
   std::vector<TNode*>        m_SDC4x1_node;
@@ -185,6 +191,8 @@ private:
   TNode                     *m_AC1_node;
   TNode                     *m_WCwall_node;
   std::vector<TNode*>        m_WCseg_node;
+  TNode                     *m_kurama_inner_node;
+  TNode                     *m_kurama_outer_node;    
   std::vector<TPolyLine3D*>  m_BcOutTrack;
   std::vector<TPolyLine3D*>  m_SdcInTrack;
   std::vector<TPolyLine3D*>  m_SdcOutTrack;
@@ -220,6 +228,7 @@ public:
   Bool_t ConstructTarget();
   Bool_t ConstructBH2();
   Bool_t ConstructS2S();
+  Bool_t ConstructKURAMA();  
   Bool_t ConstructCollimator();
   Bool_t ConstructBcOut();
   Bool_t ConstructSdcIn();
@@ -260,7 +269,7 @@ public:
   void FillBFT(Int_t layer, Int_t seg, Int_t tdc);
   void SetCorrectTimeBFT(Double_t pos);
   void DrawBcInTrack(Double_t x0, Double_t u0);
-  void FillAFT(Int_t plane, Int_t seg, Double_t de_high);
+  //void FillAFT(Int_t plane, Int_t seg, Double_t de_high);
   void FillBH2(Int_t seg, Int_t tdc);
   void SetCorrectTimeBH2(Int_t seg, Double_t de);
   void SetCorrectTimeBcOut(Int_t layer, Double_t pos);
