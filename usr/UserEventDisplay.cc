@@ -357,8 +357,8 @@ ProcessingNormal()
         if(hit->IsGood(j)){
           is_good = true;
 	  Double_t dtime = hit->GetDriftTime(j);
-	  hddaq::cout << "SdcIn layer = " << layer << ", wire = " << wire
-		      << ", dt = " << dtime << std::endl;	
+	  //hddaq::cout << "SdcIn layer = " << layer << ", wire = " << wire
+	  //<< ", dt = " << dtime << std::endl;	
           break;
         }
       }
@@ -420,8 +420,8 @@ ProcessingNormal()
       for(Int_t j=0; j<mhit && !is_good; ++j){
         is_good = hit->IsGood(j);
 	Double_t dtime = hit->GetDriftTime(j);
-	hddaq::cout << "SdcOut layer = " << layer << ", wire = " << wire
-		    << ", dt = " << dtime << std::endl;	
+	//hddaq::cout << "SdcOut layer = " << layer << ", wire = " << wire
+	//<< ", dt = " << dtime << std::endl;	
       }
       gEvDisp.DrawHitWire(layer, wire, is_good, is_good);
     }
