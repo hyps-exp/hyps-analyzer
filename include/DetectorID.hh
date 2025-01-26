@@ -69,7 +69,31 @@ const int NumOfSegCFT_PHI4  = 910;
 const std::vector<int> NumOfSegCFT = {426,584,472,692,510,800,538,910};
 
 // BGO
-const int NumOfSegBGO   = 24;
+const Double_t BGO_X = 30.;
+const Double_t BGO_Y = 25.;
+const Double_t BGO_Z = 400.;
+const Int_t    NumOfBGOUnit = 8;
+const Int_t    NumOfBGOInOneUnit = 2;//pair unit
+const Double_t RadiusOfBGOSurface = 100.;
+const Int_t    NumOfBGOInOneUnit2 = 1;//single unit
+const Double_t RadiusOfBGOSurface2 = 120.;
+const Int_t NumOfSegBGO = NumOfBGOUnit*(NumOfBGOInOneUnit+NumOfBGOInOneUnit2);//24
+
+// PiID counter
+const Int_t NumOfSegPiID =  32;
+
+const Int_t NumOfPiIDUnit = 8;
+const Int_t NumOfPiIDInOneUnit = 3;
+const Double_t PiID_X = 30.;
+const Double_t PiID_Y = 10.;
+const Double_t PiID_Z = 400.;
+const Double_t RadiusOfPiIDSurface = 164.;
+
+const Int_t    NumOfPiIDInOneUnit2 = 1;//single unit
+const Double_t PiID2_X = 40.;
+const Double_t PiID2_Y = 10.;
+const Double_t PiID2_Z = 400.;
+const Double_t RadiusOfPiID2Surface = 180.;
 
 // VMEEASIROC
 const Int_t DetIdVMEASIROC = 116;

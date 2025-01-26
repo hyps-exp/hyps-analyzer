@@ -9,6 +9,7 @@
 #include "DetectorID.hh"
 
 class DCLocalTrack;
+class CFTLocalTrack;
 
 class TApplication;
 class TArc;
@@ -77,6 +78,7 @@ private:
   TCanvas                   *m_canvas_hist7;
   TCanvas                   *m_canvas_hist8;
   TCanvas                   *m_canvas_hist9;
+  TCanvas                   *m_canvas_catch;  
   TH1                       *m_hist_vertex_x;
   TH1                       *m_hist_vertex_y;
   TH1                       *m_hist_p;
@@ -220,7 +222,21 @@ private:
   TPolyMarker               *m_S2sMarkVertexY;
   TPolyLine                 *m_MissMomXZ_line;
   TPolyLine                 *m_MissMomYZ_line;
+  //CATCH
+  TArc                      *m_Tgt_Arc;
+  TArc                      *m_CFRP_Arc;
+  TH2                       *m_hbase_catch;
+  TH2                       *m_hbase_catch_zx;
+  TH2                       *m_hbase_catch_zy;
+  std::vector<TArc*>         m_CFT_Arc_cont[NumOfPlaneCFT];
+  TLineContainer             m_BGO_Line_cont[NumOfSegBGO];
+  TLineContainer             m_PiID_Line_cont[NumOfSegPiID];
+  std::vector<TPolyLine3D*>  m_CFTTrack_cont;
+  std::vector<TPolyLine*>    m_CFTTrack_xy_cont;
+  std::vector<TPolyLine*>    m_CFTTrack_zx_cont;
+  std::vector<TPolyLine*>    m_CFTTrack_zy_cont;
 
+  
 public:
   Bool_t Initialize();
   Bool_t IsReady() const { return m_is_ready; }
@@ -238,6 +254,12 @@ public:
   Bool_t ConstructTOF();
   Bool_t ConstructAC1();
   Bool_t ConstructWC();
+  Bool_t ConstructCATCH();
+  Bool_t ConstructCFT();
+  Bool_t ConstructBGO();
+  Bool_t ConstructPiID();
+  void FiberPosPhi(int layer, int seg, double *x, double *y) const;
+  void BGOPos(int seg, double *x, double *y) const;
   void DrawInitTrack(Int_t nStep, ThreeVector *StepPoint);
   void DrawInitTrack();
   void DrawHitWire(Int_t lid, Int_t hit_wire,
@@ -258,6 +280,10 @@ public:
 			  Double_t q);
   void DrawHSTrack(Int_t nStep, const std::vector<TVector3>& StepPoint,
                        Double_t q);
+  void ShowHitFiber(Int_t layer, Int_t segment, Double_t pe, Double_t ctime);
+  void ShowHitBGO(Int_t segment, Double_t de) const;
+  void DrawCFTLocalTrack( const CFTLocalTrack *tp, bool flagP, int k_color=0 );
+  
   void DrawTarget();
   void DrawMissingMomentum(const ThreeVector& mom,
                            const ThreeVector& pos);
@@ -296,6 +322,7 @@ public:
   void FillSDC4p_Trailing(Int_t wire, Int_t tdc);
   void ShowHitFiber(Int_t layer, Int_t segment, Double_t pe);// const;
   void Update();
+  void UpdateCATCH();
   void EndOfEvent();
   void ResetVisibility();
   void CalcRotMatrix(Double_t TA, Double_t RA1, Double_t RA2, Double_t *rotMat);
@@ -308,6 +335,7 @@ private:
   void ResetVisibility(TNode *& node, Color_t c=kWhite);
   void ResetVisibility(std::vector<TNode*>& node, Color_t c=kWhite);
   void ResetHist();
+  void ResetCATCH();
 };
 
 //_____________________________________________________________________________

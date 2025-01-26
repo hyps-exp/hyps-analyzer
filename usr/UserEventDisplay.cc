@@ -18,14 +18,22 @@
 #include "RMAnalyzer.hh"
 #include "FiberCluster.hh"
 #include "FiberHit.hh"
+#include "CFTFiberHit.hh"
+#include "CFTFiberCluster.hh"
 #include "FuncName.hh"
 #include "HodoAnalyzer.hh"
 #include "HodoHit.hh"
+#include "HodoWaveformHit.hh"
 #include "S2sLib.hh"
 #include "RawData.hh"
 //#include "RootHelper.hh"
 #include "UnpackerManager.hh"
 #include "BH2Filter.hh"
+#include "TemplateFitMan.hh"
+#include "BGOCalibMan.hh"
+#include "CFTPedCorMan.hh"
+#include "CFTPosParamMan.hh"
+#include "CFTLocalTrack.hh"
 
 #define SAVEPDF 0
 #define DEBUG 0
@@ -68,6 +76,11 @@ ProcessingNormal()
   static const auto MaxTdcTOF  = gUser.GetParameter("TdcTOF", 1);
   static const auto MinTdcWC = gUser.GetParameter("TdcWC", 0);
   static const auto MaxTdcWC = gUser.GetParameter("TdcWC", 1);
+
+  static const auto MinTimeCFT = gUser.GetParameter("TimeCFT", 0);
+  static const auto MaxTimeCFT = gUser.GetParameter("TimeCFT", 1);
+  static const auto MinAdcCFT = gUser.GetParameter("AdcCFT", 0);
+  static const auto MaxAdcCFT = gUser.GetParameter("AdcCFT", 1);
 
   // static const auto StopTimeDiffSdcOut = gUser.GetParameter("StopTimeDiffSdcOut");
   // static const auto MinStopTimingSdcOut = gUser.GetParameter("StopTimingSdcOut", 0);
@@ -573,6 +586,87 @@ ProcessingNormal()
   //gEvDisp.DrawText(0.680, 0.960, "BTOF");
   //gEvDisp.DrawText(0.860, 0.960, Form("%.3f", btof));
 
+  hodoAna.DecodeHits<CFTFiberHit>("CFT");
+  {
+    const auto& U = HodoRawHit::kUp;
+    Int_t nh=hodoAna.GetNHits("CFT");
+    for(Int_t i=0; i<nh; ++i){
+      const auto& hit = hodoAna.GetHit<CFTFiberHit>("CFT", i);
+      if(!hit) continue;
+      Int_t seg   = hit->SegmentId();
+      Int_t plane = hit->PlaneId();
+
+
+      Double_t adccorHi  = hit->GetAdcCorHigh();
+      Double_t adccorLow = hit->GetAdcCorLow();
+      Double_t adcLow = hit->GetRawHit()->GetAdcLow();
+      Double_t mipHi  = hit->GetMipHigh();
+      Double_t mipLow = hit->GetMipLow();      
+      Double_t deLow  = hit->DeltaELowGain();
+      
+      Int_t NhitT = hit->GetEntries(U);
+      for(Int_t m = 0; m<NhitT; ++m){
+	Double_t time = hit->GetTUp(m);
+	if (std::abs(time)<100) {
+	  gEvDisp.ShowHitFiber(plane, seg, adccorLow, -999);
+	}
+      }
+    }
+  }
+  
+  hodoAna.DecodeHits<HodoWaveformHit>("BGO");
+  {
+    const auto& U = HodoRawHit::kUp;
+    Int_t nh=hodoAna.GetNHits("BGO");
+    for(Int_t i=0; i<nh; ++i){
+      const auto& hit = hodoAna.GetHit<HodoWaveformHit>("BGO", i);
+      if(!hit) continue;
+      Int_t seg   = hit->SegmentId();
+      Int_t plane = hit->PlaneId();
+
+      Int_t NhitT = hit->GetEntries(U);
+      bool flagTime = false;
+      for(Int_t m = 0; m<NhitT; ++m){
+	Double_t time = hit->GetTUp(m);
+	if (std::abs(time)<100)
+	  flagTime = true;
+      }
+      
+      Int_t NhitWF = hit->GetWaveformEntries(U);
+      for(Int_t m = 0; m<NhitWF; ++m){
+	std::pair<Double_t, Double_t> waveform = hit->GetWaveform(m);
+      }
+
+
+      Int_t Npulse = hit->GetNPulse(U);
+      for(Int_t m = 0; m<Npulse; ++m){
+	Double_t pulse_height = hit->GetPulseHeight(m);
+	Double_t pulse_time   = hit->GetPulseTime(m);
+	Double_t de           = hit->DeltaE(m);		
+
+	if (flagTime && std::abs(pulse_time)<100) {
+	  gEvDisp.ShowHitBGO(seg, de);	  
+	}
+      }
+      //if (flagTime)
+      //HF2 (1000*(plane+1)+206, seg, adccorHi);	
+    }
+  }
+
+
+  hodoAna.TimeCut("CFT", MinTimeCFT, MaxTimeCFT);
+  hodoAna.AdcCut("CFT",  MinAdcCFT,  MaxAdcCFT);  
+  const auto& CFTClCont = hodoAna.GetClusterContainer("CFT");
+  DCAna.DecodeCFTHits(CFTClCont);
+  DCAna.TrackSearchCFT();
+
+  Int_t ntCFT=DCAna.GetNtracksCFT();
+  
+  for( Int_t i=0; i<ntCFT; ++i ){
+    const auto& tp=DCAna.GetTrackCFT(i);
+    Bool_t flagPTrack=false;
+    gEvDisp.DrawCFTLocalTrack( tp, flagPTrack );
+  }       
 
   //________________________________________________________
   //___ Reaction
@@ -657,7 +751,7 @@ ProcessingNormal()
 Bool_t
 ProcessingEnd()
 {
-  // gEvDisp.GetCommand();
+  //gEvDisp.GetCommand();
   gEvDisp.EndOfEvent();
   // if(utility::UserStop()) gEvDisp.Run();
   // gEvDisp.Run();
@@ -689,6 +783,10 @@ ConfMan::InitializeParameterFiles()
      //&& InitializeParameter<K18TransMatrix>("K18TM")
      //&& InitializeParameter<BH2Filter>("BH2FLT")
      && InitializeParameter<UserParamMan>("USER")
+     && InitializeParameter<CFTPedCorMan>("CFTPED") 
+     && InitializeParameter<CFTPosParamMan>("CFTPOS")
+     && InitializeParameter<TemplateFitMan>("BGOTEMP") 
+     && InitializeParameter<BGOCalibMan>("BGOCALIB")      
      && InitializeParameter<EventDisplay>());
 }
 
