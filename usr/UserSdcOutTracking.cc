@@ -36,8 +36,8 @@ const auto& gUnpacker = GUnpacker::get_instance();
 const auto& gGeom = DCGeomMan::GetInstance();
 const auto& gUser = UserParamMan::GetInstance();
 const auto& zTOF = gGeom.LocalZ("TOF");
-const auto& zTOFU = gGeom.LocalZ("TOF-UX");
-const auto& zTOFD = gGeom.LocalZ("TOF-DX");
+const auto& zTOFU = gGeom.LocalZ("TOF-UX-R");
+const auto& zTOFD = gGeom.LocalZ("TOF-DX-R");
 }
 
 //_____________________________________________________________________________
@@ -48,14 +48,10 @@ struct Event
   Int_t trigpat[NumOfSegTrig];
   Int_t trigflag[NumOfSegTrig];
 
-  Int_t nhBh1;
-  Double_t tBh1[MaxHits];
-  Double_t deBh1[MaxHits];
-
-  Int_t nhBh2;
-  Double_t tBh2[MaxHits];
-  Double_t deBh2[MaxHits];
-  Double_t Bh2Seg[MaxHits];
+  Int_t nhT0;
+  Double_t tT0[MaxHits];
+  Double_t deT0[MaxHits];
+  Double_t T0Seg[MaxHits];
 
   Double_t Time0Seg;
   Double_t deTime0;
@@ -98,8 +94,7 @@ Event::clear()
   evnum     =  0;
   nlayer    =  0;
   ntrack    =  0;
-  nhBh2     =  0;
-  nhBh1     =  0;
+  nhT0     =  0;
   nhTof     =  0;
 
   btof      = qnan;
@@ -114,11 +109,9 @@ Event::clear()
   }
 
   for(Int_t it=0; it<MaxHits; it++){
-    tBh1[it]   = qnan;
-    deBh1[it]  = qnan;
-    Bh2Seg[it] = -1;
-    tBh2[it]   = qnan;
-    deBh2[it]  = qnan;
+    T0Seg[it] = -1;
+    tT0[it]   = qnan;
+    deT0[it]  = qnan;
     stof[it]   = qnan;
     TofSeg[it] = -1;
     tTof[it]   = qnan;
@@ -135,7 +128,7 @@ Event::clear()
     vTof[it] = qnan;
   }
 
-  for(Int_t it=0; it<NumOfLayersSdcOut; ++it){
+  for(Int_t it=0; it<NumOfLayersSdcOut+2; ++it){
     nhit[it] = 0;
     for(Int_t that=0; that<MaxHits; ++that){
       pos[it][that] = qnan;
@@ -167,10 +160,8 @@ ProcessingNormal()
 {
 
 #if HodoCut
-  static const auto MinDeBH2 = gUser.GetParameter("DeBH2", 0);
-  static const auto MaxDeBH2 = gUser.GetParameter("DeBH2", 1);
-  static const auto MinDeBH1 = gUser.GetParameter("DeBH1", 0);
-  static const auto MaxDeBH1 = gUser.GetParameter("DeBH1", 1);
+  static const auto MinDeT0 = gUser.GetParameter("DeT0", 0);
+  static const auto MaxDeT0 = gUser.GetParameter("DeT0", 1);
   static const auto MinBeamToF = gUser.GetParameter("BTOF", 0);
   static const auto MaxBeamToF = gUser.GetParameter("BTOF", 1);
 #endif
@@ -191,8 +182,8 @@ ProcessingNormal()
 
   RawData rawData;
   rawData.DecodeHits("TFlag");
-  // rawData.DecodeHits("BH1");
-  // rawData.DecodeHits("BH2");
+  rawData.DecodeHits("T0");
+
   rawData.DecodeHits("TOF");
   for(const auto& name: DCNameList.at("SdcIn")) rawData.DecodeHits(name);
   for(const auto& name: DCNameList.at("SdcOut")) rawData.DecodeHits(name);
@@ -226,82 +217,57 @@ ProcessingNormal()
 
   HF1(1, 1.);
 
-#if 0
-  //////////////BH2 time 0
-  hodoAna.DecodeHits("BH2");
-  Int_t nhBh2 = hodoAna.GetNHits("BH2");
-  event.nhBh2 = nhBh2;
+#if 1
+  //////////////T0 time 0
+  hodoAna.DecodeHits("T0");
+  Int_t nhT0 = hodoAna.GetNHits("T0");
+  event.nhT0 = nhT0;
 #if HodoCut
-  if(nhBh2==0) return true;
+  if(nhT0==0) return true;
 #endif
   HF1(1, 2);
 
   Double_t time0 = -9999.;
-  //////////////BH2 Analysis
-  for(Int_t i=0; i<nhBh2; ++i){
-    const auto& hit = hodoAna.GetHit("BH2", i);
+  //////////////T0 Analysis
+  for(Int_t i=0; i<nhT0; ++i){
+    const auto& hit = hodoAna.GetHit("T0", i);
     if(!hit) continue;
     Double_t seg = hit->SegmentId()+1;
     Double_t cmt = hit->CMeanTime();
     Double_t dE  = hit->DeltaE();
 
-#if HodoCut
-    if(dE<MinDeBH2 || MaxDeBH2<dE) continue;
-#endif
-    event.tBh2[i]   = cmt;
-    event.deBh2[i]  = dE;
-    event.Bh2Seg[i] = seg;
-  }
+    event.tT0[i]   = cmt;
+    event.deT0[i]  = dE;
+    event.T0Seg[i] = seg;
+    
+    if(cmt<fabs(time0)){
+    event.Time0Seg = seg;
+    event.deTime0  = dE;
+    event.Time0    = cmt;
+    time0          = cmt;
+    //event.CTime0   = cl_time0->CTime0();
+    //time0          = cl_time0->CTime0();
+    }
 
-  const auto& cl_time0 = hodoAna.GetTime0BH2Cluster();
-  if(cl_time0){
-    event.Time0Seg = cl_time0->MeanSeg()+1;
-    event.deTime0  = cl_time0->DeltaE();
-    event.Time0    = cl_time0->Time0();
-    event.CTime0   = cl_time0->CTime0();
-    time0          = cl_time0->CTime0();
-  } else {
 #if HodoCut
-    return true;
+    if(dE<MinDeT0 || MaxDeT0<dE) continue;
 #endif
+
   }
 
   HF1(1, 3.);
 
-  //////////////BH1 Analysis
-  hodoAna.DecodeHits("BH1");
-  Int_t nhBh1 = hodoAna.GetNHits("BH1");
-  event.nhBh1 = nhBh1;
-#if HodoCut
-  if(nhBh1==0) return true;
-#endif
-  HF1(1, 4);
-
-  for(Int_t i=0; i<nhBh1; ++i){
-    const auto& hit = hodoAna.GetHit("BH1", i);
-    if(!hit) continue;
-    Double_t cmt = hit->CMeanTime();
-    Double_t dE  = hit->DeltaE();
-#if HodoCut
-    if(dE<MinDeBH1 || MaxDeBH1<dE) continue;
-    if(btof<MinBeamToF || MaxBeamToF<btof) continue;
-#endif
-    event.tBh1[i]  = cmt;
-    event.deBh1[i] = dE;
-  }
-
-  Double_t btof0 = hodoAna.Btof0();
-  event.btof = btof0;
-
-  HF1(1, 5.);
 #endif
 
   //////////////Tof Analysis
-  const auto& TOFCont = hodoAna.GetClusterContainer("TOF");
+  
   hodoAna.DecodeHits("TOF");
-  // hodoAna.TimeCut("TOF", 7, 25);
+  hodoAna.TimeCut("TOF", -5, 20);
+  const auto& TOFCont = hodoAna.GetClusterContainer("TOF");
+  //
   Int_t nhTof = hodoAna.GetNClusters("TOF");
-#if 0  
+#if 1
+  if(nhTof!=1) return true;
 #if HodoCut
   if(nhTof!=0) return true;
 #endif
@@ -315,12 +281,13 @@ ProcessingNormal()
       Double_t dt   = hit->TimeDiff();
       Double_t de   = hit->DeltaE();
       Double_t stof = cmt-time0;
+      //Double_t stof = cmt;
       event.TofSeg[i] = hit->MeanSeg()+1;
       event.tTof[i]   = cmt;
       event.dtTof[i]  = dt;
       event.deTof[i]  = de;
       event.stof[i]   = stof;
-      // TOFCont.push_back(hit);
+      //TOFCont.push_back(hit);
       if(MinDeTOF<de  && de<MaxDeTOF  &&
          MinTimeTOF<stof && stof<MaxTimeTOF){
         ++nhOk;
@@ -462,7 +429,7 @@ ProcessingNormal()
 
   HF1(1, 11.);
 
-#if 0
+#if 1
   // std::cout << "==========TrackSearch SdcOut============" << std::endl;
 #if UseTOF
   DCAna.TrackSearchSdcOut(TOFCont);
@@ -521,23 +488,39 @@ ProcessingNormal()
       HF1(35, chisqr1st-chisqr);
 #endif
     ///// TOF
-#if UseTOF
-#else
+#if 1
+    //#if UseTOF
     Double_t z_tof = qnan;
     for(Int_t itof=0; itof<event.nhTof; ++itof){
       Int_t lnum = 0;
       TVector3 gposTof;
-      if((Int_t)event.TofSeg[itof]%2 == 0){
-        lnum = gGeom.GetDetectorId("TOF-UX");
-        gposTof = gGeom.GetGlobalPosition("TOF-UX");
-        z_tof = zTOFU;
-      }
-      if((Int_t)event.TofSeg[itof]%2 == 1){
-        lnum = gGeom.GetDetectorId("TOF-DX");
-        gposTof = gGeom.GetGlobalPosition("TOF-DX");
+      bool segflag=false;
+      if((Int_t)event.TofSeg[itof]%2 == 0 && event.TofSeg[itof]>12 && event.TofSeg[itof]<25){
+        lnum = gGeom.GetDetectorId("TOF-DX-R");
+        gposTof = gGeom.GetGlobalPosition("TOF-DX-R");
         z_tof = zTOFD;
+	segflag=true;
       }
-      Double_t wpos = gGeom.CalcWirePosition(lnum, event.TofSeg[itof]);
+      if((Int_t)event.TofSeg[itof]%2 == 1 && event.TofSeg[itof]>12 && event.TofSeg[itof]<25){
+        lnum = gGeom.GetDetectorId("TOF-UX-R");
+        gposTof = gGeom.GetGlobalPosition("TOF-UX-R");
+        z_tof = zTOFU;
+	segflag=true;
+      }
+      if((Int_t)event.TofSeg[itof]%2 == 0 && event.TofSeg[itof]>24 && event.TofSeg[itof]<37){
+        lnum = gGeom.GetDetectorId("TOF-UX-L");
+        gposTof = gGeom.GetGlobalPosition("TOF-UX-L");
+        z_tof = zTOFU;
+	segflag=true;
+      }
+      if((Int_t)event.TofSeg[itof]%2 == 1 && event.TofSeg[itof]>24 && event.TofSeg[itof]<37){
+        lnum = gGeom.GetDetectorId("TOF-DX-L");
+        gposTof = gGeom.GetGlobalPosition("TOF-DX-L");
+        z_tof = zTOFD;
+	segflag=true;
+      }
+      if(!segflag) continue;
+      Double_t wpos = gGeom.CalcWirePosition(lnum, event.TofSeg[itof]-1);
       TVector3 w(wpos, 0, 0);
       Double_t ytTof = event.dtTof[itof]*77.3511;
       TVector3 posTof = gposTof + w + TVector3(0, ytTof, 0);
@@ -553,7 +536,8 @@ ProcessingNormal()
         HF1(53, posTof.X() - xtof);
         HF2(54, posTof.X(), posTof.X() - xtof);
         HF2(55, event.dtTof[itof], ytof);
-        HF1(56, ytTof - ytof);
+        //HF1(56, ytTof - ytof);
+	HF1(56, posTof.Y() - ytof);
         HF2(57, event.dtTof[itof], ytTof - ytof);
       }
       HF1(21, xtof); HF1(22, ytof);
@@ -572,12 +556,15 @@ ProcessingNormal()
       else
 	layerId -= PlOffsTOF - NumOfLayersSdcOut;
 
+      
+
       HF1(13, hit->GetLayer());
       HF1(36, Double_t(nh));
       HF1(37, chisqr);
 
       Double_t wire=hit->GetWire();
       Double_t dt=hit->DriftTime(), dl=hit->DriftLength();
+      //if(layerId>10) std::cout<<hit->GetTiltAngle()<<std::endl;
       HF1(100*layerId+11, wire+0.5);
       HF1(100*layerId+12, dt);
       HF1(100*layerId+13, dl);
@@ -618,8 +605,10 @@ ProcessingNormal()
       if (std::abs(dl-std::abs(xlcal-wp))<2.0){
         HFProf(100*layerId+20, dt, std::abs(xlcal-wp));
         HF2(100*layerId+22, dt, std::abs(xlcal-wp));
+	if(layerId<11){
         HFProf(100000*layerId+3000+Int_t(wire), xlcal-wp,dt);
         HF2(100000*layerId+4000+Int_t(wire), xlcal-wp,dt);
+	}
       }
     }
   }
@@ -700,15 +689,15 @@ ConfMan::InitializeHistograms()
       //nbindl = NbinSDC5DL;
       //mindl  = MinSDC5DL;
       //maxdl  = MaxSDC5DL;
-      //    }else if(i<=NumOfLayersSdcOut+NumOfLayersTOF){
-      //tag = "TOF";
-      //nwire = NumOfSegTOF;
-      //nbindt = NbinSDC4DT;
-      //mindt  = MinSDC4DT;
-      //maxdt  = MaxSDC4DT;
-      //nbindl = NbinSDC4DL;
-      //mindl  = MinSDC4DL;
-      //maxdl  = MaxSDC4DL;
+          }else if(i<=NumOfLayersSdcOut+NumOfLayersTOF){
+      tag = "TOF";
+      nwire = NumOfSegTOF;
+      nbindt = NbinSDC3DT;
+      mindt  = MinSDC3DT;
+      maxdt  = MaxSDC3DT;
+      nbindl = NbinSDC3DL;
+      mindl  = MinSDC3DL;
+      maxdl  = MaxSDC3DL;
     }
 
     if(i<=NumOfLayersSdcOut){
@@ -779,7 +768,7 @@ ConfMan::InitializeHistograms()
     HB1(100*i+11, title11, nwire, 0., nwire);
     HB1(100*i+12, title12, nbindt, mindt, maxdt);
     HB1(100*i+13, title13, 100, -5, maxdl);
-    HB1(100*i+14, title14, 100, -1000., 1000.);
+    HB1(100*i+14, title14, 80, -1000., 1000.);
     if(i<=NumOfLayersSdcOut)
       HB1(100*i+15, title15, 1000, -5.0, 5.0);
     else
@@ -800,8 +789,13 @@ ConfMan::InitializeHistograms()
     HB1(100*i+21, title21, 200, -5.0, 5.0);
     HB1(100*i+23, title23, 1000, -5.0, 5.0);
     HB1(100*i+24, title24, 1000, -5.0, 5.0);
+    if(i<=NumOfLayersSdcOut){
     HB2(100*i+31, Form("Resid%%X SdcOut %d", i), 100, -1000., 1000., 100, -2., 2.);
     HB2(100*i+32, Form("Resid%%Y SdcOut %d", i), 100, -1000., 1000., 100, -2., 2.);
+    }else{
+    HB2(100*i+31, Form("Resid%%X SdcOut %d", i), 100, -1000., 1000., 100, -200., 200.);
+    HB2(100*i+32, Form("Resid%%Y SdcOut %d", i), 100, -1000., 1000., 100, -200., 200.);
+    }
     HB2(100*i+33, Form("Resid%%U SdcOut %d", i), 100, -0.5, 0.5, 100, -2., 2.);
     HB2(100*i+34, Form("Resid%%V SdcOut %d", i), 100, -0.5, 0.5, 100, -2., 2.);
     HB1(100*i+40, title40, 500,    0, 500);
@@ -873,14 +867,10 @@ ConfMan::InitializeHistograms()
   tree->Branch("trigpat", event.trigpat, Form("trigpat[%d]/I", NumOfSegTrig));
   tree->Branch("trigflag", event.trigflag, Form("trigflag[%d]/I", NumOfSegTrig));
 
-  tree->Branch("nhBh1", &event.nhBh1, "nhBh1/I");
-  tree->Branch("tBh1", event.tBh1, Form("tBh1[%d]/D", MaxHits));
-  tree->Branch("deBh1", event.deBh1, Form("deBh1[%d]/D", MaxHits));
-
-  tree->Branch("nhBh2",    &event.nhBh2,   "nhBh2/I");
-  tree->Branch("tBh2",      event.tBh2,    Form("tBh2[%d]/D",   MaxHits));
-  tree->Branch("deBh2",     event.deBh2,   Form("deBh2[%d]/D",  MaxHits));
-  tree->Branch("Bh2Seg",    event.Bh2Seg,  Form("Bh2Seg[%d]/D", MaxHits));
+  tree->Branch("nhT0",    &event.nhT0,   "nhT0/I");
+  tree->Branch("tT0",      event.tT0,    Form("tT0[%d]/D",   MaxHits));
+  tree->Branch("deT0",     event.deT0,   Form("deT0[%d]/D",  MaxHits));
+  tree->Branch("T0Seg",    event.T0Seg,  Form("T0Seg[%d]/D", MaxHits));
 
   tree->Branch("Time0Seg", &event.Time0Seg,  "Time0Seg/D");
   tree->Branch("deTime0",  &event.deTime0,   "deTime0/D");
@@ -896,11 +886,11 @@ ConfMan::InitializeHistograms()
   tree->Branch("dtTof",    event.dtTof,   "dtTof[nhTof]/D");
   tree->Branch("deTof",    event.deTof,   "deTof[nhTof]/D");
 
-  tree->Branch("nhit",     &event.nhit,     Form("nhit[%d]/I", NumOfLayersSdcOut));
+  tree->Branch("nhit",     &event.nhit,     Form("nhit[%d]/I", NumOfLayersSdcOut+2));
   tree->Branch("nlayer",   &event.nlayer,   "nlayer/I");
-  tree->Branch("pos",      &event.pos,     Form("pos[%d][%d]/D", NumOfLayersSdcOut, MaxHits));
-  tree->Branch("wirepos",      &event.wirepos,     Form("wirepos[%d][%d]/D", NumOfLayersSdcOut, MaxHits));
-  tree->Branch("wire",      &event.wire,     Form("wire[%d][%d]/D", NumOfLayersSdcOut, MaxHits));
+  tree->Branch("pos",      &event.pos,     Form("pos[%d][%d]/D", NumOfLayersSdcOut+2, MaxHits));
+  tree->Branch("wirepos",      &event.wirepos,     Form("wirepos[%d][%d]/D", NumOfLayersSdcOut+2, MaxHits));
+  tree->Branch("wire",      &event.wire,     Form("wire[%d][%d]/D", NumOfLayersSdcOut+2, MaxHits));
   tree->Branch("ntrack",   &event.ntrack,   "ntrack/I");
   tree->Branch("chisqr",    event.chisqr,   "chisqr[ntrack]/D");
   tree->Branch("x0",        event.x0,       "x0[ntrack]/D");

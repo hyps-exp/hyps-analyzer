@@ -984,15 +984,20 @@ LocalTrackSearchSdcOut(const DCHC& TOFHC,
   for(Int_t i=0, n=CombiIndex.size(); i<n; ++i){
     DCLocalTrack *track = MakeTrack(CandCont, CombiIndex[i]);
     if(!track) continue;
-
+    /*
     static const Int_t IdTOF_UX = gGeom.GetDetectorId("TOF-UX");
     static const Int_t IdTOF_UY = gGeom.GetDetectorId("TOF-UY");
     static const Int_t IdTOF_DX = gGeom.GetDetectorId("TOF-DX");
     static const Int_t IdTOF_DY = gGeom.GetDetectorId("TOF-DY");
-
+    */
+    static const Int_t IdTOF_X = gGeom.GetDetectorId("TOF-X");
+    static const Int_t IdTOF_Y = gGeom.GetDetectorId("TOF-Y");
+    /*
     Bool_t TOFSegXYMatching =
       (track->GetWire(IdTOF_UX)==track->GetWire(IdTOF_UY)) ||
       (track->GetWire(IdTOF_DX)==track->GetWire(IdTOF_DY));
+    */
+    Bool_t TOFSegXYMatching = (track->GetWire(IdTOF_X) == track->GetWire(IdTOF_Y));
 
     // Int_t Track[20]={0};
     // Int_t layer;
@@ -1009,7 +1014,6 @@ LocalTrackSearchSdcOut(const DCHC& TOFHC,
 
 
     if(TOFSegXYMatching &&
-       //FBT&&
        track->GetNHit()>=MinNumOfHits+2   &&
        track->GetNHitY() >= 2             &&
        track->DoFit()                     &&

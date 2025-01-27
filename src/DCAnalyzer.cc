@@ -67,10 +67,12 @@ const auto& gUser   = UserParamMan::GetInstance();
 //_____________________________________________________________________________
 const auto& valueNMR  = ConfMan::Get<Double_t>("FLDNMR");
 const Double_t& pK18 = ConfMan::Get<Double_t>("PK18");
-const Int_t& IdTOFUX = gGeom.DetectorId("TOF-UX");
-const Int_t& IdTOFUY = gGeom.DetectorId("TOF-UY");
-const Int_t& IdTOFDX = gGeom.DetectorId("TOF-DX");
-const Int_t& IdTOFDY = gGeom.DetectorId("TOF-DY");
+const Int_t& IdTOFUXL = gGeom.DetectorId("TOF-UX-L");
+const Int_t& IdTOFUXR = gGeom.DetectorId("TOF-UX-R");
+const Int_t& IdTOFX = gGeom.DetectorId("TOF-X");
+const Int_t& IdTOFY = gGeom.DetectorId("TOF-Y");
+const Int_t& IdTOFDXL = gGeom.DetectorId("TOF-DX-L");
+const Int_t& IdTOFDXR = gGeom.DetectorId("TOF-DX-R");
 
 const Double_t TimeDiffToYTOF = 77.3511; // [mm/ns]
 
@@ -512,39 +514,63 @@ DCAnalyzer::DecodeTOFHits(const HodoHC& HitCont)
   ClearTOFHits();
 
   // for the tilting plane case
-  static const Double_t RA2 = gGeom.GetRotAngle2("TOF");
-  static const TVector3 TOFPos[2] = { gGeom.GetGlobalPosition("TOF-UX"),
-				      gGeom.GetGlobalPosition("TOF-DX") };
+  static const Double_t RA2[3] ={0,-15,15};
+  static const TVector3 TOFPos[4] = {
+    gGeom.GetGlobalPosition("TOF-UX-R"),
+    gGeom.GetGlobalPosition("TOF-DX-R"),
+    gGeom.GetGlobalPosition("TOF-UX-L"),
+    gGeom.GetGlobalPosition("TOF-DX-L")
+  };
 
   for(const auto& hodo_hit: HitCont){
     const Double_t seg = hodo_hit->SegmentId()+1;
     const Double_t dt  = hodo_hit->TimeDiff();
     Int_t layer_x = -1;
     Int_t layer_y = -1;
-    if((Int_t)seg%2==0){
-      layer_x  = IdTOFUX;
-      layer_y  = IdTOFUY;
+    Int_t Posindex= -1;
+    Int_t RA2index= 0;
+    if((Int_t)seg%2==1 && seg>12 && seg<25){
+      layer_x  = IdTOFUXR;
+      layer_y  = IdTOFY;
+      Posindex=0;
+      RA2index=0;
     }
-    if((Int_t)seg%2==1){
-      layer_x  = IdTOFDX;
-      layer_y  = IdTOFDY;
+    if((Int_t)seg%2==0 && seg>12 && seg<25){
+      layer_x  = IdTOFDXR;
+      layer_y  = IdTOFY;
+      Posindex=1;
+      RA2index=0;
     }
+    if((Int_t)seg%2==1 && seg>24 && seg<37){
+      layer_x  = IdTOFDXL;
+      layer_y  = IdTOFY;
+      Posindex=3;
+      RA2index=0;
+    }
+    if((Int_t)seg%2==0 && seg>24 && seg<37){
+      layer_x  = IdTOFUXL;
+      layer_y  = IdTOFY;
+      Posindex=2;
+      RA2index=0;
+    }
+    if(Posindex==-1) continue;
     Double_t wpos = gGeom.CalcWirePosition(layer_x, seg-1);
     TVector3 w(wpos, 0., 0.);
-    w.RotateY(RA2*TMath::DegToRad()); // for the tilting plane case
-    const TVector3 hit_pos = TOFPos[(Int_t)seg%2] + w
+    w.RotateY(RA2[RA2index]*TMath::DegToRad()); // for the tilting plane case
+    const TVector3 hit_pos = TOFPos[Posindex] + w
       + TVector3(0., dt*TimeDiffToYTOF, 0.);
     // X
-    DCHit *dc_hit_x = new DCHit(layer_x, seg-1);
+    DCHit *dc_hit_x = new DCHit(IdTOFX, seg-1);
     dc_hit_x->SetWirePosition(hit_pos.x());
     dc_hit_x->SetZ(hit_pos.z());
     dc_hit_x->SetTiltAngle(0.);
     dc_hit_x->SetDCData();
     m_TOFHC.push_back(dc_hit_x);
     // Y
-    DCHit *dc_hit_y = new DCHit(layer_y, seg-1);
+    DCHit *dc_hit_y = new DCHit(IdTOFY, seg-1);
     dc_hit_y->SetWirePosition(hit_pos.y());
     dc_hit_y->SetZ(hit_pos.z());
+    //dc_hit_y->SetTiltAngle(135.);
     dc_hit_y->SetTiltAngle(90.);
     dc_hit_y->SetDCData();
     m_TOFHC.push_back(dc_hit_y);
@@ -559,38 +585,62 @@ DCAnalyzer::DecodeTOFHits(const HodoClusterContainer& ClCont)
 {
   ClearTOFHits();
 
-  static const Double_t RA2 = gGeom.GetRotAngle2("TOF");
-  static const TVector3 TOFPos[2] = {
-    gGeom.GetGlobalPosition("TOF-UX"),
-    gGeom.GetGlobalPosition("TOF-DX") };
+  static const Double_t RA2[3] ={0.0,-15.0,15.0};
+  static const TVector3 TOFPos[4] = {
+    gGeom.GetGlobalPosition("TOF-UX-R"),
+    gGeom.GetGlobalPosition("TOF-DX-R"),
+    gGeom.GetGlobalPosition("TOF-UX-L"),
+    gGeom.GetGlobalPosition("TOF-DX-L")
+  };
 
   for(const auto& hodo_cluster: ClCont){
     const Double_t seg = hodo_cluster->MeanSeg()+1;
     const Double_t dt  = hodo_cluster->TimeDiff();
     Int_t layer_x = -1;
     Int_t layer_y = -1;
-    if((Int_t)seg%2==0){
-      layer_x  = IdTOFUX;
-      layer_y  = IdTOFUY;
+    Int_t Posindex= -1;
+    Int_t RA2index= 0;
+    if((Int_t)seg%2==1 && seg>12 && seg<25){
+      layer_x  = IdTOFUXR;
+      layer_y  = IdTOFY;
+      Posindex=0;
+      RA2index=0;
     }
-    if((Int_t)seg%2==1){
-      layer_x  = IdTOFDX;
-      layer_y  = IdTOFDY;
+    if((Int_t)seg%2==0 && seg>12 && seg<25){
+      layer_x  = IdTOFDXR;
+      layer_y  = IdTOFY;
+      Posindex=1;
+      RA2index=0;
     }
+    if((Int_t)seg%2==1 && seg>24 && seg<37){
+      layer_x  = IdTOFDXL;
+      layer_y  = IdTOFY;
+      Posindex=3;
+      RA2index=0;
+    }
+    if((Int_t)seg%2==0 && seg>24 && seg<37){
+      layer_x  = IdTOFUXL;
+      layer_y  = IdTOFY;
+      Posindex=2;
+      RA2index=0;
+    }
+    if(Posindex==-1) continue;
+
     Double_t wpos = gGeom.CalcWirePosition(layer_x, seg-1);
     TVector3 w(wpos, 0., 0.);
-    w.RotateY(RA2*TMath::DegToRad());
-    const TVector3& hit_pos = TOFPos[(Int_t)seg%2] + w
+    w.RotateY(RA2[RA2index]*TMath::DegToRad());
+    const TVector3& hit_pos = TOFPos[Posindex] + w
       + TVector3(0., dt*TimeDiffToYTOF, 0.);
+    //std::cout<<"TOF seg="<<seg<<", hit_pos=("<<hit_pos.x()<<", "<<hit_pos.y()<<", "<<hit_pos.z()<<")"<<std::endl;
     // X
-    DCHit *dc_hit_x = new DCHit(layer_x, seg-1);
+    DCHit *dc_hit_x = new DCHit(IdTOFX, seg-1);
     dc_hit_x->SetWirePosition(hit_pos.x());
     dc_hit_x->SetZ(hit_pos.z());
     dc_hit_x->SetTiltAngle(0.);
     dc_hit_x->SetDCData();
     m_TOFHC.push_back(dc_hit_x);
     // Y
-    DCHit *dc_hit_y = new DCHit(layer_y, seg-1);
+    DCHit *dc_hit_y = new DCHit(IdTOFY, seg-1);
     dc_hit_y->SetWirePosition(hit_pos.y());
     dc_hit_y->SetZ(hit_pos.z());
     dc_hit_y->SetTiltAngle(90.);
