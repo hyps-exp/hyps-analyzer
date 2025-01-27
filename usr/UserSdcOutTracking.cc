@@ -267,7 +267,7 @@ ProcessingNormal()
   //
   Int_t nhTof = hodoAna.GetNClusters("TOF");
 #if 1
-  if(nhTof!=1) return true;
+  //if(nhTof!=1) return true;
 #if HodoCut
   if(nhTof!=0) return true;
 #endif
@@ -538,7 +538,8 @@ ProcessingNormal()
         HF2(55, event.dtTof[itof], ytof);
         //HF1(56, ytTof - ytof);
 	HF1(56, posTof.Y() - ytof);
-        HF2(57, event.dtTof[itof], ytTof - ytof);
+        //HF2(57, event.dtTof[itof], ytTof - ytof);
+	HF2(57, event.dtTof[itof], posTof.Y() - ytof);
       }
       HF1(21, xtof); HF1(22, ytof);
       HF1(23, utof); HF1(24, vtof);
