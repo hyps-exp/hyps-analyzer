@@ -771,7 +771,7 @@ ConfMan::InitializeHistograms()
     HB1(100*i+13, title13, 100, -5, maxdl);
     HB1(100*i+14, title14, 80, -1000., 1000.);
     if(i<=NumOfLayersSdcOut)
-      HB1(100*i+15, title15, 1000, -5.0, 5.0);
+      HB1(100*i+15, title15, 1000, -3.0, 3.0);
     else
       HB1(100*i+15, title15, 1000, -200.0, 200.0);
     if(i<=NumOfLayersSdcOut)

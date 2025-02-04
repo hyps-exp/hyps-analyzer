@@ -23,7 +23,7 @@
 
 #define HodoCut     0
 #define TdcCut      1
-#define TotCut      0
+#define TotCut      1
 #define Chi2Cut     0
 #define MaxMultiCut 0
 #define BcOutCut    0
@@ -532,8 +532,8 @@ ConfMan:: InitializeHistograms()
   const Double_t MaxSDC1DL  =   8.;
 
   const Int_t NbinRes   =  200;
-  const Double_t MinRes = -2.;
-  const Double_t MaxRes =  2.;
+  const Double_t MinRes = -3.;
+  const Double_t MaxRes =  3.;
 
   HB1(1, "Status", 20, 0., 20.);
 
