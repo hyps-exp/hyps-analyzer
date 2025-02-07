@@ -19,6 +19,16 @@ CFTPosParamMan::CFTPosParamMan()
   : m_is_ready(false),
     m_file_name("")
 {
+  for (int i=0; i<NumOfPhiLayer; i++)
+    for (int j=0; j<NumOfAngle; j++)
+      for (int k=0; k<NumOfPhiPar; k++)
+	PhiPosPar[i][j][k] = 0.;
+
+  for (int i=0; i<NumOfULayer; i++)
+    for (int j=0; j<NumOfSegCFT_UV4; j++)
+      for (int k=0; k<NumOfUPar; k++)
+	UPosPar[i][j][k] = 0.;
+
   for (int i=0; i<NumOfULayer; i++)
     for (int j=0; j<NumOfSegCFT_UV4; j++)
       for (int k=0; k<NumOfUDataPar; k++)
