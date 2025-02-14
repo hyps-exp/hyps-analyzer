@@ -29,10 +29,8 @@ const auto& gGeom   = DCGeomMan::GetInstance();
 auto&       gEvDisp = EventDisplay::GetInstance();
 const auto& gField  = FieldMan::GetInstance();
 // const Int_t& IdTOF    = gGeom.DetectorId("TOF");
-const Int_t& IdTOF_UX = gGeom.DetectorId("TOF-UX");
-const Int_t& IdTOF_UY = gGeom.DetectorId("TOF-UY");
-const Int_t& IdTOF_DX = gGeom.DetectorId("TOF-DX");
-const Int_t& IdTOF_DY = gGeom.DetectorId("TOF-DY");
+const Int_t& IdTOF_X = gGeom.DetectorId("TOF-X");
+const Int_t& IdTOF_Y = gGeom.DetectorId("TOF-Y");
 const Int_t& IdTarget = gGeom.DetectorId("Target");
 const Int_t& IdRKINIT = gGeom.DetectorId("RKINIT");
 
@@ -635,9 +633,9 @@ RK::CheckCrossing(Int_t lnum, const RKTrajectoryPoint &startPoint,
   crossPoint.posG = ThreeVector(x, y, z);
   crossPoint.momG = ThreeVector(pz*u, pz*v, pz);
 
-  if(lnum==IdTOF_UX || lnum==IdTOF_DX)
+  if(lnum==IdTOF_X)
     crossPoint.s = crossPoint.posG.x();
-  else if(lnum==IdTOF_UY || lnum==IdTOF_DY)
+  else if(lnum==IdTOF_Y)
     crossPoint.s = crossPoint.posG.y();
   else
     crossPoint.s = gGeom.Global2LocalPos(lnum, crossPoint.posG).x();
@@ -933,10 +931,8 @@ RK::MakeHPContainer()
     container.push_back(std::make_pair(i+PlMinSdcOut, RKcalcHitPoint()));
   }
 
-  container.push_back(std::make_pair(IdTOF_UX, RKcalcHitPoint()));
-  container.push_back(std::make_pair(IdTOF_UY, RKcalcHitPoint()));
-  container.push_back(std::make_pair(IdTOF_DX, RKcalcHitPoint()));
-  container.push_back(std::make_pair(IdTOF_DY, RKcalcHitPoint()));
+  container.push_back(std::make_pair(IdTOF_X, RKcalcHitPoint()));
+  container.push_back(std::make_pair(IdTOF_Y, RKcalcHitPoint()));
 
   return container;
 }

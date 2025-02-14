@@ -25,8 +25,13 @@ namespace
 {
 const auto& gGeom = DCGeomMan::GetInstance();
 // const Int_t& IdTOF   = gGeom.DetectorId("TOF");
+  /*
 const Int_t& IdTOFUX  = gGeom.DetectorId("TOF-UX");
 const Int_t& IdTOFDX  = gGeom.DetectorId("TOF-DX");
+  */
+const Int_t& IdTOFUX  = gGeom.DetectorId("TOF-X");
+const Int_t& IdTOFDX  = gGeom.DetectorId("TOF-X");
+const Int_t& IdTOFX  = gGeom.DetectorId("TOF-X");
 const Int_t& IdRKINIT = gGeom.DetectorId("RKINIT");
 const Int_t    MaxIteration = 100;
 const Double_t InitialChiSqr = 1.e+10;
@@ -108,8 +113,7 @@ S2sTrack::FillHitArray()
     DCLTrackHit *hit  = m_track_out->GetHit(i);
     TrackHit    *thit = new TrackHit(hit);
     m_hit_array.push_back(thit);
-    if(hit->GetLayer() == IdTOFUX ||
-       hit->GetLayer() == IdTOFDX){
+    if(hit->GetLayer() == IdTOFX){
       m_tof_seg = hit->GetWire();
       m_use_tof = true;
     }
@@ -149,13 +153,14 @@ Bool_t
 S2sTrack::DoFit()
 {
   m_status = kInit;
-
+  /*
   if(m_initial_momentum<0){
     hddaq::cout << FUNC_NAME << " initial momentum must be positive"
   		<< m_initial_momentum << std::endl;
     m_status = kFatal;
     return false;
   }
+  */
 
   static const auto LzRKINIT = gGeom.GetLocalZ("RKINIT");
   const Double_t xOut    = m_track_out->GetX(LzRKINIT);
@@ -168,7 +173,17 @@ S2sTrack::DoFit()
   const ThreeVector momOut =
     gGeom.Local2GlobalDir(IdRKINIT, TVector3(pzOut*uOut, pzOut*vOut, pzOut));
 
-  RKCordParameter     iniCord(posOut, momOut);
+
+  RKCordParameter     iniCord;
+  if(m_initial_momentum<0){
+    RKCordParameter     iniCord_neg(posOut, uOut,vOut,-1.0/momOut.Mag());
+    iniCord=iniCord_neg;
+  }else{
+    RKCordParameter     iniCord_pos(posOut, uOut,vOut,1.0/momOut.Mag());
+    iniCord=iniCord_pos;
+  }  
+
+
   RKCordParameter     prevCord;
   RKHitPointContainer preHPntCont;
 
@@ -281,10 +296,11 @@ S2sTrack::DoFit()
   m_n_iteration   = iItr;
   m_nef_iteration = iItrEf;
   m_chisqr = chiSqr;
-
+  /* Here kill many tracks which seems to be good. We should check and fix bugs.
   if(!RK::TraceToLast(m_HitPointCont)){
     m_status = kFailedTraceLast;
   }
+  */
   if(!SaveCalcPosition(m_HitPointCont) ||
      !SaveTrackParameters(iniCord)){
     m_status = kFailedSave;
@@ -833,6 +849,7 @@ S2sTrack::SaveTrackParameters(const RKCordParameter &cp)
 
   const RKcalcHitPoint& hpTofU = m_HitPointCont.HitPointOfLayer(IdTOFUX);
   const RKcalcHitPoint& hpTofD = m_HitPointCont.HitPointOfLayer(IdTOFDX);
+  const RKcalcHitPoint& hpTof = m_HitPointCont.HitPointOfLayer(IdTOFX);
 
   if(!m_use_tof){
     Double_t ux, uy;
@@ -849,6 +866,12 @@ S2sTrack::SaveTrackParameters(const RKCordParameter &cp)
     else                            m_tof_seg = (utof_seg+dtof_seg)/2.;
   }
 
+  m_path_length_tof = std::abs(hpTgt.PathLength()-hpTof.PathLength());
+  m_tof_pos = hpTof.PositionInGlobal();
+  //std::cout<<m_tof_seg<<", "<<m_tof_pos.X()<<", "<<m_tof_pos.Y()<<", "<<m_tof_pos.Z()<<std::endl;
+  m_tof_mom = hpTof.MomentumInGlobal();
+
+  /*
   if((Int_t)m_tof_seg%2==1){ // upstream
     m_path_length_tof = std::abs(hpTgt.PathLength()-hpTofU.PathLength());
     m_tof_pos = hpTofU.PositionInGlobal();
@@ -864,6 +887,7 @@ S2sTrack::SaveTrackParameters(const RKCordParameter &cp)
     m_tof_pos = (hpTofU.PositionInGlobal()+hpTofD.PositionInGlobal())*0.5;
     m_tof_mom = (hpTofU.MomentumInGlobal()+hpTofD.MomentumInGlobal())*0.5;
   }
+  */
 
   m_path_length_total = std::abs(hpTgt.PathLength()-hpLast.PathLength());
 
