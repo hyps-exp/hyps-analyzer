@@ -26,7 +26,7 @@
 #include "HodoWaveformHit.hh"
 #include "S2sLib.hh"
 #include "RawData.hh"
-//#include "RootHelper.hh"
+#include "RootHelper.hh"
 #include "UnpackerManager.hh"
 #include "BH2Filter.hh"
 #include "TemplateFitMan.hh"
@@ -37,9 +37,11 @@
 
 #define SAVEPDF 0
 #define DEBUG 0
+#define UseTOF 1
 
 namespace
 {
+using namespace root;
 const auto& gGeom   = DCGeomMan::GetInstance();
 auto&       gEvDisp = EventDisplay::GetInstance();
 const auto& gUser   = UserParamMan::GetInstance();
@@ -82,6 +84,11 @@ ProcessingNormal()
   static const auto MinAdcCFT = gUser.GetParameter("AdcCFT", 0);
   static const auto MaxAdcCFT = gUser.GetParameter("AdcCFT", 1);
 
+  static const auto MinTotSDC0 = gUser.GetParameter("MinTotSDC0");
+  static const auto MinTotSDC1 = gUser.GetParameter("MinTotSDC1");
+  static const auto MinTotSDC2 = gUser.GetParameter("MinTotSDC2");
+  static const auto MinTotSDC3 = gUser.GetParameter("MinTotSDC3");
+
   // static const auto StopTimeDiffSdcOut = gUser.GetParameter("StopTimeDiffSdcOut");
   // static const auto MinStopTimingSdcOut = gUser.GetParameter("StopTimingSdcOut", 0);
   // static const auto MaxStopTimingSdcOut = gUser.GetParameter("StopTimingSdcOut", 1);
@@ -90,7 +97,7 @@ ProcessingNormal()
   // static const auto MinTotSDC4 = gUser.GetParameter("MinTotSDC4");
 
   // static const Int_t IdBH2 = gGeom.GetDetectorId("BH2");
-  static const Int_t IdTOF = gGeom.GetDetectorId("TOF");
+  static const Int_t IdTOF = gGeom.GetDetectorId("TOF-X");
   //static const Int_t IdWC = gGeom.GetDetectorId("WC");
 
   static TString evinfo;
@@ -211,6 +218,22 @@ ProcessingNormal()
   //hodoAna.DecodeHits("BH1");
   //Double_t btof = hodoAna.Btof0();
 
+  //////////////T0 Analysis
+  hodoAna.DecodeHits("T0");
+  Int_t nhT0 = hodoAna.GetNHits("T0");
+  Double_t time0 = -999.;
+  //////////////T0 Analysis
+  Double_t min_time = -999.;
+  for(Int_t i=0; i<nhT0; ++i){
+    const auto& hit = hodoAna.GetHit("T0", i);
+    if(!hit) continue;
+    Double_t mt  = hit->MeanTime();
+    if(std::abs(mt)<std::abs(min_time)){
+      time0    = mt;
+    }
+  }
+
+  
   //________________________________________________________
   //___ TOFRawHit
   std::vector<Int_t> TOFSegCont;
@@ -242,13 +265,34 @@ ProcessingNormal()
   //________________________________________________________
   //___ TOFHodoHit
   hodoAna.DecodeHits("TOF");
-  const auto& TOFCont = hodoAna.GetHitContainer("TOF");
-  if(TOFCont.empty()){
-    hddaq::cout << "[Warning] TOFCont is empty!" << std::endl;
-    //gEvDisp.GetCommand();
-    // return true;
-  }
+  //const auto& TOFCont = hodoAna.GetHitContainer("TOF");
+  //if(TOFCont.empty()){
+  //hddaq::cout << "[Warning] TOFCont is empty!" << std::endl;
+  //gEvDisp.GetCommand();
+  // return true;
+  //}
+  const auto& TOFCont = hodoAna.GetClusterContainer("TOF");
+  Int_t nhTof = hodoAna.GetNClusters("TOF");
+  {
+    Double_t TofSeg[MaxHits];
+    for (Int_t i=0; i<MaxHits; ++i)
+      TofSeg[i] = -1.;
+    
+    for(Int_t i=0; i<nhTof; ++i){
+      const auto& hit = hodoAna.GetCluster("TOF", i);
+      Double_t seg = hit->MeanSeg()+1;
+      //Double_t cmt = hit->CMeanTime();
+      //Double_t dt  = hit->TimeDiff();
+      //Double_t de   = hit->DeltaE();
+      TofSeg[i] = seg;
+    }
 
+    Bool_t tofsingleflag=nhTof==1 && (TofSeg[0]<37 && TofSeg[0]>12);
+    Bool_t tofdoubleflag=nhTof==2 && (TofSeg[0]<37 && TofSeg[0]>12 && TofSeg[1]<37 && TofSeg[1]>12);
+      
+    //if(!(tofsingleflag || tofdoubleflag)) return true;
+    //if(!tofsingleflag) return true;
+  }
 
   //________________________________________________________
   //___ WCRawHit
@@ -354,7 +398,11 @@ ProcessingNormal()
 
   //________________________________________________________
   //___ SdcInDCHit
+  rawData.TdcCutSDCIn();
   DCAna.DecodeSdcInHits();
+  DCAna.TotCutSDC0(MinTotSDC0);
+  DCAna.TotCutSDC1(MinTotSDC1);
+
   Double_t multi_SdcIn = 0.;
   for(Int_t plane=0; plane<NumOfLayersSdcIn; ++plane){
     const auto& cont = DCAna.GetSdcInHC(plane);
@@ -364,7 +412,8 @@ ProcessingNormal()
     for(const auto& hit: cont){
       Int_t layer = hit->LayerId();
       Int_t wire = hit->GetWire();
-      Int_t mhit = hit->GetTdcSize();
+      Int_t mhit = hit->GetEntries();
+
       Bool_t is_good = false;
       for(Int_t j=0; j<mhit; j++){
         if(hit->IsGood(j)){
@@ -408,16 +457,16 @@ ProcessingNormal()
     gEvDisp.DrawSdcInLocalTrack(track);
   }
 
-  if(ntSdcIn != 1){
+  if(ntSdcIn == 0){
     hddaq::cout << "[Warning] SdcInTrack is empty!" << std::endl;
-    //return true;
+    return true;
   }
 
   //________________________________________________________
   //___ SdcOutDCHit
   DCAna.DecodeSdcOutHits();
-  // DCAna.TotCutSDC3(MinTotSDC3);
-  // DCAna.TotCutSDC4(MinTotSDC4);
+  DCAna.TotCutSDC2(MinTotSDC2);
+  DCAna.TotCutSDC3(MinTotSDC3);
   Double_t multi_SdcOut = 0.;
   for(Int_t plane=0; plane<NumOfLayersSdcOut; ++plane){
     const auto& cont = DCAna.GetSdcOutHC(plane);
@@ -449,8 +498,12 @@ ProcessingNormal()
 
   //________________________________________________________
   //___ SdcOutTracking
+#if UseTOF
+  DCAna.TrackSearchSdcOut(TOFCont);
+#else
   DCAna.TrackSearchSdcOut();
-  // DCAna.TrackSearchSdcOut(TOFCont);
+#endif
+
   Int_t ntSdcOut = DCAna.GetNtracksSdcOut();
   hddaq::cout << "[Info] ntSdcOut = " << ntSdcOut << std::endl;
   for(Int_t it=0; it<ntSdcOut; ++it){
@@ -474,22 +527,22 @@ ProcessingNormal()
     return true;
   }
 
-  gEvDisp.Update();
+  //gEvDisp.Update();
 
-  
+
   std::vector<ThreeVector> KpPCont, KpXCont;
   std::vector<Double_t> M2Cont;
   std::vector<Double_t> Chi2S2sCont;
-#if 0
+
   //________________________________________________________
-  //___ S2sTracking
+  //___ HYPS Tracking
   static const auto StofOffset = gUser.GetParameter("StofOffset");
   // DCAna.SetMaxV0Diff(10.);
   DCAna.TrackSearchS2s();
   Bool_t through_target = false;
-  Int_t ntS2s = DCAna.GetNTracksS2s();
-  hddaq::cout << "[Info] ntS2s = " << ntS2s << std::endl;
-  for(Int_t it=0; it<ntS2s; ++it){
+  Int_t ntHyps = DCAna.GetNTracksS2s();
+  hddaq::cout << "[Info] ntHyps = " << ntHyps << std::endl;
+  for(Int_t it=0; it<ntHyps; ++it){
     auto track = DCAna.GetS2sTrack(it);
     // track->Print();
     auto chisqr = track->GetChiSquare();
@@ -499,6 +552,7 @@ ProcessingNormal()
     const auto& momtgt = track->PrimaryMomentum();
     Double_t path = track->PathLengthToTOF();
     Double_t p = momtgt.Mag();
+    std::cout << "p = " << p << std::endl;
     gEvDisp.FillMomentum(p);
     if(chisqr > 20.) continue;
     if(TMath::Abs(postgt.x()) < 30.
@@ -506,13 +560,14 @@ ProcessingNormal()
       through_target = true;
     }
     // MassSquare
-    Double_t tofseg = track->TofSeg();
-    for(const auto& hit: TOFCont){
+    Double_t tofseg = track->TofSeg() + 1; // 1-origin
+    for(const auto& hit: hodoAna.GetHitContainer("TOF")){
       Double_t seg = hit->SegmentId()+1;
       if(tofseg != seg) continue;
-      Double_t stof = hit->CMeanTime()-ctime0+StofOffset;
+      Double_t stof = hit->CMeanTime()- time0+StofOffset;
       if(stof <= 0) continue;
       Double_t m2 = Kinematics::MassSquare(p, path, stof);
+      std::cout << "m2 = " << m2 << std::endl;
       gEvDisp.FillMassSquare(m2);
       KpPCont.push_back(momtgt);
       KpXCont.push_back(postgt);
@@ -525,8 +580,7 @@ ProcessingNormal()
     // gEvDisp.GetCommand();
     // return true;
   }
-  if(through_target) gEvDisp.DrawTarget();
-#endif 
+
   //________________________________________________________
   //___ DrawText
   TString buf;
@@ -577,16 +631,19 @@ ProcessingNormal()
     buf += Form(" %.3f", DCAna.GetTrackSdcOut(i)->GetChiSquare());
   }
   gEvDisp.DrawText(0.130, 0.200, buf);
-  //buf = "S2s"; gEvDisp.DrawText(0.040, 0.16, buf);
-  //buf = "#chi^{2} = ";
-  //for(Int_t i=0; i<ntS2s; ++i){
-  //buf += Form(" %.3f", DCAna.GetS2sTrack(i)->GetChiSquare());
-  //}
-  //gEvDisp.DrawText(0.130, 0.160, buf);
+  buf = "S2s"; gEvDisp.DrawText(0.040, 0.16, buf);
+  buf = "#chi^{2} = ";
+  for(Int_t i=0; i<ntHyps; ++i){
+    buf += Form(" %.3f", DCAna.GetS2sTrack(i)->GetChiSquare());
+  }
+  gEvDisp.DrawText(0.130, 0.160, buf);
   //gEvDisp.DrawText(0.680, 0.960, "BTOF");
   //gEvDisp.DrawText(0.860, 0.960, Form("%.3f", btof));
 
   hodoAna.DecodeHits<CFTFiberHit>("CFT");
+  hodoAna.TimeCut("CFT", MinTimeCFT, MaxTimeCFT);
+  hodoAna.AdcCut("CFT",  MinAdcCFT,  MaxAdcCFT);  
+
   {
     const auto& U = HodoRawHit::kUp;
     Int_t nh=hodoAna.GetNHits("CFT");
@@ -607,7 +664,8 @@ ProcessingNormal()
       Int_t NhitT = hit->GetEntries(U);
       for(Int_t m = 0; m<NhitT; ++m){
 	Double_t time = hit->GetTUp(m);
-	if (std::abs(time)<100) {
+	//if (std::abs(time)<100) {
+	if (time>MinTimeCFT && time<MaxAdcCFT) {
 	  gEvDisp.ShowHitFiber(plane, seg, adccorLow, -999);
 	}
       }
@@ -615,10 +673,10 @@ ProcessingNormal()
   }
   
   hodoAna.DecodeHits<HodoWaveformHit>("BGO");
+  Int_t nhBGO=hodoAna.GetNHits("BGO");
   {
     const auto& U = HodoRawHit::kUp;
-    Int_t nh=hodoAna.GetNHits("BGO");
-    for(Int_t i=0; i<nh; ++i){
+    for(Int_t i=0; i<nhBGO; ++i){
       const auto& hit = hodoAna.GetHit<HodoWaveformHit>("BGO", i);
       if(!hit) continue;
       Int_t seg   = hit->SegmentId();
@@ -653,9 +711,12 @@ ProcessingNormal()
     }
   }
 
+  
+  if(nhBGO == 0){
+    hddaq::cout << "[Warning] BGO is no hit!" << std::endl;
+    return true;
+  }
 
-  hodoAna.TimeCut("CFT", MinTimeCFT, MaxTimeCFT);
-  hodoAna.AdcCut("CFT",  MinAdcCFT,  MaxAdcCFT);  
   const auto& CFTClCont = hodoAna.GetClusterContainer("CFT");
   DCAna.DecodeCFTHits(CFTClCont);
   DCAna.TrackSearchCFT();
@@ -737,7 +798,7 @@ ProcessingNormal()
     gEvDisp.Print(gUnpacker.get_run_number(),
                   gUnpacker.get_event_number());
 #else
-    gSystem->Sleep(5000);
+    //gSystem->Sleep(5000);
 #endif
   }
 #if DEBUG
@@ -779,7 +840,7 @@ ConfMan::InitializeParameterFiles()
      && InitializeParameter<DCTdcCalibMan>("DCTDC")
      && InitializeParameter<HodoParamMan>("HDPRM")
      && InitializeParameter<HodoPHCMan>("HDPHC")
-     //&& InitializeParameter<FieldMan>("FLDMAP")
+     && InitializeParameter<FieldMan>("FLDMAP")
      //&& InitializeParameter<K18TransMatrix>("K18TM")
      //&& InitializeParameter<BH2Filter>("BH2FLT")
      && InitializeParameter<UserParamMan>("USER")

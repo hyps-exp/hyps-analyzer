@@ -90,7 +90,7 @@ const Int_t& IdTarget  = gGeom.DetectorId("Target");
   const Int_t& IdSDC1X3  = gGeom.DetectorId("SDC1-X");
   const Int_t& IdSDC2V   = gGeom.DetectorId("SDC2-V");
   //const Int_t& IdRKINIT  = gGeom.DetectorId("RKINIT");
-const Int_t& IdTOF     = gGeom.DetectorId("TOF");
+const Int_t& IdTOF     = gGeom.DetectorId("TOF-X");
   //const Int_t& IdAC1     = gGeom.DetectorId("AC1");
   //const Int_t& IdWC      = gGeom.DetectorId("WC");
 const Double_t& zTarget = gGeom.LocalZ("Target");
@@ -1907,7 +1907,7 @@ EventDisplay::ConstructTarget()
 Bool_t
 EventDisplay::ConstructTOF()
 {
-  const Int_t lid = gGeom.GetDetectorId("TOF");
+  const Int_t lid = gGeom.GetDetectorId("TOF-X");
 
   Double_t rotMatTOF[9] = {};
   Double_t TOFwallX =  80.0/2.0*NumOfSegTOF; // X
