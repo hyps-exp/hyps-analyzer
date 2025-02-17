@@ -24,7 +24,7 @@
 #include "HodoAnalyzer.hh"
 #include "HodoHit.hh"
 #include "HodoWaveformHit.hh"
-#include "S2sLib.hh"
+#include "HypsLib.hh"
 #include "RawData.hh"
 #include "RootHelper.hh"
 #include "UnpackerManager.hh"
@@ -532,18 +532,18 @@ ProcessingNormal()
 
   std::vector<ThreeVector> KpPCont, KpXCont;
   std::vector<Double_t> M2Cont;
-  std::vector<Double_t> Chi2S2sCont;
+  std::vector<Double_t> Chi2HypsCont;
 
   //________________________________________________________
   //___ HYPS Tracking
   static const auto StofOffset = gUser.GetParameter("StofOffset");
   // DCAna.SetMaxV0Diff(10.);
-  DCAna.TrackSearchS2s();
+  DCAna.TrackSearchHyps();
   Bool_t through_target = false;
-  Int_t ntHyps = DCAna.GetNTracksS2s();
+  Int_t ntHyps = DCAna.GetNTracksHyps();
   hddaq::cout << "[Info] ntHyps = " << ntHyps << std::endl;
   for(Int_t it=0; it<ntHyps; ++it){
-    auto track = DCAna.GetS2sTrack(it);
+    auto track = DCAna.GetHypsTrack(it);
     // track->Print();
     auto chisqr = track->GetChiSquare();
     hddaq::cout << "       " << it << "-th track, chi2 = "
@@ -572,7 +572,7 @@ ProcessingNormal()
       KpPCont.push_back(momtgt);
       KpXCont.push_back(postgt);
       M2Cont.push_back(m2);
-      Chi2S2sCont.push_back(chisqr);
+      Chi2HypsCont.push_back(chisqr);
     }
   }
   if(KpPCont.size() == 0){
@@ -631,10 +631,10 @@ ProcessingNormal()
     buf += Form(" %.3f", DCAna.GetTrackSdcOut(i)->GetChiSquare());
   }
   gEvDisp.DrawText(0.130, 0.200, buf);
-  buf = "S2s"; gEvDisp.DrawText(0.040, 0.16, buf);
+  buf = "Hyps"; gEvDisp.DrawText(0.040, 0.16, buf);
   buf = "#chi^{2} = ";
   for(Int_t i=0; i<ntHyps; ++i){
-    buf += Form(" %.3f", DCAna.GetS2sTrack(i)->GetChiSquare());
+    buf += Form(" %.3f", DCAna.GetHypsTrack(i)->GetChiSquare());
   }
   gEvDisp.DrawText(0.130, 0.160, buf);
   //gEvDisp.DrawText(0.680, 0.960, "BTOF");
@@ -764,7 +764,7 @@ ProcessingNormal()
     ){
       gEvDisp.DrawText(0.680, 0.920, "pK18");
       gEvDisp.DrawText(0.860, 0.920, Form("%.3f", pkm.Mag()));
-      gEvDisp.DrawText(0.680, 0.880, "pS2s");
+      gEvDisp.DrawText(0.680, 0.880, "pHyps");
       gEvDisp.DrawText(0.860, 0.880, Form("%.3f", pkp.Mag()));
       gEvDisp.DrawText(0.680, 0.840, "MassSquared");
       gEvDisp.DrawText(0.860, 0.840, Form("%.3f", m2));

@@ -20,7 +20,7 @@
 #include "HodoParamMan.hh"
 #include "HodoPHCMan.hh"
 #include "HodoRawHit.hh"
-#include "S2sLib.hh"
+#include "HypsLib.hh"
 #include "RawData.hh"
 #include "RootHelper.hh"
 #include "UserParamMan.hh"

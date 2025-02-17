@@ -18,7 +18,7 @@
 #include "HodoHit.hh"
 #include "MathTools.hh"
 #include "RMAnalyzer.hh"
-#include "S2sLib.hh"
+#include "HypsLib.hh"
 #include "MathTools.hh"
 #include "RawData.hh"
 #include "RootHelper.hh"
@@ -35,7 +35,7 @@ namespace
 {
 using namespace root;
 using namespace dst;
-const std::string& class_name("DstS2sTrackingGeant4");
+const std::string& class_name("DstHypsTrackingGeant4");
 const auto& gUnpacker = hddaq::unpacker::GUnpacker::get_instance();
 const auto qnan = TMath::QuietNaN();
 auto&       gConf = ConfMan::GetInstance();
@@ -55,13 +55,13 @@ namespace dst
 enum kArgc
 {
   kProcess, kConfFile,
-  kS2sGeant4, kOutFile, nArgc
+  kHypsGeant4, kOutFile, nArgc
 };
 std::vector<TString> ArgName =
-{ "[Process]", "[ConfFile]", "[S2sGeant4]",
+{ "[Process]", "[ConfFile]", "[HypsGeant4]",
   "[OutFile]" };
 std::vector<TString> TreeName =
-{ "", "", "s2s_g", "" };
+{ "", "", "hyps_g", "" };
 std::vector<TFile*> TFileCont;
 std::vector<TTree*> TTreeCont;
 std::vector<TTreeReader*> TTreeReaderCont;
@@ -114,14 +114,14 @@ struct Event
   Double_t x0SdcOut[MaxHits];
   Double_t y0SdcOut[MaxHits];
 
-  Int_t ntS2s;
-  Int_t nlS2s;
-  Int_t nhS2s[MaxHits];
-  Double_t chisqrS2s[MaxHits];
+  Int_t ntHyps;
+  Int_t nlHyps;
+  Int_t nhHyps[MaxHits];
+  Double_t chisqrHyps[MaxHits];
   Double_t path[MaxHits];
   Double_t stof[MaxHits];
-  Double_t pS2s[MaxHits];
-  Double_t qS2s[MaxHits];
+  Double_t pHyps[MaxHits];
+  Double_t qHyps[MaxHits];
   Double_t m2[MaxHits];
   Double_t resP[MaxHits];
   Double_t vpx[NumOfLayersVP];
@@ -129,18 +129,18 @@ struct Event
   Double_t vpu[NumOfLayersVP];
   Double_t vpv[NumOfLayersVP];
 
-  Double_t xtgtS2s[MaxHits];
-  Double_t ytgtS2s[MaxHits];
-  Double_t utgtS2s[MaxHits];
-  Double_t vtgtS2s[MaxHits];
-  Double_t thetaS2s[MaxHits];
-  Double_t phiS2s[MaxHits];
+  Double_t xtgtHyps[MaxHits];
+  Double_t ytgtHyps[MaxHits];
+  Double_t utgtHyps[MaxHits];
+  Double_t vtgtHyps[MaxHits];
+  Double_t thetaHyps[MaxHits];
+  Double_t phiHyps[MaxHits];
 
-  Double_t xtofS2s[MaxHits];
-  Double_t ytofS2s[MaxHits];
-  Double_t utofS2s[MaxHits];
-  Double_t vtofS2s[MaxHits];
-  Double_t tofsegS2s[MaxHits];
+  Double_t xtofHyps[MaxHits];
+  Double_t ytofHyps[MaxHits];
+  Double_t utofHyps[MaxHits];
+  Double_t vtofHyps[MaxHits];
+  Double_t tofsegHyps[MaxHits];
 
   std::vector< std::vector<Double_t> > resL;
   std::vector< std::vector<Double_t> > resG;
@@ -292,8 +292,8 @@ dst::InitializeEvent()
   event.nlSdcIn  = 0;
   event.ntSdcOut = 0;
   event.nlSdcOut = 0;
-  event.ntS2s = 0;
-  event.nlS2s = 0;
+  event.ntHyps = 0;
+  event.nlHyps = 0;
 
   for(Int_t it=0; it<NumOfLayersSdcIn; ++it){
     event.wposSdcIn[it] = qnan;
@@ -321,25 +321,25 @@ dst::InitializeEvent()
   }
 
   for(Int_t it=0; it<MaxHits; it++){
-    event.nhS2s[it]     = 0;
-    event.chisqrS2s[it] = qnan;
+    event.nhHyps[it]     = 0;
+    event.chisqrHyps[it] = qnan;
     event.stof[it]         = qnan;
     event.path[it]         = qnan;
-    event.pS2s[it]      = qnan;
-    event.qS2s[it]      = qnan;
+    event.pHyps[it]      = qnan;
+    event.qHyps[it]      = qnan;
     event.m2[it]           = qnan;
-    event.xtgtS2s[it]  = qnan;
-    event.ytgtS2s[it]  = qnan;
-    event.utgtS2s[it]  = qnan;
-    event.vtgtS2s[it]  = qnan;
-    event.thetaS2s[it] = qnan;
-    event.phiS2s[it]   = qnan;
+    event.xtgtHyps[it]  = qnan;
+    event.ytgtHyps[it]  = qnan;
+    event.utgtHyps[it]  = qnan;
+    event.vtgtHyps[it]  = qnan;
+    event.thetaHyps[it] = qnan;
+    event.phiHyps[it]   = qnan;
     event.resP[it]        = qnan;
-    event.xtofS2s[it]  = qnan;
-    event.ytofS2s[it]  = qnan;
-    event.utofS2s[it]  = qnan;
-    event.vtofS2s[it]  = qnan;
-    event.tofsegS2s[it] = qnan;
+    event.xtofHyps[it]  = qnan;
+    event.ytofHyps[it]  = qnan;
+    event.utofHyps[it]  = qnan;
+    event.vtofHyps[it]  = qnan;
+    event.tofsegHyps[it] = qnan;
   }
 
   for(Int_t i=0; i<PlMaxTOF; ++i){
@@ -475,7 +475,7 @@ dst::DstRead(Int_t ievent)
       if(nhSdcIn>0) nlSdcIn++;
     }
     event.nlSdcIn   = nlSdcIn;
-    event.nlS2s += nlSdcIn;
+    event.nlHyps += nlSdcIn;
   }
   if(multi_SdcIn/Double_t(NumOfLayersSdcIn) > MaxMultiHitSdcIn){
     // return true;
@@ -497,7 +497,7 @@ dst::DstRead(Int_t ievent)
       if(nhSdcOut>0) nlSdcOut++;
     }
     event.nlSdcOut = nlSdcOut;
-    event.nlS2s += nlSdcOut;
+    event.nlHyps += nlSdcOut;
   }
   if(multi_SdcOut/Double_t(NumOfLayersSdcOut) > MaxMultiHitSdcOut){
     // return true;
@@ -678,18 +678,18 @@ dst::DstRead(Int_t ievent)
   ///// BTOF BH2-Target
   static const auto StofOffset = gUser.GetParameter("StofOffset");
 
-  //////////////S2S Tracking
-  DCAna.TrackSearchS2s();
-  Int_t ntS2s = DCAna.GetNTracksS2s();
-  if(MaxHits < ntS2s){
-    std::cout << "#W too many ntS2s " << ntS2s << "/" << MaxHits << std::endl;
-    ntS2s = MaxHits;
+  //////////////HYPS Tracking
+  DCAna.TrackSearchHyps();
+  Int_t ntHyps = DCAna.GetNTracksHyps();
+  if(MaxHits < ntHyps){
+    std::cout << "#W too many ntHyps " << ntHyps << "/" << MaxHits << std::endl;
+    ntHyps = MaxHits;
   }
-  event.ntS2s = ntS2s;
-  HF1(70, ntS2s);
+  event.ntHyps = ntHyps;
+  HF1(70, ntHyps);
 
-  for(Int_t i=0; i<ntS2s; ++i){
-    auto track = DCAna.GetS2sTrack(i);
+  for(Int_t i=0; i<ntHyps; ++i){
+    auto track = DCAna.GetHypsTrack(i);
     if(!track) continue;
     // track->Print();
     Int_t nh = track->GetNHits();
@@ -713,17 +713,17 @@ dst::DstRead(Int_t ievent)
     HF1(74, xt); HF1(75, yt); HF1(76, ut); HF1(77,vt);
     HF2(78, xt, ut); HF2(79, yt, vt); HF2(80, xt, yt);
     HF1(91, p); HF1(92, q); HF1(93, path);
-    event.nhS2s[i] = nh;
-    event.chisqrS2s[i] = chisqr;
+    event.nhHyps[i] = nh;
+    event.chisqrHyps[i] = chisqr;
     event.path[i] = path;
-    event.pS2s[i] = p;
-    event.qS2s[i] = q;
-    event.xtgtS2s[i] = xt;
-    event.ytgtS2s[i] = yt;
-    event.utgtS2s[i] = ut;
-    event.vtgtS2s[i] = vt;
-    event.thetaS2s[i] = theta;
-    event.phiS2s[i] = phi;
+    event.pHyps[i] = p;
+    event.qHyps[i] = q;
+    event.xtgtHyps[i] = xt;
+    event.ytgtHyps[i] = yt;
+    event.utgtHyps[i] = ut;
+    event.vtgtHyps[i] = vt;
+    event.thetaHyps[i] = theta;
+    event.phiHyps[i] = phi;
     event.resP[i] = p - initial_momentum;
     for(Int_t i = 0; i<NumOfLayersVP; ++i){
       Int_t l = PlMinVP + i;
@@ -739,25 +739,25 @@ dst::DstRead(Int_t ievent)
     }
     const auto& posTof = track->TofPos();
     const auto& momTof = track->TofMom();
-    event.xtofS2s[i] = posTof.x();
-    event.ytofS2s[i] = posTof.y();
-    event.utofS2s[i] = momTof.x()/momTof.z();
-    event.vtofS2s[i] = momTof.y()/momTof.z();
+    event.xtofHyps[i] = posTof.x();
+    event.ytofHyps[i] = posTof.y();
+    event.utofHyps[i] = momTof.x()/momTof.z();
+    event.vtofHyps[i] = momTof.y()/momTof.z();
     /*
 #if UseTOF
     Double_t tof_seg = track->TofSeg();
-    event.tofsegS2s[i] = tof_seg;
+    event.tofsegHyps[i] = tof_seg;
 #else
     Double_t tof_x = track->GetLocalTrackOut()->GetX(zTOF);
     Double_t tof_seg = MathTools::Round(tof_x/75. + (NumOfSegTOF + 1)*0.5);
-    event.tofsegS2s[i] = tof_seg;
+    event.tofsegHyps[i] = tof_seg;
 # if 0
     std::cout << "posTof " << posTof << std::endl;
     std::cout << "momTof " << momTof << std::endl;
     std::cout << std::setw(10) << vecTof.X()
 	      << std::setw(10) << vecTof.Y()
 	      << std::setw(10) << sign*vecTof.Mod()
-	      << std::setw(10) << TofSegS2s << std::endl;
+	      << std::setw(10) << TofSegHyps << std::endl;
 # endif
     Double_t minres = 1.0e10;
 #endif
@@ -856,10 +856,10 @@ dst::DstRead(Int_t ievent)
 	HF1(53, layer);
       }
     }
-  } // for in ntS2s
+  } // for in ntHyps
 
-  for(Int_t i=0; i<ntS2s; ++i){
-    const auto& track = DCAna.GetS2sTrack(i);
+  for(Int_t i=0; i<ntHyps; ++i){
+    const auto& track = DCAna.GetHypsTrack(i);
     if(!track) continue;
     const auto& trSdcIn =track->GetLocalTrackIn();
     const auto& trSdcOut=track->GetLocalTrackOut();
@@ -872,8 +872,8 @@ dst::DstRead(Int_t ievent)
     HF2(20013, uin, uout); HF2(20014, vin, vout);
   }
 
-  if(ntS2s==0) return true;
-  const auto& track = DCAna.GetS2sTrack(0);
+  if(ntHyps==0) return true;
+  const auto& track = DCAna.GetHypsTrack(0);
   Double_t path = track->PathLengthToTOF();
   Double_t p    = track->PrimaryMomentum().Mag();
   //Double_t tTof[Event::nParticle];
@@ -1063,16 +1063,16 @@ ConfMan::InitializeHistograms()
   HB2(19, "V0%Y0 SdcIn", 100, -100., 100., 100, -0.20, 0.20);
   HB2(20, "X0%Y0 SdcIn", 100, -100., 100., 100, -100., 100.);
 
-  HB1(21, "#Hits of Track SdcIn [S2sTrack]", 15, 0., 15.);
-  HB1(22, "Chisqr SdcIn [S2sTrack]", 500, 0., 50.);
-  HB1(23, "LayerId SdcIn [S2sTrack]", 15, 0., 15.);
-  HB1(24, "X0 SdcIn [S2sTrack]", 400, -100., 100.);
-  HB1(25, "Y0 SdcIn [S2sTrack]", 400, -100., 100.);
-  HB1(26, "U0 SdcIn [S2sTrack]", 200, -0.20, 0.20);
-  HB1(27, "V0 SdcIn [S2sTrack]", 200, -0.20, 0.20);
-  HB2(28, "U0%X0 SdcIn [S2sTrack]", 100, -100., 100., 100, -0.20, 0.20);
-  HB2(29, "V0%Y0 SdcIn [S2sTrack]", 100, -100., 100., 100, -0.20, 0.20);
-  HB2(30, "X0%Y0 SdcIn [S2sTrack]", 100, -100., 100., 100, -100., 100.);
+  HB1(21, "#Hits of Track SdcIn [HypsTrack]", 15, 0., 15.);
+  HB1(22, "Chisqr SdcIn [HypsTrack]", 500, 0., 50.);
+  HB1(23, "LayerId SdcIn [HypsTrack]", 15, 0., 15.);
+  HB1(24, "X0 SdcIn [HypsTrack]", 400, -100., 100.);
+  HB1(25, "Y0 SdcIn [HypsTrack]", 400, -100., 100.);
+  HB1(26, "U0 SdcIn [HypsTrack]", 200, -0.20, 0.20);
+  HB1(27, "V0 SdcIn [HypsTrack]", 200, -0.20, 0.20);
+  HB2(28, "U0%X0 SdcIn [HypsTrack]", 100, -100., 100., 100, -0.20, 0.20);
+  HB2(29, "V0%Y0 SdcIn [HypsTrack]", 100, -100., 100., 100, -0.20, 0.20);
+  HB2(30, "X0%Y0 SdcIn [HypsTrack]", 100, -100., 100., 100, -100., 100.);
 
   HB1(40, "#Tracks SdcOut", 10, 0., 10.);
   HB1(41, "#Hits of Track SdcOut", 20, 0., 20.);
@@ -1086,32 +1086,32 @@ ConfMan::InitializeHistograms()
   HB2(49, "V0%Y0 SdcOut", 100, -500., 500., 100, -0.20, 0.20);
   HB2(50, "X0%Y0 SdcOut", 100, -1200., 1200., 100, -500., 500.);
 
-  HB1(51, "#Hits of Track SdcOut [S2sTrack]", 20, 0., 20.);
-  HB1(52, "Chisqr SdcOut [S2sTrack]", 500, 0., 50.);
-  HB1(53, "LayerId SdcOut [S2sTrack]", 20, 30., 50.);
-  HB1(54, "X0 SdcOut [S2sTrack]", 1400, -1200., 1200.);
-  HB1(55, "Y0 SdcOut [S2sTrack]", 1000, -500., 500.);
-  HB1(56, "U0 SdcOut [S2sTrack]",  700, -0.35, 0.35);
-  HB1(57, "V0 SdcOut [S2sTrack]",  200, -0.10, 0.10);
-  HB2(58, "U0%X0 SdcOut [S2sTrack]", 120, -600., 600., 100, -0.40, 0.40);
-  HB2(59, "V0%Y0 SdcOut [S2sTrack]", 100, -500., 500., 100, -0.10, 0.10);
-  HB2(60, "X0%Y0 SdcOut [S2sTrack]", 100, -700., 700., 100, -500., 500.);
+  HB1(51, "#Hits of Track SdcOut [HypsTrack]", 20, 0., 20.);
+  HB1(52, "Chisqr SdcOut [HypsTrack]", 500, 0., 50.);
+  HB1(53, "LayerId SdcOut [HypsTrack]", 20, 30., 50.);
+  HB1(54, "X0 SdcOut [HypsTrack]", 1400, -1200., 1200.);
+  HB1(55, "Y0 SdcOut [HypsTrack]", 1000, -500., 500.);
+  HB1(56, "U0 SdcOut [HypsTrack]",  700, -0.35, 0.35);
+  HB1(57, "V0 SdcOut [HypsTrack]",  200, -0.10, 0.10);
+  HB2(58, "U0%X0 SdcOut [HypsTrack]", 120, -600., 600., 100, -0.40, 0.40);
+  HB2(59, "V0%Y0 SdcOut [HypsTrack]", 100, -500., 500., 100, -0.10, 0.10);
+  HB2(60, "X0%Y0 SdcOut [HypsTrack]", 100, -700., 700., 100, -500., 500.);
 
-  HB1(70, "#Tracks S2S", 10, 0., 10.);
-  HB1(71, "#Hits of S2sTrack", 50, 0., 50.);
-  HB1(72, "Chisqr S2sTrack", 500, 0., 50.);
-  HB1(73, "LayerId S2sTrack", 90, 0., 90.);
-  HB1(74, "Xtgt S2sTrack", 200, -100., 100.);
-  HB1(75, "Ytgt S2sTrack", 200, -100., 100.);
-  HB1(76, "Utgt S2sTrack", 300, -0.30, 0.30);
-  HB1(77, "Vtgt S2sTrack", 300, -0.20, 0.20);
-  HB2(78, "U%Xtgt S2sTrack", 100, -100., 100., 100, -0.25, 0.25);
-  HB2(79, "V%Ytgt S2sTrack", 100, -100., 100., 100, -0.10, 0.10);
-  HB2(80, "Y%Xtgt S2sTrack", 100, -100., 100., 100, -100., 100.);
+  HB1(70, "#Tracks HYPS", 10, 0., 10.);
+  HB1(71, "#Hits of HypsTrack", 50, 0., 50.);
+  HB1(72, "Chisqr HypsTrack", 500, 0., 50.);
+  HB1(73, "LayerId HypsTrack", 90, 0., 90.);
+  HB1(74, "Xtgt HypsTrack", 200, -100., 100.);
+  HB1(75, "Ytgt HypsTrack", 200, -100., 100.);
+  HB1(76, "Utgt HypsTrack", 300, -0.30, 0.30);
+  HB1(77, "Vtgt HypsTrack", 300, -0.20, 0.20);
+  HB2(78, "U%Xtgt HypsTrack", 100, -100., 100., 100, -0.25, 0.25);
+  HB2(79, "V%Ytgt HypsTrack", 100, -100., 100., 100, -0.10, 0.10);
+  HB2(80, "Y%Xtgt HypsTrack", 100, -100., 100., 100, -100., 100.);
 
-  HB1(91, "P S2sTrack", 500, 0.00, 2.50);
-  HB1(92, "q S2sTrack", 4, -2., 2.);
-  HB1(93, "PathLength S2sTrack", 300, 7000., 10000.);
+  HB1(91, "P HypsTrack", 500, 0.00, 2.50);
+  HB1(92, "q HypsTrack", 4, -2., 2.);
+  HB1(93, "PathLength HypsTrack", 300, 7000., 10000.);
   HB1(94, "MassSqr", 600, -0.4, 1.4);
 
   // SdcInTracking
@@ -1153,13 +1153,13 @@ ConfMan::InitializeHistograms()
     HB1(100*l+5, title5, NbinSdcInRes, MinSdcInRes, MaxSdcInRes);
     HB2(100*l+6, title6, 100, -100., 100., NbinSdcInRes, MinSdcInRes, MaxSdcInRes);
     HB2(100*l+7, title7, 100, -100., 100., 100, -50., 50.);
-    title1 += " [S2sTrack]";
-    title2 += " [S2sTrack]";
-    title3 += " [S2sTrack]";
-    title4 += " [S2sTrack]";
-    title5 += " [S2sTrack]";
-    title6 += " [S2sTrack]";
-    title7 += " [S2sTrack]";
+    title1 += " [HypsTrack]";
+    title2 += " [HypsTrack]";
+    title3 += " [HypsTrack]";
+    title4 += " [HypsTrack]";
+    title5 += " [HypsTrack]";
+    title6 += " [HypsTrack]";
+    title7 += " [HypsTrack]";
     HB1(100*l+11, title1, nwire, 0., Double_t(nwire));
     HB1(100*l+12, title2, nbindt, mindt, maxdt);
     HB1(100*l+13, title3, nbindl, mindl, maxdl);
@@ -1167,7 +1167,7 @@ ConfMan::InitializeHistograms()
     HB1(100*l+15, title5, NbinSdcInRes, MinSdcInRes, MaxSdcInRes);
     HB2(100*l+16, title6, 100, -100., 100., NbinSdcInRes, MinSdcInRes, MaxSdcInRes);
     HB2(100*l+17, title7, 100, -100., 100., 100, -50., 50.);
-    TString title22 = Form("DriftLength%%DriftTime SdcIn%2d [S2sTrack]", i);
+    TString title22 = Form("DriftLength%%DriftTime SdcIn%2d [HypsTrack]", i);
     HB2(100*l+22, title22, nbindt, mindt, maxdt, nbindl, mindl, maxdl);
   }
 
@@ -1219,13 +1219,13 @@ ConfMan::InitializeHistograms()
     HB1(100*l+5, title5, NbinSdcOutRes, MinSdcOutRes, MaxSdcOutRes);
     HB2(100*l+6, title6, 2000, -1000., 1000., NbinSdcOutRes, MinSdcOutRes, MaxSdcOutRes);
     HB2(100*l+7, title7, 100, -600., 600., 100, -600., 600.);
-    title1 += " [S2sTrack]";
-    title2 += " [S2sTrack]";
-    title3 += " [S2sTrack]";
-    title4 += " [S2sTrack]";
-    title5 += " [S2sTrack]";
-    title6 += " [S2sTrack]";
-    title7 += " [S2sTrack]";
+    title1 += " [HypsTrack]";
+    title2 += " [HypsTrack]";
+    title3 += " [HypsTrack]";
+    title4 += " [HypsTrack]";
+    title5 += " [HypsTrack]";
+    title6 += " [HypsTrack]";
+    title7 += " [HypsTrack]";
     HB1(100*l+11, title1, nwire, 0., Double_t(nwire));
     HB1(100*l+12, title2, nbindt, mindt, maxdt);
     HB1(100*l+13, title3, nbindl, mindl, maxdl);
@@ -1233,12 +1233,12 @@ ConfMan::InitializeHistograms()
     HB1(100*l+15, title5, NbinSdcOutRes, MinSdcOutRes, MaxSdcOutRes);
     HB2(100*l+16, title6, 2000, -1000., 1000., NbinSdcOutRes, MinSdcOutRes, MaxSdcOutRes);
     HB2(100*l+17, title7, 100, -600., 600., 100, -600., 600.);
-    TString title22 = Form("DriftLength%%DriftTime SdcOut%2d [S2sTrack]", i);
+    TString title22 = Form("DriftLength%%DriftTime SdcOut%2d [HypsTrack]", i);
     HB2(100*l+22, title22, nbindt, mindt, maxdt, nbindl, mindl, maxdl);
   }
   /////////////////////
 
-  // TOF in SdcOut/S2sTracking
+  // TOF in SdcOut/HypsTracking
   for( Int_t i = 1; i <= NumOfLayersTOF; ++i ){
   const Int_t    NbinSDC4DT =  360;
   const Double_t MinSDC4DT  = -50.;
@@ -1261,13 +1261,13 @@ ConfMan::InitializeHistograms()
     HB1(100*l+5, title5, 200, -20., 20.);
     HB2(100*l+6, title6, 100, -1000., 1000., 100, -200., 200.);
     HB2(100*l+7, title6, 100, -1000., 1000., 100, -1000., 1000.);
-    title1 += " [S2sTrack]";
-    title2 += " [S2sTrack]";
-    title3 += " [S2sTrack]";
-    title4 += " [S2sTrack]";
-    title5 += " [S2sTrack]";
-    title6 += " [S2sTrack]";
-    title7 += " [S2sTrack]";
+    title1 += " [HypsTrack]";
+    title2 += " [HypsTrack]";
+    title3 += " [HypsTrack]";
+    title4 += " [HypsTrack]";
+    title5 += " [HypsTrack]";
+    title6 += " [HypsTrack]";
+    title7 += " [HypsTrack]";
     HB1(100*l+11, title1, 200, 0., 200.);
     HB1(100*l+12, title2, 400, 0., 200.);
     HB1(100*l+13, title3, 100, -2., 8.);
@@ -1279,9 +1279,9 @@ ConfMan::InitializeHistograms()
 
   for( Int_t i = 1; i <= NumOfLayersVP; ++i ){
     Int_t l = i + PlMinVP - 1;
-    TString title1 = Form("U%%X VP%d S2sTrack", i);
-    TString title2 = Form("V%%Y VP%d S2sTrack", i);
-    TString title3 = Form("Y%%X VP%d S2sTrack", i);
+    TString title1 = Form("U%%X VP%d HypsTrack", i);
+    TString title2 = Form("V%%Y VP%d HypsTrack", i);
+    TString title3 = Form("Y%%X VP%d HypsTrack", i);
     HB2(100*l+1, title1, 500, -500., 500., 1000, -0.5, 0.5);
     HB2(100*l+2, title2, 300, -300., 300., 200, -0.1, 0.1);
     HB2(100*l+3, title3, 500, -500., 500., 300, -300., 300.);
@@ -1292,13 +1292,13 @@ ConfMan::InitializeHistograms()
   HB2(20003, "Uout%Uin", 100, -0.5,  0.5,  100, -0.5,  0.5);
   HB2(20004, "Vin%Vout", 100, -0.1,  0.1,  100, -0.1,  0.1);
 
-  HB2(20011, "Xout%Xin [S2sTrack]", 100, -200., 200., 100, -200., 200.);
-  HB2(20012, "Yout%Yin [S2sTrack]", 100, -200., 200., 100, -200., 200.);
-  HB2(20013, "Uout%Uin [S2sTrack]", 100, -0.5,  0.5,  100, -0.5,  0.5);
-  HB2(20014, "Vin%Vout [S2sTrack]", 100, -0.1,  0.1,  100, -0.1,  0.1);
+  HB2(20011, "Xout%Xin [HypsTrack]", 100, -200., 200., 100, -200., 200.);
+  HB2(20012, "Yout%Yin [HypsTrack]", 100, -200., 200., 100, -200., 200.);
+  HB2(20013, "Uout%Uin [HypsTrack]", 100, -0.5,  0.5,  100, -0.5,  0.5);
+  HB2(20014, "Vin%Vout [HypsTrack]", 100, -0.1,  0.1,  100, -0.1,  0.1);
 
 
-  HBTree("g4s2s", "tree of DstS2sTracking using Geant4 input");
+  HBTree("g4hyps", "tree of DstHypsTracking using Geant4 input");
 
   // tree->Branch("status", &event.status, "status/I");
   // tree->Branch("evnum", &event.evnum, "evnum/I");
@@ -1355,31 +1355,31 @@ ConfMan::InitializeHistograms()
   tree->Branch("u0SdcOut",    event.u0SdcOut,     "u0SdcOut[ntSdcOut]/D");
   tree->Branch("v0SdcOut",    event.v0SdcOut,     "v0SdcOut[ntSdcOut]/D");
 
-  // S2S Tracking
-  tree->Branch("ntS2s",    &event.ntS2s,     "ntS2s/I");
-  tree->Branch("nlS2s",    &event.nlS2s,     "nlS2s/I");
-  tree->Branch("nhS2s",     event.nhS2s,     "nhS2s[ntS2s]/I");
-  tree->Branch("chisqrS2s", event.chisqrS2s, "chisqrS2s[ntS2s]/D");
-  tree->Branch("stof",         event.stof,         "stof[ntS2s]/D");
-  tree->Branch("path",         event.path,         "path[ntS2s]/D");
-  tree->Branch("pS2s",      event.pS2s,      "pS2s[ntS2s]/D");
-  tree->Branch("qS2s",      event.qS2s,      "qS2s[ntS2s]/D");
-  tree->Branch("m2",           event.m2,           "m2[ntS2s]/D");
+  // HYPS Tracking
+  tree->Branch("ntHyps",    &event.ntHyps,     "ntHyps/I");
+  tree->Branch("nlHyps",    &event.nlHyps,     "nlHyps/I");
+  tree->Branch("nhHyps",     event.nhHyps,     "nhHyps[ntHyps]/I");
+  tree->Branch("chisqrHyps", event.chisqrHyps, "chisqrHyps[ntHyps]/D");
+  tree->Branch("stof",         event.stof,         "stof[ntHyps]/D");
+  tree->Branch("path",         event.path,         "path[ntHyps]/D");
+  tree->Branch("pHyps",      event.pHyps,      "pHyps[ntHyps]/D");
+  tree->Branch("qHyps",      event.qHyps,      "qHyps[ntHyps]/D");
+  tree->Branch("m2",           event.m2,           "m2[ntHyps]/D");
 
-  tree->Branch("xtgtS2s",   event.xtgtS2s,   "xtgtS2s[ntS2s]/D");
-  tree->Branch("ytgtS2s",   event.ytgtS2s,   "ytgtS2s[ntS2s]/D");
-  tree->Branch("utgtS2s",   event.utgtS2s,   "utgtS2s[ntS2s]/D");
-  tree->Branch("vtgtS2s",   event.vtgtS2s,   "vtgtS2s[ntS2s]/D");
+  tree->Branch("xtgtHyps",   event.xtgtHyps,   "xtgtHyps[ntHyps]/D");
+  tree->Branch("ytgtHyps",   event.ytgtHyps,   "ytgtHyps[ntHyps]/D");
+  tree->Branch("utgtHyps",   event.utgtHyps,   "utgtHyps[ntHyps]/D");
+  tree->Branch("vtgtHyps",   event.vtgtHyps,   "vtgtHyps[ntHyps]/D");
 
-  tree->Branch("thetaS2s",  event.thetaS2s,  "thetaS2s[ntS2s]/D");
-  tree->Branch("phiS2s",    event.phiS2s,    "phiS2s[ntS2s]/D");
-  tree->Branch("resP",    event.resP,   "resP[ntS2s]/D");
+  tree->Branch("thetaHyps",  event.thetaHyps,  "thetaHyps[ntHyps]/D");
+  tree->Branch("phiHyps",    event.phiHyps,    "phiHyps[ntHyps]/D");
+  tree->Branch("resP",    event.resP,   "resP[ntHyps]/D");
 
-  tree->Branch("xtofS2s",   event.xtofS2s,   "xtofS2s[ntS2s]/D");
-  tree->Branch("ytofS2s",   event.ytofS2s,   "ytofS2s[ntS2s]/D");
-  tree->Branch("utofS2s",   event.utofS2s,   "utofS2s[ntS2s]/D");
-  tree->Branch("vtofS2s",   event.vtofS2s,   "vtofS2s[ntS2s]/D");
-  tree->Branch("tofsegS2s", event.tofsegS2s, "tofsegS2s[ntS2s]/D");
+  tree->Branch("xtofHyps",   event.xtofHyps,   "xtofHyps[ntHyps]/D");
+  tree->Branch("ytofHyps",   event.ytofHyps,   "ytofHyps[ntHyps]/D");
+  tree->Branch("utofHyps",   event.utofHyps,   "utofHyps[ntHyps]/D");
+  tree->Branch("vtofHyps",   event.vtofHyps,   "vtofHyps[ntHyps]/D");
+  tree->Branch("tofsegHyps", event.tofsegHyps, "tofsegHyps[ntHyps]/D");
 
   event.resL.resize(PlMaxTOF);
   for( Int_t i = PlMinSdcIn;  i<= PlMaxSdcIn;  i++ ) tree->Branch(Form("ResL%d", i), &event.resL[i-1]);
@@ -1475,18 +1475,18 @@ ConfMan::InitializeHistograms()
   // // TTreeCont[kTPCGeant]->SetBranchAddress("dytpc_pad", src.dytpc_pad);
   // // TTreeCont[kTPCGeant]->SetBranchAddress("dztpc_pad", src.dztpc_pad);
 
-  TTreeCont[kS2sGeant4]->SetBranchStatus("*", 0);
-  TTreeCont[kS2sGeant4]->SetBranchStatus("DCNh", 1);
-  TTreeCont[kS2sGeant4]->SetBranchStatus("DCgPosx", 1);
-  TTreeCont[kS2sGeant4]->SetBranchStatus("DCgPosy", 1);
-  TTreeCont[kS2sGeant4]->SetBranchStatus("DCgPosz", 1);
-  TTreeCont[kS2sGeant4]->SetBranchStatus("DCde", 1);
+  TTreeCont[kHypsGeant4]->SetBranchStatus("*", 0);
+  TTreeCont[kHypsGeant4]->SetBranchStatus("DCNh", 1);
+  TTreeCont[kHypsGeant4]->SetBranchStatus("DCgPosx", 1);
+  TTreeCont[kHypsGeant4]->SetBranchStatus("DCgPosy", 1);
+  TTreeCont[kHypsGeant4]->SetBranchStatus("DCgPosz", 1);
+  TTreeCont[kHypsGeant4]->SetBranchStatus("DCde", 1);
 
-  TTreeCont[kS2sGeant4]->SetBranchAddress("DCNh", src.DCNh);
-  TTreeCont[kS2sGeant4]->SetBranchAddress("DCgPosx", src.DCgPosx);
-  TTreeCont[kS2sGeant4]->SetBranchAddress("DCgPosy", src.DCgPosy);
-  TTreeCont[kS2sGeant4]->SetBranchAddress("DCgPosz", src.DCgPosz);
-  TTreeCont[kS2sGeant4]->SetBranchAddress("DCde", src.DCde);
+  TTreeCont[kHypsGeant4]->SetBranchAddress("DCNh", src.DCNh);
+  TTreeCont[kHypsGeant4]->SetBranchAddress("DCgPosx", src.DCgPosx);
+  TTreeCont[kHypsGeant4]->SetBranchAddress("DCgPosy", src.DCgPosy);
+  TTreeCont[kHypsGeant4]->SetBranchAddress("DCgPosz", src.DCgPosz);
+  TTreeCont[kHypsGeant4]->SetBranchAddress("DCde", src.DCde);
 
   return true;
 }

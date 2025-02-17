@@ -33,7 +33,7 @@
 #include "K18Parameters.hh"
 //#include "K18TrackU2D.hh"
 #include "K18TrackD2U.hh"
-#include "S2sTrack.hh"
+#include "HypsTrack.hh"
 #include "MathTools.hh"
 #include "MWPCCluster.hh"
 #include "RawData.hh"
@@ -51,7 +51,7 @@
 #define BcOut_XUV  0 // XUV Tracking (slow but accerate)
 #define BcOut_Pair 1 // Pair plane Tracking (fast but bad for large angle track)
 /* SdcInTracking */
-#define SdcIn_XUV         0 // XUV Tracking (not used in S2S)
+#define SdcIn_XUV         0 // XUV Tracking (not used in HYPS)
 #define SdcIn_Pair        1 // Pair plane Tracking (fast but bad for large angle track)
 #define SdcIn_Deletion    1 // Deletion method for too many combinations
 
@@ -76,7 +76,7 @@ const Int_t& IdTOFDXR = gGeom.DetectorId("TOF-DX-R");
 
 const Double_t TimeDiffToYTOF = 77.3511; // [mm/ns]
 
-const Double_t MaxChiSqrS2sTrack = 10000.;
+const Double_t MaxChiSqrHypsTrack = 10000.;
 const Double_t MaxTimeDifMWPC       =   100.;
 
 const Double_t kMWPCClusteringWireExtension =  1.0; // [mm]
@@ -173,7 +173,7 @@ DCAnalyzer::~DCAnalyzer()
   for(auto& elem: m_dc_hit_collection)
     del::ClearContainer(elem.second);
 
-  ClearS2sTracks();
+  ClearHypsTracks();
 #if UseBcIn
   ClearK18TracksU2D();
   ClearTracksBcIn();
@@ -194,12 +194,12 @@ DCAnalyzer::~DCAnalyzer()
 
 //_____________________________________________________________________________
 void
-DCAnalyzer::PrintS2s(const TString& arg) const
+DCAnalyzer::PrintHyps(const TString& arg) const
 {
-  Int_t nn = m_S2sTC.size();
+  Int_t nn = m_HypsTC.size();
   hddaq::cout << FUNC_NAME << " " << arg << std::endl
-              << "   S2sTC.size : " << nn << std::endl;
-  for(const auto& track: m_S2sTC){
+              << "   HypsTC.size : " << nn << std::endl;
+  for(const auto& track: m_HypsTC){
     hddaq::cout << " Niter=" << std::setw(3) << track->Niteration()
                 << " ChiSqr=" << track->ChiSquare()
                 << " P=" << track->PrimaryMomentum().Mag()
@@ -988,9 +988,9 @@ DCAnalyzer::TrackSearchK18D2U(const std::vector<Double_t>& XinCont)
 
 //_____________________________________________________________________________
 Bool_t
-DCAnalyzer::TrackSearchS2s()
+DCAnalyzer::TrackSearchHyps()
 {
-  ClearS2sTracks();
+  ClearHypsTracks();
 
   auto nIn = m_SdcInTC.size();
   auto nOut = m_SdcOutTC.size();
@@ -1003,8 +1003,8 @@ DCAnalyzer::TrackSearchS2s()
       //if(!trOut || !trOut->GoodForTracking()) continue;
       double xtof=trOut->GetX(gGeom.LocalZ("TOF-X"));
       if(!trOut || fabs(xtof)>1000.) continue;
-      auto trS2s = new S2sTrack(trIn, trOut);
-      if(!trS2s) continue;
+      auto trHyps = new HypsTrack(trIn, trOut);
+      if(!trHyps) continue;
       Double_t u0In    = trIn->GetU0();
       Double_t u0Out   = trOut->GetU0();
       // Double_t v0In    = trIn->GetV0();
@@ -1017,30 +1017,30 @@ DCAnalyzer::TrackSearchS2s()
       // Double_t initial_momentum = s*pK18;
       //Double_t initial_momentum = 1.4;
       if(bending>0. && initial_momentum>0.){
-        trS2s->SetInitialMomentum(initial_momentum);
+        trHyps->SetInitialMomentum(initial_momentum);
       }else if(bending<0. && initial_momentum>0.){
-	trS2s->SetInitialMomentum(-initial_momentum);
+	trHyps->SetInitialMomentum(-initial_momentum);
       }
       else {
-        trS2s->SetInitialMomentum(0.7);
+        trHyps->SetInitialMomentum(0.7);
       }
       if(true
-         && trS2s->DoFit()
-         && trS2s->ChiSquare()<MaxChiSqrS2sTrack){
-        // trS2s->Print("in "+FUNC_NAME);
-        m_S2sTC.push_back(trS2s);
+         && trHyps->DoFit()
+         && trHyps->ChiSquare()<MaxChiSqrHypsTrack){
+        // trHyps->Print("in "+FUNC_NAME);
+        m_HypsTC.push_back(trHyps);
       }
       else{
-        // trS2s->Print("in "+FUNC_NAME);
-        delete trS2s;
+        // trHyps->Print("in "+FUNC_NAME);
+        delete trHyps;
       }
     }
   }
 
-  std::sort(m_S2sTC.begin(), m_S2sTC.end(), S2sTrackComp());
+  std::sort(m_HypsTC.begin(), m_HypsTC.end(), HypsTrackComp());
 
 #if 0
-  PrintS2s("Before Deleting");
+  PrintHyps("Before Deleting");
 #endif
 
   return true;
@@ -1048,9 +1048,9 @@ DCAnalyzer::TrackSearchS2s()
 
 //_____________________________________________________________________________
 Bool_t
-DCAnalyzer::TrackSearchS2s(Double_t initial_momentum)
+DCAnalyzer::TrackSearchHyps(Double_t initial_momentum)
 {
-  ClearS2sTracks();
+  ClearHypsTracks();
 
   Int_t nIn  = GetNtracksSdcIn();
   Int_t nOut = GetNtracksSdcOut();
@@ -1063,23 +1063,23 @@ DCAnalyzer::TrackSearchS2s(Double_t initial_momentum)
     for(Int_t iOut=0; iOut<nOut; ++iOut){
       const auto& trOut = GetTrackSdcOut(iOut);
       if(!trOut->GoodForTracking()) continue;
-      S2sTrack *trS2s = new S2sTrack(trIn, trOut);
-      if(!trS2s) continue;
-      trS2s->SetInitialMomentum(initial_momentum);
-      if(trS2s->DoFit() && trS2s->ChiSquare()<MaxChiSqrS2sTrack){
-        m_S2sTC.push_back(trS2s);
+      HypsTrack *trHyps = new HypsTrack(trIn, trOut);
+      if(!trHyps) continue;
+      trHyps->SetInitialMomentum(initial_momentum);
+      if(trHyps->DoFit() && trHyps->ChiSquare()<MaxChiSqrHypsTrack){
+        m_HypsTC.push_back(trHyps);
       }
       else{
-        // trS2s->Print(" in "+FUNC_NAME);
-        delete trS2s;
+        // trHyps->Print(" in "+FUNC_NAME);
+        delete trHyps;
       }
     }// for(iOut)
   }// for(iIn)
 
-  std::sort(m_S2sTC.begin(), m_S2sTC.end(), S2sTrackComp());
+  std::sort(m_HypsTC.begin(), m_HypsTC.end(), HypsTrackComp());
 
 #if 0
-  PrintS2s("Before Deleting");
+  PrintHyps("Before Deleting");
 #endif
 
   return true;
@@ -1201,9 +1201,9 @@ DCAnalyzer::ClearK18TracksD2U()
 
 //_____________________________________________________________________________
 void
-DCAnalyzer::ClearS2sTracks()
+DCAnalyzer::ClearHypsTracks()
 {
-  del::ClearContainer(m_S2sTC);
+  del::ClearContainer(m_HypsTC);
 }
 
 //_____________________________________________________________________________
@@ -1307,12 +1307,12 @@ DCAnalyzer::ReCalcTrack(K18TC& cont, Bool_t applyRecursively)
 
 //_____________________________________________________________________________
 Bool_t
-DCAnalyzer::ReCalcTrack(S2sTC& cont,
+DCAnalyzer::ReCalcTrack(HypsTC& cont,
                         Bool_t applyRecursively)
 {
   const std::size_t n = cont.size();
   for(std::size_t i=0; i<n; ++i){
-    S2sTrack *track = cont[i];
+    HypsTrack *track = cont[i];
     if(track) track->ReCalc(applyRecursively);
   }
   return true;
@@ -1371,9 +1371,9 @@ DCAnalyzer::ReCalcK18TrackD2U(Bool_t applyRecursively)
 
 //_____________________________________________________________________________
 Bool_t
-DCAnalyzer::ReCalcS2sTrack(Bool_t applyRecursively)
+DCAnalyzer::ReCalcHypsTrack(Bool_t applyRecursively)
 {
-  return ReCalcTrack(m_S2sTC, applyRecursively);
+  return ReCalcTrack(m_HypsTC, applyRecursively);
 }
 
 //_____________________________________________________________________________
@@ -1390,7 +1390,7 @@ DCAnalyzer::ReCalcAll()
   ReCalcTrackSdcOut();
 
   //ReCalcK18TrackD2U();
-  ReCalcS2sTrack();
+  ReCalcHypsTrack();
 
   return true;
 }

@@ -16,7 +16,7 @@
 #include "HodoAnalyzer.hh"
 #include "HodoHit.hh"
 #include "RMAnalyzer.hh"
-#include "S2sLib.hh"
+#include "HypsLib.hh"
 #include "MathTools.hh"
 #include "RawData.hh"
 #include "RootHelper.hh"

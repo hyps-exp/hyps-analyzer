@@ -1,6 +1,6 @@
 // -*- C++ -*-
 
-#include "S2sFieldMap.hh"
+#include "HypsFieldMap.hh"
 
 #include <cmath>
 #include <cstdlib>
@@ -29,7 +29,7 @@
 //}
 
 //_____________________________________________________________________________
-S2sFieldMap::S2sFieldMap(const TString& file_name)
+HypsFieldMap::HypsFieldMap(const TString& file_name)
   : m_is_ready(false),
     m_file_name(file_name),
     B(),
@@ -46,7 +46,7 @@ S2sFieldMap::S2sFieldMap(const TString& file_name)
 }
 
 //_____________________________________________________________________________
-S2sFieldMap::S2sFieldMap(const TString& file_name, const Double_t measure, const Double_t calc)
+HypsFieldMap::HypsFieldMap(const TString& file_name, const Double_t measure, const Double_t calc)
   : m_is_ready(false),
     m_file_name(file_name),
     B(),
@@ -66,14 +66,14 @@ S2sFieldMap::S2sFieldMap(const TString& file_name, const Double_t measure, const
 
 
 //_____________________________________________________________________________
-S2sFieldMap::~S2sFieldMap()
+HypsFieldMap::~HypsFieldMap()
 {
   ClearField();
 }
 
 //_____________________________________________________________________________
 Bool_t
-S2sFieldMap::Initialize()
+HypsFieldMap::Initialize()
 {
   std::ifstream ifs(m_file_name);
   if(!ifs.is_open()){
@@ -110,7 +110,7 @@ S2sFieldMap::Initialize()
 
   if(valueCalc==0. || !std::isfinite(valueCalc) ||
      valueMeasure==0.  || !std::isfinite(valueMeasure) ){
-    hddaq::cout << FUNC_NAME << " S2sField is zero : "
+    hddaq::cout << FUNC_NAME << " HypsField is zero : "
                 << " Calc = " << valueCalc
                 << " Measure = " << valueMeasure << std::endl
                 << " -> skip reading fieldmap" << std::endl;
@@ -163,7 +163,7 @@ S2sFieldMap::Initialize()
 
 //_____________________________________________________________________________
 Bool_t
-S2sFieldMap::GetFieldValue(const Double_t pointCM[3],
+HypsFieldMap::GetFieldValue(const Double_t pointCM[3],
                               Double_t* BfieldTesla) const
 {
   Double_t xt = pointCM[0];
@@ -216,7 +216,7 @@ S2sFieldMap::GetFieldValue(const Double_t pointCM[3],
 
 //_____________________________________________________________________________
 void
-S2sFieldMap::ClearField()
+HypsFieldMap::ClearField()
 {
   for(Int_t ix=0; ix<Nx; ++ix){
     for(Int_t iy=0; iy<Ny; ++iy){

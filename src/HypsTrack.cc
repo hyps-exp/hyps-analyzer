@@ -1,6 +1,6 @@
 // -*- C++ -*-
 
-#include "S2sTrack.hh"
+#include "HypsTrack.hh"
 
 #include <cstring>
 #include <iomanip>
@@ -46,7 +46,7 @@ const TString coutEnd   = "\033[m";
 #define WARNOUT 0
 
 //_____________________________________________________________________________
-S2sTrack::S2sTrack(const DCLocalTrack *track_in,
+HypsTrack::HypsTrack(const DCLocalTrack *track_in,
                          const DCLocalTrack *track_out)
   : m_status(kInit),
     m_track_in(track_in),
@@ -77,7 +77,7 @@ S2sTrack::S2sTrack(const DCLocalTrack *track_in,
 }
 
 //_____________________________________________________________________________
-S2sTrack::~S2sTrack()
+HypsTrack::~HypsTrack()
 {
   ClearHitArray();
   debug::ObjectCounter::decrease(ClassName());
@@ -85,7 +85,7 @@ S2sTrack::~S2sTrack()
 
 //_____________________________________________________________________________
 const TrackHit*
-S2sTrack::GetHitOfLayerNumber(Int_t lnum) const
+HypsTrack::GetHitOfLayerNumber(Int_t lnum) const
 {
   for(Int_t i=0, n=m_hit_array.size(); i<n; ++i){
     if(m_hit_array[i]->GetLayer()==lnum)
@@ -96,7 +96,7 @@ S2sTrack::GetHitOfLayerNumber(Int_t lnum) const
 
 //_____________________________________________________________________________
 void
-S2sTrack::FillHitArray()
+HypsTrack::FillHitArray()
 {
   Int_t nIn  = m_track_in->GetNHit();
   Int_t nOut = m_track_out->GetNHit();
@@ -122,7 +122,7 @@ S2sTrack::FillHitArray()
 
 //_____________________________________________________________________________
 void
-S2sTrack::ClearHitArray()
+HypsTrack::ClearHitArray()
 {
   Int_t nh = m_hit_array.size();
   for(Int_t i=nh-1; i>=0; --i){
@@ -133,7 +133,7 @@ S2sTrack::ClearHitArray()
 
 //_____________________________________________________________________________
 Bool_t
-S2sTrack::ReCalc(Bool_t applyRecursively)
+HypsTrack::ReCalc(Bool_t applyRecursively)
 {
   if(applyRecursively){
     // m_track_in->ReCalc(applyRecursively);
@@ -150,7 +150,7 @@ S2sTrack::ReCalc(Bool_t applyRecursively)
 
 //_____________________________________________________________________________
 Bool_t
-S2sTrack::DoFit()
+HypsTrack::DoFit()
 {
   m_status = kInit;
   /*
@@ -318,7 +318,7 @@ S2sTrack::DoFit()
 
 //_____________________________________________________________________________
 Bool_t
-S2sTrack::DoFit(RKCordParameter iniCord)
+HypsTrack::DoFit(RKCordParameter iniCord)
 {
   //  ClearHitArray();
   //  FillHitArray();
@@ -447,7 +447,7 @@ S2sTrack::DoFit(RKCordParameter iniCord)
 
 //_____________________________________________________________________________
 Double_t
-S2sTrack::CalcChiSqr(const RKHitPointContainer &hpCont) const
+HypsTrack::CalcChiSqr(const RKHitPointContainer &hpCont) const
 {
   Int_t nh = m_hit_array.size();
 
@@ -480,7 +480,7 @@ S2sTrack::CalcChiSqr(const RKHitPointContainer &hpCont) const
 
 //_____________________________________________________________________________
 Bool_t
-S2sTrack::GuessNextParameters(const RKHitPointContainer& hpCont,
+HypsTrack::GuessNextParameters(const RKHitPointContainer& hpCont,
                                  RKCordParameter& Cord, Double_t& estDeltaChisqr,
                                  Double_t& lambdaCri, Double_t dmp) const
 {
@@ -731,7 +731,7 @@ S2sTrack::GuessNextParameters(const RKHitPointContainer& hpCont,
 
 //_____________________________________________________________________________
 Bool_t
-S2sTrack::SaveCalcPosition(const RKHitPointContainer &hpCont)
+HypsTrack::SaveCalcPosition(const RKHitPointContainer &hpCont)
 {
   for(Int_t i=0, n=m_hit_array.size(); i<n; ++i){
     TrackHit *thp = m_hit_array[i];
@@ -750,7 +750,7 @@ S2sTrack::SaveCalcPosition(const RKHitPointContainer &hpCont)
 
 //_____________________________________________________________________________
 void
-S2sTrack::Print(Option_t* arg) const
+HypsTrack::Print(Option_t* arg) const
 {
   PrintHelper helper(5, std::ios::fixed);
   TString coutColor = m_status == kPassed ? coutGreen : coutRed;
@@ -782,7 +782,7 @@ S2sTrack::Print(Option_t* arg) const
 
 //_____________________________________________________________________________
 void
-S2sTrack::PrintCalcHits(const RKHitPointContainer &hpCont) const
+HypsTrack::PrintCalcHits(const RKHitPointContainer &hpCont) const
 {
   PrintHelper helper(2, std::ios::fixed);
 
@@ -829,7 +829,7 @@ S2sTrack::PrintCalcHits(const RKHitPointContainer &hpCont) const
 
 //_____________________________________________________________________________
 Bool_t
-S2sTrack::SaveTrackParameters(const RKCordParameter &cp)
+HypsTrack::SaveTrackParameters(const RKCordParameter &cp)
 {
   m_cord_param = cp;
   const Int_t TGTid = m_HitPointCont.begin()->first;
@@ -896,7 +896,7 @@ S2sTrack::SaveTrackParameters(const RKCordParameter &cp)
 
 //_____________________________________________________________________________
 Bool_t
-S2sTrack::TofLocalPos(TVector3& pos) const
+HypsTrack::TofLocalPos(TVector3& pos) const
 {
   if( m_tof_seg < 0 ) return false;
 
@@ -915,7 +915,7 @@ S2sTrack::TofLocalPos(TVector3& pos) const
 
 //_____________________________________________________________________________
 Bool_t
-S2sTrack::TofLocalMom(TVector3& mom) const
+HypsTrack::TofLocalMom(TVector3& mom) const
 {
   if( m_tof_seg < 0 ) return false;
 
@@ -934,7 +934,7 @@ S2sTrack::TofLocalMom(TVector3& mom) const
 
 //_____________________________________________________________________________
 Bool_t
-S2sTrack::GetTrajectoryLocalPosition(Int_t layer,
+HypsTrack::GetTrajectoryLocalPosition(Int_t layer,
 				     Double_t& x, Double_t& y) const
 {
   try {
@@ -952,7 +952,7 @@ S2sTrack::GetTrajectoryLocalPosition(Int_t layer,
 
 //_____________________________________________________________________________
 Bool_t
-S2sTrack::GetTrajectoryLocalDirection(Int_t layer,
+HypsTrack::GetTrajectoryLocalDirection(Int_t layer,
 				      Double_t& u, Double_t& v) const
 {
   try {
@@ -970,7 +970,7 @@ S2sTrack::GetTrajectoryLocalDirection(Int_t layer,
 
 //_____________________________________________________________________________
 Bool_t
-S2sTrack::GetTrajectoryLocalPosition(const TString& key,
+HypsTrack::GetTrajectoryLocalPosition(const TString& key,
 				     Double_t& x, Double_t& y) const
 {
   Int_t layer = gGeom.GetLayerId(key);
@@ -979,7 +979,7 @@ S2sTrack::GetTrajectoryLocalPosition(const TString& key,
 
 //_____________________________________________________________________________
 Bool_t
-S2sTrack::GetTrajectoryLocalDirection(const TString& key,
+HypsTrack::GetTrajectoryLocalDirection(const TString& key,
 				      Double_t& u, Double_t& v) const
 {
   Int_t layer = gGeom.GetLayerId(key);

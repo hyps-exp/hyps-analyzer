@@ -1,23 +1,23 @@
 // -*- C++ -*-
 
-#ifndef S2S_FIELD_MAP_HH
-#define S2S_FIELD_MAP_HH
+#ifndef HYPS_FIELD_MAP_HH
+#define HYPS_FIELD_MAP_HH
 
 #include <vector>
 #include <TString.h>
 
 //_____________________________________________________________________________
-class S2sFieldMap
+class HypsFieldMap
 {
 public:
   static const TString& ClassName();
-  S2sFieldMap(const TString& file_name);
-  S2sFieldMap(const TString& file_name, const Double_t measure, const Double_t calc);
-  ~S2sFieldMap();
+  HypsFieldMap(const TString& file_name);
+  HypsFieldMap(const TString& file_name, const Double_t measure, const Double_t calc);
+  ~HypsFieldMap();
 
 private:
-  S2sFieldMap(const S2sFieldMap&);
-  S2sFieldMap& operator =(const S2sFieldMap&);
+  HypsFieldMap(const HypsFieldMap&);
+  HypsFieldMap& operator =(const HypsFieldMap&);
 
 private:
   struct XYZ { Double_t x, y, z; };
@@ -51,9 +51,9 @@ private:
 
 //_____________________________________________________________________________
 inline const TString&
-S2sFieldMap::ClassName()
+HypsFieldMap::ClassName()
 {
-  static TString s_name("S2sFieldMap");
+  static TString s_name("HypsFieldMap");
   return s_name;
 }
 

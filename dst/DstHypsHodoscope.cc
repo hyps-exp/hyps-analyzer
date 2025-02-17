@@ -39,7 +39,7 @@ const auto& gPHC  = HodoPHCMan::GetInstance();
 const auto& gCounter = debug::ObjectCounter::GetInstance();
 const Bool_t USE_M2 = false;
 const Bool_t USE_XYCut = false;
-TString ClassName() { return TString("DstS2sHodoscope"); }
+TString ClassName() { return TString("DstHypsHodoscope"); }
 }
 
 namespace dst
@@ -47,13 +47,13 @@ namespace dst
 enum kArgc
 {
   kProcess, kConfFile,
-  kS2sTracking, kHodoscope, kOutFile, nArgc
+  kHypsTracking, kHodoscope, kOutFile, nArgc
 };
 std::vector<TString> ArgName =
-{ "[Process]", "[ConfFile]", "[S2sTracking]",
+{ "[Process]", "[ConfFile]", "[HypsTracking]",
   "[Hodoscope]", "[OutFile]" };
 std::vector<TString> TreeName =
-{ "", "", "s2s", "hodo", "" };
+{ "", "", "hyps", "hodo", "" };
 std::vector<TFile*> TFileCont;
 std::vector<TTree*> TTreeCont;
 std::vector<TTreeReader*> TTreeReaderCont;
@@ -72,26 +72,26 @@ struct Event
   Double_t u0SdcOut[MaxHits];
   Double_t v0SdcOut[MaxHits];
 
-  // S2sTracking
-  Int_t ntS2s;
+  // HypsTracking
+  Int_t ntHyps;
   Double_t path[MaxHits];
-  Double_t pS2s[MaxHits];
-  Double_t qS2s[MaxHits];
-  Double_t chisqrS2s[MaxHits];
-  Double_t thetaS2s[MaxHits];
-  Double_t xtgtS2s[MaxHits];
-  Double_t ytgtS2s[MaxHits];
-  Double_t utgtS2s[MaxHits];
-  Double_t vtgtS2s[MaxHits];
-  Double_t xtofS2s[MaxHits];
-  Double_t ytofS2s[MaxHits];
-  Double_t utofS2s[MaxHits];
-  Double_t vtofS2s[MaxHits];
-  Double_t lxtofS2s[MaxHits];
-  Double_t lytofS2s[MaxHits];
-  Double_t lutofS2s[MaxHits];
-  Double_t lvtofS2s[MaxHits];
-  Double_t tofsegS2s[MaxHits];
+  Double_t pHyps[MaxHits];
+  Double_t qHyps[MaxHits];
+  Double_t chisqrHyps[MaxHits];
+  Double_t thetaHyps[MaxHits];
+  Double_t xtgtHyps[MaxHits];
+  Double_t ytgtHyps[MaxHits];
+  Double_t utgtHyps[MaxHits];
+  Double_t vtgtHyps[MaxHits];
+  Double_t xtofHyps[MaxHits];
+  Double_t ytofHyps[MaxHits];
+  Double_t utofHyps[MaxHits];
+  Double_t vtofHyps[MaxHits];
+  Double_t lxtofHyps[MaxHits];
+  Double_t lytofHyps[MaxHits];
+  Double_t lutofHyps[MaxHits];
+  Double_t lvtofHyps[MaxHits];
+  Double_t tofsegHyps[MaxHits];
   Double_t vpx[NumOfLayersVP*MaxHits];
   Double_t vpy[NumOfLayersVP*MaxHits];
   Double_t vpu[NumOfLayersVP*MaxHits];
@@ -131,7 +131,7 @@ struct Event
   Double_t Ac1Seg[NumOfSegAC1];
   Double_t tAc1[NumOfSegAC1];
 
-  // S2sHodoscope
+  // HypsHodoscope
   Int_t    m2Combi;
   Double_t beta[MaxHits];
   Double_t stof[MaxHits];
@@ -162,25 +162,25 @@ struct Src
   Double_t u0SdcOut[MaxHits];
   Double_t v0SdcOut[MaxHits];
 
-  Int_t    ntS2s;
+  Int_t    ntHyps;
   Double_t path[MaxHits];
-  Double_t pS2s[MaxHits];
-  Double_t qS2s[MaxHits];
-  Double_t chisqrS2s[MaxHits];
-  Double_t thetaS2s[MaxHits];
-  Double_t xtgtS2s[MaxHits];
-  Double_t ytgtS2s[MaxHits];
-  Double_t utgtS2s[MaxHits];
-  Double_t vtgtS2s[MaxHits];
-  Double_t xtofS2s[MaxHits];
-  Double_t ytofS2s[MaxHits];
-  Double_t utofS2s[MaxHits];
-  Double_t vtofS2s[MaxHits];
-  Double_t lxtofS2s[MaxHits];
-  Double_t lytofS2s[MaxHits];
-  Double_t lutofS2s[MaxHits];
-  Double_t lvtofS2s[MaxHits];
-  Double_t tofsegS2s[MaxHits];
+  Double_t pHyps[MaxHits];
+  Double_t qHyps[MaxHits];
+  Double_t chisqrHyps[MaxHits];
+  Double_t thetaHyps[MaxHits];
+  Double_t xtgtHyps[MaxHits];
+  Double_t ytgtHyps[MaxHits];
+  Double_t utgtHyps[MaxHits];
+  Double_t vtgtHyps[MaxHits];
+  Double_t xtofHyps[MaxHits];
+  Double_t ytofHyps[MaxHits];
+  Double_t utofHyps[MaxHits];
+  Double_t vtofHyps[MaxHits];
+  Double_t lxtofHyps[MaxHits];
+  Double_t lytofHyps[MaxHits];
+  Double_t lutofHyps[MaxHits];
+  Double_t lvtofHyps[MaxHits];
+  Double_t tofsegHyps[MaxHits];
   Double_t vpx[NumOfLayersVP];
   Double_t vpy[NumOfLayersVP];
   Double_t vpu[NumOfLayersVP];
@@ -280,7 +280,7 @@ dst::InitializeEvent()
 {
   event.status   = 0;
   event.ntSdcOut = 0;
-  event.ntS2s = 0;
+  event.ntHyps = 0;
   event.nhBh1    = 0;
   event.nhBh2    = 0;
   event.nhTof    = 0;
@@ -304,23 +304,23 @@ dst::InitializeEvent()
     event.u0SdcOut[i]     = qnan;
     event.v0SdcOut[i]     = qnan;
     event.path[i]         = qnan;
-    event.pS2s[i]      = qnan;
-    event.qS2s[i]      = qnan;
-    event.chisqrS2s[i] = qnan;
-    event.thetaS2s[i] = qnan;
-    event.xtgtS2s[i]  = qnan;
-    event.ytgtS2s[i]  = qnan;
-    event.utgtS2s[i]  = qnan;
-    event.vtgtS2s[i]  = qnan;
-    event.xtofS2s[i]  = qnan;
-    event.ytofS2s[i]  = qnan;
-    event.utofS2s[i]  = qnan;
-    event.vtofS2s[i]  = qnan;
-    event.lxtofS2s[i]  = qnan;
-    event.lytofS2s[i]  = qnan;
-    event.lutofS2s[i]  = qnan;
-    event.lvtofS2s[i]  = qnan;
-    event.tofsegS2s[i]  = qnan;
+    event.pHyps[i]      = qnan;
+    event.qHyps[i]      = qnan;
+    event.chisqrHyps[i] = qnan;
+    event.thetaHyps[i] = qnan;
+    event.xtgtHyps[i]  = qnan;
+    event.ytgtHyps[i]  = qnan;
+    event.utgtHyps[i]  = qnan;
+    event.vtgtHyps[i]  = qnan;
+    event.xtofHyps[i]  = qnan;
+    event.ytofHyps[i]  = qnan;
+    event.utofHyps[i]  = qnan;
+    event.vtofHyps[i]  = qnan;
+    event.lxtofHyps[i]  = qnan;
+    event.lytofHyps[i]  = qnan;
+    event.lutofHyps[i]  = qnan;
+    event.lvtofHyps[i]  = qnan;
+    event.tofsegHyps[i]  = qnan;
   }
 
   for (Int_t l = 0; l < NumOfLayersVP; ++l) {
@@ -421,7 +421,7 @@ dst::DstRead(Int_t ievent)
   HF1(1, event.status++);
 
   event.ntSdcOut = src.ntSdcOut;
-  event.ntS2s = src.ntS2s;
+  event.ntHyps = src.ntHyps;
   event.nhBh1    = src.nhBh1;
   event.nhBh2    = src.nhBh2;
   event.nhTof    = src.nhTof;
@@ -429,7 +429,7 @@ dst::DstRead(Int_t ievent)
 
 #if 0
   std::cout<<"[event]: "<<std::setw(6)<<ievent<<" ";
-  std::cout<<"[ntS2s]: "<<std::setw(2)<<src.ntS2s<<" ";
+  std::cout<<"[ntHyps]: "<<std::setw(2)<<src.ntHyps<<" ";
   std::cout<<"[nhBh1]: "<<std::setw(2)<<src.nhBh1<<" ";
   std::cout<<"[nhBh2]: "<<std::setw(2)<<src.nhBh2<<" ";
   std::cout<<"[nhTof]: "<<std::setw(2)<<src.nhTof<<" "<<std::endl;
@@ -452,9 +452,9 @@ dst::DstRead(Int_t ievent)
   // if(event.nhTof<=0) return true;
   HF1(1, event.status++);
 
-  // if(event.ntS2s<=0) return true;
-  // if(event.ntS2s>MaxHits)
-  //   event.ntS2s = MaxHits;
+  // if(event.ntHyps<=0) return true;
+  // if(event.ntHyps>MaxHits)
+  //   event.ntHyps = MaxHits;
 
   HF1(1, event.status++);
 
@@ -518,7 +518,7 @@ dst::DstRead(Int_t ievent)
     event.tAc1[it]   = src.tAc1[it];
   }
 
-  Int_t m2Combi = event.nhTof*event.ntS2s;
+  Int_t m2Combi = event.nhTof*event.ntHyps;
   if(m2Combi>MaxHits || m2Combi<0){
     std::cout << FUNC_NAME << " too much m2Combi : " << m2Combi << std::endl;
     return false;
@@ -527,45 +527,45 @@ dst::DstRead(Int_t ievent)
 
   HF1(1, event.status++);
   Int_t mm=0;
-  for(Int_t it=0; it<src.ntS2s; ++it){
+  for(Int_t it=0; it<src.ntHyps; ++it){
     event.path[it] = src.path[it];
-    event.pS2s[it] = src.pS2s[it];
-    event.qS2s[it] = src.qS2s[it];
-    event.chisqrS2s[it] = src.chisqrS2s[it];
-    event.thetaS2s[it]  = src.thetaS2s[it];
-    event.xtgtS2s[it] = src.xtgtS2s[it];
-    event.ytgtS2s[it] = src.ytgtS2s[it];
-    event.utgtS2s[it] = src.utgtS2s[it];
-    event.vtgtS2s[it] = src.vtgtS2s[it];
-    event.xtofS2s[it] = src.xtofS2s[it];
-    event.ytofS2s[it] = src.ytofS2s[it];
-    event.utofS2s[it] = src.utofS2s[it];
-    event.vtofS2s[it] = src.vtofS2s[it];
-    event.lxtofS2s[it] = src.lxtofS2s[it];
-    event.lytofS2s[it] = src.lytofS2s[it];
-    event.lutofS2s[it] = src.lutofS2s[it];
-    event.lvtofS2s[it] = src.lvtofS2s[it];
-    event.tofsegS2s[it] = src.tofsegS2s[it];
-    Double_t xtgt  = event.xtgtS2s[it];
-    Double_t ytgt  = event.ytgtS2s[it];
-    Double_t lytof = event.lytofS2s[it];
-    Double_t pS2s = event.pS2s[it];
-    Double_t qS2s = event.qS2s[it];
-    if(event.chisqrS2s[it] < 200){
-      HF1(10, pS2s);
+    event.pHyps[it] = src.pHyps[it];
+    event.qHyps[it] = src.qHyps[it];
+    event.chisqrHyps[it] = src.chisqrHyps[it];
+    event.thetaHyps[it]  = src.thetaHyps[it];
+    event.xtgtHyps[it] = src.xtgtHyps[it];
+    event.ytgtHyps[it] = src.ytgtHyps[it];
+    event.utgtHyps[it] = src.utgtHyps[it];
+    event.vtgtHyps[it] = src.vtgtHyps[it];
+    event.xtofHyps[it] = src.xtofHyps[it];
+    event.ytofHyps[it] = src.ytofHyps[it];
+    event.utofHyps[it] = src.utofHyps[it];
+    event.vtofHyps[it] = src.vtofHyps[it];
+    event.lxtofHyps[it] = src.lxtofHyps[it];
+    event.lytofHyps[it] = src.lytofHyps[it];
+    event.lutofHyps[it] = src.lutofHyps[it];
+    event.lvtofHyps[it] = src.lvtofHyps[it];
+    event.tofsegHyps[it] = src.tofsegHyps[it];
+    Double_t xtgt  = event.xtgtHyps[it];
+    Double_t ytgt  = event.ytgtHyps[it];
+    Double_t lytof = event.lytofHyps[it];
+    Double_t pHyps = event.pHyps[it];
+    Double_t qHyps = event.qHyps[it];
+    if(event.chisqrHyps[it] < 200){
+      HF1(10, pHyps);
       HF1(13, event.path[it]);
-      HF1(50, event.chisqrS2s[it]);
-      HF1(51, event.xtofS2s[it]);
-      HF1(52, event.ytofS2s[it]);
-      HF1(53, event.utofS2s[it]);
-      HF1(54, event.vtofS2s[it]);
-      HF1(55, event.lxtofS2s[it]);
-      HF1(56, event.lytofS2s[it]);
-      HF1(57, event.lutofS2s[it]);
-      HF1(58, event.lvtofS2s[it]);
-      HF1(59, event.tofsegS2s[it]);
+      HF1(50, event.chisqrHyps[it]);
+      HF1(51, event.xtofHyps[it]);
+      HF1(52, event.ytofHyps[it]);
+      HF1(53, event.utofHyps[it]);
+      HF1(54, event.vtofHyps[it]);
+      HF1(55, event.lxtofHyps[it]);
+      HF1(56, event.lytofHyps[it]);
+      HF1(57, event.lutofHyps[it]);
+      HF1(58, event.lvtofHyps[it]);
+      HF1(59, event.tofsegHyps[it]);
     }
-    if(src.ntS2s == 1){
+    if(src.ntHyps == 1){
       for (Int_t l = 0; l < NumOfLayersVP; ++l) {
 	event.vpx[l] = src.vpx[l];
 	event.vpy[l] = src.vpy[l];
@@ -575,22 +575,22 @@ dst::DstRead(Int_t ievent)
     }
     if(it == 0){
       event.tTofCalc[Event::Pion] =
-        Kinematics::CalcTimeOfFlight(event.pS2s[it],
+        Kinematics::CalcTimeOfFlight(event.pHyps[it],
                                      event.path[it],
                                      pdg::PionMass());
       event.tTofCalc[Event::Kaon] =
-        Kinematics::CalcTimeOfFlight(event.pS2s[it],
+        Kinematics::CalcTimeOfFlight(event.pHyps[it],
                                      event.path[it],
                                      pdg::KaonMass());
       event.tTofCalc[Event::Proton] =
-        Kinematics::CalcTimeOfFlight(event.pS2s[it],
+        Kinematics::CalcTimeOfFlight(event.pHyps[it],
                                      event.path[it],
                                      pdg::ProtonMass());
     }
 
     for(Int_t itof=0; itof<src.nhTof; ++itof){
       Int_t tofseg = (Int_t)event.TofSeg[itof];
-      if( tofseg != event.tofsegS2s[0] ) continue;
+      if( tofseg != event.tofsegHyps[0] ) continue;
 
       ////////// TimeCut
       Double_t stof = event.tTof[itof] - time0 + StofOffset;
@@ -600,12 +600,12 @@ dst::DstRead(Int_t ievent)
       event.beta[mm] = beta;
       event.stof[mm] = stof;// - event.tTofCalc[0];
       event.cstof[mm] = cstof;
-      Double_t m2 = Kinematics::MassSquare(pS2s, event.path[it], cstof);
+      Double_t m2 = Kinematics::MassSquare(pHyps, event.path[it], cstof);
       event.m2[mm] = m2;
-      // Bool_t is_pion = (// qS2s > 0
+      // Bool_t is_pion = (// qHyps > 0
       //                   // &&
       //                   TMath::Abs(m2-pdg::PionMass()*pdg::PionMass()) < 0.1);
-      // Bool_t is_kaon = (qS2s > 0
+      // Bool_t is_kaon = (qHyps > 0
       //                   && TMath::Abs(m2-pdg::KaonMass()*pdg::KaonMass()) < 0.12);
 #if 0
       std::cout << "#D DebugPrint() Event : " << ievent << std::endl
@@ -614,11 +614,11 @@ dst::DstRead(Int_t ievent)
 		<< "   offset  : " << StofOffset << std::endl
 		<< "   tTof    : " << event.tTof[itof] << std::endl
 		<< "   stof    : " << stof << std::endl
-		<< "   pS2s    : " << pS2s << std::endl
+		<< "   pHyps    : " << pHyps << std::endl
 		<< "   m2      : " << m2 << std::endl;
 #endif
 
-      if(event.chisqrS2s[it] < 200.){
+      if(event.chisqrHyps[it] < 200.){
         for(Int_t ip=0; ip<Event::nParticle; ++ip){
           if(USE_M2){
             if(ip == Event::Pion && TMath::Abs(m2-0.0194) > 0.1) continue;
@@ -672,16 +672,16 @@ dst::DstRead(Int_t ievent)
 	      }
 	    }
 	  }
-	  HF1(11, qS2s*m2);
+	  HF1(11, qHyps*m2);
 	  HF1(12, beta);
 	  HF1(14, stof);
-	  HF2(20, qS2s*m2, pS2s);
+	  HF2(20, qHyps*m2, pHyps);
 	  if(!TMath::IsNaN(event.Time0Seg)){
-	    HF1(1100+(Int_t)event.Time0Seg, qS2s*m2);
-	    HF2(1200+(Int_t)event.Time0Seg, qS2s*m2, pS2s);
+	    HF1(1100+(Int_t)event.Time0Seg, qHyps*m2);
+	    HF2(1200+(Int_t)event.Time0Seg, qHyps*m2, pHyps);
 	  }
-	  HF1(2100+tofseg, qS2s*m2);
-	  HF2(2200+tofseg, qS2s*m2, pS2s);
+	  HF1(2100+tofseg, qHyps*m2);
+	  HF2(2200+tofseg, qHyps*m2, pHyps);
 	}
       }
       ++mm;
@@ -723,34 +723,34 @@ ConfMan::InitializeHistograms()
 
   TString name[Event::nParticle] = { "Pion", "Kaon", "Proton" };
 
-  HB1(10, "pS2s",    NBinP,  MinP, MaxP);
+  HB1(10, "pHyps",    NBinP,  MinP, MaxP);
   HB1(11, "ChargexMassSquare", NBinM2, MinM2, MaxM2);
   HB1(12, "beta", 500, 0., 1.);
   HB1(13, "path", 500, 3000., 8000.);
   HB1(14, "stof", 500, 0., 100.);
-  HB2(20, "pS2s % ChargexMassSquare", NBinM2, MinM2, MaxM2, NBinP, MinP, MaxP);
+  HB2(20, "pHyps % ChargexMassSquare", NBinM2, MinM2, MaxM2, NBinP, MinP, MaxP);
 
-  HB1(50, "Chisqr S2sTrack", 500, 0., 50.);
-  HB1(51, "Xtof S2sTrack", 200, -100., 100.);
-  HB1(52, "Ytof S2sTrack", 400, -200., 200.);
-  HB1(53, "Utof S2sTrack", 300, -0.30, 0.30);
-  HB1(54, "Vtof S2sTrack", 300, -0.30, 0.30);
-  HB1(55, "Local Xtof S2sTrack", 700, -700., 700.);
-  HB1(56, "Local Ytof S2sTrack", 350, -350., 350.);
-  HB1(57, "Local Utof S2sTrack", 300, -0.30, 0.30);
-  HB1(58, "Local Vtof S2sTrack", 300, -0.30, 0.30);
-  HB1(59, "tofseg S2sTrack", 21, 0, 21);
+  HB1(50, "Chisqr HypsTrack", 500, 0., 50.);
+  HB1(51, "Xtof HypsTrack", 200, -100., 100.);
+  HB1(52, "Ytof HypsTrack", 400, -200., 200.);
+  HB1(53, "Utof HypsTrack", 300, -0.30, 0.30);
+  HB1(54, "Vtof HypsTrack", 300, -0.30, 0.30);
+  HB1(55, "Local Xtof HypsTrack", 700, -700., 700.);
+  HB1(56, "Local Ytof HypsTrack", 350, -350., 350.);
+  HB1(57, "Local Utof HypsTrack", 300, -0.30, 0.30);
+  HB1(58, "Local Vtof HypsTrack", 300, -0.30, 0.30);
+  HB1(59, "tofseg HypsTrack", 21, 0, 21);
 
   for(Int_t i=0;i<NumOfSegBH2;++i){
     HB1(1100+i+1, Form("ChargexMassSquare [BH2-%d]", i+1),
         NBinM2, MinM2, MaxM2);
-    HB2(1200+i+1, Form("pS2s %% ChargexMassSquare [BH2-%d]", i+1),
+    HB2(1200+i+1, Form("pHyps %% ChargexMassSquare [BH2-%d]", i+1),
         NBinM2, MinM2, MaxM2, NBinP, MinP, MaxP);
   }
   for(Int_t i=0;i<NumOfSegTOF;++i){
     HB1(2100+i+1, Form("ChargexMassSquare [TOF-%d]", i+1),
         NBinM2, MinM2, MaxM2);
-    HB2(2200+i+1, Form("pS2s %% ChargexMassSquare [TOF-%d]", i+1),
+    HB2(2200+i+1, Form("pHyps %% ChargexMassSquare [TOF-%d]", i+1),
         NBinM2, MinM2, MaxM2, NBinP, MinP, MaxP);
   }
   // for TOF Param
@@ -791,7 +791,7 @@ ConfMan::InitializeHistograms()
     }
   }
 
-  HBTree("shodo", "tree of DstS2sHodoscope");
+  HBTree("shodo", "tree of DstHypsHodoscope");
   tree->Branch("trigflag",   event.trigflag,  Form("trigflag[%d]/I", NumOfSegTrig));
   tree->Branch("trigpat",    event.trigpat,   Form("trigpat[%d]/I", NumOfSegTrig));
   tree->Branch("status",     &event.status,      "status/I");
@@ -837,25 +837,25 @@ ConfMan::InitializeHistograms()
   tree->Branch("y0SdcOut", event.y0SdcOut, "y0SdcOut[ntSdcOut]/D");
   tree->Branch("u0SdcOut", event.u0SdcOut, "u0SdcOut[ntSdcOut]/D");
   tree->Branch("v0SdcOut", event.v0SdcOut, "v0SdcOut[ntSdcOut]/D");
-  tree->Branch("ntS2s", &event.ntS2s,  "ntS2s/I");
-  tree->Branch("path",      event.path,      "path[ntS2s]/D");
-  tree->Branch("pS2s",   event.pS2s,   "pS2s[ntS2s]/D");
-  tree->Branch("qS2s",   event.qS2s,   "qS2s[ntS2s]/D");
-  tree->Branch("chisqrS2s", event.chisqrS2s, "chisqrS2s[ntS2s]/D");
-  tree->Branch("thetaS2s",   event.thetaS2s,  "thetaS2s[ntS2s]/D");
-  tree->Branch("xtgtS2s",    event.xtgtS2s,   "xtgtS2s[ntS2s]/D");
-  tree->Branch("ytgtS2s",    event.ytgtS2s,   "ytgtS2s[ntS2s]/D");
-  tree->Branch("utgtS2s",    event.utgtS2s,   "utgtS2s[ntS2s]/D");
-  tree->Branch("vtgtS2s",    event.vtgtS2s,   "vtgtS2s[ntS2s]/D");
-  tree->Branch("xtofS2s",    event.xtofS2s,   "xtofS2s[ntS2s]/D");
-  tree->Branch("ytofS2s",    event.ytofS2s,   "ytofS2s[ntS2s]/D");
-  tree->Branch("utofS2s",    event.utofS2s,   "utofS2s[ntS2s]/D");
-  tree->Branch("vtofS2s",    event.vtofS2s,   "vtofS2s[ntS2s]/D");
-  tree->Branch("lxtofS2s",    event.lxtofS2s,   "lxtofS2s[ntS2s]/D");
-  tree->Branch("lytofS2s",    event.lytofS2s,   "lytofS2s[ntS2s]/D");
-  tree->Branch("lutofS2s",    event.lutofS2s,   "lutofS2s[ntS2s]/D");
-  tree->Branch("lvtofS2s",    event.lvtofS2s,   "lvtofS2s[ntS2s]/D");
-  tree->Branch("tofsegS2s",  event.tofsegS2s, "tofsegS2s[ntS2s]/D");
+  tree->Branch("ntHyps", &event.ntHyps,  "ntHyps/I");
+  tree->Branch("path",      event.path,      "path[ntHyps]/D");
+  tree->Branch("pHyps",   event.pHyps,   "pHyps[ntHyps]/D");
+  tree->Branch("qHyps",   event.qHyps,   "qHyps[ntHyps]/D");
+  tree->Branch("chisqrHyps", event.chisqrHyps, "chisqrHyps[ntHyps]/D");
+  tree->Branch("thetaHyps",   event.thetaHyps,  "thetaHyps[ntHyps]/D");
+  tree->Branch("xtgtHyps",    event.xtgtHyps,   "xtgtHyps[ntHyps]/D");
+  tree->Branch("ytgtHyps",    event.ytgtHyps,   "ytgtHyps[ntHyps]/D");
+  tree->Branch("utgtHyps",    event.utgtHyps,   "utgtHyps[ntHyps]/D");
+  tree->Branch("vtgtHyps",    event.vtgtHyps,   "vtgtHyps[ntHyps]/D");
+  tree->Branch("xtofHyps",    event.xtofHyps,   "xtofHyps[ntHyps]/D");
+  tree->Branch("ytofHyps",    event.ytofHyps,   "ytofHyps[ntHyps]/D");
+  tree->Branch("utofHyps",    event.utofHyps,   "utofHyps[ntHyps]/D");
+  tree->Branch("vtofHyps",    event.vtofHyps,   "vtofHyps[ntHyps]/D");
+  tree->Branch("lxtofHyps",    event.lxtofHyps,   "lxtofHyps[ntHyps]/D");
+  tree->Branch("lytofHyps",    event.lytofHyps,   "lytofHyps[ntHyps]/D");
+  tree->Branch("lutofHyps",    event.lutofHyps,   "lutofHyps[ntHyps]/D");
+  tree->Branch("lvtofHyps",    event.lvtofHyps,   "lvtofHyps[ntHyps]/D");
+  tree->Branch("tofsegHyps",  event.tofsegHyps, "tofsegHyps[ntHyps]/D");
   tree->Branch("vpx", event.vpx, Form("vpx[%d]/D", NumOfLayersVP));
   tree->Branch("vpy", event.vpy, Form("vpy[%d]/D", NumOfLayersVP));
   tree->Branch("vpu", event.vpu, Form("vpu[%d]/D", NumOfLayersVP));
@@ -943,66 +943,66 @@ ConfMan::InitializeHistograms()
   TTreeCont[kHodoscope]->SetBranchAddress("Ac1Seg",src.Ac1Seg);
   TTreeCont[kHodoscope]->SetBranchAddress("tAc1",  src.tAc1);
 
-  TTreeCont[kS2sTracking]->SetBranchStatus("*",      0);
-  TTreeCont[kS2sTracking]->SetBranchStatus("ntSdcOut", 1);
-  TTreeCont[kS2sTracking]->SetBranchStatus("chisqrSdcOut", 1);
-  TTreeCont[kS2sTracking]->SetBranchStatus("x0SdcOut", 1);
-  TTreeCont[kS2sTracking]->SetBranchStatus("y0SdcOut", 1);
-  TTreeCont[kS2sTracking]->SetBranchStatus("u0SdcOut", 1);
-  TTreeCont[kS2sTracking]->SetBranchStatus("v0SdcOut", 1);
-  TTreeCont[kS2sTracking]->SetBranchStatus("ntS2s",     1);
-  TTreeCont[kS2sTracking]->SetBranchStatus("path",         1);
-  TTreeCont[kS2sTracking]->SetBranchStatus("pS2s",      1);
-  TTreeCont[kS2sTracking]->SetBranchStatus("qS2s",      1);
-  TTreeCont[kS2sTracking]->SetBranchStatus("chisqrS2s", 1);
-  TTreeCont[kS2sTracking]->SetBranchStatus("thetaS2s",  1);
-  TTreeCont[kS2sTracking]->SetBranchStatus("xtgtS2s",   1);
-  TTreeCont[kS2sTracking]->SetBranchStatus("ytgtS2s",   1);
-  TTreeCont[kS2sTracking]->SetBranchStatus("utgtS2s",   1);
-  TTreeCont[kS2sTracking]->SetBranchStatus("vtgtS2s",   1);
-  TTreeCont[kS2sTracking]->SetBranchStatus("xtofS2s",   1);
-  TTreeCont[kS2sTracking]->SetBranchStatus("ytofS2s",   1);
-  TTreeCont[kS2sTracking]->SetBranchStatus("utofS2s",   1);
-  TTreeCont[kS2sTracking]->SetBranchStatus("vtofS2s",   1);
-  TTreeCont[kS2sTracking]->SetBranchStatus("lxtofS2s",   1);
-  TTreeCont[kS2sTracking]->SetBranchStatus("lytofS2s",   1);
-  TTreeCont[kS2sTracking]->SetBranchStatus("lutofS2s",   1);
-  TTreeCont[kS2sTracking]->SetBranchStatus("lvtofS2s",   1);
-  TTreeCont[kS2sTracking]->SetBranchStatus("tofsegS2s", 1);
-  TTreeCont[kS2sTracking]->SetBranchStatus("vpx",          1);
-  TTreeCont[kS2sTracking]->SetBranchStatus("vpy",          1);
-  TTreeCont[kS2sTracking]->SetBranchStatus("vpu",          1);
-  TTreeCont[kS2sTracking]->SetBranchStatus("vpv",          1);
+  TTreeCont[kHypsTracking]->SetBranchStatus("*",      0);
+  TTreeCont[kHypsTracking]->SetBranchStatus("ntSdcOut", 1);
+  TTreeCont[kHypsTracking]->SetBranchStatus("chisqrSdcOut", 1);
+  TTreeCont[kHypsTracking]->SetBranchStatus("x0SdcOut", 1);
+  TTreeCont[kHypsTracking]->SetBranchStatus("y0SdcOut", 1);
+  TTreeCont[kHypsTracking]->SetBranchStatus("u0SdcOut", 1);
+  TTreeCont[kHypsTracking]->SetBranchStatus("v0SdcOut", 1);
+  TTreeCont[kHypsTracking]->SetBranchStatus("ntHyps",     1);
+  TTreeCont[kHypsTracking]->SetBranchStatus("path",         1);
+  TTreeCont[kHypsTracking]->SetBranchStatus("pHyps",      1);
+  TTreeCont[kHypsTracking]->SetBranchStatus("qHyps",      1);
+  TTreeCont[kHypsTracking]->SetBranchStatus("chisqrHyps", 1);
+  TTreeCont[kHypsTracking]->SetBranchStatus("thetaHyps",  1);
+  TTreeCont[kHypsTracking]->SetBranchStatus("xtgtHyps",   1);
+  TTreeCont[kHypsTracking]->SetBranchStatus("ytgtHyps",   1);
+  TTreeCont[kHypsTracking]->SetBranchStatus("utgtHyps",   1);
+  TTreeCont[kHypsTracking]->SetBranchStatus("vtgtHyps",   1);
+  TTreeCont[kHypsTracking]->SetBranchStatus("xtofHyps",   1);
+  TTreeCont[kHypsTracking]->SetBranchStatus("ytofHyps",   1);
+  TTreeCont[kHypsTracking]->SetBranchStatus("utofHyps",   1);
+  TTreeCont[kHypsTracking]->SetBranchStatus("vtofHyps",   1);
+  TTreeCont[kHypsTracking]->SetBranchStatus("lxtofHyps",   1);
+  TTreeCont[kHypsTracking]->SetBranchStatus("lytofHyps",   1);
+  TTreeCont[kHypsTracking]->SetBranchStatus("lutofHyps",   1);
+  TTreeCont[kHypsTracking]->SetBranchStatus("lvtofHyps",   1);
+  TTreeCont[kHypsTracking]->SetBranchStatus("tofsegHyps", 1);
+  TTreeCont[kHypsTracking]->SetBranchStatus("vpx",          1);
+  TTreeCont[kHypsTracking]->SetBranchStatus("vpy",          1);
+  TTreeCont[kHypsTracking]->SetBranchStatus("vpu",          1);
+  TTreeCont[kHypsTracking]->SetBranchStatus("vpv",          1);
 
-  TTreeCont[kS2sTracking]->SetBranchAddress("ntSdcOut", &src.ntSdcOut);
-  TTreeCont[kS2sTracking]->SetBranchAddress("chisqrSdcOut", src.chisqrSdcOut);
-  TTreeCont[kS2sTracking]->SetBranchAddress("x0SdcOut", src.x0SdcOut);
-  TTreeCont[kS2sTracking]->SetBranchAddress("y0SdcOut", src.y0SdcOut);
-  TTreeCont[kS2sTracking]->SetBranchAddress("u0SdcOut", src.u0SdcOut);
-  TTreeCont[kS2sTracking]->SetBranchAddress("v0SdcOut", src.v0SdcOut);
-  TTreeCont[kS2sTracking]->SetBranchAddress("ntS2s", &src.ntS2s);
-  TTreeCont[kS2sTracking]->SetBranchAddress("path",     src.path);
-  TTreeCont[kS2sTracking]->SetBranchAddress("pS2s",  src.pS2s);
-  TTreeCont[kS2sTracking]->SetBranchAddress("qS2s",  src.qS2s);
-  TTreeCont[kS2sTracking]->SetBranchAddress("chisqrS2s", src.chisqrS2s);
-  TTreeCont[kS2sTracking]->SetBranchAddress("thetaS2s", src.thetaS2s);
-  TTreeCont[kS2sTracking]->SetBranchAddress("xtgtS2s", src.xtgtS2s);
-  TTreeCont[kS2sTracking]->SetBranchAddress("ytgtS2s", src.ytgtS2s);
-  TTreeCont[kS2sTracking]->SetBranchAddress("utgtS2s", src.utgtS2s);
-  TTreeCont[kS2sTracking]->SetBranchAddress("vtgtS2s", src.vtgtS2s);
-  TTreeCont[kS2sTracking]->SetBranchAddress("xtofS2s",   src.xtofS2s);
-  TTreeCont[kS2sTracking]->SetBranchAddress("ytofS2s",   src.ytofS2s);
-  TTreeCont[kS2sTracking]->SetBranchAddress("utofS2s",   src.utofS2s);
-  TTreeCont[kS2sTracking]->SetBranchAddress("vtofS2s",   src.vtofS2s);
-  TTreeCont[kS2sTracking]->SetBranchAddress("lxtofS2s",   src.lxtofS2s);
-  TTreeCont[kS2sTracking]->SetBranchAddress("lytofS2s",   src.lytofS2s);
-  TTreeCont[kS2sTracking]->SetBranchAddress("lutofS2s",   src.lutofS2s);
-  TTreeCont[kS2sTracking]->SetBranchAddress("lvtofS2s",   src.lvtofS2s);
-  TTreeCont[kS2sTracking]->SetBranchAddress("tofsegS2s", src.tofsegS2s);
-  TTreeCont[kS2sTracking]->SetBranchAddress("vpx",        src.vpx);
-  TTreeCont[kS2sTracking]->SetBranchAddress("vpy",        src.vpy);
-  TTreeCont[kS2sTracking]->SetBranchAddress("vpu",        src.vpu);
-  TTreeCont[kS2sTracking]->SetBranchAddress("vpv",        src.vpv);
+  TTreeCont[kHypsTracking]->SetBranchAddress("ntSdcOut", &src.ntSdcOut);
+  TTreeCont[kHypsTracking]->SetBranchAddress("chisqrSdcOut", src.chisqrSdcOut);
+  TTreeCont[kHypsTracking]->SetBranchAddress("x0SdcOut", src.x0SdcOut);
+  TTreeCont[kHypsTracking]->SetBranchAddress("y0SdcOut", src.y0SdcOut);
+  TTreeCont[kHypsTracking]->SetBranchAddress("u0SdcOut", src.u0SdcOut);
+  TTreeCont[kHypsTracking]->SetBranchAddress("v0SdcOut", src.v0SdcOut);
+  TTreeCont[kHypsTracking]->SetBranchAddress("ntHyps", &src.ntHyps);
+  TTreeCont[kHypsTracking]->SetBranchAddress("path",     src.path);
+  TTreeCont[kHypsTracking]->SetBranchAddress("pHyps",  src.pHyps);
+  TTreeCont[kHypsTracking]->SetBranchAddress("qHyps",  src.qHyps);
+  TTreeCont[kHypsTracking]->SetBranchAddress("chisqrHyps", src.chisqrHyps);
+  TTreeCont[kHypsTracking]->SetBranchAddress("thetaHyps", src.thetaHyps);
+  TTreeCont[kHypsTracking]->SetBranchAddress("xtgtHyps", src.xtgtHyps);
+  TTreeCont[kHypsTracking]->SetBranchAddress("ytgtHyps", src.ytgtHyps);
+  TTreeCont[kHypsTracking]->SetBranchAddress("utgtHyps", src.utgtHyps);
+  TTreeCont[kHypsTracking]->SetBranchAddress("vtgtHyps", src.vtgtHyps);
+  TTreeCont[kHypsTracking]->SetBranchAddress("xtofHyps",   src.xtofHyps);
+  TTreeCont[kHypsTracking]->SetBranchAddress("ytofHyps",   src.ytofHyps);
+  TTreeCont[kHypsTracking]->SetBranchAddress("utofHyps",   src.utofHyps);
+  TTreeCont[kHypsTracking]->SetBranchAddress("vtofHyps",   src.vtofHyps);
+  TTreeCont[kHypsTracking]->SetBranchAddress("lxtofHyps",   src.lxtofHyps);
+  TTreeCont[kHypsTracking]->SetBranchAddress("lytofHyps",   src.lytofHyps);
+  TTreeCont[kHypsTracking]->SetBranchAddress("lutofHyps",   src.lutofHyps);
+  TTreeCont[kHypsTracking]->SetBranchAddress("lvtofHyps",   src.lvtofHyps);
+  TTreeCont[kHypsTracking]->SetBranchAddress("tofsegHyps", src.tofsegHyps);
+  TTreeCont[kHypsTracking]->SetBranchAddress("vpx",        src.vpx);
+  TTreeCont[kHypsTracking]->SetBranchAddress("vpy",        src.vpy);
+  TTreeCont[kHypsTracking]->SetBranchAddress("vpu",        src.vpu);
+  TTreeCont[kHypsTracking]->SetBranchAddress("vpv",        src.vpv);
 
   return true;
 }

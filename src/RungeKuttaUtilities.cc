@@ -20,7 +20,7 @@
 #include "Exception.hh"
 #include "FieldMan.hh"
 #include "FuncName.hh"
-#include "S2sTrack.hh"
+#include "HypsTrack.hh"
 #include "PrintHelper.hh"
 
 namespace
@@ -819,9 +819,9 @@ RK::Trace(const RKCordParameter &initial, RKHitPointContainer &hitContainer)
       if(iPlane<0) {
 	if(gEvDisp.IsReady()){
 	  Double_t q = hitContainer[0].second.MomentumInGlobal().z();
-	  gEvDisp.DrawS2sTrack(iStep, StepPoint, q);
+	  gEvDisp.DrawHypsTrack(iStep, StepPoint, q);
         }
-	return S2sTrack::kPassed;
+	return HypsTrack::kPassed;
       }
     } // while(RKcheckCrossing())
 
@@ -833,7 +833,7 @@ RK::Trace(const RKCordParameter &initial, RKHitPointContainer &hitContainer)
 		  << " iPlane=" << std::dec << hitContainer[iPlane+1].first
 		  << std::endl;
 #endif
-      return S2sTrack::kExceedMaxPathLength;
+      return HypsTrack::kExceedMaxPathLength;
     }
     prevPoint = nextPoint;
   }// while(++iStep)
@@ -846,7 +846,7 @@ RK::Trace(const RKCordParameter &initial, RKHitPointContainer &hitContainer)
 	      << std::endl;
 #endif
 
-  return S2sTrack::kExceedMaxStep;
+  return HypsTrack::kExceedMaxStep;
 }
 
 //_____________________________________________________________________________
@@ -895,7 +895,7 @@ RK::TraceToLast(RKHitPointContainer& hitContainer)
       if(++iPlane>=nPlane){
 	if(gEvDisp.IsReady()){
 	  Double_t q = hitContainer[0].second.MomentumInGlobal().z();
-	  gEvDisp.DrawS2sTrackToLast(iStep, StepPoint, q);
+	  gEvDisp.DrawHypsTrackToLast(iStep, StepPoint, q);
 	}
 	return true;
       }

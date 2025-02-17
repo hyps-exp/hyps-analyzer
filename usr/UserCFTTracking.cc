@@ -25,7 +25,7 @@
 #include "HodoRawHit.hh"
 #include "DCAnalyzer.hh"
 #include "CFTLocalTrack.hh"
-#include "S2sLib.hh"
+#include "HypsLib.hh"
 #include "RawData.hh"
 #include "RootHelper.hh"
 #include "UserParamMan.hh"

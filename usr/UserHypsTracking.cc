@@ -24,7 +24,7 @@
 #include "HodoRawHit.hh"
 #include "MathTools.hh"
 #include "RMAnalyzer.hh"
-#include "S2sLib.hh"
+#include "HypsLib.hh"
 #include "MathTools.hh"
 #include "RawData.hh"
 #include "RootHelper.hh"
@@ -658,8 +658,8 @@ ProcessingNormal()
   //return true;
 
   //////////////HYPS Tracking
-  DCAna.TrackSearchS2s();
-  Int_t ntHyps = DCAna.GetNTracksS2s();
+  DCAna.TrackSearchHyps();
+  Int_t ntHyps = DCAna.GetNTracksHyps();
   if(MaxHits < ntHyps){
     std::cout << "#W too many ntHyps " << ntHyps << "/" << MaxHits << std::endl;
     ntHyps = MaxHits;
@@ -669,7 +669,7 @@ ProcessingNormal()
 
 
   for(Int_t i=0; i<ntHyps; ++i){
-    auto track = DCAna.GetS2sTrack(i);
+    auto track = DCAna.GetHypsTrack(i);
     if(!track) continue;
     // track->Print();
     Int_t nh = track->GetNHits();
@@ -833,7 +833,7 @@ ProcessingNormal()
   } // for in ntHyps
 
   for(Int_t i=0; i<ntHyps; ++i){
-    const auto& track = DCAna.GetS2sTrack(i);
+    const auto& track = DCAna.GetHypsTrack(i);
     if(!track) continue;
     const auto& trSdcIn =track->GetLocalTrackIn();
     const auto& trSdcOut=track->GetLocalTrackOut();
@@ -847,7 +847,7 @@ ProcessingNormal()
   }
 
   if(ntHyps==0) return true;
-  const auto& track = DCAna.GetS2sTrack(0);
+  const auto& track = DCAna.GetHypsTrack(0);
   Double_t path = track->PathLengthToTOF();
   Double_t p    = track->PrimaryMomentum().Mag();
   //Double_t tTof[Event::nParticle];

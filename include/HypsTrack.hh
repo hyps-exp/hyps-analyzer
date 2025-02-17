@@ -1,7 +1,7 @@
 // -*- C++ -*-
 
-#ifndef S2S_TRACK_HH
-#define S2S_TRACK_HH
+#ifndef HYPS_TRACK_HH
+#define HYPS_TRACK_HH
 
 #include <vector>
 #include <iosfwd>
@@ -21,16 +21,16 @@ class DCAnalyzer;
 class Hodo2Hit;
 
 //_____________________________________________________________________________
-class S2sTrack
+class HypsTrack
 {
 public:
   static const TString& ClassName();
-  S2sTrack(const DCLocalTrack* track_in, const DCLocalTrack* track_out);
-  ~S2sTrack();
+  HypsTrack(const DCLocalTrack* track_in, const DCLocalTrack* track_out);
+  ~HypsTrack();
 
 private:
-  S2sTrack(const S2sTrack&);
-  S2sTrack& operator =(const S2sTrack&);
+  HypsTrack(const HypsTrack&);
+  HypsTrack& operator =(const HypsTrack&);
 
 public:
   enum RKstatus { kInit,
@@ -122,18 +122,18 @@ private:
 
 //_____________________________________________________________________________
 inline const TString&
-S2sTrack::ClassName()
+HypsTrack::ClassName()
 {
-  static TString s_name("S2sTrack");
+  static TString s_name("HypsTrack");
   return s_name;
 }
 
 //_____________________________________________________________________________
-struct S2sTrackComp
-  : public std::binary_function<S2sTrack*, S2sTrack*, Bool_t>
+struct HypsTrackComp
+  : public std::binary_function<HypsTrack*, HypsTrack*, Bool_t>
 {
-  Bool_t operator()(const S2sTrack* const p1,
-                    const S2sTrack* const p2) const
+  Bool_t operator()(const HypsTrack* const p1,
+                    const HypsTrack* const p2) const
   {
     Int_t n1=p1->GetNHits(), n2=p2->GetNHits();
     if(n1>n2+1) return true;

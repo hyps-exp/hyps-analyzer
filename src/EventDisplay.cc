@@ -76,7 +76,7 @@
 #define Hist_Timing 0
 #define Hist_SdcOut 0
 #define Hist_BcIn   0
-#define DrawOneS2sTrack 1
+#define DrawOneHypsTrack 1
 #define CATCH      1
 
 namespace
@@ -201,16 +201,16 @@ EventDisplay::EventDisplay()
     m_SdcInTrack(),
     m_init_step_mark(),
     m_hs_step_mark(),
-    m_s2s_step_mark(),
-    m_s2s_step_mark_tolast(),
+    m_Hyps_step_mark(),
+    m_Hyps_step_mark_tolast(),
     m_TargetXZ_box(),
     m_TargetYZ_box(),
     m_VertexPointXZ(),
     m_VertexPointYZ(),
     m_HSMarkVertexXShs(),
-    m_S2sMarkVertexXShs(),
-    m_S2sMarkVertexX(),
-    m_S2sMarkVertexY(),
+    m_HypsMarkVertexXShs(),
+    m_HypsMarkVertexX(),
+    m_HypsMarkVertexY(),
     m_MissMomXZ_line(),
     m_MissMomYZ_line(),
     m_Tgt_Arc(),
@@ -2917,12 +2917,12 @@ EventDisplay::DrawMissingMomentum(const ThreeVector& mom, const ThreeVector& pos
 
 //_____________________________________________________________________________
 void
-EventDisplay::DrawS2sTrack(Int_t nStep, const std::vector<TVector3>& StepPoint,
+EventDisplay::DrawHypsTrack(Int_t nStep, const std::vector<TVector3>& StepPoint,
 			   Double_t q)
 {
 
-#if DrawOneS2sTrack
-  del::DeleteObject(m_s2s_step_mark);
+#if DrawOneHypsTrack
+  del::DeleteObject(m_Hyps_step_mark);
 #endif
 
   auto step_mark = new TPolyMarker3D(nStep);
@@ -2941,49 +2941,49 @@ EventDisplay::DrawS2sTrack(Int_t nStep, const std::vector<TVector3>& StepPoint,
   }
   step_mark->SetMarkerColor(color);
 
-  m_s2s_step_mark.push_back(step_mark);
+  m_Hyps_step_mark.push_back(step_mark);
 
   m_canvas->cd(1)->cd(2);
   step_mark->Draw();
   m_canvas->Update();
 
 #if Vertex
-  del::DeleteObject(m_S2sMarkVertexX);
-  m_S2sMarkVertexX = new TPolyMarker(nStep);
+  del::DeleteObject(m_HypsMarkVertexX);
+  m_HypsMarkVertexX = new TPolyMarker(nStep);
   for(Int_t i=0; i<nStep; ++i){
     Double_t x = StepPoint[i].x()-BeamAxis;
     Double_t z = StepPoint[i].z()-zTarget;
-    m_S2sMarkVertexX->SetPoint(i, z, x);
+    m_HypsMarkVertexX->SetPoint(i, z, x);
   }
-  m_S2sMarkVertexX->SetMarkerSize(0.4);
-  m_S2sMarkVertexX->SetMarkerColor(color);
-  m_S2sMarkVertexX->SetMarkerStyle(6);
+  m_HypsMarkVertexX->SetMarkerSize(0.4);
+  m_HypsMarkVertexX->SetMarkerColor(color);
+  m_HypsMarkVertexX->SetMarkerStyle(6);
   m_canvas_vertex->cd(1);
-  m_S2sMarkVertexX->Draw();
-  del::DeleteObject(m_S2sMarkVertexY);
-  m_S2sMarkVertexY = new TPolyMarker(nStep);
+  m_HypsMarkVertexX->Draw();
+  del::DeleteObject(m_HypsMarkVertexY);
+  m_HypsMarkVertexY = new TPolyMarker(nStep);
   for(Int_t i=0; i<nStep; ++i){
     Double_t y = StepPoint[i].y();
     Double_t z = StepPoint[i].z()-zTarget;
-    m_S2sMarkVertexY->SetPoint(i, z, y);
+    m_HypsMarkVertexY->SetPoint(i, z, y);
   }
-  m_S2sMarkVertexY->SetMarkerSize(0.4);
-  m_S2sMarkVertexY->SetMarkerColor(color);
-  m_S2sMarkVertexY->SetMarkerStyle(6);
+  m_HypsMarkVertexY->SetMarkerSize(0.4);
+  m_HypsMarkVertexY->SetMarkerColor(color);
+  m_HypsMarkVertexY->SetMarkerStyle(6);
   m_canvas_vertex->cd(2);
-  m_S2sMarkVertexY->Draw();
+  m_HypsMarkVertexY->Draw();
   m_canvas_vertex->Update();
 #endif
 }
 
 //_____________________________________________________________________________
 void
-EventDisplay::DrawS2sTrackToLast(Int_t nStep, const std::vector<TVector3>& StepPoint,
+EventDisplay::DrawHypsTrackToLast(Int_t nStep, const std::vector<TVector3>& StepPoint,
 				 Double_t q)
 {
 
-#if DrawOneS2sTrack
-  del::DeleteObject(m_s2s_step_mark_tolast);
+#if DrawOneHypsTrack
+  del::DeleteObject(m_Hyps_step_mark_tolast);
 #endif
 
   auto step_mark = new TPolyMarker3D(nStep);
@@ -3002,37 +3002,37 @@ EventDisplay::DrawS2sTrackToLast(Int_t nStep, const std::vector<TVector3>& StepP
   }
   step_mark->SetMarkerColor(color);
 
-  m_s2s_step_mark_tolast.push_back(step_mark);
+  m_Hyps_step_mark_tolast.push_back(step_mark);
 
   m_canvas->cd(1)->cd(2);
   step_mark->Draw();
   m_canvas->Update();
 
 #if Vertex
-  del::DeleteObject(m_S2sMarkVertexX);
-  m_S2sMarkVertexX = new TPolyMarker(nStep);
+  del::DeleteObject(m_HypsMarkVertexX);
+  m_HypsMarkVertexX = new TPolyMarker(nStep);
   for(Int_t i=0; i<nStep; ++i){
     Double_t x = StepPoint[i].x()-BeamAxis;
     Double_t z = StepPoint[i].z()-zTarget;
-    m_S2sMarkVertexX->SetPoint(i, z, x);
+    m_HypsMarkVertexX->SetPoint(i, z, x);
   }
-  m_S2sMarkVertexX->SetMarkerSize(0.4);
-  m_S2sMarkVertexX->SetMarkerColor(color);
-  m_S2sMarkVertexX->SetMarkerStyle(6);
+  m_HypsMarkVertexX->SetMarkerSize(0.4);
+  m_HypsMarkVertexX->SetMarkerColor(color);
+  m_HypsMarkVertexX->SetMarkerStyle(6);
   m_canvas_vertex->cd(1);
-  m_S2sMarkVertexX->Draw();
-  del::DeleteObject(m_S2sMarkVertexY);
-  m_S2sMarkVertexY = new TPolyMarker(nStep);
+  m_HypsMarkVertexX->Draw();
+  del::DeleteObject(m_HypsMarkVertexY);
+  m_HypsMarkVertexY = new TPolyMarker(nStep);
   for(Int_t i=0; i<nStep; ++i){
     Double_t y = StepPoint[i].y();
     Double_t z = StepPoint[i].z()-zTarget;
-    m_S2sMarkVertexY->SetPoint(i, z, y);
+    m_HypsMarkVertexY->SetPoint(i, z, y);
   }
-  m_S2sMarkVertexY->SetMarkerSize(0.4);
-  m_S2sMarkVertexY->SetMarkerColor(color);
-  m_S2sMarkVertexY->SetMarkerStyle(6);
+  m_HypsMarkVertexY->SetMarkerSize(0.4);
+  m_HypsMarkVertexY->SetMarkerColor(color);
+  m_HypsMarkVertexY->SetMarkerStyle(6);
   m_canvas_vertex->cd(2);
-  m_S2sMarkVertexY->Draw();
+  m_HypsMarkVertexY->Draw();
   m_canvas_vertex->Update();
 #endif
 }
@@ -3373,16 +3373,16 @@ EventDisplay::EndOfEvent()
   del::DeleteObject(m_SdcInTrack2);
   del::DeleteObject(m_SdcOutTrack);
   del::DeleteObject(m_hs_step_mark);
-  del::DeleteObject(m_s2s_step_mark);
-  del::DeleteObject(m_s2s_step_mark_tolast);
+  del::DeleteObject(m_Hyps_step_mark);
+  del::DeleteObject(m_Hyps_step_mark_tolast);
   del::DeleteObject(m_VertexPointXZ);
   del::DeleteObject(m_VertexPointYZ);
   del::DeleteObject(m_MissMomXZ_line);
   del::DeleteObject(m_MissMomYZ_line);
   del::DeleteObject(m_HSMarkVertexXShs);
-  del::DeleteObject(m_S2sMarkVertexXShs);
-  del::DeleteObject(m_S2sMarkVertexX);
-  del::DeleteObject(m_S2sMarkVertexY);
+  del::DeleteObject(m_HypsMarkVertexXShs);
+  del::DeleteObject(m_HypsMarkVertexX);
+  del::DeleteObject(m_HypsMarkVertexY);
   ResetVisibility();
   ResetHist();
 
@@ -3798,20 +3798,20 @@ EventDisplay::DrawBcOutTrack(Double_t x0, Double_t u0, Double_t y0, Double_t v0,
 
 //_____________________________________________________________________________
 void
-EventDisplay::DrawSdcInTrack(Double_t x0, Double_t u0, Double_t y0, Double_t v0, Bool_t flagS2s, Bool_t flagBeam)
+EventDisplay::DrawSdcInTrack(Double_t x0, Double_t u0, Double_t y0, Double_t v0, Bool_t flagHyps, Bool_t flagBeam)
 {
 #if Hist_BcIn
 
   Double_t z1 = -1500, z2 = 0;
   TLine *l = new TLine(x0+u0*z1, z1, x0+u0*z2, z2);
-  if (flagS2s)
+  if (flagHyps)
     l->SetLineColor(kRed);
   if (flagBeam)
     l->SetLineColor(kOrange);
   m_SdcInTrack2.push_back(l);
 
   TLine *l2 = new TLine(y0+v0*z1, z1, y0+v0*z2, z2);
-  if (flagS2s)
+  if (flagHyps)
     l2->SetLineColor(kRed);
   if (flagBeam)
     l2->SetLineColor(kOrange);
