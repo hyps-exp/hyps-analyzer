@@ -189,6 +189,18 @@ private:
   TNode                     *m_FBHwall_node;
   std::vector<TNode*>        m_FBHseg_node;
   TNode                     *m_TOFwall_node;
+  TNode                     *m_TOFwall_0_8_node;
+  TNode                     *m_TOFwall_1_9_node;
+  TNode                     *m_TOFwall_10_node;
+  TNode                     *m_TOFwall_11_node;
+  TNode                     *m_TOFwall_12_22_node;
+  TNode                     *m_TOFwall_13_23_node;
+  TNode                     *m_TOFwall_24_34_node;
+  TNode                     *m_TOFwall_25_35_node;
+  TNode                     *m_TOFwall_36_node;
+  TNode                     *m_TOFwall_37_node;
+  TNode                     *m_TOFwall_38_46_node;
+  TNode                     *m_TOFwall_39_47_node;    
   std::vector<TNode*>        m_TOFseg_node;
   TNode                     *m_AC1_node;
   TNode                     *m_WCwall_node;
@@ -231,10 +243,19 @@ private:
   std::vector<TArc*>         m_CFT_Arc_cont[NumOfPlaneCFT];
   TLineContainer             m_BGO_Line_cont[NumOfSegBGO];
   TLineContainer             m_PiID_Line_cont[NumOfSegPiID];
+  std::vector<TPolyLine3D*>  m_SdcInTrack_Catch_cont;  
   std::vector<TPolyLine3D*>  m_CFTTrack_cont;
   std::vector<TPolyLine*>    m_CFTTrack_xy_cont;
   std::vector<TPolyLine*>    m_CFTTrack_zx_cont;
   std::vector<TPolyLine*>    m_CFTTrack_zy_cont;
+  std::vector<TPolyLine*>    m_SdcInTrack_Catch_xy_cont;
+  std::vector<TPolyLine*>    m_SdcInTrack_Catch_zx_cont;
+  std::vector<TPolyLine*>    m_SdcInTrack_Catch_zy_cont;
+  // Tagger
+  TH2                       *m_hbase_tagger;
+  TLineContainer             m_TagSFF_Line_cont[NumOfSegTagSF];
+  TLineContainer             m_TagSFB_Line_cont[NumOfSegTagSF];
+  TLineContainer             m_TagPL_Line_cont[NumOfSegTagSF];    
 
   
 public:
@@ -260,6 +281,7 @@ public:
   Bool_t ConstructPiID();
   void FiberPosPhi(int layer, int seg, double *x, double *y) const;
   void BGOPos(int seg, double *x, double *y) const;
+  Bool_t ConstructTagger();    
   void DrawInitTrack(Int_t nStep, ThreeVector *StepPoint);
   void DrawInitTrack();
   void DrawHitWire(Int_t lid, Int_t hit_wire,
@@ -282,6 +304,7 @@ public:
                        Double_t q);
   void ShowHitFiber(Int_t layer, Int_t segment, Double_t pe, Double_t ctime);
   void ShowHitBGO(Int_t segment, Double_t de) const;
+  void ShowHitTagger(const TString& name, Int_t segment, Double_t de) const;    
   void DrawCFTLocalTrack( const CFTLocalTrack *tp, bool flagP, int k_color=0 );
   
   void DrawTarget();

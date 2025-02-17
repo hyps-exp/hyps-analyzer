@@ -696,7 +696,7 @@ ProcessingNormal()
 	*/
         Int_t layer2 = (Int_t)(plane/2);
         event.hitMeanSegPhi_16layer[layer2][event.nhPhi_16layer[layer2]]  = ms;
-        event.resPhi_16layer[layer2][event.nhPhi_16layer[layer2]]  = res_phi;
+        event.resPhi_16layer[layer2][event.nhPhi_16layer[layer2]]  = res_phi_cor;
         event.calZPhi_16layer[layer2][event.nhPhi_16layer[layer2]]  = z_cal;
         event.phi_16layer[layer2][event.nhPhi_16layer[layer2]]  = phi;
         event.nhPhi_16layer[layer2]++;

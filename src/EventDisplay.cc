@@ -193,6 +193,18 @@ EventDisplay::EventDisplay()
     m_target_node(),
     m_BH2wall_node(),
     m_TOFwall_node(),
+    m_TOFwall_0_8_node(),
+    m_TOFwall_1_9_node(),
+    m_TOFwall_10_node(),
+    m_TOFwall_11_node(),
+    m_TOFwall_12_22_node(),
+    m_TOFwall_13_23_node(),
+    m_TOFwall_24_34_node(),
+    m_TOFwall_25_35_node(),
+    m_TOFwall_36_node(),
+    m_TOFwall_37_node(),
+    m_TOFwall_38_46_node(),
+    m_TOFwall_39_47_node(),    
     m_AC1_node(),
     m_WCwall_node(),
     m_kurama_inner_node(),
@@ -217,7 +229,8 @@ EventDisplay::EventDisplay()
     m_CFRP_Arc(),
     m_hbase_catch(),
     m_hbase_catch_zx(),
-    m_hbase_catch_zy()        
+    m_hbase_catch_zy(),
+    m_hbase_tagger()
 {
 }
 
@@ -315,7 +328,7 @@ EventDisplay::Initialize()
 #endif
 
   m_canvas = new TCanvas("canvas", "HYPS Event Display",
-                         1800, 900);
+                         1800, 700);
   m_canvas->Divide(2, 1);
   m_canvas->cd(1)->Divide(1, 2);
   m_canvas->cd(1)->cd(1)->SetPad(0.00, 0.92, 1.00, 1.00);
@@ -335,6 +348,11 @@ EventDisplay::Initialize()
 
   m_canvas->Modified();
   m_canvas->Update();
+
+  m_canvas->cd(2)->Divide(1, 2);
+  m_canvas->cd(2)->cd(1)->SetPad(0.00, 0.37, 1.00, 1.00);
+  m_canvas->cd(2)->cd(2)->SetPad(0.00, 0.00, 1.00, 0.37);
+  ConstructTagger();
 
   /*
   m_canvas->cd(2)->Divide(1, 2);
@@ -1904,6 +1922,7 @@ EventDisplay::ConstructTarget()
 }
 
 //_____________________________________________________________________________
+#if 0
 Bool_t
 EventDisplay::ConstructTOF()
 {
@@ -1953,6 +1972,566 @@ EventDisplay::ConstructTOF()
                                       -tofSegLocalPos.y(),
                                       tofSegLocalPos.z()));
   }
+
+  m_node->cd();
+  ConstructionDone(__func__);
+  return true;
+}
+#endif
+
+//_____________________________________________________________________________
+Bool_t
+EventDisplay::ConstructTOF()
+{
+  Double_t LEPS_TOFSegX =  120.0/2.0; // X
+  Double_t LEPS_TOFSegY =  40.0/2.0; // Z
+  Double_t LEPS_TOFSegZ = 1800.0/2.0; // Y
+  Double_t LEPS_TOFPitch = 110.0; // X
+  
+  // segment 0, 2, 4, 6, 8
+  Int_t lid = gGeom.GetDetectorId("LEPS-TOF-UX-Tilt-R");
+  ThreeVector localPosSeg4(gGeom.CalcWirePosition(lid, 4), 0, 0);
+  ThreeVector globalPosSeg4=gGeom.Local2GlobalPos(lid, localPosSeg4);
+  std::cout << "globalPosSeg4 = " << globalPosSeg4 << std::endl;
+  Double_t rotMatTOF[9] = {};  
+  CalcRotMatrix(gGeom.GetTiltAngle(lid),
+                gGeom.GetRotAngle1(lid),
+                gGeom.GetRotAngle2(lid),
+                rotMatTOF);
+  new TRotMatrix("rotTOF_seg4", "rotTOF_seg4", rotMatTOF);  
+
+  Double_t TOFwallX_0_8 =  LEPS_TOFPitch * 8 + LEPS_TOFSegX*2; // X
+  Double_t TOFwallY_0_8 =  LEPS_TOFSegY; // Z
+  Double_t TOFwallZ_0_8 =  LEPS_TOFSegZ; // Y
+
+  new TBRIK("TOFwall_0_8_brik", "TOFwall_0_8_brik", "void",
+            TOFwallX_0_8, TOFwallY_0_8, TOFwallZ_0_8);
+
+  m_TOFwall_0_8_node = new TNode("TOFwall_0_8_node", "TOFwall_0_8_node", "TOFwall_0_8_brik",
+                             globalPosSeg4.x(),// + offset,
+                             globalPosSeg4.y(),
+                             globalPosSeg4.z(),
+                             "rotTOF_seg4", "void");
+  
+  m_TOFwall_0_8_node->SetVisibility(0);
+  m_TOFwall_0_8_node->cd();
+
+  new TBRIK("LEPS_TOFseg_brik", "LEPS_TOFseg_brik", "void",
+            LEPS_TOFSegX, LEPS_TOFSegY, LEPS_TOFSegZ);
+  
+  for(Int_t i=0; i<=8; i+=2){
+    Int_t ref_seg = 4;
+    Double_t ref_lpos = gGeom.CalcWirePosition(lid, ref_seg);
+    Double_t lpos = gGeom.CalcWirePosition(lid, i);    
+    ThreeVector tofSegLocalPos(lpos - ref_lpos,
+                               0., 0.);
+    std::cout << i << " " << tofSegLocalPos << std::endl;
+    m_TOFseg_node.push_back(new TNode(Form("TOFseg_node_%d", i),
+                                      Form("TOFseg_node_%d", i),
+                                      "LEPS_TOFseg_brik",
+                                      tofSegLocalPos.x(),
+                                      tofSegLocalPos.y(),
+                                      tofSegLocalPos.z()));
+  }
+
+  m_node->cd();
+  
+  // segment 1, 3, 5, 7, 9
+  lid = gGeom.GetDetectorId("LEPS-TOF-DX-Tilt-R");
+  ThreeVector localPosSeg5(gGeom.CalcWirePosition(lid, 5), 0, 0);
+  ThreeVector globalPosSeg5=gGeom.Local2GlobalPos(lid, localPosSeg5);
+  CalcRotMatrix(gGeom.GetTiltAngle(lid),
+                gGeom.GetRotAngle1(lid),
+                gGeom.GetRotAngle2(lid),
+                rotMatTOF);
+  new TRotMatrix("rotTOF_seg5", "rotTOF_seg5", rotMatTOF);  
+
+  Double_t TOFwallX_1_9 =  LEPS_TOFPitch * 8 + LEPS_TOFSegX*2; // X
+  Double_t TOFwallY_1_9 =  LEPS_TOFSegY; // Z
+  Double_t TOFwallZ_1_9 =  LEPS_TOFSegZ; // Y
+
+  new TBRIK("TOFwall_1_9_brik", "TOFwall_1_9_brik", "void",
+            TOFwallX_1_9, TOFwallY_1_9, TOFwallZ_1_9);
+
+  m_TOFwall_1_9_node = new TNode("TOFwall_1_9_node", "TOFwall_1_9_node", "TOFwall_1_9_brik",
+                             globalPosSeg5.x(),// + offset,
+                             globalPosSeg5.y(),
+                             globalPosSeg5.z(),
+                             "rotTOF_seg5", "void");
+  
+  m_TOFwall_1_9_node->SetVisibility(0);
+  m_TOFwall_1_9_node->cd();
+
+  for(Int_t i=1; i<=9; i+=2){
+    Int_t ref_seg = 5;
+    Double_t ref_lpos = gGeom.CalcWirePosition(lid, ref_seg);
+    Double_t lpos = gGeom.CalcWirePosition(lid, i);    
+    ThreeVector tofSegLocalPos(lpos - ref_lpos,
+                               0., 0.);
+    std::cout << i << " " << tofSegLocalPos << std::endl;
+    m_TOFseg_node.push_back(new TNode(Form("TOFseg_node_%d", i),
+                                      Form("TOFseg_node_%d", i),
+                                      "LEPS_TOFseg_brik",
+                                      tofSegLocalPos.x(),
+                                      tofSegLocalPos.y(),
+                                      tofSegLocalPos.z()));
+  }
+
+  m_node->cd();
+  
+  // segment 10
+  lid = gGeom.GetDetectorId("LEPS-TOF-UX-R");
+  ThreeVector localPosSeg10(gGeom.CalcWirePosition(lid, 10), 0, 0);
+  ThreeVector globalPosSeg10=gGeom.Local2GlobalPos(lid, localPosSeg10);
+  CalcRotMatrix(gGeom.GetTiltAngle(lid),
+                gGeom.GetRotAngle1(lid),
+                gGeom.GetRotAngle2(lid),
+                rotMatTOF);
+  new TRotMatrix("rotTOF_seg10", "rotTOF_seg10", rotMatTOF);  
+
+  Double_t TOFwallX_10 =  LEPS_TOFSegX; // X
+  Double_t TOFwallY_10 =  LEPS_TOFSegY; // Z
+  Double_t TOFwallZ_10 =  LEPS_TOFSegZ; // Y
+
+  new TBRIK("TOFwall_10_brik", "TOFwall_10_brik", "void",
+            TOFwallX_10, TOFwallY_10, TOFwallZ_10);
+
+  m_TOFwall_10_node = new TNode("TOFwall_10_node", "TOFwall_10_node", "TOFwall_10_brik",
+                             globalPosSeg10.x(),// + offset,
+                             globalPosSeg10.y(),
+                             globalPosSeg10.z(),
+                             "rotTOF_seg10", "void");
+  
+  m_TOFwall_10_node->SetVisibility(0);
+  m_TOFwall_10_node->cd();
+
+  for(Int_t i=10; i<=10; i++){
+    Int_t ref_seg = 10;
+    Double_t ref_lpos = gGeom.CalcWirePosition(lid, ref_seg);
+    Double_t lpos = gGeom.CalcWirePosition(lid, i);    
+    ThreeVector tofSegLocalPos(lpos - ref_lpos,
+                               0., 0.);
+    std::cout << i << " " << tofSegLocalPos << std::endl;
+    m_TOFseg_node.push_back(new TNode(Form("TOFseg_node_%d", i),
+                                      Form("TOFseg_node_%d", i),
+                                      "LEPS_TOFseg_brik",
+                                      tofSegLocalPos.x(),
+                                      tofSegLocalPos.y(),
+                                      tofSegLocalPos.z()));
+  }
+
+  m_node->cd();
+  
+  // segment 11
+  lid = gGeom.GetDetectorId("LEPS-TOF-DX-R");
+  ThreeVector localPosSeg11(gGeom.CalcWirePosition(lid, 11), 0, 0);
+  ThreeVector globalPosSeg11=gGeom.Local2GlobalPos(lid, localPosSeg11);
+  CalcRotMatrix(gGeom.GetTiltAngle(lid),
+                gGeom.GetRotAngle1(lid),
+                gGeom.GetRotAngle2(lid),
+                rotMatTOF);
+  new TRotMatrix("rotTOF_seg11", "rotTOF_seg11", rotMatTOF);  
+
+  Double_t TOFwallX_11 =  LEPS_TOFSegX; // X
+  Double_t TOFwallY_11 =  LEPS_TOFSegY; // Z
+  Double_t TOFwallZ_11 =  LEPS_TOFSegZ; // Y
+
+  new TBRIK("TOFwall_11_brik", "TOFwall_11_brik", "void",
+            TOFwallX_11, TOFwallY_11, TOFwallZ_11);
+
+  m_TOFwall_11_node = new TNode("TOFwall_11_node", "TOFwall_11_node", "TOFwall_11_brik",
+                             globalPosSeg11.x(),// + offset,
+                             globalPosSeg11.y(),
+                             globalPosSeg11.z(),
+                             "rotTOF_seg11", "void");
+  
+  m_TOFwall_11_node->SetVisibility(0);
+  m_TOFwall_11_node->cd();
+
+  for(Int_t i=11; i<=11; i++){
+    Int_t ref_seg = 11;
+    Double_t ref_lpos = gGeom.CalcWirePosition(lid, ref_seg);
+    Double_t lpos = gGeom.CalcWirePosition(lid, i);    
+    ThreeVector tofSegLocalPos(lpos - ref_lpos,
+                               0., 0.);
+    std::cout << i << " " << tofSegLocalPos << std::endl;
+    m_TOFseg_node.push_back(new TNode(Form("TOFseg_node_%d", i),
+                                      Form("TOFseg_node_%d", i),
+                                      "LEPS_TOFseg_brik",
+                                      tofSegLocalPos.x(),
+                                      tofSegLocalPos.y(),
+                                      tofSegLocalPos.z()));
+  }
+
+  m_node->cd();
+  
+  // segment 12, 14, 16, 18, 20, 22
+  lid = gGeom.GetDetectorId("TOF-UX-R");
+  ThreeVector localPosSeg12(gGeom.CalcWirePosition(lid, 12), 0, 0);
+  ThreeVector globalPosSeg12=gGeom.Local2GlobalPos(lid, localPosSeg12);
+  ThreeVector localPosSeg22(gGeom.CalcWirePosition(lid, 22), 0, 0);
+  ThreeVector globalPosSeg22=gGeom.Local2GlobalPos(lid, localPosSeg22);
+  ThreeVector globalPosSeg12_22 = (globalPosSeg12 + globalPosSeg22)*0.5;
+  
+  CalcRotMatrix(gGeom.GetTiltAngle(lid),
+                gGeom.GetRotAngle1(lid),
+                gGeom.GetRotAngle2(lid),
+                rotMatTOF);
+  new TRotMatrix("rotTOF_seg12_22", "rotTOF_seg12_22", rotMatTOF);  
+
+  Double_t KURAMA_TOFSegX =  80.0/2.0; // X
+  Double_t KURAMA_TOFSegY =  30.0/2.0; // Z
+  Double_t KURAMA_TOFSegZ = 1800.0/2.0; // Y
+  Double_t KURAMA_TOFPitch = 75.0; 
+
+  Double_t TOFwallX_12_22 =  KURAMA_TOFPitch * 10 + KURAMA_TOFSegX*2; // X
+  Double_t TOFwallY_12_22 =  KURAMA_TOFSegY; // Z
+  Double_t TOFwallZ_12_22 =  KURAMA_TOFSegZ; // Y
+
+  new TBRIK("TOFwall_12_22_brik", "TOFwall_12_22_brik", "void",
+            TOFwallX_12_22, TOFwallY_12_22, TOFwallZ_12_22);
+
+  m_TOFwall_12_22_node = new TNode("TOFwall_12_22_node", "TOFwall_12_22_node", "TOFwall_12_22_brik",
+                             globalPosSeg12_22.x(),// + offset,
+                             globalPosSeg12_22.y(),
+                             globalPosSeg12_22.z(),
+                             "rotTOF_seg12_22", "void");
+  
+  m_TOFwall_12_22_node->SetVisibility(0);
+  m_TOFwall_12_22_node->cd();
+
+  new TBRIK("KURAMA_TOFseg_brik", "KURAMA_TOFseg_brik", "void",
+            KURAMA_TOFSegX, KURAMA_TOFSegY, KURAMA_TOFSegZ);
+  
+  for(Int_t i=12; i<=22; i+=2){
+    Int_t ref_seg = 17;
+    Double_t ref_lpos = gGeom.CalcWirePosition(lid, ref_seg);
+    Double_t lpos = gGeom.CalcWirePosition(lid, i);    
+    ThreeVector tofSegLocalPos(lpos - ref_lpos,
+                               0., 0.);
+    std::cout << i << " " << tofSegLocalPos << std::endl;
+    m_TOFseg_node.push_back(new TNode(Form("TOFseg_node_%d", i),
+                                      Form("TOFseg_node_%d", i),
+                                      "KURAMA_TOFseg_brik",
+                                      tofSegLocalPos.x(),
+                                      tofSegLocalPos.y(),
+                                      tofSegLocalPos.z()));
+  }
+
+  m_node->cd();
+  
+  // segment 13, 15, 17, 19, 21, 23
+  lid = gGeom.GetDetectorId("TOF-DX-R");
+  ThreeVector localPosSeg13(gGeom.CalcWirePosition(lid, 13), 0, 0);
+  ThreeVector globalPosSeg13=gGeom.Local2GlobalPos(lid, localPosSeg13);
+  ThreeVector localPosSeg23(gGeom.CalcWirePosition(lid, 23), 0, 0);
+  ThreeVector globalPosSeg23=gGeom.Local2GlobalPos(lid, localPosSeg23);
+  ThreeVector globalPosSeg13_23 = (globalPosSeg13 + globalPosSeg23)*0.5;
+  
+  CalcRotMatrix(gGeom.GetTiltAngle(lid),
+                gGeom.GetRotAngle1(lid),
+                gGeom.GetRotAngle2(lid),
+                rotMatTOF);
+  new TRotMatrix("rotTOF_seg13_23", "rotTOF_seg13_23", rotMatTOF);  
+
+  Double_t TOFwallX_13_23 =  KURAMA_TOFPitch * 10 + KURAMA_TOFSegX*2; // X
+  Double_t TOFwallY_13_23 =  KURAMA_TOFSegY; // Z
+  Double_t TOFwallZ_13_23 =  KURAMA_TOFSegZ; // Y
+
+  new TBRIK("TOFwall_13_23_brik", "TOFwall_13_23_brik", "void",
+            TOFwallX_13_23, TOFwallY_13_23, TOFwallZ_13_23);
+
+  m_TOFwall_13_23_node = new TNode("TOFwall_13_23_node", "TOFwall_13_23_node", "TOFwall_13_23_brik",
+                             globalPosSeg13_23.x(),// + offset,
+                             globalPosSeg13_23.y(),
+                             globalPosSeg13_23.z(),
+                             "rotTOF_seg13_23", "void");
+  
+  m_TOFwall_13_23_node->SetVisibility(0);
+  m_TOFwall_13_23_node->cd();
+
+  for(Int_t i=13; i<=23; i+=2){
+    Int_t ref_seg = 18;
+    Double_t ref_lpos = gGeom.CalcWirePosition(lid, ref_seg);
+    Double_t lpos = gGeom.CalcWirePosition(lid, i);    
+    ThreeVector tofSegLocalPos(lpos - ref_lpos,
+                               0., 0.);
+    std::cout << i << " " << tofSegLocalPos << std::endl;
+    m_TOFseg_node.push_back(new TNode(Form("TOFseg_node_%d", i),
+                                      Form("TOFseg_node_%d", i),
+                                      "KURAMA_TOFseg_brik",
+                                      tofSegLocalPos.x(),
+                                      tofSegLocalPos.y(),
+                                      tofSegLocalPos.z()));
+  }
+
+  m_node->cd();
+  
+  // segment 24, 26, 28, 30, 32, 34
+  lid = gGeom.GetDetectorId("TOF-DX-L");
+  ThreeVector localPosSeg24(gGeom.CalcWirePosition(lid, 24), 0, 0);
+  ThreeVector globalPosSeg24=gGeom.Local2GlobalPos(lid, localPosSeg24);
+  ThreeVector localPosSeg34(gGeom.CalcWirePosition(lid, 34), 0, 0);
+  ThreeVector globalPosSeg34=gGeom.Local2GlobalPos(lid, localPosSeg34);
+  ThreeVector globalPosSeg24_34 = (globalPosSeg24 + globalPosSeg34)*0.5;
+  
+  CalcRotMatrix(gGeom.GetTiltAngle(lid),
+                gGeom.GetRotAngle1(lid),
+                gGeom.GetRotAngle2(lid),
+                rotMatTOF);
+  new TRotMatrix("rotTOF_seg24_34", "rotTOF_seg24_34", rotMatTOF);  
+
+  Double_t TOFwallX_24_34 =  KURAMA_TOFPitch * 10 + KURAMA_TOFSegX*2; // X
+  Double_t TOFwallY_24_34 =  KURAMA_TOFSegY; // Z
+  Double_t TOFwallZ_24_34 =  KURAMA_TOFSegZ; // Y
+
+  new TBRIK("TOFwall_24_34_brik", "TOFwall_24_34_brik", "void",
+            TOFwallX_24_34, TOFwallY_24_34, TOFwallZ_24_34);
+
+  m_TOFwall_24_34_node = new TNode("TOFwall_24_34_node", "TOFwall_24_34_node", "TOFwall_24_34_brik",
+                             globalPosSeg24_34.x(),// + offset,
+                             globalPosSeg24_34.y(),
+                             globalPosSeg24_34.z(),
+                             "rotTOF_seg24_34", "void");
+  
+  m_TOFwall_24_34_node->SetVisibility(0);
+  m_TOFwall_24_34_node->cd();
+
+  for(Int_t i=24; i<=34; i+=2){
+    Int_t ref_seg = 29;
+    Double_t ref_lpos = gGeom.CalcWirePosition(lid, ref_seg);
+    Double_t lpos = gGeom.CalcWirePosition(lid, i);    
+    ThreeVector tofSegLocalPos(lpos - ref_lpos,
+                               0., 0.);
+    std::cout << i << " " << tofSegLocalPos << std::endl;
+    m_TOFseg_node.push_back(new TNode(Form("TOFseg_node_%d", i),
+                                      Form("TOFseg_node_%d", i),
+                                      "KURAMA_TOFseg_brik",
+                                      tofSegLocalPos.x(),
+                                      tofSegLocalPos.y(),
+                                      tofSegLocalPos.z()));
+  }
+
+  m_node->cd();
+
+  // segment 25, 27, 29, 31, 33, 35
+  lid = gGeom.GetDetectorId("TOF-UX-L");
+  ThreeVector localPosSeg25(gGeom.CalcWirePosition(lid, 25), 0, 0);
+  ThreeVector globalPosSeg25=gGeom.Local2GlobalPos(lid, localPosSeg25);
+  ThreeVector localPosSeg35(gGeom.CalcWirePosition(lid, 35), 0, 0);
+  ThreeVector globalPosSeg35=gGeom.Local2GlobalPos(lid, localPosSeg35);
+  ThreeVector globalPosSeg25_35 = (globalPosSeg25 + globalPosSeg35)*0.5;
+  
+  CalcRotMatrix(gGeom.GetTiltAngle(lid),
+                gGeom.GetRotAngle1(lid),
+                gGeom.GetRotAngle2(lid),
+                rotMatTOF);
+  new TRotMatrix("rotTOF_seg25_35", "rotTOF_seg25_35", rotMatTOF);  
+
+  Double_t TOFwallX_25_35 =  KURAMA_TOFPitch * 10 + KURAMA_TOFSegX*2; // X
+  Double_t TOFwallY_25_35 =  KURAMA_TOFSegY; // Z
+  Double_t TOFwallZ_25_35 =  KURAMA_TOFSegZ; // Y
+
+  new TBRIK("TOFwall_25_35_brik", "TOFwall_25_35_brik", "void",
+            TOFwallX_25_35, TOFwallY_25_35, TOFwallZ_25_35);
+
+  m_TOFwall_25_35_node = new TNode("TOFwall_25_35_node", "TOFwall_25_35_node", "TOFwall_25_35_brik",
+                             globalPosSeg25_35.x(),// + offset,
+                             globalPosSeg25_35.y(),
+                             globalPosSeg25_35.z(),
+                             "rotTOF_seg25_35", "void");
+  
+  m_TOFwall_25_35_node->SetVisibility(0);
+  m_TOFwall_25_35_node->cd();
+
+  for(Int_t i=25; i<=35; i+=2){
+    Int_t ref_seg = 30;
+    Double_t ref_lpos = gGeom.CalcWirePosition(lid, ref_seg);
+    Double_t lpos = gGeom.CalcWirePosition(lid, i);    
+    ThreeVector tofSegLocalPos(lpos - ref_lpos,
+                               0., 0.);
+    std::cout << i << " " << tofSegLocalPos << std::endl;
+    m_TOFseg_node.push_back(new TNode(Form("TOFseg_node_%d", i),
+                                      Form("TOFseg_node_%d", i),
+                                      "KURAMA_TOFseg_brik",
+                                      tofSegLocalPos.x(),
+                                      tofSegLocalPos.y(),
+                                      tofSegLocalPos.z()));
+  }
+
+  m_node->cd();
+  
+  // segment 36
+  lid = gGeom.GetDetectorId("LEPS-TOF-DX-L");
+  ThreeVector localPosSeg36(gGeom.CalcWirePosition(lid, 36), 0, 0);
+  ThreeVector globalPosSeg36=gGeom.Local2GlobalPos(lid, localPosSeg36);
+  CalcRotMatrix(gGeom.GetTiltAngle(lid),
+                gGeom.GetRotAngle1(lid),
+                gGeom.GetRotAngle2(lid),
+                rotMatTOF);
+  new TRotMatrix("rotTOF_seg36", "rotTOF_seg36", rotMatTOF);  
+
+  Double_t TOFwallX_36 =  LEPS_TOFSegX; // X
+  Double_t TOFwallY_36 =  LEPS_TOFSegY; // Z
+  Double_t TOFwallZ_36 =  LEPS_TOFSegZ; // Y
+
+  new TBRIK("TOFwall_36_brik", "TOFwall_36_brik", "void",
+            TOFwallX_36, TOFwallY_36, TOFwallZ_36);
+
+  m_TOFwall_36_node = new TNode("TOFwall_36_node", "TOFwall_36_node", "TOFwall_36_brik",
+                             globalPosSeg36.x(),// + offset,
+                             globalPosSeg36.y(),
+                             globalPosSeg36.z(),
+                             "rotTOF_seg36", "void");
+  
+  m_TOFwall_36_node->SetVisibility(0);
+  m_TOFwall_36_node->cd();
+
+  for(Int_t i=36; i<=36; i++){
+    Int_t ref_seg = 36;
+    Double_t ref_lpos = gGeom.CalcWirePosition(lid, ref_seg);
+    Double_t lpos = gGeom.CalcWirePosition(lid, i);    
+    ThreeVector tofSegLocalPos(lpos - ref_lpos,
+                               0., 0.);
+    std::cout << i << " " << tofSegLocalPos << std::endl;
+    m_TOFseg_node.push_back(new TNode(Form("TOFseg_node_%d", i),
+                                      Form("TOFseg_node_%d", i),
+                                      "LEPS_TOFseg_brik",
+                                      tofSegLocalPos.x(),
+                                      tofSegLocalPos.y(),
+                                      tofSegLocalPos.z()));
+  }
+
+  m_node->cd();
+  
+  // segment 37
+  lid = gGeom.GetDetectorId("LEPS-TOF-UX-L");
+  ThreeVector localPosSeg37(gGeom.CalcWirePosition(lid, 37), 0, 0);
+  ThreeVector globalPosSeg37=gGeom.Local2GlobalPos(lid, localPosSeg37);
+  CalcRotMatrix(gGeom.GetTiltAngle(lid),
+                gGeom.GetRotAngle1(lid),
+                gGeom.GetRotAngle2(lid),
+                rotMatTOF);
+  new TRotMatrix("rotTOF_seg37", "rotTOF_seg37", rotMatTOF);  
+
+  Double_t TOFwallX_37 =  LEPS_TOFSegX; // X
+  Double_t TOFwallY_37 =  LEPS_TOFSegY; // Z
+  Double_t TOFwallZ_37 =  LEPS_TOFSegZ; // Y
+
+  new TBRIK("TOFwall_37_brik", "TOFwall_37_brik", "void",
+            TOFwallX_37, TOFwallY_37, TOFwallZ_37);
+
+  m_TOFwall_37_node = new TNode("TOFwall_37_node", "TOFwall_37_node", "TOFwall_37_brik",
+                             globalPosSeg37.x(),// + offset,
+                             globalPosSeg37.y(),
+                             globalPosSeg37.z(),
+                             "rotTOF_seg37", "void");
+  
+  m_TOFwall_37_node->SetVisibility(0);
+  m_TOFwall_37_node->cd();
+
+  for(Int_t i=37; i<=37; i++){
+    Int_t ref_seg = 37;
+    Double_t ref_lpos = gGeom.CalcWirePosition(lid, ref_seg);
+    Double_t lpos = gGeom.CalcWirePosition(lid, i);    
+    ThreeVector tofSegLocalPos(lpos - ref_lpos,
+                               0., 0.);
+    std::cout << i << " " << tofSegLocalPos << std::endl;
+    m_TOFseg_node.push_back(new TNode(Form("TOFseg_node_%d", i),
+                                      Form("TOFseg_node_%d", i),
+                                      "LEPS_TOFseg_brik",
+                                      tofSegLocalPos.x(),
+                                      tofSegLocalPos.y(),
+                                      tofSegLocalPos.z()));
+  }
+
+  m_node->cd();
+  
+  // segment 38, 40, 42, 44, 46
+  lid = gGeom.GetDetectorId("LEPS-TOF-DX-Tilt-L");
+  ThreeVector localPosSeg42(gGeom.CalcWirePosition(lid, 42), 0, 0);
+  ThreeVector globalPosSeg42=gGeom.Local2GlobalPos(lid, localPosSeg42);
+  CalcRotMatrix(gGeom.GetTiltAngle(lid),
+                gGeom.GetRotAngle1(lid),
+                gGeom.GetRotAngle2(lid),
+                rotMatTOF);
+  new TRotMatrix("rotTOF_seg42", "rotTOF_seg42", rotMatTOF);  
+
+  Double_t TOFwallX_38_46 =  LEPS_TOFPitch * 8 + LEPS_TOFSegX*2; // X
+  Double_t TOFwallY_38_46 =  LEPS_TOFSegY; // Z
+  Double_t TOFwallZ_38_46 =  LEPS_TOFSegZ; // Y
+
+  new TBRIK("TOFwall_38_46_brik", "TOFwall_38_46_brik", "void",
+            TOFwallX_38_46, TOFwallY_38_46, TOFwallZ_38_46);
+
+  m_TOFwall_38_46_node = new TNode("TOFwall_38_46_node", "TOFwall_38_46_node", "TOFwall_38_46_brik",
+                             globalPosSeg42.x(),// + offset,
+                             globalPosSeg42.y(),
+                             globalPosSeg42.z(),
+                             "rotTOF_seg42", "void");
+  
+  m_TOFwall_38_46_node->SetVisibility(0);
+  m_TOFwall_38_46_node->cd();
+
+  for(Int_t i=38; i<=46; i+=2){
+    Int_t ref_seg = 42;
+    Double_t ref_lpos = gGeom.CalcWirePosition(lid, ref_seg);
+    Double_t lpos = gGeom.CalcWirePosition(lid, i);    
+    ThreeVector tofSegLocalPos(lpos - ref_lpos,
+                               0., 0.);
+    std::cout << i << " " << tofSegLocalPos << std::endl;
+    m_TOFseg_node.push_back(new TNode(Form("TOFseg_node_%d", i),
+                                      Form("TOFseg_node_%d", i),
+                                      "LEPS_TOFseg_brik",
+                                      tofSegLocalPos.x(),
+                                      tofSegLocalPos.y(),
+                                      tofSegLocalPos.z()));
+  }
+
+  m_node->cd();
+  
+  // segment 39, 41, 43, 45, 47
+  lid = gGeom.GetDetectorId("LEPS-TOF-UX-Tilt-L");
+  ThreeVector localPosSeg43(gGeom.CalcWirePosition(lid, 43), 0, 0);
+  ThreeVector globalPosSeg43=gGeom.Local2GlobalPos(lid, localPosSeg43);
+  CalcRotMatrix(gGeom.GetTiltAngle(lid),
+                gGeom.GetRotAngle1(lid),
+                gGeom.GetRotAngle2(lid),
+                rotMatTOF);
+  new TRotMatrix("rotTOF_seg43", "rotTOF_seg43", rotMatTOF);  
+
+  Double_t TOFwallX_39_47 =  LEPS_TOFPitch * 8 + LEPS_TOFSegX*2; // X
+  Double_t TOFwallY_39_47 =  LEPS_TOFSegY; // Z
+  Double_t TOFwallZ_39_47 =  LEPS_TOFSegZ; // Y
+
+  new TBRIK("TOFwall_39_47_brik", "TOFwall_39_47_brik", "void",
+            TOFwallX_39_47, TOFwallY_39_47, TOFwallZ_39_47);
+
+  m_TOFwall_39_47_node = new TNode("TOFwall_39_47_node", "TOFwall_39_47_node", "TOFwall_39_47_brik",
+                             globalPosSeg43.x(),// + offset,
+                             globalPosSeg43.y(),
+                             globalPosSeg43.z(),
+                             "rotTOF_seg43", "void");
+  
+  m_TOFwall_39_47_node->SetVisibility(0);
+  m_TOFwall_39_47_node->cd();
+
+  for(Int_t i=39; i<=47; i+=2){
+    Int_t ref_seg = 43;
+    Double_t ref_lpos = gGeom.CalcWirePosition(lid, ref_seg);
+    Double_t lpos = gGeom.CalcWirePosition(lid, i);    
+    ThreeVector tofSegLocalPos(lpos - ref_lpos,
+                               0., 0.);
+    std::cout << i << " " << tofSegLocalPos << std::endl;
+    m_TOFseg_node.push_back(new TNode(Form("TOFseg_node_%d", i),
+                                      Form("TOFseg_node_%d", i),
+                                      "LEPS_TOFseg_brik",
+                                      tofSegLocalPos.x(),
+                                      tofSegLocalPos.y(),
+                                      tofSegLocalPos.z()));
+  }
+
+  
 
   m_node->cd();
   ConstructionDone(__func__);
@@ -2080,14 +2659,19 @@ EventDisplay::ConstructWC()
 //______________________________________________________________________________
 Bool_t EventDisplay::ConstructCATCH(void)
 {
-  m_canvas_catch = new TCanvas( "canvas_catch", "CATCH Event Display",
-				1200, 600 );
-  m_canvas_catch->Divide(1,3);
-  m_canvas_catch->cd(1)->SetPad( 0.001,0.001,0.499,0.999);
-  m_canvas_catch->cd(2)->SetPad( 0.501,0.501,0.999,0.999);
-  m_canvas_catch->cd(3)->SetPad( 0.501,0.001,0.999,0.499);
+  //m_canvas_catch = new TCanvas( "canvas_catch", "CATCH Event Display",
+  //1200, 600 );
+  //m_canvas_catch->Divide(1,3);
+  //m_canvas_catch->cd(1)->SetPad( 0.001,0.001,0.499,0.999);
+  //m_canvas_catch->cd(2)->SetPad( 0.501,0.501,0.999,0.999);
+  //m_canvas_catch->cd(3)->SetPad( 0.501,0.001,0.999,0.499);
+  //m_canvas_catch->cd(1)->SetGrid(); 
 
-  m_canvas_catch->cd(1)->SetGrid(); 
+  m_canvas->cd(2)->cd(1)->Divide(1,3);
+  m_canvas->cd(2)->cd(1)->cd(1)->SetPad( 0.001,0.001,0.499,0.999);
+  m_canvas->cd(2)->cd(1)->cd(2)->SetPad( 0.501,0.501,0.999,0.999);
+  m_canvas->cd(2)->cd(1)->cd(3)->SetPad( 0.501,0.001,0.999,0.499);
+  m_canvas->cd(2)->cd(1)->cd(1)->SetGrid();
 
   m_hbase_catch = new TH2F("hbase_catch","Event Display XY plane", 180, -180, 180, 180, -180, 180);
   m_hbase_catch->SetMaximum(200);
@@ -2109,11 +2693,13 @@ Bool_t EventDisplay::ConstructCATCH(void)
   ConstructBGO();
   ConstructPiID();
 
-  m_canvas_catch->cd(2)->SetGrid(); 
+  //m_canvas_catch->cd(2)->SetGrid();
+  m_canvas->cd(2)->cd(1)->cd(2)->SetGrid();    
   m_hbase_catch_zx = new TH2F("hbase_catch_zx","Event Display ZX plane", 600, -200, 400, 180, -180, 180);
   m_hbase_catch_zx->Draw();
 
-  m_canvas_catch->cd(3)->SetGrid(); 
+  //m_canvas_catch->cd(3)->SetGrid();
+  m_canvas->cd(2)->cd(1)->cd(3)->SetGrid();    
   m_hbase_catch_zy = new TH2F("hbase_catch_zy","Event Display ZY plane", 600, -200, 400, 180, -180, 180);
   m_hbase_catch_zy->Draw();
 
@@ -2124,7 +2710,8 @@ Bool_t EventDisplay::ConstructCATCH(void)
 //______________________________________________________________________________
 Bool_t EventDisplay::ConstructCFT(void)
 {
-  m_canvas_catch->cd(1);
+  //m_canvas_catch->cd(1);
+  m_canvas->cd(2)->cd(1)->cd(1);
 
   for (Int_t i=0; i<NumOfPlaneCFT; ++i) {
     m_CFT_Arc_cont[i].reserve(NumOfSegCFT[i]);
@@ -2147,8 +2734,9 @@ Bool_t EventDisplay::ConstructCFT(void)
 //______________________________________________________________________________
 Bool_t EventDisplay::ConstructBGO(void)
 {
-  m_canvas_catch->cd(1);
-
+  //m_canvas_catch->cd(1);
+  m_canvas->cd(2)->cd(1)->cd(1);
+  
   int unit=0;
 
   for (int i=0; i<NumOfBGOUnit; i++) {
@@ -2259,8 +2847,9 @@ Bool_t EventDisplay::ConstructBGO(void)
 //______________________________________________________________________________
 Bool_t EventDisplay::ConstructPiID(void)
 {
-  m_canvas_catch->cd(1);
-
+  //m_canvas_catch->cd(1);
+  m_canvas->cd(2)->cd(1)->cd(1);
+  
   int unit=0;
 
   for (int i=0; i<NumOfPiIDUnit; i++) {
@@ -2486,6 +3075,166 @@ void EventDisplay::BGOPos(int seg, double *x, double *y) const
   *y = x0*sin(theta*TMath::DegToRad()) + y0*cos(theta*TMath::DegToRad());
 
 }
+
+//______________________________________________________________________________
+Bool_t EventDisplay::ConstructTagger(void)
+{
+  m_canvas->cd(2)->cd(2);
+  
+  m_hbase_tagger = new TH2F("m_hbase_tagger", "Tagger", 100, -40, 60, 100, -30, 70);
+  m_hbase_tagger->SetMinimum(-1);
+  m_hbase_tagger->Draw("");
+
+  double TagSF_X = 6.;
+  double TagSF_Y = 1.;  
+  
+  for (int i=0; i<NumOfSegTagSF; i++) {
+    double x0 = 0.0;
+    double y0 = i*TagSF_Y;
+
+    double x1 = x0+TagSF_X/2;
+    double y1 = y0+TagSF_Y/2;
+    
+    double x2 = x0-TagSF_X/2;
+    double y2 = y0+TagSF_Y/2;
+    
+    double x3 = x0-TagSF_X/2;
+    double y3 = y0-TagSF_Y/2;
+    
+    double x4 = x0+TagSF_X/2;
+    double y4 = y0-TagSF_Y/2;
+    
+
+    double theta = 0.;
+
+    ThreeVector pos1((x1*cos(theta*TMath::DegToRad()) - y1*sin(theta*TMath::DegToRad())),
+		     (x1*sin(theta*TMath::DegToRad()) + y1*cos(theta*TMath::DegToRad())),
+		     0);
+    ThreeVector pos2((x2*cos(theta*TMath::DegToRad()) - y2*sin(theta*TMath::DegToRad())),
+		     (x2*sin(theta*TMath::DegToRad()) + y2*cos(theta*TMath::DegToRad())),
+		     0);
+    ThreeVector pos3((x3*cos(theta*TMath::DegToRad()) - y3*sin(theta*TMath::DegToRad())),
+		     (x3*sin(theta*TMath::DegToRad()) + y3*cos(theta*TMath::DegToRad())),
+		     0);
+    ThreeVector pos4((x4*cos(theta*TMath::DegToRad()) - y4*sin(theta*TMath::DegToRad())),
+		     (x4*sin(theta*TMath::DegToRad()) + y4*cos(theta*TMath::DegToRad())),
+		     0);
+
+    TLine *l1 = new TLine(pos1.x(), pos1.y(), pos2.x(), pos2.y());
+    TLine *l2 = new TLine(pos2.x(), pos2.y(), pos3.x(), pos3.y());
+    TLine *l3 = new TLine(pos3.x(), pos3.y(), pos4.x(), pos4.y());
+    TLine *l4 = new TLine(pos4.x(), pos4.y(), pos1.x(), pos1.y());
+    l1->Draw("same");
+    l2->Draw("same");
+    l3->Draw("same");
+    l4->Draw("same");
+
+    m_TagSFF_Line_cont[i].push_back(l1);
+    m_TagSFF_Line_cont[i].push_back(l2);
+    m_TagSFF_Line_cont[i].push_back(l3);
+    m_TagSFF_Line_cont[i].push_back(l4);
+  }
+
+  for (int i=0; i<NumOfSegTagSF; i++) {
+    double x0 = 6.0;
+    double y0 = 0.5 + i*TagSF_Y;
+
+    double x1 = x0+TagSF_X/2;
+    double y1 = y0+TagSF_Y/2;
+    
+    double x2 = x0-TagSF_X/2;
+    double y2 = y0+TagSF_Y/2;
+    
+    double x3 = x0-TagSF_X/2;
+    double y3 = y0-TagSF_Y/2;
+    
+    double x4 = x0+TagSF_X/2;
+    double y4 = y0-TagSF_Y/2;
+    
+
+    double theta = 0.;
+
+    ThreeVector pos1((x1*cos(theta*TMath::DegToRad()) - y1*sin(theta*TMath::DegToRad())),
+		     (x1*sin(theta*TMath::DegToRad()) + y1*cos(theta*TMath::DegToRad())),
+		     0);
+    ThreeVector pos2((x2*cos(theta*TMath::DegToRad()) - y2*sin(theta*TMath::DegToRad())),
+		     (x2*sin(theta*TMath::DegToRad()) + y2*cos(theta*TMath::DegToRad())),
+		     0);
+    ThreeVector pos3((x3*cos(theta*TMath::DegToRad()) - y3*sin(theta*TMath::DegToRad())),
+		     (x3*sin(theta*TMath::DegToRad()) + y3*cos(theta*TMath::DegToRad())),
+		     0);
+    ThreeVector pos4((x4*cos(theta*TMath::DegToRad()) - y4*sin(theta*TMath::DegToRad())),
+		     (x4*sin(theta*TMath::DegToRad()) + y4*cos(theta*TMath::DegToRad())),
+		     0);
+
+    TLine *l1 = new TLine(pos1.x(), pos1.y(), pos2.x(), pos2.y());
+    TLine *l2 = new TLine(pos2.x(), pos2.y(), pos3.x(), pos3.y());
+    TLine *l3 = new TLine(pos3.x(), pos3.y(), pos4.x(), pos4.y());
+    TLine *l4 = new TLine(pos4.x(), pos4.y(), pos1.x(), pos1.y());
+    l1->Draw("same");
+    l2->Draw("same");
+    l3->Draw("same");
+    l4->Draw("same");
+
+    m_TagSFB_Line_cont[i].push_back(l1);
+    m_TagSFB_Line_cont[i].push_back(l2);
+    m_TagSFB_Line_cont[i].push_back(l3);
+    m_TagSFB_Line_cont[i].push_back(l4);
+  }
+
+  double TagPL_X = 3.;
+  double TagPL_Y = 7.4;  
+  double overlap = 2.7;
+  for (int i=0; i<NumOfSegTagPL; i++) {
+    double x0 = 24.0 + 10*(i%2);
+    double y0 = i*(TagPL_Y - overlap);
+
+    double x1 = x0+TagPL_X/2;
+    double y1 = y0+TagPL_Y/2;
+    
+    double x2 = x0-TagPL_X/2;
+    double y2 = y0+TagPL_Y/2;
+    
+    double x3 = x0-TagPL_X/2;
+    double y3 = y0-TagPL_Y/2;
+    
+    double x4 = x0+TagPL_X/2;
+    double y4 = y0-TagPL_Y/2;
+    
+
+    double theta = 0.;
+
+    ThreeVector pos1((x1*cos(theta*TMath::DegToRad()) - y1*sin(theta*TMath::DegToRad())),
+		     (x1*sin(theta*TMath::DegToRad()) + y1*cos(theta*TMath::DegToRad())),
+		     0);
+    ThreeVector pos2((x2*cos(theta*TMath::DegToRad()) - y2*sin(theta*TMath::DegToRad())),
+		     (x2*sin(theta*TMath::DegToRad()) + y2*cos(theta*TMath::DegToRad())),
+		     0);
+    ThreeVector pos3((x3*cos(theta*TMath::DegToRad()) - y3*sin(theta*TMath::DegToRad())),
+		     (x3*sin(theta*TMath::DegToRad()) + y3*cos(theta*TMath::DegToRad())),
+		     0);
+    ThreeVector pos4((x4*cos(theta*TMath::DegToRad()) - y4*sin(theta*TMath::DegToRad())),
+		     (x4*sin(theta*TMath::DegToRad()) + y4*cos(theta*TMath::DegToRad())),
+		     0);
+
+    TLine *l1 = new TLine(pos1.x(), pos1.y(), pos2.x(), pos2.y());
+    TLine *l2 = new TLine(pos2.x(), pos2.y(), pos3.x(), pos3.y());
+    TLine *l3 = new TLine(pos3.x(), pos3.y(), pos4.x(), pos4.y());
+    TLine *l4 = new TLine(pos4.x(), pos4.y(), pos1.x(), pos1.y());
+    l1->Draw("same");
+    l2->Draw("same");
+    l3->Draw("same");
+    l4->Draw("same");
+
+    m_TagPL_Line_cont[i].push_back(l1);
+    m_TagPL_Line_cont[i].push_back(l2);
+    m_TagPL_Line_cont[i].push_back(l3);
+    m_TagPL_Line_cont[i].push_back(l4);
+  }
+
+  return true;
+}
+
 
 //_____________________________________________________________________________
 void
@@ -2822,6 +3571,42 @@ EventDisplay::DrawSdcInLocalTrack(const DCLocalTrack *tp)
   m_canvas_vertex->Update();
 #endif
 
+#if CATCH
+  double zc0 = -150, zc1 = 400;
+  double xc0 = tp->GetX( zc0 ), yc0 = tp->GetY( zc0 );
+  double xc1 = tp->GetX( zc1 ), yc1 = tp->GetY( zc1 );
+  {
+    TPolyLine3D *p = new TPolyLine3D(2);
+    p->SetLineColor(kRed);
+    p->SetLineWidth(1);
+    p->SetPoint( 0, xc0, yc0, zc0 );
+    p->SetPoint( 1, xc1, yc1, zc1 );
+    m_SdcInTrack_Catch_cont.push_back(p);
+
+    TPolyLine *lxy = new TPolyLine(2);
+    lxy->SetPoint( 0, xc0, yc0 );
+    lxy->SetPoint( 1, xc1, yc1 );
+    lxy->SetLineColor(kRed);
+    lxy->SetLineWidth(1);
+    m_SdcInTrack_Catch_xy_cont.push_back(lxy);
+
+    TPolyLine *lzx = new TPolyLine(2);
+    lzx->SetPoint( 0, zc0, xc0 );
+    lzx->SetPoint( 1, zc1, xc1 );
+    lzx->SetLineColor(kRed);
+    lzx->SetLineWidth(1);
+    m_SdcInTrack_Catch_zx_cont.push_back(lzx);
+
+    TPolyLine *lzy = new TPolyLine(2);
+    lzy->SetPoint( 0, zc0, yc0 );
+    lzy->SetPoint( 1, zc1, yc1 );
+    lzy->SetLineColor(kRed);
+    lzy->SetLineWidth(1);
+    m_SdcInTrack_Catch_zy_cont.push_back(lzy);
+
+
+  }
+#endif
 }
 
 //_____________________________________________________________________________
@@ -3309,6 +4094,64 @@ EventDisplay::DrawCFTLocalTrack( const CFTLocalTrack *tp, Bool_t flagP , Int_t k
 
 }
 
+//______________________________________________________________________________
+void EventDisplay::ShowHitTagger(const TString& name, Int_t segment, Double_t de) const
+{
+  Color_t colorPallet[5] = {kAzure, kTeal, kSpring, kOrange, kPink};
+  Color_t color = kBlack;
+
+  if (de <= 0)
+    color = kGray;
+  else {
+    Int_t color_unit = 5000;
+    Int_t color_index = ((Int_t)de/color_unit);
+    Int_t sub_color = ((Int_t)de%color_unit)/(color_unit/10);
+    if (color_index>=5) {
+      color_index = 4;
+      sub_color = 10;
+    } 
+    color = colorPallet[color_index] + sub_color ;
+
+  }
+
+  double TagSF_X = 6.;
+  double TagSF_Y = 1.;  
+
+  double TagPL_X = 3.;
+  double TagPL_Y = 7.4;  
+  double overlap = 2.7;
+  
+  if (name == "TAG-PL") {
+    Int_t size = m_TagPL_Line_cont[segment].size();
+    for (Int_t i=0; i<size; i++)
+      m_TagPL_Line_cont[segment][i]->SetLineColor(kRed);
+
+    double x0 = 24.0 + 10*(segment%2);
+    double y0 = segment*(TagPL_Y - overlap);
+    m_hbase_tagger->Fill(x0, y0, de);
+    
+  } else if (name == "TAG-SFF" ) {
+    Int_t size = m_TagSFF_Line_cont[segment].size();
+    for (Int_t i=0; i<size; i++)
+      m_TagSFF_Line_cont[segment][i]->SetLineColor(kRed);
+
+    double x0 = 0.0;
+    double y0 = segment*TagSF_Y;
+    m_hbase_tagger->Fill(x0, y0, de);
+    
+  } else if (name == "TAG-SFB" ) {
+    Int_t size = m_TagSFB_Line_cont[segment].size();
+    for (Int_t i=0; i<size; i++)
+      m_TagSFB_Line_cont[segment][i]->SetLineColor(kRed);
+
+    double x0 = 6.0;
+    double y0 = 0.5 + segment*TagSF_Y;
+    m_hbase_tagger->Fill(x0, y0, de);
+
+  }
+
+}
+
 //_____________________________________________________________________________
 void
 EventDisplay::DrawTarget()
@@ -3466,6 +4309,23 @@ void
 EventDisplay::ResetHist()
 {
 
+  for (int seg=0; seg<NumOfSegTagSF; seg++) {
+    int size = m_TagSFF_Line_cont[seg].size();
+    for (int i=0; i<size; i++)
+      m_TagSFF_Line_cont[seg][i]->SetLineColor(kBlack);
+  }
+  for (int seg=0; seg<NumOfSegTagSF; seg++) {
+    int size = m_TagSFB_Line_cont[seg].size();
+    for (int i=0; i<size; i++)
+      m_TagSFB_Line_cont[seg][i]->SetLineColor(kBlack);
+  }
+  for (int seg=0; seg<NumOfSegTagPL; seg++) {
+    int size = m_TagPL_Line_cont[seg].size();
+    for (int i=0; i<size; i++)
+      m_TagPL_Line_cont[seg][i]->SetLineColor(kBlack);
+  }
+  m_hbase_tagger->Reset("ICES");
+
   //m_hist_aft_x->Reset("");
   //m_hist_aft_y->Reset("");
 
@@ -3579,6 +4439,11 @@ void EventDisplay::ResetCATCH( void )
   del::DeleteObject( m_CFTTrack_zx_cont);
   del::DeleteObject( m_CFTTrack_zy_cont);
 
+  del::DeleteObject( m_SdcInTrack_Catch_cont);
+  del::DeleteObject( m_SdcInTrack_Catch_xy_cont);
+  del::DeleteObject( m_SdcInTrack_Catch_zx_cont);
+  del::DeleteObject( m_SdcInTrack_Catch_zy_cont);
+  
   //del::DeleteObject( m_CFTTrackCand_zx_cont);
   //del::DeleteObject( m_CFTTrackCand_zy_cont);
   //del::DeleteObject( m_CATCH_dE_E_cont);
@@ -4220,8 +5085,11 @@ EventDisplay::Update()
 void EventDisplay::UpdateCATCH( void ) 
 {
 #if CATCH
-  m_canvas_catch->cd(1);
-  m_canvas_catch->cd(1)->SetLogz(0);  
+  //m_canvas_catch->cd(1);
+  //m_canvas_catch->cd(1)->SetLogz(0);
+  m_canvas->cd(2)->cd(1)->cd(1);
+  m_canvas->cd(2)->cd(1)->cd(1)->SetLogz(0);  
+  
   m_hbase_catch->Draw("colz");
 
   for (int layer=0; layer<NumOfPlaneCFT; layer++) {
@@ -4245,12 +5113,13 @@ void EventDisplay::UpdateCATCH( void )
 
   for (int i=0; i<m_CFTTrack_xy_cont.size(); i++)
     m_CFTTrack_xy_cont[i]->Draw();
-  /*  
-  for (int i=0; i<m_BcOutTrack_Catch_xy_cont.size(); i++)
-    m_BcOutTrack_Catch_xy_cont[i]->Draw();
 
   for (int i=0; i<m_SdcInTrack_Catch_xy_cont.size(); i++)
     m_SdcInTrack_Catch_xy_cont[i]->Draw();
+
+  /*  
+  for (int i=0; i<m_BcOutTrack_Catch_xy_cont.size(); i++)
+    m_BcOutTrack_Catch_xy_cont[i]->Draw();
 
   for (int i=0; i<m_SigmaTrack1_xy_cont.size(); i++)
     m_SigmaTrack1_xy_cont[i]->Draw("pl");
@@ -4258,17 +5127,18 @@ void EventDisplay::UpdateCATCH( void )
   for (int i=0; i<m_SigmaTrack2_xy_cont.size(); i++)
     m_SigmaTrack2_xy_cont[i]->Draw("pl");
   */
-  m_canvas_catch->cd(2);
-
+  //m_canvas_catch->cd(2);
+  m_canvas->cd(2)->cd(1)->cd(2);
+  
   for (int i=0; i<m_CFTTrack_zx_cont.size(); i++)
     m_CFTTrack_zx_cont[i]->Draw();
+
+  for (int i=0; i<m_SdcInTrack_Catch_zx_cont.size(); i++)
+    m_SdcInTrack_Catch_zx_cont[i]->Draw();
 
   /*
   for (int i=0; i<m_BcOutTrack_Catch_zx_cont.size(); i++)
     m_BcOutTrack_Catch_zx_cont[i]->Draw();
-
-  for (int i=0; i<m_SdcInTrack_Catch_zx_cont.size(); i++)
-    m_SdcInTrack_Catch_zx_cont[i]->Draw();
 
   for (int i=0; i<m_SigmaTrack1_zx_cont.size(); i++)
     m_SigmaTrack1_zx_cont[i]->Draw("pl");
@@ -4279,16 +5149,18 @@ void EventDisplay::UpdateCATCH( void )
   for (int i=0; i<m_CFTTrackCand_zx_cont.size(); i++)
     m_CFTTrackCand_zx_cont[i]->Draw("pl");
   */
-  m_canvas_catch->cd(3);
-
+  //m_canvas_catch->cd(3);
+  m_canvas->cd(2)->cd(1)->cd(3);
+  
   for (int i=0; i<m_CFTTrack_zy_cont.size(); i++)
     m_CFTTrack_zy_cont[i]->Draw();
-  /*
-  for (int i=0; i<m_BcOutTrack_Catch_zy_cont.size(); i++)
-    m_BcOutTrack_Catch_zy_cont[i]->Draw();
 
   for (int i=0; i<m_SdcInTrack_Catch_zy_cont.size(); i++)
     m_SdcInTrack_Catch_zy_cont[i]->Draw();
+
+  /*
+  for (int i=0; i<m_BcOutTrack_Catch_zy_cont.size(); i++)
+    m_BcOutTrack_Catch_zy_cont[i]->Draw();
 
   for (int i=0; i<m_SigmaTrack1_zy_cont.size(); i++)
     m_SigmaTrack1_zy_cont[i]->Draw("pl");
@@ -4300,10 +5172,13 @@ void EventDisplay::UpdateCATCH( void )
     m_CFTTrackCand_zy_cont[i]->Draw("pl");
   */
   
-  m_canvas_catch->cd();
+  //m_canvas_catch->cd();
+  //m_canvas_catch->Update();
+  //m_canvas_catch->Modified();
 
-  m_canvas_catch->Update();
-  m_canvas_catch->Modified();
+  m_canvas->cd(2)->cd(1)->cd(1);
+  m_canvas->cd(2)->cd(1)->Update();
+  m_canvas->cd(2)->cd(1)->Modified();
 
   /*
   m_canvas_catch3d->cd();

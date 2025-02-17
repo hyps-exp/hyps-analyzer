@@ -34,6 +34,7 @@
 #include "CFTPedCorMan.hh"
 #include "CFTPosParamMan.hh"
 #include "CFTLocalTrack.hh"
+#include "TAGPLMatch.hh"
 
 #define SAVEPDF 0
 #define DEBUG 0
@@ -46,6 +47,7 @@ const auto& gGeom   = DCGeomMan::GetInstance();
 auto&       gEvDisp = EventDisplay::GetInstance();
 const auto& gUser   = UserParamMan::GetInstance();
 auto&       gUnpacker = hddaq::unpacker::GUnpacker::get_instance();
+auto&       gTAGPLMth = TAGPLMatch::GetInstance();    
 const Double_t PionMass   = pdg::PionMass();
 const Double_t KaonMass   = pdg::KaonMass();
 const Double_t ProtonMass = pdg::ProtonMass();
@@ -292,6 +294,129 @@ ProcessingNormal()
       
     //if(!(tofsingleflag || tofdoubleflag)) return true;
     //if(!tofsingleflag) return true;
+  }
+
+  //Tag-Hodoana
+  std::vector<int> PLCand;
+  {  
+    hodoAna.DecodeHits("TAG-PL");
+  
+    Int_t nh=hodoAna.GetNHits("TAG-PL");
+    Int_t nseg_goodtime=0;
+    for(Int_t i=0;i<nh;++i){
+      const auto& hit =hodoAna.GetHit("TAG-PL",i);
+      if(!hit) continue;
+      Int_t seg =hit->SegmentId();
+      //std::cout<<"Tagger PL (seg) = ("<<seg<<std::endl;      
+      bool is_hit_time =false;
+      Int_t n_mhit =hit->GetEntries();
+      for(Int_t m=0;m<n_mhit;++m){
+	Double_t t=hit->GetTUp(m);
+	//std::cout << t << "  ";
+	//Double_t ct= hit->GetCTUp(m);
+	if(fabs(t)<5.0) is_hit_time=true;
+      }
+      //std::cout << std::endl;
+      if(is_hit_time){
+	nseg_goodtime++;
+	PLCand.push_back(seg);
+	Double_t de = hit->DeltaE();
+	gEvDisp.ShowHitTagger("TAG-PL", seg, de);	  	
+      }
+    }
+  }
+
+  std::vector<double> SFFhit;
+  std::vector<double> SFBhit;
+  std::vector<double> SFFCand;
+  std::vector<double> SFBCand;
+  {  
+    hodoAna.DecodeHits("TAG-SF");
+
+    Int_t nh=hodoAna.GetNHits("TAG-SF");
+    Int_t nseg_goodtime=0;
+    for(Int_t i=0;i<nh;++i){
+      const auto& hit =hodoAna.GetHit("TAG-SF",i);
+      if(!hit) continue;
+      Int_t seg =hit->SegmentId();
+      Int_t plane =hit->PlaneId();
+      TString planename=hit->PlaneName();
+      //std::cout<<"(seg, plane) = ("<<seg<<", "<<plane<<")"<<std::endl;
+      /*
+	Double_t a =hit->GetAUp();
+	
+      */
+      bool is_hit_time =false;
+      Int_t n_mhit =hit->GetEntries();
+      for(Int_t m=0;m<n_mhit;++m){
+	Double_t t=hit->GetTUp(m);
+	//std::cout << t << "  ";
+	//Double_t ct= hit->GetCTUp(m);
+	if(fabs(t)<5) is_hit_time=true;
+      }
+      //std::cout << std::endl;
+      if(is_hit_time){
+	//if(plane==0) SFFhit.push_back(seg);
+	//if(plane==1) SFBhit.push_back(seg);
+	Double_t de = hit->DeltaE();
+	if (plane==0)
+	  gEvDisp.ShowHitTagger("TAG-SFF", seg, de);
+	else if (plane==1)
+	  gEvDisp.ShowHitTagger("TAG-SFB", seg, de);	  
+      }
+    }
+    
+    hodoAna.TimeCut("TAG-SF",-5,5);
+  
+    Int_t nc=hodoAna.GetNClusters("TAG-SF");
+    Int_t ncl1=0, ncl2=0;
+    for(Int_t i=0;i<nc;++i){
+      const auto& cl =hodoAna.GetCluster("TAG-SF",i);
+      if(!cl) continue;
+      Int_t plane=cl->PlaneId();
+      if(plane==0) ncl1++;
+      if(plane==1) ncl2++;
+      Double_t ms =cl->MeanSeg();
+      Double_t mt =cl->MeanTime();
+      
+      if(plane==0 && cl->ClusterSize()<4) SFFhit.push_back(ms);
+      if(plane==1 && cl->ClusterSize()<4) SFBhit.push_back(ms);
+      
+      bool is_plmth=false;
+      if(PLCand.size()==0) is_plmth=true;
+      for(Int_t j=0;j<PLCand.size();j++){
+	if(gTAGPLMth.Judge(ms,PLCand[j])) is_plmth=true;	  
+      }
+      if(is_plmth && cl->ClusterSize()<4){
+	if(plane==0) SFFCand.push_back(ms);
+	if(plane==1) SFBCand.push_back(ms);
+      }
+    }
+  }
+  
+  std::vector<double> SFFCand_final;
+  std::vector<double> SFBCand_final;
+  
+  for(int i=0;i<SFFCand.size();i++){
+    for(int j=0;j<SFBCand.size();j++){
+      if(fabs(SFFCand[i]-SFBCand[j])<3){
+	SFFCand_final.push_back(SFFCand[i]);
+	SFBCand_final.push_back(SFBCand[j]);
+      }
+    }
+  }
+  
+  if(SFFCand_final.size()==1){
+    const double eparf[3]={1.42893,0.0350856,-0.000132564};
+    const double eparb[3]={1.42415,0.0351546,-0.000136274};
+    const double offset_b=0.6421;
+    
+    double egamf=eparf[0]+eparf[1]*SFFCand[0]+eparf[2]*SFFCand[0]*SFFCand[0];
+    double SFBpos=SFBCand[0]+offset_b;
+    double egamb=eparb[0]+eparb[1]*SFBpos+eparb[2]*SFBpos*SFBpos;
+
+    std::cout << "Egamma (egamf) = " << egamf << " GeV, "
+	      << "Egamma (egamb) = " << egamb << " GeV" << std::endl;
   }
 
   //________________________________________________________
@@ -847,7 +972,8 @@ ConfMan::InitializeParameterFiles()
      && InitializeParameter<CFTPedCorMan>("CFTPED") 
      && InitializeParameter<CFTPosParamMan>("CFTPOS")
      && InitializeParameter<TemplateFitMan>("BGOTEMP") 
-     && InitializeParameter<BGOCalibMan>("BGOCALIB")      
+     && InitializeParameter<BGOCalibMan>("BGOCALIB")
+     && InitializeParameter<TAGPLMatch>("TAGPLMTH")      
      && InitializeParameter<EventDisplay>());
 }
 
