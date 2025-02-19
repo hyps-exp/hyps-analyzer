@@ -296,11 +296,11 @@ HypsTrack::DoFit()
   m_n_iteration   = iItr;
   m_nef_iteration = iItrEf;
   m_chisqr = chiSqr;
-  /* Here kill many tracks which seems to be good. We should check and fix bugs.
+
   if(!RK::TraceToLast(m_HitPointCont)){
     m_status = kFailedTraceLast;
   }
-  */
+  
   if(!SaveCalcPosition(m_HitPointCont) ||
      !SaveTrackParameters(iniCord)){
     m_status = kFailedSave;

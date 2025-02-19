@@ -864,7 +864,7 @@ RK::TraceToLast(RKHitPointContainer& hitContainer)
   //   }
   // }
 
-  for(const auto& key : {"RKINIT", "AC1", "WC-U", "WC-D", "VP11"}){
+  for(const auto& key : {"RKINIT"}){
     auto id = gGeom.DetectorId(key);
     hitContainer.push_back(std::make_pair(id, RKcalcHitPoint()));
   }
