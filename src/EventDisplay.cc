@@ -89,6 +89,8 @@ const Int_t& IdTarget  = gGeom.DetectorId("Target");
   //const Int_t& IdBH2     = gGeom.DetectorId("BH2");
   const Int_t& IdSDC1X3  = gGeom.DetectorId("SDC1-X");
   const Int_t& IdSDC2V   = gGeom.DetectorId("SDC2-V");
+  const Int_t& IdSDC2X   = gGeom.DetectorId("SDC2-X");
+  const Int_t& IdSDC3X   = gGeom.DetectorId("SDC3-X");  
   //const Int_t& IdRKINIT  = gGeom.DetectorId("RKINIT");
 const Int_t& IdTOF     = gGeom.DetectorId("TOF-X");
   //const Int_t& IdAC1     = gGeom.DetectorId("AC1");
@@ -3616,12 +3618,17 @@ EventDisplay::DrawSdcOutLocalTrack(const DCLocalTrack *tp)
 #if SdcOut
   Double_t z0 = gGeom.GetLocalZ(IdSDC2V);
   Double_t x0 = tp->GetX(z0), y0 = tp->GetY(z0);
-  ThreeVector gPos0 = gGeom.Local2GlobalPos(IdSDC2V , TVector3(x0, y0, 0.));
+  Double_t z0_X = gGeom.GetLocalZ(IdSDC2X);
+  
+  ThreeVector gPos0 = gGeom.Local2GlobalPos(IdSDC2X , TVector3(x0, y0, z0-z0_X));
 
   //Double_t z1 = gGeom.GetLocalZ(IdRKINIT);
-  Double_t z1 = gGeom.GetLocalZ(IdTOF);  
+  //Double_t z1 = gGeom.GetLocalZ(IdTOF);
+  Double_t z_offset = 1500.;
+  Double_t z1 = gGeom.GetLocalZ(IdSDC3X)+z_offset;  
   Double_t x1 = tp->GetX(z1), y1 = tp->GetY(z1);
-  ThreeVector gPos1 = gGeom.Local2GlobalPos(IdTOF,  TVector3(x1, y1, 0.));
+  //ThreeVector gPos1 = gGeom.Local2GlobalPos(IdTOF,  TVector3(x1, y1, 0.));
+  ThreeVector gPos1 = gGeom.Local2GlobalPos(IdSDC3X,  TVector3(x1, y1, z_offset));
 
   auto p = new TPolyLine3D(2);
   p->SetLineColor(kRed);
