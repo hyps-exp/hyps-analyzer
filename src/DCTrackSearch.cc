@@ -958,9 +958,8 @@ LocalTrackSearchSdcOut(const DCHC& TOFHC,
     if(ppFlag){
       MakePairPlaneHitCluster(SdcOutHC[layer1], SdcOutHC[layer2],
                               PpInfo[i].CellSize, CandCont[i], honeycomb);
-    }else{
-      MakeMWPCPairPlaneHitCluster(SdcOutHC[layer1], CandCont[i]);
-      MakeMWPCPairPlaneHitCluster(SdcOutHC[layer2], CandCont[i]);
+    }else {
+      MakeUnPairPlaneHitCluster(SdcOutHC[layer1], CandCont[i], honeycomb);
     }
   }
 
@@ -1808,6 +1807,9 @@ LocalTrackSearchCFT( const std::vector<CFTFiberCC>& HC,
 	  fabs(track->GetVtxZ())<cut_range // vtx cut
 	  ){
 
+	//std::cout << "pass 1st Z Tracking : chi2 = " << track->GetChiSquareZ()
+	//<< std::endl;
+	
 	track->SetCalculatedValue();
 
 	track->SetCorPhi();
@@ -1833,6 +1835,13 @@ LocalTrackSearchCFT( const std::vector<CFTFiberCC>& HC,
 	if (track->GetNHit()==3 && track->GetChiSquareXY() > 30)
 	  flag_chi2_phi = false;
 
+	/*
+	std::cout << "2nd tracking : chi2(XY) = " << track->GetChiSquareXY()
+		  << ", nhitX = " << track->GetNHit()
+		  << ", chi2(Z) = " << track->GetChiSquareZ()
+		  << ", nhitZ = " << track->GetNHitU()
+		  << std::endl;
+	*/
 	if (track->GetChiSquareXY() < MaxChi2CFT2nd_phi  && 
 	    track->GetChiSquareZ() < MaxChi2CFT2nd_uv  &&
 	    flag_chi2_uv &&
