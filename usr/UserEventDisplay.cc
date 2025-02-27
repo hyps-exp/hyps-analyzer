@@ -35,6 +35,7 @@
 #include "CFTPosParamMan.hh"
 #include "CFTLocalTrack.hh"
 #include "TAGPLMatch.hh"
+#include "EventSelectMan.hh"
 
 #define SAVEPDF 0
 #define DEBUG 0
@@ -48,6 +49,7 @@ auto&       gEvDisp = EventDisplay::GetInstance();
 const auto& gUser   = UserParamMan::GetInstance();
 auto&       gUnpacker = hddaq::unpacker::GUnpacker::get_instance();
 auto&       gTAGPLMth = TAGPLMatch::GetInstance();    
+const auto& gEventMan = EventSelectMan::GetInstance();
 const Double_t PionMass   = pdg::PionMass();
 const Double_t KaonMass   = pdg::KaonMass();
 const Double_t ProtonMass = pdg::ProtonMass();
@@ -101,6 +103,10 @@ ProcessingNormal()
   // static const Int_t IdBH2 = gGeom.GetDetectorId("BH2");
   static const Int_t IdTOF = gGeom.GetDetectorId("TOF-X");
   //static const Int_t IdWC = gGeom.GetDetectorId("WC");
+
+  if (gEventMan.RunNumCheck(gUnpacker.get_run_number()))
+    if (! gEventMan.IsGood(gUnpacker.get_event_number()))
+      return true;
 
   static TString evinfo;
   evinfo = Form("Run# %5d%4sEvent# %6d",
@@ -229,9 +235,14 @@ ProcessingNormal()
   for(Int_t i=0; i<nhT0; ++i){
     const auto& hit = hodoAna.GetHit("T0", i);
     if(!hit) continue;
-    Double_t mt  = hit->MeanTime();
-    if(std::abs(mt)<std::abs(min_time)){
-      time0    = mt;
+    Double_t multi = hit->GetEntries();
+    for (Int_t im = 0; im <multi; ++im) {    
+      Double_t mt  = hit->MeanTime(im);
+      Double_t cmt  = hit->CMeanTime(im);      
+      if(std::abs(mt)<std::abs(min_time)){
+	time0    = cmt;
+	min_time = mt;
+      }
     }
   }
 
@@ -690,6 +701,15 @@ ProcessingNormal()
       Double_t seg = hit->SegmentId()+1;
       if(tofseg != seg) continue;
       Double_t stof = hit->CMeanTime()- time0+StofOffset;
+      Int_t multi = hit->GetEntries();
+      Double_t tdiff = 9999.;
+      for (Int_t im = 0; im<multi; ++im) {
+	Double_t mt=hit->CMeanTime(im);
+	if (std::abs(mt-10)<std::abs(tdiff)) {
+	  stof = mt- time0+StofOffset;
+	  tdiff = mt-10;
+	}
+      }
       if(stof <= 0) continue;
       Double_t m2 = Kinematics::MassSquare(p, path, stof);
       std::cout << "m2 = " << m2 << std::endl;
@@ -915,7 +935,7 @@ ProcessingNormal()
 #endif
   is_good = true;
   gEvDisp.Update();
-  //gEvDisp.GetCommand();
+  gEvDisp.GetCommand();
   hddaq::cout << "[Info] IsGood = " << is_good << std::endl;
 
   if(is_good){
@@ -973,7 +993,8 @@ ConfMan::InitializeParameterFiles()
      && InitializeParameter<CFTPosParamMan>("CFTPOS")
      && InitializeParameter<TemplateFitMan>("BGOTEMP") 
      && InitializeParameter<BGOCalibMan>("BGOCALIB")
-     && InitializeParameter<TAGPLMatch>("TAGPLMTH")      
+     && InitializeParameter<TAGPLMatch>("TAGPLMTH")
+     && InitializeParameter<EventSelectMan>("EVSELECT") 
      && InitializeParameter<EventDisplay>());
 }
 

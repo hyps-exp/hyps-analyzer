@@ -36,6 +36,7 @@
 #include "CFTPosParamMan.hh"
 #include "TemplateFitMan.hh"
 #include "BGOCalibMan.hh"
+#include "EventSelectMan.hh"
 
 namespace
 {
