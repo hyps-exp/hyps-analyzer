@@ -137,7 +137,7 @@ Event::clear()
   rfnhits     = 0;
   tagsffnhits=0;
   tagsfbnhits=0;
-  tagplnhits=0;  
+  tagplnhits=0;
   t0nhits     = 0;
   sacnhits    = 0;
   sac1nhits   = 0;
@@ -540,7 +540,7 @@ ProcessingNormal()
 
       ///// Tag-SF
   rawData.DecodeHits("TAG-SF");
-  
+
   {
     Int_t tagsf_nhits = 0;
     const auto& cont = rawData.GetHodoRawHC("TAG-SF");
@@ -574,11 +574,11 @@ ProcessingNormal()
     event.tagsffnhits = sffnhits;
     event.tagsfbnhits = sfbnhits;
   }
-  
+
       ///// Tag-PL
-  
+
   rawData.DecodeHits("TAG-PL");
-  
+
   {
     Int_t tagpl_nhits = 0;
     const auto& cont = rawData.GetHodoRawHC("TAG-PL");
@@ -613,9 +613,9 @@ ProcessingNormal()
 
   //Tag-Hodoana
   std::vector<int> PLCand;
-  {  
+  {
   hodoAna.DecodeHits("TAG-PL");
-  
+
     Int_t nh=hodoAna.GetNHits("TAG-PL");
     Int_t nseg_goodtime=0;
     for(Int_t i=0;i<nh;++i){
@@ -634,7 +634,7 @@ ProcessingNormal()
 	//HF1(TagPLHid +100*(seg+1) +13, t);
 	HF1(TagPLHid +13, t);
 	if(fabs(t)<5.0) is_hit_time=true;
-	//if(fabs(t)<300.0) is_hit_time=true;	
+	//if(fabs(t)<300.0) is_hit_time=true;
       }
       if(is_hit_time){
 	nseg_goodtime++;
@@ -651,7 +651,7 @@ ProcessingNormal()
   std::vector<double> SFBhit;
   std::vector<double> SFFCand;
   std::vector<double> SFBCand;
-    {  
+    {
       hodoAna.DecodeHits("TAG-SF");
 
       Int_t nh=hodoAna.GetNHits("TAG-SF");
@@ -665,7 +665,7 @@ ProcessingNormal()
 	//std::cout<<"(seg, plane) = ("<<seg<<", "<<planename<<")"<<std::endl;
 	/*
 	  Double_t a =hit->GetAUp();
-	  
+
 	*/
 	bool is_hit_time =false;
 	Int_t n_mhit =hit->GetEntries();
@@ -680,12 +680,12 @@ ProcessingNormal()
 	  //if(plane==0) SFFhit.push_back(seg);
 	  //if(plane==1) SFBhit.push_back(seg);
 	}
-	
+
       }
 
       hodoAna.TimeCut("TAG-SF",-5,5);
       //hodoAna.TimeCut("TAG-SF",-100,100);
-  
+
       Int_t nc=hodoAna.GetNClusters("TAG-SF");
       Int_t ncl1=0, ncl2=0;
       for(Int_t i=0;i<nc;++i){
@@ -705,7 +705,7 @@ ProcessingNormal()
 	bool is_plmth=false;
 	if(PLCand.size()==0) is_plmth=true;
 	for(Int_t j=0;j<PLCand.size();j++){
-	  if(gTAGPLMth.Judge(ms,PLCand[j])) is_plmth=true;	  
+	  if(gTAGPLMth.Judge(ms,PLCand[j])) is_plmth=true;
 	}
 	if(is_plmth && cl->ClusterSize()<4){
 	  HF1(TagSFHid +25 +plane, ms);
@@ -1010,7 +1010,7 @@ ProcessingNormal()
 
   //*****************  Normalzed Data  *****************
 
-#if 0 // Normalized
+#if 1 // Normalized
 
 #if 0 // BH2, SAC
   // BH2
@@ -1563,7 +1563,7 @@ ConfMan::InitializeHistograms()
     HB1(TOFHid +100*(i+1) +8, title8, NbinAdc, MinAdc, MaxAdc);
   }
 
-#if 0 // TOF Normalized
+#if 1 // TOF Normalized
   HB1(TOFHid +10, "#Hits Tof[Hodo]",  NumOfSegTOF+1, 0., Double_t(NumOfSegTOF+1));
   HB1(TOFHid +11, "Hitpat Tof[Hodo]", NumOfSegTOF,   0., Double_t(NumOfSegTOF));
   HB1(TOFHid +12, "CMeanTime Tof", 500, -5., 45.);
@@ -1635,7 +1635,7 @@ ConfMan::InitializeHistograms()
   tree->Branch("tagplhitpat", event.tagplhitpat, Form("tagplhitpat[%d]/I",NumOfSegTagPL));
   tree->Branch("tagpla", event.tagpla, Form("tagpla[%d]/D",NumOfSegTagPL));
   tree->Branch("tagplt",event.tagplt, Form("tagplt[%d][%d]/D",NumOfSegTagPL,MaxDepth));
-  
+
   //T0
   tree->Branch("t0nhits",   &event.t0nhits,   "t0nhits/I");
   tree->Branch("t0la",       event.t0la,      Form("t0la[%d]/D", NumOfSegT0));
@@ -1663,7 +1663,8 @@ ConfMan::InitializeHistograms()
   tree->Branch("tofda",       event.tofda,      Form("tofda[%d]/D", NumOfSegTOF));
   tree->Branch("tofdt",       event.tofdt,      Form("tofdt[%d][%d]/D", NumOfSegTOF, MaxDepth));
 
-#if 0 // Normalized, Dst
+#if 1 // Normalized, Dst
+  /*
   //Normalized data
   tree->Branch("bh2mt",     event.bh2mt,     Form("bh2mt[%d][%d]/D", NumOfSegBH2, MaxDepth));
   tree->Branch("bh2utime",     event.bh2utime,     Form("bh2utime[%d][%d]/D", NumOfSegBH2, MaxDepth));
@@ -1678,6 +1679,7 @@ ConfMan::InitializeHistograms()
 #endif
   tree->Branch("sacmt",     event.sacmt,     Form("sacmt[%d][%d]/D", NumOfSegSAC, MaxDepth));
   tree->Branch("sacde",     event.sacde,     Form("sacde[%d]/D", NumOfSegSAC));
+  */
   tree->Branch("tofmt",     event.tofmt,     Form("tofmt[%d][%d]/D", NumOfSegTOF, MaxDepth));
   tree->Branch("tofde",     event.tofde,     Form("tofde[%d]/D", NumOfSegTOF));
   tree->Branch("tofude",     event.tofude,     Form("tofude[%d]/D", NumOfSegTOF));
@@ -1685,7 +1687,7 @@ ConfMan::InitializeHistograms()
   tree->Branch("tofctu",     event.tofctu,     Form("tofctu[%d][%d]/D", NumOfSegTOF, MaxDepth));
   tree->Branch("tofctd",     event.tofctd,     Form("tofctd[%d][%d]/D", NumOfSegTOF, MaxDepth));
   tree->Branch("tofcmt",     event.tofcmt,     Form("tofcmt[%d][%d]/D", NumOfSegTOF, MaxDepth));
-
+  /*
   tree->Branch("t0",        event.t0,        Form("t0[%d][%d]/D",  NumOfSegBH2, MaxDepth));
   tree->Branch("ct0",       event.ct0,       Form("ct0[%d][%d]/D", NumOfSegBH2, MaxDepth));
 
@@ -1693,7 +1695,10 @@ ConfMan::InitializeHistograms()
   tree->Branch("deTime0",  &event.deTime0,   "deTime0/D");
   tree->Branch("Time0",    &event.Time0,     "Time0/D");
   tree->Branch("CTime0",   &event.CTime0,    "CTime0/D");
+  */
+#endif
 
+#if 0
   ////////////////////////////////////////////
   //Dst
   hodo = new TTree("hodo","Data Summary Table of Hodoscope");
