@@ -27,7 +27,7 @@ namespace
   const auto& gGeom = DCGeomMan::GetInstance();
   const double Deg2Rad = TMath::DegToRad();
   const double Rad2Deg = TMath::RadToDeg();
-  
+
   const int ReservedNumOfHits  = 4;
   const int ReservedNumOfHitsU  = 4;
   const int DCLocalMinNHits    = 3;
@@ -40,20 +40,20 @@ namespace
 CFTLocalTrack::CFTLocalTrack()
   : status_(false), x0_(0.0), y0_(0.0), u0_(0.0), v0_(0.0),a_(0.0),b_(0.0),
     gftstatus_(true), xyFitFlag_(-1), Axy_(0.), Bxy_(0.), Az_(0.), Bz_(0.),
-    zTrackFlag_(-1), TotalDEHiGain_(0.), TotalDELowGain_(0.), 
-    vtx_z_(-100000.), 
+    zTrackFlag_(-1), TotalDEHiGain_(0.), TotalDELowGain_(0.),
+    vtx_z_(-100000.),
     chisqr_dE_(1.e+10),
     chisqrXY_(1.e+10),
     chisqrZ_(1.e+10),
     nth_ztracking_(0),
-    MaxDEHiGain_(0.), 
-    MaxDELowGain_(0.), 
-    MaxDEHiGain_phi_(0.), 
-    MaxDELowGain_phi_(0.), 
-    MaxDEHiGain_uv_(0.), 
-    MaxDELowGain_uv_(0.), 
-    TotalDELowGain_phi_(0.), 
-    TotalDELowGain_uv_(0.), 
+    MaxDEHiGain_(0.),
+    MaxDELowGain_(0.),
+    MaxDEHiGain_phi_(0.),
+    MaxDELowGain_phi_(0.),
+    MaxDEHiGain_uv_(0.),
+    MaxDELowGain_uv_(0.),
+    TotalDELowGain_phi_(0.),
+    TotalDELowGain_uv_(0.),
     pathlength_(0.),
     theta_(-999.),
     OffsetPos0_(2.5, -1.5, 0 )
@@ -86,14 +86,14 @@ CFTFiberCluster *CFTLocalTrack::GetHitOfLayerNumber( int lnum ) const
 {
   for( std::size_t i=0; i<hitArray.size(); ++i ) {
     CFTFiberCluster *hitp = hitArray[i];
-    Int_t layer = gGeom.GetDetectorId(hitp->DetectorName()+"-"+hitp->PlaneName());      
+    Int_t layer = gGeom.GetDetectorId(hitp->DetectorName()+"-"+hitp->PlaneName());
     if( layer == lnum )
       return hitArray[i];
   }
-  
+
   for( std::size_t i=0; i<hitArrayU.size(); ++i ) {
     CFTFiberCluster *hitp = hitArrayU[i];
-    Int_t layer = gGeom.GetDetectorId(hitp->DetectorName()+"-"+hitp->PlaneName());      
+    Int_t layer = gGeom.GetDetectorId(hitp->DetectorName()+"-"+hitp->PlaneName());
     if( layer == lnum )
       return hitArrayU[i];
   }
@@ -111,11 +111,11 @@ int CFTLocalTrack::GetFirstLayerPhi() const
 
   for( std::size_t i=0; i<hitArray.size(); ++i ) {
     CFTFiberCluster *hitp = hitArray[i];
-    Int_t layer = gGeom.GetDetectorId(hitp->DetectorName()+"-"+hitp->PlaneName());          
+    Int_t layer = gGeom.GetDetectorId(hitp->DetectorName()+"-"+hitp->PlaneName());
     if( layer < firstLayer )
       firstLayer = layer;
   }
-  
+
   return firstLayer;
 
 }
@@ -129,11 +129,11 @@ int CFTLocalTrack::GetFirstLayerUV() const
 
   for( std::size_t i=0; i<hitArrayU.size(); ++i ) {
     CFTFiberCluster *hitp = hitArrayU[i];
-    Int_t layer = gGeom.GetDetectorId(hitp->DetectorName()+"-"+hitp->PlaneName());          
+    Int_t layer = gGeom.GetDetectorId(hitp->DetectorName()+"-"+hitp->PlaneName());
     if( layer < firstLayer )
       firstLayer = layer;
   }
-  
+
   return firstLayer;
 
 }
@@ -143,9 +143,9 @@ bool CFTLocalTrack::DoFitXY( void )
 {
   const std::string funcname = "[CFTLocalTrack::DoFit()]";
   //  const DCGeomMan & geomMan=DCGeomMan::GetInstance();
-  
+
   std::size_t n = hitArray.size();
-  
+
   if(n < DCLocalMinNHits ) return status_ = false;
 
   std::vector <double> x, y, s;
@@ -158,14 +158,14 @@ bool CFTLocalTrack::DoFitXY( void )
 
       double xx = hitp->MeanX();
       double yy = hitp->MeanY();
-      double ss = gGeom.GetResolution( lnum );      
+      double ss = gGeom.GetResolution( lnum );
 
 
       x.push_back( xx ); y.push_back( yy ); s.push_back(ss);
 
 #if 0
       double phi = hitp->MeanPhi();
-      std::cout << std::setw(10) << "layer = " << lnum 
+      std::cout << std::setw(10) << "layer = " << lnum
 		<< std::setw(10) << "x  = " << xx << ", y  =  " << yy
 		<< ", phi = " << phi << ", segment " << hitp->MeanSeg()
 		<< std::endl;
@@ -244,9 +244,9 @@ bool CFTLocalTrack::DoFitXY_2nd( void )
 {
   const std::string funcname = "[CFTLocalTrack::DoFit()]";
   //const DCGeomMan & geomMan=DCGeomMan::GetInstance();
-  
+
   std::size_t n = hitArray.size();
-  
+
   if(n < DCLocalMinNHits ) return status_ = false;
 
   std::vector <double> x, y, s;
@@ -256,17 +256,17 @@ bool CFTLocalTrack::DoFitXY_2nd( void )
     CFTFiberCluster *hitp = hitArray[i];
     if( hitp ){
       Int_t lnum = gGeom.GetDetectorId(hitp->DetectorName()+"-"+hitp->PlaneName());
-      
+
       double xx = hitp->MeanXCor();
       double yy = hitp->MeanYCor();
-      double ss = gGeom.GetResolution( lnum );      
+      double ss = gGeom.GetResolution( lnum );
 
 
       x.push_back( xx ); y.push_back( yy ); s.push_back(ss);
 
 #if 0
       double phi = hitp->GetPhiCor();
-      std::cout << std::setw(10) << "layer = " << lnum 
+      std::cout << std::setw(10) << "layer = " << lnum
 		<< std::setw(10) << "x  = " << xx << ", y  =  " << yy
 		<< ", phi = " << phi << ", segment " << hitp->MeanPairId()
 		<< std::endl;
@@ -361,7 +361,7 @@ bool CFTLocalTrack::DoFitZTrack()
     CFTFiberCluster *hitp = hitArrayU[i];
     if( hitp ){
       Int_t lnum = gGeom.GetDetectorId(hitp->DetectorName()+"-"+hitp->PlaneName());
-      double r = gGeom.GetLocalZ(lnum);      
+      double r = gGeom.GetLocalZ(lnum);
       double phi;
       bool ret = GetCrossPointR(r, &phi);
       if (!ret) {
@@ -381,7 +381,7 @@ bool CFTLocalTrack::DoFitZTrack()
     CFTFiberCluster *hitp = hitArrayU[i];
     if( hitp ){
       Int_t lnum = gGeom.GetDetectorId(hitp->DetectorName()+"-"+hitp->PlaneName());
-      double r = gGeom.GetLocalZ(lnum);      
+      double r = gGeom.GetLocalZ(lnum);
       double phi;
       bool ret = GetCrossPointR(r, &phi);
       if (!ret) {
@@ -393,17 +393,17 @@ bool CFTLocalTrack::DoFitZTrack()
       //double z1 = CalculateZpos(phi, hitp, mean_z);
 
       double xy1=-999.;
-      if (xyFitFlag_==0) 
+      if (xyFitFlag_==0)
 	xy1 = r*cos(phi*Deg2Rad);
       else
 	xy1 = r*sin(phi*Deg2Rad);
 
-      double ss = gGeom.GetResolution( lnum );      
+      double ss = gGeom.GetResolution( lnum );
 
       z.push_back( z1 ); xy.push_back( xy1 ); s.push_back(ss);
 
 #if 0
-      std::cout << std::setw(10) << "layer = " << lnum 
+      std::cout << std::setw(10) << "layer = " << lnum
 		<< std::setw(10) << "z  = " << z1 + offsetCATCH << ", xy  =  " << xy1
 		<< ", phi = " << phi << ", Z0 = " << hitp->GetZ0()
 		<< ", segment = " << hitp->MeanPairId()
@@ -428,10 +428,10 @@ bool CFTLocalTrack::DoFitZTrack()
       E += z[i]*xy[i]/(s[i]*s[i]);
       F += xy[i]*xy[i]/(s[i]*s[i]);
     }
-    
+
     Az_=(E*B-C*A)/(D*B-A*A);
     Bz_=(D*C-E*A)/(D*B-A*A);
-    
+
     if (xyFitFlag_==0) {
       u0_ = Az_;
       x0_ = Bz_;
@@ -443,15 +443,15 @@ bool CFTLocalTrack::DoFitZTrack()
       v0_ = Az_;
       y0_ = Bz_;
     }
-    
+
     chisqrZ_ = 0.;
     for (int i=0; i<n; i++) {
       double xycal = Az_*z[i] + Bz_;
       double xcal = u0_*z[i] + x0_;
       double ycal = v0_*z[i] + y0_;
-      
+
       chisqrZ_ += (xy[i]-xycal)*(xy[i]-xycal)/(s[i]*s[i]);
-      
+
       double xy2 = xy[i];
       double zcal = (xy2-Bz_)/Az_;
       //chisqrZ_ += (z[i]-zcal)*(z[i]-zcal)/(s[i]*s[i]);
@@ -460,7 +460,7 @@ bool CFTLocalTrack::DoFitZTrack()
     //chisqrZ_ /= 2*n;
     chisqrZ_ /= n;
 
-    vtx_z_ = -Bz_/Az_;    
+    vtx_z_ = -Bz_/Az_;
     //std::cout << "chisqrZ : " << chisqrZ_ << std::endl;
 
     if (chisqrZ_ < 10) {
@@ -476,7 +476,7 @@ bool CFTLocalTrack::DoFitZTrack()
 	  std::cout << " , y = " << xy[i] << " (" << xy[i]-xycal << " )" << std::endl;
       }
     }
-    
+
     zTrackFlag_ = 0;
   }   */
   //else {
@@ -510,7 +510,7 @@ bool CFTLocalTrack::DoFitZTrack()
     chisqrZ_ = 0.;
     for (int i=0; i<n; i++) {
       double zcal = Az_*xy[i] + Bz_;
-      
+
       chisqrZ_ += (z[i]-zcal)*(z[i]-zcal)/(s[i]*s[i]);
 
       double z2 = z[i];
@@ -522,7 +522,7 @@ bool CFTLocalTrack::DoFitZTrack()
     //chisqrZ_ /= 2*n;
 
     vtx_z_ = Bz_;
-   
+
     //std::cout << "chisqrZ : " << chisqrZ_ << std::endl;
     /*
     if (chisqrZ_ < 100 && n==4) {
@@ -537,7 +537,7 @@ bool CFTLocalTrack::DoFitZTrack()
       }
     }
     */
-    
+
     zTrackFlag_ = 1;
 
   }
@@ -569,7 +569,7 @@ bool CFTLocalTrack::DoFitZTrack_16layer()
     CFTFiberCluster *hitp = hitArrayU[i];
     if( hitp ){
       Int_t lnum = gGeom.GetDetectorId(hitp->DetectorName()+"-"+hitp->PlaneName());
-      double r = gGeom.GetLocalZ(lnum);      
+      double r = gGeom.GetLocalZ(lnum);
       double phi, phi1, phi2;
 
       bool ret = GetCrossPointR(r, &phi1, &phi2);
@@ -577,7 +577,7 @@ bool CFTLocalTrack::DoFitZTrack_16layer()
 	//std::cout << funcname << " return at GetCrossPointR" << std::endl;
 	return false;
       }
-      
+
       double phiCal = hitp->GetCalPhi();
       if (fabs(phi1-phiCal) <= fabs(phi2-phiCal) && fabs(phi1-phiCal) < 10.)
 	phi = phi1;
@@ -599,7 +599,7 @@ bool CFTLocalTrack::DoFitZTrack_16layer()
       //double z1 = CalculateZpos(phi, hitp);
 
       double xy1=-999.;
-      if (xyFitFlag_==0) 
+      if (xyFitFlag_==0)
 	xy1 = r*cos(phi*Deg2Rad);
       else
 	xy1 = r*sin(phi*Deg2Rad);
@@ -609,7 +609,7 @@ bool CFTLocalTrack::DoFitZTrack_16layer()
       z.push_back( z1 ); xy.push_back( xy1 ); s.push_back(ss);
 
 #if 0
-      std::cout << std::setw(10) << "layer = " << lnum 
+      std::cout << std::setw(10) << "layer = " << lnum
 		<< std::setw(10) << "z  = " << z1 + offsetCATCH << ", xy  =  " << xy1
 		<< ", phi = " << phi << ", Z0 = " << hitp->GetZ0()
 		<< ", segment = " << hitp->MeanPairId()
@@ -633,10 +633,10 @@ bool CFTLocalTrack::DoFitZTrack_16layer()
       E += z[i]*xy[i]/(s[i]*s[i]);
       F += xy[i]*xy[i]/(s[i]*s[i]);
     }
-    
+
     Az_=(E*B-C*A)/(D*B-A*A);
     Bz_=(D*C-E*A)/(D*B-A*A);
-    
+
     if (xyFitFlag_==0) {
       u0_ = Az_;
       x0_ = Bz_;
@@ -648,19 +648,19 @@ bool CFTLocalTrack::DoFitZTrack_16layer()
       v0_ = Az_;
       y0_ = Bz_;
     }
-    
+
     chisqrZ_ = 0.;
     for (int i=0; i<n; i++) {
       double xycal = Az_*z[i] + Bz_;
       double xcal = u0_*z[i] + x0_;
       double ycal = v0_*z[i] + y0_;
-      
+
       chisqrZ_ += (xy[i]-xycal)*(xy[i]-xycal)/(s[i]*s[i]);
     }
     chisqrZ_ /= n;
-    
+
     //std::cout << "chisqrZ : " << chisqrZ_ << std::endl;
-    
+
     zTrackFlag_ = 0;
   } else {
   */
@@ -694,13 +694,13 @@ bool CFTLocalTrack::DoFitZTrack_16layer()
     chisqrZ_ = 0.;
     for (int i=0; i<n; i++) {
       double zcal = Az_*xy[i] + Bz_;
-      
+
       chisqrZ_ += (z[i]-zcal)*(z[i]-zcal)/(s[i]*s[i]);
     }
     chisqrZ_ /= n;
-    
+
     //std::cout << "chisqrZ : " << chisqrZ_ << std::endl;
-    
+
     zTrackFlag_ = 1;
 
   }
@@ -713,9 +713,9 @@ bool CFTLocalTrack::DoFitXY_wVtx( void )
 {
   const std::string funcname = "[CFTLocalTrack::DoFitXY_wVtx()]";
   //const DCGeomMan & geomMan=DCGeomMan::GetInstance();
-  
+
   std::size_t n = hitArray.size() + 1; // +1 is Vtx
-  
+
   if(n < DCLocalMinNHits ) return status_ = false;
 
   std::vector <double> x, y, s;
@@ -727,7 +727,7 @@ bool CFTLocalTrack::DoFitXY_wVtx( void )
     CFTFiberCluster *hitp = hitArray[i];
     if( hitp ){
       Int_t lnum = gGeom.GetDetectorId(hitp->DetectorName()+"-"+hitp->PlaneName());
-      
+
       double xx = hitp->MeanX();
       double yy = hitp->MeanY();
       double ss = gGeom.GetResolution( lnum );
@@ -737,7 +737,7 @@ bool CFTLocalTrack::DoFitXY_wVtx( void )
 
 #if 0
       double phi = hitp->GetPhi();
-      std::cout << std::setw(10) << "layer = " << lnum 
+      std::cout << std::setw(10) << "layer = " << lnum
 		<< std::setw(10) << "x  = " << xx << ", y  =  " << yy
 		<< ", phi = " << phi
 		<< std::endl;
@@ -818,9 +818,9 @@ bool CFTLocalTrack::CheckPhi( void )
 {
   const std::string funcname = "[CFTLocalTrack::CheckPhi()]";
   //const DCGeomMan & geomMan=DCGeomMan::GetInstance();
-  
+
   std::size_t n = hitArray.size();
-  
+
   if(n < 2 ) return false;
 
   double DeltaPhi = 5.;
@@ -838,7 +838,7 @@ bool CFTLocalTrack::CheckPhi( void )
 	if (std::abs(phi-phi0)<DeltaPhi || std::abs(phi-phi0-360.)<DeltaPhi)
 	  ;
 	else
-	  return false;	  
+	  return false;
       }
     }
   }
@@ -850,9 +850,9 @@ bool CFTLocalTrack::CheckPhi_1st( void )
 {
   const std::string funcname = "[CFTLocalTrack::CheckPhi_1st()]";
   //const DCGeomMan & geomMan=DCGeomMan::GetInstance();
-  
+
   std::size_t n = hitArray.size();
-  
+
   if(n < 2 ) return false;
 
   double DeltaPhi = 30.;
@@ -870,7 +870,7 @@ bool CFTLocalTrack::CheckPhi_1st( void )
 	if (std::abs(phi-phi0)<DeltaPhi || std::abs(phi-phi0-360.)<DeltaPhi)
 	  ;
 	else
-	  return false;	  
+	  return false;
       }
     }
   }
@@ -882,9 +882,9 @@ bool CFTLocalTrack::CheckEdep( void )
 {
   const std::string funcname = "[CFTLocalTrack::CheckPhi()]";
   //const DCGeomMan & geomMan=DCGeomMan::GetInstance();
-  
+
   std::size_t n = hitArray.size();
-  
+
   if(n < 2 ) return false;
 
   bool flagLowDE = true;
@@ -894,10 +894,10 @@ bool CFTLocalTrack::CheckEdep( void )
     CFTFiberCluster *hitp = hitArray[i];
     if (hitp) {
       double de = hitp->TotalDeltaE_Hi();
-      
+
       if (de>1.5)
 	flagLowDE = false;
-      
+
       if (de<0.5)
 	flagHighDE = false;
     }
@@ -912,10 +912,10 @@ bool CFTLocalTrack::CheckEdep( void )
     CFTFiberCluster *hitp = hitArrayU[i];
     if( hitp ){
       double de = hitp->TotalDeltaE_Hi();
-      
+
       if (de>1.5)
 	flagLowDE = false;
-      
+
       if (de<1.0)
 	flagHighDE = false;
     }
@@ -930,7 +930,7 @@ bool CFTLocalTrack::CheckEdep( void )
 
 bool CFTLocalTrack::DoFitZTrack_wVtx()
 {
-  const std::string funcname = "[CFTLocalTrack::DoFitZTrack_vVtx()]";
+  const std::string funcname = "[CFTLocalTrack:DoF:itZTrack_vVtx()]";
   //const DCGeomMan & geomMan=DCGeomMan::GetInstance();
 
   std::size_t n = 0;
@@ -938,7 +938,7 @@ bool CFTLocalTrack::DoFitZTrack_wVtx()
 
   if (nHit>=3)
     n=nHit;
-  else 
+  else
     n=nHit + 1;
 
   if(n < DCLocalMinNHits ) return status_ = false;
@@ -958,7 +958,7 @@ bool CFTLocalTrack::DoFitZTrack_wVtx()
   for( std::size_t i=0; i<nHit; ++i ){
     CFTFiberCluster *hitp = hitArrayU[i];
     if( hitp ){
-      Int_t lnum = gGeom.GetDetectorId(hitp->DetectorName()+"-"+hitp->PlaneName());      
+      Int_t lnum = gGeom.GetDetectorId(hitp->DetectorName()+"-"+hitp->PlaneName());
       double r = gGeom.GetLocalZ(lnum);
       double phi;
       bool ret = GetCrossPointR(r, &phi);
@@ -970,7 +970,7 @@ bool CFTLocalTrack::DoFitZTrack_wVtx()
       double z1 = CalculateZpos(phi, hitp);
 
       double xy1=-999.;
-      if (xyFitFlag_==0) 
+      if (xyFitFlag_==0)
 	xy1 = r*cos(phi*Deg2Rad);
       else
 	xy1 = r*sin(phi*Deg2Rad);
@@ -980,7 +980,7 @@ bool CFTLocalTrack::DoFitZTrack_wVtx()
       z.push_back( z1 ); xy.push_back( xy1 ); s.push_back(ss);
 
 #if 0
-      std::cout << std::setw(10) << "layer = " << lnum 
+      std::cout << std::setw(10) << "layer = " << lnum
 		<< std::setw(10) << "z  = " << z1 << ", xy  =  " << xy1
 		<< ", phi = " << phi
 		<< std::endl;
@@ -1003,10 +1003,10 @@ bool CFTLocalTrack::DoFitZTrack_wVtx()
       E += z[i]*xy[i]/(s[i]*s[i]);
       F += xy[i]*xy[i]/(s[i]*s[i]);
     }
-    
+
     Az_=(E*B-C*A)/(D*B-A*A);
     Bz_=(D*C-E*A)/(D*B-A*A);
-    
+
     if (xyFitFlag_==0) {
       u0_ = Az_;
       x0_ = Bz_;
@@ -1018,19 +1018,19 @@ bool CFTLocalTrack::DoFitZTrack_wVtx()
       v0_ = Az_;
       y0_ = Bz_;
     }
-    
+
     chisqrZ_ = 0.;
     for (int i=0; i<n; i++) {
       double xycal = Az_*z[i] + Bz_;
       double xcal = u0_*z[i] + x0_;
       double ycal = v0_*z[i] + y0_;
-      
+
       chisqrZ_ += (xy[i]-xycal)*(xy[i]-xycal)/(s[i]*s[i]);
     }
     chisqrZ_ /= n;
-    
+
     //std::cout << "chisqrZ : " << chisqrZ_ << std::endl;
-    
+
     zTrackFlag_ = 0;
   } else {
 
@@ -1063,13 +1063,13 @@ bool CFTLocalTrack::DoFitZTrack_wVtx()
     chisqrZ_ = 0.;
     for (int i=0; i<n; i++) {
       double zcal = Az_*xy[i] + Bz_;
-      
+
       chisqrZ_ += (z[i]-zcal)*(z[i]-zcal)/(s[i]*s[i]);
     }
     chisqrZ_ /= n;
-    
+
     //std::cout << "chisqrZ : " << chisqrZ_ << std::endl;
-    
+
     zTrackFlag_ = 1;
 
   }
@@ -1083,17 +1083,17 @@ bool CFTLocalTrack::DoFit( void )
 {
   const std::string funcname = "[DCLocalTrack::DoFit()]";
   const DCGeomMan & geomMan=DCGeomMan::GetInstance();
-  
+
   std::size_t nPhi = hitArray.size();
   std::size_t nU   = hitArrayU.size();
   std::size_t n = nPhi + nU;
-  
+
   if(n < DCLocalMinNHits ) return status_ = false;
-  
+
   std::vector <double> z, w, s, ct, st;
   z.reserve(n); w.reserve(n); s.reserve(n);
   ct.reserve(n); st.reserve(n);
-  
+
   for( std::size_t i=0; i<nPhi; ++i ){
     CFTFiberCluster *hitp = hitArray[i];
     if( hitp ){
@@ -1102,16 +1102,16 @@ bool CFTLocalTrack::DoFit( void )
       double zz = hitp->GetR();
       double aa = 0.;
 
-      z.push_back( zz ); w.push_back( 1./(ww*ww) ); 
+      z.push_back( zz ); w.push_back( 1./(ww*ww) );
       s.push_back( hitp->GetPhi() );
       ct.push_back( cos(aa) ); st.push_back( sin(aa) );
 
 #if 0
-      std::cout << std::setw(10) << "layer = " << lnum 
+      std::cout << std::setw(10) << "layer = " << lnum
 		<< std::setw(10) << "wire  = " << hitp->GetWire() << " "
 		<< std::setw(20) << "WirePosition = "<<hitp->GetWirePosition() << " "
 		<< std::setw(20) << "DriftLength = "<<hitp->GetDriftLength() << " "
-		<< std::setw(20) << "hit position = "<<hitp->GetLocalHitPos()<< " " 
+		<< std::setw(20) << "hit position = "<<hitp->GetLocalHitPos()<< " "
 		<< std::endl;
 #endif
     }
@@ -1135,16 +1135,16 @@ bool CFTLocalTrack::DoFit( void )
 
       double uv = CalculateUVpos(phi, hitp);
 
-      z.push_back( zz ); w.push_back( 1./(ww*ww) ); 
+      z.push_back( zz ); w.push_back( 1./(ww*ww) );
       s.push_back( uv );
       ct.push_back( cos(aa) ); st.push_back( sin(aa) );
 
 #if 0
-      std::cout << std::setw(10) << "layer = " << lnum 
+      std::cout << std::setw(10) << "layer = " << lnum
 		<< std::setw(10) << "wire  = " << hitp->GetWire() << " "
 		<< std::setw(20) << "WirePosition = "<<hitp->GetWirePosition() << " "
 		<< std::setw(20) << "DriftLength = "<<hitp->GetDriftLength() << " "
-		<< std::setw(20) << "hit position = "<<hitp->GetLocalHitPos()<< " " 
+		<< std::setw(20) << "hit position = "<<hitp->GetLocalHitPos()<< " "
 		<< std::endl;
 #endif
     }
@@ -1324,7 +1324,7 @@ bool CFTLocalTrack::DoFit( void )
     CFTFiberCluster *hitp = hitArray[i];
     if( hitp ){
       double r = hitp->GetR();
-      /*  
+      /*
 	  if(chisqr<2){
 	  std::cout<<std::setw(10)<<"lnum = "<< lnum <<std::endl;
 	  std::cout<<std::setw(10)<<"X = "<< GetX(zz)<<" Y = "<< GetY(zz)<<std::endl;
@@ -1383,10 +1383,10 @@ bool CFTLocalTrack::SetCalculatedValue()
       } else if (zTrackFlag_==1){
 	if (xyFitFlag_==0) {
 	  zcal = Az_*xcal + Bz_;
-	  ycal = Axy_*xcal + Bxy_; 
+	  ycal = Axy_*xcal + Bxy_;
 	} else {
 	  zcal = Az_*ycal + Bz_;
-	  xcal = Axy_*ycal + Bxy_; 
+	  xcal = Axy_*ycal + Bxy_;
 	}
 	if (i==0) {
 	  pos1 = ThreeVector(xcal, ycal, zcal);
@@ -1442,10 +1442,10 @@ bool CFTLocalTrack::SetCalculatedValue()
       } else if (zTrackFlag_==1){
 	if (xyFitFlag_==0) {
 	  zcal = Az_*xcal2 + Bz_;
-	  //ycal = Axy_*xcal + Bxy_; 
+	  //ycal = Axy_*xcal + Bxy_;
 	} else {
 	  zcal = Az_*ycal2 + Bz_;
-	  //xcal = Axy_*ycal + Bxy_; 
+	  //xcal = Axy_*ycal + Bxy_;
 	}
       }
 
@@ -1461,7 +1461,7 @@ bool CFTLocalTrack::SetCalculatedValue()
     if( hitp ){
       mean_dE += hitp->MaxDeltaE()*sin(theta_cft*TMath::DegToRad());
     }
-  }  
+  }
   for( std::size_t i=0; i<nU; ++i ){
     CFTFiberCluster *hitp = hitArrayU[i];
     if( hitp ){
@@ -1482,7 +1482,7 @@ bool CFTLocalTrack::SetCalculatedValue()
       chisqr_dE += (dE_max*sin(theta*Deg2Rad) - mean_dE)*(dE_max*sin(theta*Deg2Rad) - mean_dE)/(sigma_dE*sigma_dE);
 
     }
-  }  
+  }
   for( std::size_t i=0; i<nU; ++i ){
     CFTFiberCluster *hitp = hitArrayU[i];
     if( hitp ){
@@ -1526,7 +1526,7 @@ bool CFTLocalTrack::SetCalculatedValue_16layer()
   for( std::size_t i=0; i<n; ++i ){
     CFTFiberCluster *hitp = hitArray[i];
     if( hitp ){
-      Int_t lnum = gGeom.GetDetectorId(hitp->DetectorName()+"-"+hitp->PlaneName());      
+      Int_t lnum = gGeom.GetDetectorId(hitp->DetectorName()+"-"+hitp->PlaneName());
       double r = gGeom.GetLocalZ(lnum);
       double phi, phi1, phi2;
 
@@ -1564,10 +1564,10 @@ bool CFTLocalTrack::SetCalculatedValue_16layer()
       } else if (zTrackFlag_==1){
 	if (xyFitFlag_==0) {
 	  zcal = Az_*xcal + Bz_;
-	  ycal = Axy_*xcal + Bxy_; 
+	  ycal = Axy_*xcal + Bxy_;
 	} else {
 	  zcal = Az_*ycal + Bz_;
-	  xcal = Axy_*ycal + Bxy_; 
+	  xcal = Axy_*ycal + Bxy_;
 	}
 	if (i==0) {
 	  pos1 = ThreeVector(xcal, ycal, zcal);
@@ -1591,7 +1591,7 @@ bool CFTLocalTrack::SetCalculatedValue_16layer()
   for( std::size_t i=0; i<nU; ++i ){
     CFTFiberCluster *hitp = hitArrayU[i];
     if( hitp ){
-      Int_t lnum = gGeom.GetDetectorId(hitp->DetectorName()+"-"+hitp->PlaneName());      
+      Int_t lnum = gGeom.GetDetectorId(hitp->DetectorName()+"-"+hitp->PlaneName());
       double r = gGeom.GetLocalZ(lnum);
       double phi, phi1, phi2;
 
@@ -1600,7 +1600,7 @@ bool CFTLocalTrack::SetCalculatedValue_16layer()
 	//std::cout << funcname << " return at GetCrossPointR" << std::endl;
 	return false;
       }
-      
+
       double phiCal = hitp->GetCalPhi();
       if (std::abs(phi1-phiCal) <= std::abs(phi2-phiCal) && std::abs(phi1-phiCal) < 10.)
 	phi = phi1;
@@ -1625,7 +1625,7 @@ bool CFTLocalTrack::SetCalculatedValue_16layer()
 
       // use 4 layer tracking value with theta correction
       // comment out here
-      //hitp->SetZ(z1); 
+      //hitp->SetZ(z1);
       hitp->SetCalPhi(phi);
       //hitp->SetCalZ(z1);
       hitp->SetXYFitFlag(xyFitFlag_);
@@ -1643,10 +1643,10 @@ bool CFTLocalTrack::SetCalculatedValue_16layer()
       } else if (zTrackFlag_==1){
 	if (xyFitFlag_==0) {
 	  zcal = Az_*xcal2 + Bz_;
-	  //ycal = Axy_*xcal + Bxy_; 
+	  //ycal = Axy_*xcal + Bxy_;
 	} else {
 	  zcal = Az_*ycal2 + Bz_;
-	  //xcal = Axy_*ycal + Bxy_; 
+	  //xcal = Axy_*ycal + Bxy_;
 	}
       }
 
@@ -1678,7 +1678,7 @@ bool CFTLocalTrack::FindZTrack()
     return false;
   }
 
-  double phi1, phi2;  
+  double phi1, phi2;
   if ((tmp_phi1>=0 && tmp_phi1 <=90) || (tmp_phi1>=270 && tmp_phi1<=360)) {
     phi1 = tmp_phi1;
     phi2 = tmp_phi2;
@@ -1686,7 +1686,7 @@ bool CFTLocalTrack::FindZTrack()
     phi1 = tmp_phi2;
     phi2 = tmp_phi1;
   }
-  
+
   CFTFiberCluster *cl1, *cl2;
   cl1 = hitArrayU[0];
   cl2 = hitArrayU[1];
@@ -1706,7 +1706,7 @@ bool CFTLocalTrack::FindZTrack()
   ThreeVector posU1, posU2;
   if (fabs(z1-trigPosZ) <= fabs(z2-trigPosZ)) {
     posU1 = ThreeVector(r*cos(phi1*Deg2Rad), r*sin(phi1*Deg2Rad), z1);
- 
+
     cl1->SetCalPosition(r*cos(phi1*Deg2Rad), r*sin(phi1*Deg2Rad));
     cl1->SetCalPhi(phi1);
     cl1->SetCalZ(z1);
@@ -1744,7 +1744,7 @@ bool CFTLocalTrack::FindZTrack()
   ThreeVector dirVec = posU1-posU2;
   // x = u0 * z + x0
   // y = v0 * z + y0
-  
+
   u0_ = dirVec.x()/dirVec.z();
   v0_ = dirVec.y()/dirVec.z();
   x0_ = posU1.x()-u0_*posU1.z();
@@ -1766,13 +1766,13 @@ bool CFTLocalTrack::CalcNormalizedDE( void )
 
     double len;
     if (!GetPathLengthInFiber(r, phi, &len)) {
-      //std::cout << "CFTLocalTrack::CalcNormalizedDE , error in GetPathLengthInFiber r " << r 
+      //std::cout << "CFTLocalTrack::CalcNormalizedDE , error in GetPathLengthInFiber r " << r
       //<< ", phi " << phi << std::endl;
       return false;
     }
     /*
     double meanId = cl->MeanSeg();
-    std::cout << "PHI : " << i << ", r " << r << ", phi " << phi 
+    std::cout << "PHI : " << i << ", r " << r << ", phi " << phi
 	      << ", MeanId " << meanId << ", len " << len << std::endl;
     */
     cl->SetPathLength(len);
@@ -1795,13 +1795,13 @@ bool CFTLocalTrack::CalcNormalizedDE( void )
 
     double len;
     if (!GetPathLengthInFiber( r, phi, &len)) {
-      //std::cout << "CFTLocalTrack::CalcNormalizedDE , error in GetPathLengthInFiber r " << r 
+      //std::cout << "CFTLocalTrack::CalcNormalizedDE , error in GetPathLengthInFiber r " << r
       //<< ", phi " << phi << std::endl;
       return false;
     }
     /*
     double meanId = cl->MeanSeg();
-    std::cout << "U : " << i << ", r " << r << ", phi " << phi 
+    std::cout << "U : " << i << ", r " << r << ", phi " << phi
 	      << ", MeanId " << meanId << ", len " << len << std::endl;
     */
     cl->SetPathLength(len);
@@ -1820,7 +1820,7 @@ bool CFTLocalTrack::CalcNormalizedDE( void )
 
   return true;
 
-} 
+}
 
 
 bool CFTLocalTrack::GetPathLengthInFiber(double r, double phi, double *len)
@@ -1877,9 +1877,9 @@ bool CFTLocalTrack::GetPathLengthInFiber(double r, double phi, double *len)
 
     /*
     if (r>30 && r<45) {
-      std::cout << "(x_in1, y_in1, z_in1) = ( " << x1_in1 << ", " << y1_in1 
+      std::cout << "(x_in1, y_in1, z_in1) = ( " << x1_in1 << ", " << y1_in1
 		<< ", " << z1_in1 << ")" << std::endl;
-      std::cout << "(x_out1, y_out1, z_out1) = ( " << x1_out1 << ", " << y1_out1 
+      std::cout << "(x_out1, y_out1, z_out1) = ( " << x1_out1 << ", " << y1_out1
 		<< ", " << z1_out1 << ")" << std::endl;
       std::cout << "Pathlength : " << *len << std::endl;
     }
@@ -1908,9 +1908,9 @@ bool CFTLocalTrack::GetPathLengthInFiber(double r, double phi, double *len)
 
     /*
     if (r>30 && r<45) {
-      std::cout << "(x_in2, y_in2, z_in2) = ( " << x1_in2 << ", " << y1_in2 
+      std::cout << "(x_in2, y_in2, z_in2) = ( " << x1_in2 << ", " << y1_in2
 		<< ", " << z1_in2 << ")" << std::endl;
-      std::cout << "(x_out2, y_out2, z_out2) = ( " << x1_out2 << ", " << y1_out2 
+      std::cout << "(x_out2, y_out2, z_out2) = ( " << x1_out2 << ", " << y1_out2
 		<< ", " << z1_out2 << ")" << std::endl;
       std::cout << "Pathlength : " << *len << std::endl;
     }
@@ -1931,7 +1931,7 @@ bool CFTLocalTrack::GetCrossPointR(double r, double *phi1, double *phi2)
   double a = Axy_;
   double b = Bxy_;
   double x1, y1, x2, y2;
-  
+
   if (xyFitFlag_==0) {
     double hanbetsu = a*a*b*b-(1.+a*a)*(b*b-r*r);
     if (hanbetsu<0)
@@ -2032,7 +2032,7 @@ bool CFTLocalTrack::GetCrossPointR(double r, double *phi)
       phi2 -= 360.;
 
     if (std::abs(phi1-meanPhi)<std::abs(phi2-meanPhi)) {
-      if (phi1<0) 
+      if (phi1<0)
 	phi1 += 360.;
 
       *phi = phi1;
@@ -2045,7 +2045,7 @@ bool CFTLocalTrack::GetCrossPointR(double r, double *phi)
   }
   /*
   if (fabs(*phi-meanPhi)>10)
-    std::cout << "MeanPhi " << meanPhi 
+    std::cout << "MeanPhi " << meanPhi
 	      << "phi1 " << phi1 << ", phi2 " << phi2 << "phi " << *phi << std::endl;
   */
 
@@ -2082,7 +2082,7 @@ double CFTLocalTrack::CalculateUVpos(double phi, CFTFiberCluster *cl)
   else if (a2>=0 && a2<=400)
     if (slope>0)
       return (z0-400. - offsetCATCH)*cos(theta*Deg2Rad);
-    else 
+    else
       return (z0+400. - offsetCATCH)*cos(theta*Deg2Rad);
   else
     return -100.;
@@ -2107,11 +2107,11 @@ double CFTLocalTrack::CalculateZpos(double phi, CFTFiberCluster *cl, double mean
 
     double z_glo = -99999.;
     if (std::abs(a1-mean_z) < std::abs(a2-mean_z)) {
-      std::cout << "a1 selected ( " << a1 << "), mean_z ( " 
+      std::cout << "a1 selected ( " << a1 << "), mean_z ( "
 		<< mean_z << " ), a2 ( " << a2 << " )" << std::endl;
       z_glo = (a1 - offsetCATCH);
     } else {
-      std::cout << "a2 selected ( " << a2 << "), mean_z ( " 
+      std::cout << "a2 selected ( " << a2 << "), mean_z ( "
 		<< mean_z << " ), a1 ( " << a1 << " )" << std::endl;
       z_glo =  (a2 - offsetCATCH);
     }
@@ -2120,18 +2120,20 @@ double CFTLocalTrack::CalculateZpos(double phi, CFTFiberCluster *cl, double mean
   }
 
   if (a1>=0 && a1<=400) {
-    if (a1>=370 && time<=-1)
-      a1 = a1-400;
-    else if (a1<=30 && time>=0.5)
-      a1 = a1+400;
+    //cosmic ray no use
+    // if (a1>=370 && time<=-1)
+    //   a1 = a1-400;
+    // else if (a1<=30 && time>=0.5)
+    //   a1 = a1+400;
 
 
     return (a1 - offsetCATCH);
   } else if (a2>=0 && a2<=400) {
-    if (a2>=370 && time<=-1)
-      a2 = a2-400;
-    else if (a2<=30 && time>=0.5)
-      a2 = a2+400;
+    //cosmic ray no use
+    // if (a2>=370 && time<=-1)
+    //   a2 = a2-400;
+    // else if (a2<=30 && time>=0.5)
+    //   a2 = a2+400;
 
     return (a2 - offsetCATCH);
   } else
@@ -2145,12 +2147,13 @@ double CFTLocalTrack::CalculateZpos2(double phi, CFTFiberCluster *cl, double mea
 
   double z = cl->GetCorZ(phi, mean_z, theta_);
   double time = cl->CMeanTimeMaxCluster();
-  
-  if (z>=370 && time<=-1)
-    z = z-400;
-  else if (z<=30 && time>=0.5)
-    z = z+400;
-  
+
+  //cosmic ray no use
+  // if (z>=370 && time<=-1)
+  //   z = z-400;
+  // else if (z<=30 && time>=0.5)
+  //   z = z+400;
+
   return z - offsetCATCH;
 }
 
@@ -2164,7 +2167,7 @@ bool CFTLocalTrack::ReCalc( bool applyRecursively )
     CFTFiberCluster *hitp = hitArray[i];
     if( hitp ) hitp->ReCalc( applyRecursively );
   }
-  
+
   bool ret=DoFit();
   if( !ret ){
     std::cerr << funcname << ": Recalculation fails" << std::endl;
