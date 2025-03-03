@@ -72,7 +72,9 @@ struct Event
   Double_t distMeanx[MaxDepth];
   Double_t distMeany[MaxDepth];
   Double_t distMeanz[MaxDepth];
-  Double_t cos_16layer[MaxDepth];
+
+  Double_t track_theta[MaxDepth];
+  Double_t track_phi[MaxDepth];
 
   Int_t    ntCFT_16layer;
   Int_t    nhXY_16layer[MaxDepth];
@@ -86,7 +88,6 @@ struct Event
   Double_t z0_y_16layer[MaxDepth];
   Double_t z0_x_16layer[MaxDepth];
   Double_t dist_16layer[MaxDepth];
-  Double_t costheta[MaxDepth];
   Double_t theta_16layer[MaxDepth];
   Double_t cost_16layer[MaxDepth];
   Int_t    nhPhi_16layer[4];
@@ -147,7 +148,8 @@ Event::clear()
     distMeanx[j] = qnan;
     distMeany[j] = qnan;
     distMeanz[j] = qnan;
-    cos_16layer[j] = qnan;
+    track_theta[j] = qnan;
+    track_phi[j] = qnan;
     nhXY_16layer[j] = 0;
     nhZ_16layer[j] = 0;
     chisqrXY_16layer[j] = qnan;
@@ -159,7 +161,6 @@ Event::clear()
     z0_y_16layer[j] = qnan;
     z0_x_16layer[j] = qnan;
     dist_16layer[j] = qnan;
-    costheta[j] = qnan;
     theta_16layer[j] = qnan;
     cost_16layer[j] = qnan;
     for (Int_t i=0; i<4; i++) {
@@ -561,6 +562,9 @@ ProcessingNormal()
   Double_t u1_cos = 0;
   Double_t v0_cos = 0;
   Double_t v1_cos = 0;
+  Double_t in_vec = 0;
+  Double_t out_vec = 0;
+
 
   for( Int_t i=0; i<ntCFT; ++i ){
     const auto& tp=DCAna.GetTrackCFT(i);
@@ -596,23 +600,18 @@ ProcessingNormal()
     HF2(25, max_dE, theta_cft);
     HF2(26, norm_max_dE, theta_cft);
 
-    event.x0[0]=x0;
-    event.y0[0]=y0;
-    event.u0[0]=u0;
-    event.v0[0]=v0;
-    event.dist[0]=fabs(v0*x0-u0*y0)/sqrt(u0*u0+v0*v0);
-    event.distMeanx[0]=v0*(v0*x0-u0*y0)/(2*(u0*u0+v0*v0));
-    event.distMeany[0]=u0*(u0*y0-v0*x0)/(2*(u0*u0+v0*v0));
-    event.distMeanz[0]=-(u0*x0+v0*y0)/(u0*u0+v0*v0);
+    event.x0[i]=x0;
+    event.y0[i]=y0;
+    event.u0[i]=u0;
+    event.v0[i]=v0;
+    event.dist[i]=fabs(v0*x0-u0*y0)/sqrt(u0*u0+v0*v0);
+    event.distMeanx[i]=v0*(v0*x0-u0*y0)/(2*(u0*u0+v0*v0));
+    event.distMeany[i]=u0*(u0*y0-v0*x0)/(2*(u0*u0+v0*v0));
+    event.distMeanz[i]=-(u0*x0+v0*y0)/(u0*u0+v0*v0);
 
-    if(i==0){
-      u0_cos = u0;
-      v0_cos = v0;
-    }
-    if(i==1){
-      u1_cos = u0;
-      v1_cos = v0;
-    }
+    ThreeVector track_vector = tp->GetDir();
+    event.track_theta[i] = track_vector.Theta()*TMath::RadToDeg();
+    event.track_phi[i] = track_vector.Phi()*TMath::RadToDeg();
 
     for (Int_t j=0; j<nh; ++j) {
       const auto& cl = tp->GetHit(j);
@@ -714,7 +713,7 @@ ProcessingNormal()
       event.z0_y_16layer[0]=-y0/v0;
       event.z0_x_16layer[0]=-x0/u0;
       event.dist_16layer[0]=fabs(v0*x0-u0*y0)/sqrt(u0*u0+v0*v0);
-      event.costheta[0]= (u0_cos*u1_cos+v0_cos*v1_cos+1)/sqrt((u0_cos*u0_cos+v0_cos*v0_cos+1)*(u1_cos*u1_cos+v1_cos*v1_cos+1));
+
 
       for (Int_t ih=0; ih<nhXY; ih++) {
         CFTFiberCluster *cl = tp->GetHit(ih);
@@ -1096,7 +1095,10 @@ ConfMan::InitializeHistograms()
   tree->Branch("distMeanx",   event.distMeanx,  "distMeanx[ntCFT]/D");
   tree->Branch("distMeany",   event.distMeany,  "distMeany[ntCFT]/D");
   tree->Branch("distMeanz",   event.distMeanz,  "distMeanz[ntCFT]/D");
-  tree->Branch("cos_16layer", event.cos_16layer, "cos_16layer[ntCFT]/D");
+  tree->Branch("track_theta", event.track_theta,"track_theta[ntCFT]/D");
+  tree->Branch("track_phi",   event.track_phi,  "track_phi[ntCFT]/D");
+
+
   tree->Branch("ntCFT_16layer",   &event.ntCFT_16layer,  "ntCFT_16layer/I");
   tree->Branch("nhXY_16layer",   event.nhXY_16layer,  "nhXY_16layer[ntCFT_16layer]/I");
   tree->Branch("nhZ_16layer",   event.nhZ_16layer,  "nhZ_16layer[ntCFT_16layer]/I");
@@ -1107,7 +1109,6 @@ ConfMan::InitializeHistograms()
   tree->Branch("u0_16layer",   event.u0_16layer,  "u0_16layer[ntCFT_16layer]/D");
   tree->Branch("v0_16layer",   event.v0_16layer,  "v0_16layer[ntCFT_16layer]/D");
   tree->Branch("dist_16layer",   event.dist_16layer,  "dist_16layer[ntCFT_16layer]/D");
-  tree->Branch("costheta",   event.costheta,  "costheta[ntCFT_16layer]/D");
   tree->Branch("theta_16layer",   event.theta_16layer,  "theta_16layer[ntCFT_16layer]/D");
   tree->Branch("cost_16layer",   event.cost_16layer,  "cost_16layer[ntCFT_16layer]/D");
   tree->Branch("nhPhi1_16layer", &event.nhPhi_16layer[0], "nhPhi1_16layer/I");
