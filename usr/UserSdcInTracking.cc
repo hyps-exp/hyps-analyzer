@@ -487,7 +487,7 @@ ProcessingNormal()
       else if (theta>=45)
 	HF1(100*layerId+74, res);
 
-      if (std::abs(dl-std::abs(xlcal-wp))<2.0) {
+      if (std::abs(dl-std::abs(xlcal-wp))<2.6) {
 	HFProf(100*layerId+20, dt, std::abs(xlcal-wp));
 	HF2(100*layerId+22, dt, std::abs(xlcal-wp));
 	HFProf(100000*layerId+3000+Int_t(wire), xlcal-wp,dt);
