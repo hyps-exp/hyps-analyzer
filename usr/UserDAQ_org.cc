@@ -49,18 +49,10 @@ struct Event
 
   // data size
   Int_t eb_datasize;
-
-  // data size of each node
-  // ex.) vme_datazie[0]: vme01, vme_datasize[1]: vme02
-  // std::vector<Int_t> vme_datasize;
-  // std::vector<Int_t> optlink_datasize;
-  // std::vector<Int_t> hul_datasize;
-  // std::vector< std::vector<Int_t> > vea0c_datasize; //[plane][board]
-  // std::vector<Int_t> vea0c_datasize;
-  Int_t vme_datasize[2 + 1]; // vme01, vme02
-  Int_t optlink_datasize[1 + 1];
-  Int_t hul_datasize[203 + 1];
-  Int_t vea0c_datasize[NumOfPlaneVMEEASIROC + 1];
+  Int_t vme_datasize;
+  Int_t optlink_datasize;
+  Int_t hul_datasize;
+  Int_t vea0c_datasize;
 
   // trigger rate
   Int_t  L1req;
@@ -87,21 +79,10 @@ Event::clear()
   realtime    = 0;
   livetime    = 0;
   eb_datasize = 0;
-  // vme_datasize.clear();
-  // optlink_datasize.clear();
-  // hul_datasize.clear();
-  for(Int_t i=0; i<2 + 1; ++i){
-    vme_datasize[i] = 0;
-  }
-  for(Int_t i=0; i<1 + 1; ++i){
-    optlink_datasize[i] = 0;
-  }
-  for(Int_t i=0; i<203 + 1; ++i){
-    hul_datasize[i] = 0;
-  }
-  for(Int_t i=0; i<NumOfPlaneVMEEASIROC + 1; ++i){
-    vea0c_datasize[i] = 0;
-  }
+  vme_datasize = 0;
+  optlink_datasize = 0;
+  hul_datasize = 0;
+  vea0c_datasize = 0;
   unixtime      = -0.999;
   clock10M      = 0;
 
@@ -196,16 +177,6 @@ enum eDetHid {
 
   DAQHid    = 90000
 };
-
-static const std::vector< std::vector<Int_t> > vea0c_plane_id =
-  {
-    {16, 17, 31, 32, 33, 34, 49, 50, 51, 52, 53, 69, 70, 71, 72, 73, 74, 95},
-    {19, 20, 21, 22, 35, 36, 37, 38, 54, 55, 56, 57, 58, 75, 76, 77, 78, 79, 80},
-    {23, 24, 25, 26, 39, 40, 41, 42, 43, 59, 60, 61, 62, 63, 81, 82, 83, 84, 85},
-    {27, 28, 29, 30, 44, 45, 46, 47, 48, 64, 65, 66, 67, 68, 86, 87, 88, 89},
-    {90, 91, 92, 94, 93}
-  };
-
 }
 
 //_____________________________________________________________________________
@@ -223,7 +194,7 @@ ProcessingNormal()
 {
   RawData rawData;
 
-  gRM.Decode();
+  // gRM.Decode();
 
   event.evnum = gUnpacker.get_event_number();
   event.spill = gRM.SpillNumber();
@@ -253,20 +224,6 @@ ProcessingNormal()
       vea0c_fe_id.push_back(id);
   }
 
-  // std::sort(vme_fe_id.begin(), vme_fe_id.end());
-  // std::sort(optlink_fe_id.begin(), optlink_fe_id.end());
-  // std::sort(hul_fe_id.begin(), hul_fe_id.end());
-  // std::sort(vea0c_fe_id.begin(), vea0c_fe_id.end());
-
-  // for (int id : vea0c_fe_id) {
-  //   for (size_t i = 0; i < vea0c_plane_id.size(); ++i) {
-  //     if (std::find(vea0c_plane_id[i].begin(), vea0c_plane_id[i].end(), id-4000) != vea0c_plane_id[i].end()) {
-  // 	auto data_size = gUnpacker.get_node_header(id, DAQNode::k_data_size);
-  // 	event.vea0c_datasize[i].push_back(id);
-  // 	break;
-  //     }
-  //   }
-  // }
 
   { //___ EB
     auto data_size = gUnpacker.get_node_header(k_eb, DAQNode::k_data_size);
@@ -274,62 +231,37 @@ ProcessingNormal()
     HF1(DAQHid+100+1, data_size);
   }
 
-  for (int id : vme_fe_id) {
-    auto data_size = gUnpacker.get_node_header(id, DAQNode::k_data_size);
-    event.vme_datasize[id-3000] = data_size;
-    HF1(DAQHid + id, data_size);
-  }
-  for (int id : optlink_fe_id) {
-    auto data_size = gUnpacker.get_node_header(id, DAQNode::k_data_size);
-    event.optlink_datasize[id-5000] = data_size;
-    HF1(DAQHid + id, data_size);
-  }
-  for (int id : hul_fe_id) {
-    auto data_size = gUnpacker.get_node_header(id, DAQNode::k_data_size);
-    event.hul_datasize[id-2000] = data_size;
-    HF1(DAQHid + id, data_size);
-  }
-  for (int id : vea0c_fe_id) {
-    auto data_size = gUnpacker.get_node_header(id, DAQNode::k_data_size);
-    event.vea0c_datasize[id-4000] = data_size;
-    HF1(DAQHid + id, data_size);
-    if(id-4000 == 17){
-      std::cout << "Veasiroc" << id-4000 << ": " << data_size << "Word, Array data: " << event.vea0c_datasize[id-4000] << std::endl;
+  { //___ VME node
+    for(Int_t i=0, n=vme_fe_id.size(); i<n; ++i) {
+      auto data_size = gUnpacker.get_node_header(vme_fe_id[i], DAQNode::k_data_size);
+      event.vme_datasize += data_size;
+      //      HF1(DAQHid+200+i+1, data_size);
     }
   }
 
-  // { //___ VME node
-  //   for(Int_t i=0, n=vme_fe_id.size(); i<n; ++i) {
-  //     auto data_size = gUnpacker.get_node_header(vme_fe_id[i], DAQNode::k_data_size);
-  //     event.vme_datasize += data_size;
-  //     //      HF1(DAQHid+200+i+1, data_size);
-  //   }
-  // }
+  { //___ optlink node
+    for(Int_t i=0, n=optlink_fe_id.size(); i<n; ++i) {
+      auto data_size = gUnpacker.get_node_header(optlink_fe_id[i], DAQNode::k_data_size);
+      event.optlink_datasize += data_size;
+      //      HF1(DAQHid+200+i+1, data_size);
+    }
+  }
 
-  // { //___ optlink node
-  //   for(Int_t i=0, n=optlink_fe_id.size(); i<n; ++i) {
-  //     auto data_size = gUnpacker.get_node_header(optlink_fe_id[i], DAQNode::k_data_size);
-  //     event.optlink_datasize += data_size;
-  //     //      HF1(DAQHid+200+i+1, data_size);
-  //   }
-  // }
+  { //___ HUL node
+    for(Int_t i=0, n=hul_fe_id.size(); i<n; ++i) {
+      auto data_size = gUnpacker.get_node_header(hul_fe_id[i], DAQNode::k_data_size);
+      event.hul_datasize = data_size;
+      //      HF1(DAQHid+400+i+1, data_size);
+    }
+  }
 
-  // { //___ HUL node
-  //   for(Int_t i=0, n=hul_fe_id.size(); i<n; ++i) {
-  //     auto data_size = gUnpacker.get_node_header(hul_fe_id[i], DAQNode::k_data_size);
-  //     event.hul_datasize = data_size;
-  //     //      HF1(DAQHid+400+i+1, data_size);
-  //   }
-  // }
-
-  // { //___ VEASIROC node
-  //   for(Int_t i=0, n=vea0c_fe_id.size(); i<n; ++i) {
-  //     auto data_size = gUnpacker.get_node_header(vea0c_fe_id[i], DAQNode::k_data_size);
-  //     event.vea0c_datasize = data_size;
-  //     //      HF1(DAQHid+500+i+1, data_size);
-  //   }
-  // }
-
+  { //___ VEASIROC node
+    for(Int_t i=0, n=vea0c_fe_id.size(); i<n; ++i) {
+      auto data_size = gUnpacker.get_node_header(vea0c_fe_id[i], DAQNode::k_data_size);
+      event.vea0c_datasize = data_size;
+      //      HF1(DAQHid+500+i+1, data_size);
+    }
+  }
   // {
   // //  Int_t c = ScalerAnalyzer::kLeft;
   // Int_t c = 0;
@@ -443,26 +375,13 @@ ConfMan::InitializeHistograms()
   for(Int_t i=0; i<NumOfSegTrig; ++i){
     HB1(10+i+1, Form("Trigger Trig %d", i+1), 0x1000, 0, 0x1000);
   }
-  HB1(DAQHid+100+1, "eb datasize", 10000, 0., 10000.);
-  for(Int_t i=0; i<2+1; ++i){
-    HB1(DAQHid+3000+i, Form("vme%02d datasize", i), 2500, 0., 2500.);
-  }
-  for(Int_t i=0; i<1+1; ++i){
-    HB1(DAQHid+5000+i, Form("optlink%02d datasize", i), 2500, 0., 2500.);
-  }
-  for(Int_t i=0; i<203+1; ++i){
-    HB1(DAQHid+2000+i, Form("hul%d datasize", i), 2500, 0., 2500.);
-  }
-  for(Int_t i=0; i<NumOfPlaneVMEEASIROC+1; ++i){
-    HB1(DAQHid+4000+i, Form("Veasiroc%d datasize", i), 2500, 0., 2500.);
-    // std::cout << "Hist for Veasiroc" << i << " was created" << std::endl;
-  }
+  HB1(DAQHid+100+1, "eb1 datasize", 10000, 0., 100000.);
 
   HB1(DAQHid+900+1, "L1 request", 10000, 0., 10000.);
   HB1(DAQHid+900+2, "L1 accept", 10000, 0., 10000.);
   HB1(DAQHid+900+3, "realtime", 10000, 0., 10000.);
   HB1(DAQHid+900+4, "livetime", 10000, 0., 10000.);
-  // HB2(DAQHid+900+5, "data size of vme-easiroc nodes", NumOfSegVMEEASIROC, 0., NumOfSegVMEEASIROC, 370, 90, 460);
+  HB2(DAQHid+900+5, "data size of vme-easiroc nodes", NumOfSegVMEEASIROC, 0., NumOfSegVMEEASIROC, 370, 90, 460);
 
   ////////////////////////////////////////////
   //Tree
@@ -470,14 +389,10 @@ ConfMan::InitializeHistograms()
   tree->Branch("evnum",     &event.evnum,     "evnum/I");
   tree->Branch("spill",     &event.spill,     "spill/I");
   tree->Branch("eb_datasize",     &event.eb_datasize,     "eb_datasize/I");
-  // tree->Branch("vme_datasize",     &event.vme_datasize,     "vme_datasize/I");
-  // tree->Branch("optlink_datasize",     &event.optlink_datasize,     "optlink_datasize/I");
-  // tree->Branch("hul_datasize",     &event.hul_datasize,     "hul_datasize/I");
-  // tree->Branch("vea0c_datasize",     &event.vea0c_datasize,     "vea0c_datasize/I");
-  tree->Branch("vme_datasize",     &event.vme_datasize,     Form("vme_datasize[%d]/I", 2 + 1));
-  tree->Branch("optlink_datasize",     &event.optlink_datasize,     Form("optlink_datasize[%d]/I", 1 + 1));
-  tree->Branch("hul_datasize",     &event.hul_datasize,     Form("hul_datasize[%d]/I", 203 + 1));
-  tree->Branch("vea0c_datasize",     &event.vea0c_datasize,     Form("vea0c_datasize[%d]/I", NumOfPlaneVMEEASIROC + 1));
+  tree->Branch("vme_datasize",     &event.vme_datasize,     "vme_datasize/I");
+  tree->Branch("optlink_datasize",     &event.optlink_datasize,     "optlink_datasize/I");
+  tree->Branch("hul_datasize",     &event.hul_datasize,     "hul_datasize/I");
+  tree->Branch("vea0c_datasize",     &event.vea0c_datasize,     "vea0c_datasize/I");
   tree->Branch("L1req",     &event.L1req,     "L1req/I");
   tree->Branch("L1acc",     &event.L1acc,    "L1acc/I");
   tree->Branch("realtime",     &event.realtime,     "realtime/I");
