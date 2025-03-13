@@ -32,6 +32,7 @@
 
 #define HodoCut 0
 #define UseTOF  1
+#define UseRF 0
 
 namespace
 {
@@ -53,6 +54,8 @@ struct Event
 
   Double_t btof;
   Double_t time0;
+
+  Double_t RF1st;
 
   Int_t nhT0;
   Double_t T0Seg[MaxHits];
@@ -150,6 +153,7 @@ Event::clear()
 
   time0 = qnan;
   btof  = qnan;
+  RF1st = qnan;
 
   for(Int_t i = 0; i<NumOfLayersVP; ++i){
     vpx[i] = qnan;
@@ -279,6 +283,9 @@ ProcessingNormal()
   static const auto MaxTimeTOF = gUser.GetParameter("TimeTOF", 1);
 #endif
 
+#if UseRF
+  static const auto BunchInterval =gUser.GetParameter("BunchInterval",0);
+#endif
   static const auto MinStopTimingSdcOut = gUser.GetParameter("StopTimingSdcOut", 0);
   static const auto MaxStopTimingSdcOut = gUser.GetParameter("StopTimingSdcOut", 1);
   // static const auto StopTimeDiffSdcOut = gUser.GetParameter("StopTimeDiffSdcOut");
@@ -294,6 +301,7 @@ ProcessingNormal()
 
   RawData rawData;
   rawData.DecodeHits("TFlag");
+  rawData.DecodeHits("RF");
   rawData.DecodeHits("T0");
   rawData.DecodeHits("TOF");
   for(const auto& name: DCNameList.at("SdcIn")) rawData.DecodeHits(name);
@@ -328,6 +336,26 @@ ProcessingNormal()
 
   HF1(1, 1.);
 
+#if UseRF
+  //RF analysis
+  hodoAna.DecodeHits("RF");
+  hodoAna.TimeCut("RF",-5,170);
+  Int_t nhRF =hodoAna.GetNHits("RF");
+  Double_t RFmin_time =999;
+
+  for(Int_t i=0;i<nhRF;i++){
+    const auto& hit = hodoAna.GetHit("RF", i);
+    if(!hit) continue;
+    Double_t time =hit->GetTUp();
+    if(time<RFmin_time) RFmin_time=time;
+  }
+  event.RF1st=RFmin_time;
+
+  while(RFmin_time>BunchInterval*0.5){
+    RFmin_time-=BunchInterval;
+  }
+#endif
+
   //////////////T0 Analysis
   hodoAna.DecodeHits("T0");
   Int_t nhT0 = hodoAna.GetNHits("T0");
@@ -335,7 +363,7 @@ ProcessingNormal()
 #if HodoCut
   if(nhT0==0) return true;
 #endif
-  Double_t time0 = -999.;
+  Double_t time_t0 = -999.;
   //////////////T0 Analysis
   Double_t min_time = -999.;
   for(Int_t i=0; i<nhT0; ++i){
@@ -355,12 +383,16 @@ ProcessingNormal()
     event.T0Seg[i] = seg;
     if(std::abs(mt)<std::abs(min_time)){
       min_time = mt;
-      //time0    = ct0;
-      time0    = mt;
     }
   }
-  event.time0 = time0;
 
+#if UseRF
+  event.time0 =RFmin_time;
+  Double_t time0=RFmin_time;
+#else
+  event.time0 = min_time;
+  Double_t time0=min_time;
+#endif
 
   HF1(1, 3.);
 
@@ -653,7 +685,11 @@ ProcessingNormal()
   HF1(1, 21.);
 
   ///// BTOF BH2-Target
+#if UseRF
+  static const auto StofOffset =0;
+#else
   static const auto StofOffset = gUser.GetParameter("StofOffset");
+#endif
 
   //return true;
 
@@ -705,7 +741,7 @@ ProcessingNormal()
     event.thetaHyps[i] = theta;
     event.phiHyps[i] = phi;
     event.resP[i] = p - initial_momentum;
-    /* //this region still have bug
+
     for(Int_t j = 0; j<NumOfLayersVP; ++j){
       Int_t l = PlMinVP + j;
       Double_t vpx, vpy;
@@ -718,7 +754,7 @@ ProcessingNormal()
       event.vpv[j] = vpv;
       HF2(100*l+1, vpx, vpu); HF2(100*l+2, vpy, vpv); HF2(100*l+3, vpx, vpy);
     }
-    */
+    
     Double_t tof_seg = track->TofSeg()+1; // 1-origin
     if( tof_seg > 0 ){
       event.tofsegHyps[i] = tof_seg;
@@ -1220,6 +1256,7 @@ ConfMan::InitializeHistograms()
   tree->Branch("T0Seg",   event.T0Seg,  "T0Seg[nhT0]/D");
   tree->Branch("tT0",     event.tT0,    "tT0[nhT0]/D");
   tree->Branch("deT0",    event.deT0,   "deT0[nhT0]/D");
+  tree->Branch("RF1st", &event.RF1st, "RF1st/D");
   tree->Branch("time0",   &event.time0,   "time0/D");
 
   tree->Branch("nhTof",   &event.nhTof,   "nhTof/I");

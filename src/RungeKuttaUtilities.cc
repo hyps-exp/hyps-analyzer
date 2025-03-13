@@ -924,7 +924,7 @@ RK::MakeHPContainer()
   for(Int_t i=0; i<NumOfLayersSdcIn; ++i){
     container.push_back(std::make_pair(i+PlMinSdcIn, RKcalcHitPoint()));
   }
-  for(Int_t i=0; i<NumOfLayersVP-1; ++i){
+  for(Int_t i=0; i<NumOfLayersVP; ++i){
     container.push_back(std::make_pair(i+PlMinVP, RKcalcHitPoint()));
   }
   for(Int_t i=0; i<NumOfLayersSdcOut; ++i){
