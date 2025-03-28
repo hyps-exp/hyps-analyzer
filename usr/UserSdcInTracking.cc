@@ -621,7 +621,7 @@ ConfMan:: InitializeHistograms()
     HB2(100*i+18, title18, 100, -6.5, 6.6, NbinRes, MinRes, MaxRes);
     HB2(100*i+19, title19, nbindt, mindt, maxdt, Int_t(maxdl*20), -maxdl, maxdl);
     HBProf(100*i+20, title20, nbindt, mindt, maxdt, mindl, maxdl);
-    HB2(100*i+22, title22, nbindt, mindt, maxdt, nbindl, mindl, maxdl);
+    HB2(100*i+22, title22, nbindt, mindt, maxdt, Int_t((maxdl-mindl)*20), mindl, maxdl);
     HB1(100*i+21, title21, 200, -5.0, 5.0);
     HB1(100*i+40, title40, 500,    0, 500);
     HB1(100*i+71, title71, 200, -5.0, 5.0);
