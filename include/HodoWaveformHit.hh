@@ -66,6 +66,8 @@ protected:
   using TGraphC = std::vector<TGraphErrors*>; 
   TGraphC m_TGraphC;
   TF1    *m_func;
+
+  mutable Bool_t   m_JoinTrack;
   
 public:
   Bool_t   Calculate();
@@ -118,6 +120,9 @@ public:
 
   Double_t GetPulseTime(Int_t j) const
   { return m_pulse_time.at(HodoRawHit::kUp).at(j); }
+
+  void   SetTrackJoined() const { m_JoinTrack = true; }
+  Bool_t IsTrackJoined() const  { return m_JoinTrack; }  
   
   virtual void   Print(Option_t* arg="") const;
   virtual Bool_t ReCalc(Bool_t allpyRecursively=false){ return Calculate(); }

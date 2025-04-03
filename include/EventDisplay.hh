@@ -10,6 +10,7 @@
 
 class DCLocalTrack;
 class CFTLocalTrack;
+class CFTParticle;
 
 class TApplication;
 class TArc;
@@ -142,6 +143,43 @@ private:
   TH1                       *m_hist_bc4_time;
   TH1                       *m_hist_bc4p_time;
 
+  TH2                       *m_hist_cft1_l;   
+  TH2                       *m_hist_cft1_t;   
+  TH2                       *m_hist_cft1_hi;  
+  TH2                       *m_hist_cft1_lo;  
+  TH2                       *m_hist_cft2_l;   
+  TH2                       *m_hist_cft2_t;   
+  TH2                       *m_hist_cft2_hi;  
+  TH2                       *m_hist_cft2_lo;  
+  TH2                       *m_hist_cft3_l;   
+  TH2                       *m_hist_cft3_t;   
+  TH2                       *m_hist_cft3_hi;  
+  TH2                       *m_hist_cft3_lo;  
+  TH2                       *m_hist_cft4_l;   
+  TH2                       *m_hist_cft4_t;   
+  TH2                       *m_hist_cft4_hi;  
+  TH2                       *m_hist_cft4_lo;  
+  TH2                       *m_hist_cft5_l;   
+  TH2                       *m_hist_cft5_t;   
+  TH2                       *m_hist_cft5_hi;  
+  TH2                       *m_hist_cft5_lo;  
+  TH2                       *m_hist_cft6_l;   
+  TH2                       *m_hist_cft6_t;   
+  TH2                       *m_hist_cft6_hi;  
+  TH2                       *m_hist_cft6_lo;  
+  TH2                       *m_hist_cft7_l;   
+  TH2                       *m_hist_cft7_t;   
+  TH2                       *m_hist_cft7_hi;  
+  TH2                       *m_hist_cft7_lo;  
+  TH2                       *m_hist_cft8_l;   
+  TH2                       *m_hist_cft8_t;   
+  TH2                       *m_hist_cft8_hi;  
+  TH2                       *m_hist_cft8_lo;  
+  TH2                       *m_hist_bgo;      
+  TH2                       *m_hist_piid_l;   
+  TH2                       *m_hist_piid_t;   
+
+
   TNode                     *m_target_node;
   TNode                     *m_BH2wall_node;
   std::vector<TNode*>        m_BH2seg_node;
@@ -251,6 +289,10 @@ private:
   std::vector<TPolyLine*>    m_SdcInTrack_Catch_xy_cont;
   std::vector<TPolyLine*>    m_SdcInTrack_Catch_zx_cont;
   std::vector<TPolyLine*>    m_SdcInTrack_Catch_zy_cont;
+  TCanvas                   *m_canvas_dE_E;
+  TH2                       *m_hist_dE_E;
+  std::vector<TGraph*>       m_CATCH_dE_E_cont;
+  std::vector<TF1*>          m_CATCH_dE_E_line_cont;  
   // Tagger
   TH2                       *m_hbase_tagger;
   TLineContainer             m_TagSFF_Line_cont[NumOfSegTagSF];
@@ -304,8 +346,12 @@ public:
                        Double_t q);
   void ShowHitFiber(Int_t layer, Int_t segment, Double_t pe, Double_t ctime);
   void ShowHitBGO(Int_t segment, Double_t de) const;
+  void DrawCFT_Time( Int_t layer, Int_t seg, Int_t LorT, Double_t time );
+  void DrawCFT_AdcCor( Int_t layer, Int_t seg, Int_t HorL, Double_t adccor );  
   void ShowHitTagger(const TString& name, Int_t segment, Double_t de) const;    
+  void ShowHitPiID(Int_t segment);
   void DrawCFTLocalTrack( const CFTLocalTrack *tp, bool flagP, int k_color=0 );
+  void DrawCFTLocalTrack_dE_E( CFTParticle *CFTPart, bool flagP );
   
   void DrawTarget();
   void DrawMissingMomentum(const ThreeVector& mom,

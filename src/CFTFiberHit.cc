@@ -66,34 +66,10 @@ CFTFiberHit::Calculate()
   Int_t id    = m_raw->DetectorId();
   Int_t plane = m_raw->PlaneId();
   Int_t seg   = m_raw->SegmentId();
-
-  data_t trailing(m_n_ch);
-  for(Int_t ch=0; ch<m_n_ch; ++ch){
-    const auto& l_cont = m_time_leading[ch];
-    m_ctime_leading[ch].clear();
-    m_ctime_trailing[ch].clear();
-    for(Int_t il=0, nl=l_cont.size(); il<nl; ++il){
-      Double_t l = l_cont[il];
-      Double_t l_next = (il+1) != nl ? l_cont[il+1] : DBL_MAX;
-      Double_t buf = qnan;
-      for(const auto& t: m_time_trailing[ch]){
-        if(l<t && t<l_next){
-          buf = t;
-          break;
-        }
-      }
-      trailing[ch].push_back(buf);
-      Double_t ctime = qnan;
-      Double_t tot = buf - l;
-      gPHC.DoCorrection(id, plane, seg, ch, l, tot, ctime);
-      m_ctime_leading[ch].push_back(ctime);
-      m_ctime_trailing[ch].push_back(ctime + tot); // no use
-      m_is_clustered.push_back(false);
-    }
-  }
-  m_time_trailing = trailing;
-
-  if (id != 31) {
+  
+  if (id == 33) {// piid
+    ;
+  } else if (id != 31) {
     Int_t layer = gGeom.GetDetectorId(DetectorName()+"-"+PlaneName());
     m_position = gGeom.CalcWirePosition(layer, seg);
     m_dxdw     = gGeom.dXdW(layer);
@@ -131,6 +107,7 @@ CFTFiberHit::Calculate()
 
 	Double_t mip_hi = adccor_hi/gainHi ;
 	m_mip_hi[ch].push_back(mip_hi);	
+
       }
 
       if (low>0) {
@@ -163,6 +140,7 @@ CFTFiberHit::Calculate()
       }
 #endif
 
+      
 #if 0      
       for(auto& pair: m_pair_cont){
 	Double_t time= pair.time_l;
@@ -176,35 +154,70 @@ CFTFiberHit::Calculate()
 #endif      
     }
 
-    Int_t layer = gGeom.GetDetectorId(DetectorName()+"-"+PlaneName());
+    if (id == 31) { // CFT
+      Int_t layer = gGeom.GetDetectorId(DetectorName()+"-"+PlaneName());
     
-    m_r = gGeom.GetLocalZ(layer);
-    if (seg%2 == 0)
-      m_r -= 0.4;
-    else
-      m_r += 0.4;
+      m_r = gGeom.GetLocalZ(layer);
+      if (seg%2 == 0)
+	m_r -= 0.4;
+      else
+	m_r += 0.4;
     
-    if (PlaneName() == "PHI1" || PlaneName() == "PHI2" || PlaneName() == "PHI3" || PlaneName() == "PHI4") {
-      m_phi = gGeom.CalcWirePosition(layer, seg);
-      if (m_phi>=360)
-	m_phi = m_phi - 360.;
-      else if (m_phi < 0)
-	m_phi = 360. + m_phi;
+      if (PlaneName() == "PHI1" || PlaneName() == "PHI2" || PlaneName() == "PHI3" || PlaneName() == "PHI4") {
+	m_phi = gGeom.CalcWirePosition(layer, seg);
+	if (m_phi>=360)
+	  m_phi = m_phi - 360.;
+	else if (m_phi < 0)
+	  m_phi = 360. + m_phi;
       
-      m_x = m_r * TMath::Cos(m_phi*TMath::DegToRad());
-      m_y = m_r * TMath::Sin(m_phi*TMath::DegToRad());
-    } else if (PlaneName() == "UV1" || PlaneName() == "UV2" || PlaneName() == "UV3" || PlaneName() == "UV4") {
-      m_z0 =  gGeom.CalcWirePosition(layer, seg);
-      if (m_z0 >= 400)
-	m_z0 = m_z0 - 400.;
-      else if (m_z0 < 0)
-	m_z0 = 400. + m_z0;
+	m_x = m_r * TMath::Cos(m_phi*TMath::DegToRad());
+	m_y = m_r * TMath::Sin(m_phi*TMath::DegToRad());
+      } else if (PlaneName() == "UV1" || PlaneName() == "UV2" || PlaneName() == "UV3" || PlaneName() == "UV4") {
+	m_z0 =  gGeom.CalcWirePosition(layer, seg);
+	if (m_z0 >= 400)
+	  m_z0 = m_z0 - 400.;
+	else if (m_z0 < 0)
+	  m_z0 = 400. + m_z0;
       
-      m_slope =  gGeom.GetTiltAngle(layer);
+	m_slope =  gGeom.GetTiltAngle(layer);
+      }
+      
     }
-    
   }
 #endif
+
+  data_t trailing(m_n_ch);
+  for(Int_t ch=0; ch<m_n_ch; ++ch){
+    const auto& l_cont = m_time_leading[ch];
+    m_ctime_leading[ch].clear();
+    m_ctime_trailing[ch].clear();
+    for(Int_t il=0, nl=l_cont.size(); il<nl; ++il){
+      Double_t l = l_cont[il];
+      Double_t l_next = (il+1) != nl ? l_cont[il+1] : DBL_MAX;
+      Double_t buf = qnan;
+      for(const auto& t: m_time_trailing[ch]){
+	if(l<t && t<l_next){
+	  buf = t;
+	  break;
+	}
+      }
+      trailing[ch].push_back(buf);
+      Double_t ctime = qnan;
+      Double_t tot = buf - l;
+
+      if (m_adccor_hi[0].size()>0) {
+	Double_t adccor_hi = m_adccor_hi[0][0];
+	//gPHC.DoCorrection(id, plane, seg, ch, l, tot, ctime);
+	gPHC.DoCorrection(id, plane, seg, ch, l, adccor_hi, ctime);
+	m_ctime_leading[ch].push_back(ctime);
+	m_ctime_trailing[ch].push_back(ctime + tot); // no use
+	m_is_clustered.push_back(false);
+      }
+    }
+  }
+  m_time_trailing = trailing;
+
+  
   m_is_calculated = true;
 
   //HodoHit::Print();

@@ -206,10 +206,11 @@ void CFTFiberCluster::SetCorPhi()
   
   Int_t angle = ((Int_t)m_mean_phi/10);
 
-  //std::cout << "layer : " << layer << ", angle : " << angle << ", " << MeanPhi_ << " --> ";
+  //std::cout << "layer : " << phi_layer << ", angle : " << angle
+  //<< ", z_cal : " << m_z_cal << ", " << m_mean_phi << " --> ";
 
   m_mean_phi_cor = m_mean_phi - gCFTPos.GetPhiShift(phi_layer, angle, m_z_cal);
-  //std::cout << MeanPhi_ << std::endl;
+  //std::cout << m_mean_phi_cor << std::endl;
   m_mean_x_cor = m_mean_r * TMath::Cos(m_mean_phi_cor*TMath::DegToRad());
   m_mean_y_cor = m_mean_r * TMath::Sin(m_mean_phi_cor*TMath::DegToRad());
 

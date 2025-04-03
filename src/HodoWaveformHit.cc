@@ -54,7 +54,8 @@ HodoWaveformHit::HodoWaveformHit(HodoRawHit *rhit)
     m_waveform(m_n_ch),
     m_pulse_height(m_n_ch),
     m_pulse_time(m_n_ch),        
-    m_position(qnan)
+    m_position(qnan),
+    m_JoinTrack(false)
 {
   debug::ObjectCounter::increase(ClassName());
 

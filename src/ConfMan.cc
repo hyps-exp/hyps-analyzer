@@ -37,6 +37,7 @@
 #include "TemplateFitMan.hh"
 #include "BGOCalibMan.hh"
 #include "EventSelectMan.hh"
+#include "CATCHPidMan.hh"
 
 namespace
 {
