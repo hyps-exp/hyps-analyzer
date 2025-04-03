@@ -34,6 +34,8 @@
 #include "CFTPedCorMan.hh"
 #include "CFTPosParamMan.hh"
 #include "CFTLocalTrack.hh"
+#include "CFTParticle.hh"
+#include "CATCHPidMan.hh"
 #include "TAGPLMatch.hh"
 #include "EventSelectMan.hh"
 
@@ -805,11 +807,20 @@ ProcessingNormal()
       Double_t mipHi  = hit->GetMipHigh();
       Double_t mipLow = hit->GetMipLow();      
       Double_t deLow  = hit->DeltaELowGain();
+
+      //ADC 
+      gEvDisp.DrawCFT_AdcCor(plane, seg, 0, (int)adccorHi);
       
       Int_t NhitT = hit->GetEntries(U);
       for(Int_t m = 0; m<NhitT; ++m){
+	Double_t ctime = hit->GetCTUp(m);
 	Double_t time = hit->GetTUp(m);
-	//if (std::abs(time)<100) {
+
+	if (adccorHi>0) {
+	  gEvDisp.DrawCFT_Time(plane, seg, 0, ctime);
+	  //gEvDisp.DrawCFT_Time(plane, seg, 1, time);
+	}
+	
 	if (time>MinTimeCFT && time<MaxAdcCFT) {
 	  gEvDisp.ShowHitFiber(plane, seg, adccorLow, -999);
 	}
@@ -856,10 +867,34 @@ ProcessingNormal()
     }
   }
 
-  
+ 
   if(nhBGO == 0){
     hddaq::cout << "[Warning] BGO is no hit!" << std::endl;
     return true;
+  }
+
+  hodoAna.DecodeHits<CFTFiberHit>("PiID");
+  {
+    const auto& U = HodoRawHit::kUp;
+    Int_t nh=hodoAna.GetNHits("PiID");
+    for(Int_t i=0; i<nh; ++i){
+      const auto& hit = hodoAna.GetHit<CFTFiberHit>("PiID", i);
+      if(!hit) continue;
+      Int_t seg   = hit->SegmentId();
+      Int_t NhitT = hit->GetEntries(U);
+      bool flagTime = false;
+
+      double time0 = -999;
+      double ctime0 = -999;
+
+      for(Int_t m = 0; m<NhitT; ++m){
+	Double_t time = hit->GetTUp(m);
+	if (time>-10 && time<20)
+	  flagTime = true;
+      }
+      if (flagTime)
+	gEvDisp.ShowHitPiID(seg);	  	
+    }
   }
 
   const auto& CFTClCont = hodoAna.GetClusterContainer("CFT");
@@ -874,6 +909,28 @@ ProcessingNormal()
     gEvDisp.DrawCFTLocalTrack( tp, flagPTrack );
   }       
 
+  std::vector <CFTParticle*> CFTPartCont;
+  for( Int_t i=0; i<ntCFT; ++i ){
+    const CFTLocalTrack *tp=DCAna.GetTrackCFT(i);
+    CFTParticle * CFTPart = new CFTParticle(tp, &hodoAna);
+    CFTPartCont.push_back(CFTPart);
+  }
+
+  for( Int_t i=0; i<ntCFT; ++i ){
+    CFTParticle *CFTPart  = CFTPartCont[i];
+    CFTPart->Calculate();
+
+    bool flagPTrack = false;
+
+    if (CFTPart->GetMass()>0.9) {
+      //flagCFTProton = true;
+      flagPTrack = true;
+    }
+    gEvDisp.DrawCFTLocalTrack_dE_E( CFTPart, flagPTrack );
+    
+  }
+
+  
   //________________________________________________________
   //___ Reaction
   Bool_t is_good = false;
@@ -994,6 +1051,7 @@ ConfMan::InitializeParameterFiles()
      && InitializeParameter<TemplateFitMan>("BGOTEMP") 
      && InitializeParameter<BGOCalibMan>("BGOCALIB")
      && InitializeParameter<TAGPLMatch>("TAGPLMTH")
+     && InitializeParameter<CATCHPidMan>("CATCHPID")      
      && InitializeParameter<EventSelectMan>("EVSELECT") 
      && InitializeParameter<EventDisplay>());
 }
