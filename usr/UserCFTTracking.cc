@@ -557,14 +557,6 @@ ProcessingNormal()
   HF1(10, ntCFT);
   event.ntCFT = ntCFT;
 
-  //for costheta
-  Double_t u0_cos = 0;
-  Double_t u1_cos = 0;
-  Double_t v0_cos = 0;
-  Double_t v1_cos = 0;
-  Double_t in_vec = 0;
-  Double_t out_vec = 0;
-
 
   for( Int_t i=0; i<ntCFT; ++i ){
     const auto& tp=DCAna.GetTrackCFT(i);
@@ -713,7 +705,6 @@ ProcessingNormal()
       event.z0_y_16layer[0]=-y0/v0;
       event.z0_x_16layer[0]=-x0/u0;
       event.dist_16layer[0]=fabs(v0*x0-u0*y0)/sqrt(u0*u0+v0*v0);
-
 
       for (Int_t ih=0; ih<nhXY; ih++) {
         CFTFiberCluster *cl = tp->GetHit(ih);
