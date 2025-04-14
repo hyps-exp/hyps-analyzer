@@ -31,6 +31,7 @@
 // #define TimeCut    1 // in cluster analysis
 #define FHitBranch 0 // make FiberHit branches (becomes heavy)
 #define HodoHitPos 0
+#define SDCoutreq 0
 
 namespace
 {
@@ -472,6 +473,20 @@ ProcessingNormal()
   RawData rawData;
   HodoAnalyzer hodoAna(rawData);
 
+#if SDCoutreq
+  for(const auto& name: DCNameList.at("SdcIn")) rawData.DecodeHits(name);
+  for(const auto& name: DCNameList.at("SdcOut")) rawData.DecodeHits(name);
+  DCAnalyzer   DCAna(rawData);
+  DCAna.DecodeSdcOutHits();
+  DCAna.TotCutSDC2(30);
+  DCAna.TotCutSDC3(40);
+  DCAna.TrackSearchSdcOut();
+  Int_t nt=DCAna.GetNtracksSdcOut();
+  //std::cout<<nt<<std::endl;
+  if(nt<1) return true;
+#endif
+
+    
 
   gRM.Decode();
 
@@ -1761,6 +1776,10 @@ ConfMan::InitializeParameterFiles()
      InitializeParameter<HodoParamMan>("HDPRM") &&
      InitializeParameter<HodoPHCMan>("HDPHC")   &&
      InitializeParameter<TAGPLMatch>("TAGPLMTH") &&
+#if SDCoutreq
+     InitializeParameter<DCDriftParamMan>("DCDRFT") &&
+     InitializeParameter<DCTdcCalibMan>("DCTDC")    &&
+#endif
      InitializeParameter<UserParamMan>("USER"));
 }
 
