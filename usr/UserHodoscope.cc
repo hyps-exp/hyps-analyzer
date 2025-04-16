@@ -17,6 +17,7 @@
 #include "DetectorID.hh"
 #include "RMAnalyzer.hh"
 #include "HodoHit.hh"
+#include "HodoWaveformHit.hh"
 #include "HodoAnalyzer.hh"
 #include "HodoCluster.hh"
 #include "HodoParamMan.hh"
@@ -32,6 +33,7 @@
 #define FHitBranch 0 // make FiberHit branches (becomes heavy)
 #define HodoHitPos 0
 #define SDCoutreq 0
+#define TAG_PL_FADC 1
 
 namespace
 {
@@ -605,8 +607,18 @@ ProcessingNormal()
       HodoRawHit *hit = cont[i];
       Int_t seg = hit->SegmentId();
       HF1(TagPLHid+5, seg+0.5);
-      Double_t a=hit->GetAdc();
-      event.tagpla[seg]=a;
+
+      //Double_t a=hit->GetAdc();
+      //event.tagpla[seg]=a;
+
+      Int_t NhitA = hit->GetSizeAdcHigh();
+      for(Int_t m = 0; m<NhitA; ++m){
+	Int_t adc = hit->GetAdcUp(m);	
+	HF2 (TagPLHid +100*(seg+1) +1, m, adc);
+
+	event.tagpla[seg]=adc;	
+      }
+
       Bool_t is_hit_l = false;
       Int_t m_l = hit->GetSizeTdcLeading();
       for(Int_t j=0;j<m_l;++j){
@@ -629,12 +641,21 @@ ProcessingNormal()
   //Tag-Hodoana
   std::vector<int> PLCand;
   {
-  hodoAna.DecodeHits("TAG-PL");
-
+    const auto& U= HodoRawHit::kUp;
+#ifdef TAG_PL_FADC
+    hodoAna.DecodeHits<HodoWaveformHit>("TAG-PL");
+#elif  
+    hodoAna.DecodeHits("TAG-PL");
+#endif
     Int_t nh=hodoAna.GetNHits("TAG-PL");
     Int_t nseg_goodtime=0;
+
     for(Int_t i=0;i<nh;++i){
-      const auto& hit =hodoAna.GetHit("TAG-PL",i);
+#ifdef TAG_PL_FADC
+      const auto& hit = hodoAna.GetHit<HodoWaveformHit>("TAG-PL", i);
+#elif        
+      const auto& hit = hodoAna.GetHit("TAG-PL",i);
+#endif      
       if(!hit) continue;
       Int_t seg =hit->SegmentId();
       /*
@@ -648,7 +669,8 @@ ProcessingNormal()
 	//Double_t ct= hit->GetCTUp(m);
 	//HF1(TagPLHid +100*(seg+1) +13, t);
 	HF1(TagPLHid +13, t);
-	if(fabs(t)<5.0) is_hit_time=true;
+	//if(fabs(t)<5.0) is_hit_time=true;
+	if(fabs(t-7)<5.0) is_hit_time=true;
 	//if(fabs(t)<300.0) is_hit_time=true;
       }
       if(is_hit_time){
@@ -656,12 +678,24 @@ ProcessingNormal()
 	HF1(TagPLHid +16, seg+0.5);
 	PLCand.push_back(seg);
       }
-
+#ifdef TAG_PL_FADC
+      Int_t NhitWF = hit->GetWaveformEntries(U);
+      for(Int_t m = 0; m<NhitWF; ++m){
+	std::pair<Double_t, Double_t> waveform = hit->GetWaveform(m);
+	HF2 (TagPLHid +100*(seg+1)+11, waveform.first, waveform.second);            	
+      }
+      Double_t adc_integral = hit->GetAdcIntegral();
+      HF1 (TagPLHid +100*(seg+1)+12, adc_integral);
+      if (is_hit_time)
+	HF1 (TagPLHid +100*(seg+1)+13, adc_integral);            	      
+#endif
     }
+
     HF1(TagPLHid+10, Double_t(PLCand.size()));
 
   }
 
+  
   std::vector<double> SFFhit;
   std::vector<double> SFBhit;
   std::vector<double> SFFCand;
@@ -1468,8 +1502,16 @@ ConfMan::InitializeHistograms()
   HB1(TagPLHid +6, "HitPat Tag-PL (w/ TDC cut)", NumOfSegTagPL, 0, Double_t(NumOfSegTagPL));
   HB1(TagPLHid +16, "HitPat Tag-PL (w/ Time cut)", NumOfSegTagPL, 0, Double_t(NumOfSegTagPL));
   for(Int_t i=1;i<=NumOfSegTagPL;++i){
+    TString title1 = Form("TagPL-%d FADC", i);
     TString title3 = Form("TagPL-%d Tdc", i);
+    TString title11 = Form("TagPL-%d Waveform", i);
+    TString title12 = Form("TagPL-%d ADC integral", i);
+    TString title13 = Form("TagPL-%d ADC integral (w/ TDC)", i);            
+    HB2(TagPLHid +100*i +1, title1, 200, 0, 400, 400, 0, 20000);
     HB1(TagPLHid +100*i +3, title3, NbinTdc, MinTdc, MaxTdc);
+    HB2(TagPLHid +100*i+11, title11, 200, -0.5, 0.5, 500, -10000, 2000);
+    HB1(TagPLHid +100*i+12, title12, NbinAdc, -500, 10000);
+    HB1(TagPLHid +100*i+13, title13, NbinAdc, -500, 10000);        
   }
 
   // T0

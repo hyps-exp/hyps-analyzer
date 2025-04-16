@@ -55,24 +55,30 @@ HodoWaveformHit::HodoWaveformHit(HodoRawHit *rhit)
     m_pulse_height(m_n_ch),
     m_pulse_time(m_n_ch),        
     m_position(qnan),
+    m_adc_integral(qnan),    
+    m_func(0),
     m_JoinTrack(false)
 {
   debug::ObjectCounter::increase(ClassName());
 
-  auto &cont = gTempFit.GetHitContainer(DetectorName());
-  TemplateFitFunction *tempFunc = cont.at(SegmentId());
-  m_func = new TF1(DetectorName()+"-"+std::to_string(SegmentId()),
-		   //gTempFit.GetFitFunction(SegmentId()),
-		   tempFunc,
-		   fitStart, fitEnd, ParaMax );
-
+  if (DetectorName()=="BGO") {
+    auto &cont = gTempFit.GetHitContainer(DetectorName());
+    TemplateFitFunction *tempFunc = cont.at(SegmentId());
+    m_func = new TF1(DetectorName()+"-"+std::to_string(SegmentId()),
+		     //gTempFit.GetFitFunction(SegmentId()),
+		     tempFunc,
+		     fitStart, fitEnd, ParaMax );
+  }
 }
 
 //_____________________________________________________________________________
 HodoWaveformHit::~HodoWaveformHit()
 {
   del::ClearContainer( m_TGraphC );
-  delete m_func;
+
+  if (m_func)
+    delete m_func;
+  
   m_func = 0;
   debug::ObjectCounter::decrease(ClassName());
 }
@@ -99,6 +105,7 @@ HodoWaveformHit::Calculate()
 
   for(Int_t ch=0; ch<m_n_ch; ++ch){
     // adc
+    
     Int_t ns=0;
     for(const auto& adc: m_raw->GetArrayAdcHigh(ch)){
       Double_t de   = TMath::QuietNaN();
@@ -108,16 +115,39 @@ HodoWaveformHit::Calculate()
 	 ){
 	Double_t pedestal  = gHodo.GetP0(id, plane, seg, 0);
 	de = (Double_t)adc - pedestal;
-
+	
 	std::pair<Double_t, Double_t> wf_pair(time, de);
         m_waveform.at(ch).push_back(wf_pair);
+
       }
       ns++;
     }
+
+    Int_t Nped=0;
+    Double_t event_pedestal=0;
+    for(const auto& wf: m_waveform.at(ch)){
+      Double_t time = wf.first;
+      if (time >= -0.06 && time < -0.015) {
+	event_pedestal = wf.second;
+	Nped++;
+      }
+    }
+    event_pedestal /= Nped;
+    if (Nped>0)
+      m_adc_integral = 0.;
+    
+    for(const auto& wf: m_waveform.at(ch)){
+      Double_t time = wf.first;
+      if (time >= -0.01 && time <=0.03) {
+	Double_t de = wf.second;
+	m_adc_integral += (de - event_pedestal) * (-1.0);
+      }
+    }
+
   }
 
-
-  PulseSearch();
+  if (DetectorName()=="BGO") 
+    PulseSearch();
 
   m_is_calculated = true;
 

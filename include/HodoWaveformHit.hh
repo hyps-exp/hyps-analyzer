@@ -56,7 +56,8 @@ private:
 protected:
   Double_t m_position;
   Double_t m_dxdw;
-
+  Double_t m_adc_integral;
+  
   using waveform_t = std::vector<std::vector<std::pair<Double_t, Double_t>>>; // (time, de)[ch][mhit]
   waveform_t m_waveform;
 
@@ -109,6 +110,9 @@ public:
   { if(m_n_ch == HodoRawHit::kNChannel) return GetNPulse(HodoRawHit::kExtra);
     else return GetNPulse(HodoRawHit::kUp); }
 
+  Double_t GetAdcIntegral() const
+  { return m_adc_integral; }
+  
   Double_t GetPulseHeight(Int_t i, Int_t j) const
   { return m_pulse_height.at(i).at(j); }
 
