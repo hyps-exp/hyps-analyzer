@@ -444,27 +444,40 @@ ProcessingNormal()
   
   std::vector<double> SFFCand_final;
   std::vector<double> SFBCand_final;
-  
-  for(int i=0;i<SFFCand.size();i++){
-    for(int j=0;j<SFBCand.size();j++){
-      if(fabs(SFFCand[i]-SFBCand[j])<3){
-	SFFCand_final.push_back(SFFCand[i]);
-	SFBCand_final.push_back(SFBCand[j]);
+  double Egamma=0.0;
+
+  const double eparf[3]={1.486,0.03312,-0.0001588};
+  const double eparb[3]={1.49797,0.0327588,-0.000152769};
+  const double offset_b=0.6421;
+
+  if(SFFCand.size()>0 && SFBCand.size()>0){
+    for(int i=0;i<SFFCand.size();i++){
+      for(int j=0;j<SFBCand.size();j++){
+	if(fabs(SFFCand[i]-SFBCand[j])<3){
+	  SFFCand_final.push_back(SFFCand[i]);
+	  SFBCand_final.push_back(SFBCand[j]);
+	}
       }
     }
+  }else if(SFFCand.size()==1 && PLCand.size()>0){
+    Egamma=eparf[0]+eparf[1]*SFFCand[0]+eparf[2]*SFFCand[0]*SFFCand[0];
+  }else if(SFBCand.size()==1 && PLCand.size()>0){
+    double SFBpos=SFBCand[0]+offset_b;
+    Egamma=eparb[0]+eparb[1]*SFBpos+eparb[2]*SFBpos*SFBpos;
   }
   
   if(SFFCand_final.size()==1){
-    const double eparf[3]={1.42893,0.0350856,-0.000132564};
-    const double eparb[3]={1.42415,0.0351546,-0.000136274};
-    const double offset_b=0.6421;
     
-    double egamf=eparf[0]+eparf[1]*SFFCand[0]+eparf[2]*SFFCand[0]*SFFCand[0];
-    double SFBpos=SFBCand[0]+offset_b;
+    double egamf=eparf[0]+eparf[1]*SFFCand_final[0]+eparf[2]*SFFCand_final[0]*SFFCand_final[0];
+    double SFBpos=SFBCand_final[0]+offset_b;
     double egamb=eparb[0]+eparb[1]*SFBpos+eparb[2]*SFBpos*SFBpos;
 
-    std::cout << "Egamma (egamf) = " << egamf << " GeV, "
-	      << "Egamma (egamb) = " << egamb << " GeV" << std::endl;
+    Egamma=(egamf+egamb)*0.5;
+
+  }
+
+  if(Egamma>0){
+  std::cout << "Egamma = " << Egamma << " GeV"<< std::endl;
   }
 
   //________________________________________________________

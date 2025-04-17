@@ -780,32 +780,40 @@ ProcessingNormal()
       }
     }
 
-    for(int i=0;i<SFFCand.size();i++){
-      for(int j=0;j<SFBCand.size();j++){
-	HF2(TagSFHid+27,SFFCand[i],SFBCand[j]);
-	if(fabs(SFFCand[i]-SFBCand[j])<3){
-	  SFFCand_final.push_back(SFFCand[i]);
-	  SFBCand_final.push_back(SFBCand[j]);
+    double egamf=qnan;
+    double egamb=qnan;
+    const double eparf[3]={1.486,0.03312,-0.0001588};
+    const double eparb[3]={1.49797,0.0327588,-0.000152769};
+    const double offset_b=0.6421;
+    if(SFFCand.size()>0 && SFBCand.size()>0){
+      for(int i=0;i<SFFCand.size();i++){
+	for(int j=0;j<SFBCand.size();j++){
+	  HF2(TagSFHid+27,SFFCand[i],SFBCand[j]);
+	  if(fabs(SFFCand[i]-SFBCand[j])<3){
+	    SFFCand_final.push_back(SFFCand[i]);
+	    SFBCand_final.push_back(SFBCand[j]);
+	  }
 	}
       }
+    }else if(SFFCand.size()==1 && PLCand.size()>0){
+      egamf=eparf[0]+eparf[1]*SFFCand[0]+eparf[2]*SFFCand[0]*SFFCand[0];
+    }else if(SFBCand.size()==1 && PLCand.size()>0){
+      double SFBpos=SFBCand[0]+offset_b;
+      egamb=eparb[0]+eparb[1]*SFBpos+eparb[2]*SFBpos*SFBpos;
     }
     HF1(TagSFHid+30,Double_t(SFFCand_final.size()));
     HF1(TagSFHid+31,Double_t(SFBCand_final.size()));
 
     if(SFFCand_final.size()==1){
-      HF2(TagSFHid+37,SFFCand[0],SFBCand[0]);
-      const double eparf[3]={1.42893,0.0350856,-0.000132564};
-      const double eparb[3]={1.42415,0.0351546,-0.000136274};
-      const double offset_b=0.6421;
+      HF2(TagSFHid+37,SFFCand_final[0],SFBCand_final[0]);
 
-      double egamf=eparf[0]+eparf[1]*SFFCand[0]+eparf[2]*SFFCand[0]*SFFCand[0];
-      double SFBpos=SFBCand[0]+offset_b;
-      double egamb=eparb[0]+eparb[1]*SFBpos+eparb[2]*SFBpos*SFBpos;
-
-      HF1(TagSFHid+35,egamf);
-      HF1(TagSFHid+36,egamb);
+      egamf=eparf[0]+eparf[1]*SFFCand_final[0]+eparf[2]*SFFCand_final[0]*SFFCand_final[0];
+      double SFBpos=SFBCand_final[0]+offset_b;
+      egamb=eparb[0]+eparb[1]*SFBpos+eparb[2]*SFBpos*SFBpos;
 
     }
+    HF1(TagSFHid+35,egamf);
+    HF1(TagSFHid+36,egamb);
 
     for(int i=0;i<PLCand.size();i++){
       for(int j=0;j<SFFhit.size();j++){
