@@ -110,6 +110,10 @@ public:
   { if(m_n_ch == HodoRawHit::kNChannel) return GetNPulse(HodoRawHit::kExtra);
     else return GetNPulse(HodoRawHit::kUp); }
 
+  Int_t GetNGraph() const {return m_TGraphC.size(); }
+  inline TGraphErrors * GetTGraph( std::size_t i ) const;
+  inline TF1 * GetFitTF1() const;
+  
   Double_t GetAdcIntegral() const
   { return m_adc_integral; }
   
@@ -142,6 +146,22 @@ HodoWaveformHit::ClassName()
   return s_name;
 }
 
+//______________________________________________________________________________
+inline TGraphErrors*
+HodoWaveformHit::GetTGraph( std::size_t i ) const
+{
+  if( i<m_TGraphC.size() )
+    return m_TGraphC[i];
+  else
+    return 0;
+}
+
+//______________________________________________________________________________
+inline TF1*
+HodoWaveformHit::GetFitTF1() const
+{
+  return m_func;
+}
 //_____________________________________________________________________________
 /*
 inline Bool_t
