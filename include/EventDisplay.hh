@@ -346,6 +346,9 @@ public:
                        Double_t q);
   void ShowHitFiber(Int_t layer, Int_t segment, Double_t pe, Double_t ctime);
   void ShowHitBGO(Int_t segment, Double_t de) const;
+  void SetBGOWaveformCanvas(Int_t nhit );
+  void DrawBGOWaveform(Int_t nc, Int_t ngraph, Int_t seg, TGraphErrors* gr );
+  void DrawBGOFitFunc(Int_t nc, Int_t seg, TF1* func );
   void DrawCFT_Time( Int_t layer, Int_t seg, Int_t LorT, Double_t time );
   void DrawCFT_AdcCor( Int_t layer, Int_t seg, Int_t HorL, Double_t adccor );  
   void ShowHitTagger(const TString& name, Int_t segment, Double_t de) const;    

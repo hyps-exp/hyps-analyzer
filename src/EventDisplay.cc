@@ -81,6 +81,7 @@
 #define CATCH        1
 #define CATCH_Timing 1
 #define CATCH_ADC    1
+#define BGO_WF       1
 
 namespace
 {
@@ -370,7 +371,7 @@ EventDisplay::Initialize()
 #endif
 
   m_canvas = new TCanvas("canvas", "HYPS Event Display",
-                         1800, 700);
+                         900, 350);
   m_canvas->Divide(2, 1);
   m_canvas->cd(1)->Divide(1, 2);
   m_canvas->cd(1)->cd(1)->SetPad(0.00, 0.92, 1.00, 1.00);
@@ -743,7 +744,7 @@ EventDisplay::Initialize()
 #endif
 
 #if CATCH_Timing
-  m_canvas_hist7 = new TCanvas( "canvas_hist7", "EventDisplay Detector Timing (CATCH)", 800, 1000 );
+  m_canvas_hist7 = new TCanvas( "canvas_hist7", "EventDisplay Detector Timing (CATCH)", 400, 500 );
   m_canvas_hist7->Divide(4,3);  
 
 
@@ -807,7 +808,7 @@ EventDisplay::Initialize()
 
 #if CATCH_ADC
 
-  m_canvas_hist8 = new TCanvas( "canvas_hist8", "EventDisplay Detector ADC (CATCH)", 800, 1000 );
+  m_canvas_hist8 = new TCanvas( "canvas_hist8", "EventDisplay Detector ADC (CATCH)", 400, 500 );
   m_canvas_hist8->Divide(4,3);  
 
   for (Int_t layer=0; layer<8; layer++) {
@@ -853,12 +854,22 @@ EventDisplay::Initialize()
   }
 
 #endif
+
+#if BGO_WF  
+  std::cout << "m_canvas_hist9" << std::endl;
+  m_canvas_hist9 = new TCanvas( "canvas_hist9", "EventDisplay Detector BGO waveform (CATCH)", 500, 500 );
+  m_canvas_hist9->Divide(4,6);  
+  for (int npad = 0; npad<24; npad++)
+    m_canvas_hist9->cd(npad+1)->SetGrid();
+
+  std::cout << "finish m_canvas_hist9" << std::endl;  
+#endif
   
 #if CATCH
   ConstructCATCH();
   //ConstructCATCH3d();
 
-  m_canvas_dE_E = new TCanvas( "canvas_dE_E", "EventDisplay Detector #DeltaE-E (CATCH)", 500, 500 );
+  m_canvas_dE_E = new TCanvas( "canvas_dE_E", "EventDisplay Detector #DeltaE-E (CATCH)", 250, 250 );
   m_canvas_dE_E->SetGrid();
   m_hist_dE_E = new TH2F( "hist_dE_E","#Delta E - E",
 			   100, 0, 200, 100, 0, 10 );
@@ -4159,6 +4170,72 @@ void EventDisplay::ShowHitBGO(Int_t segment, Double_t de) const
   node->SetVisibility(1);
   node->SetLineColor(color);
   */
+#endif
+}
+
+//______________________________________________________________________________
+void
+EventDisplay::SetBGOWaveformCanvas(Int_t nhit )
+{
+#if BGO_WF
+  m_canvas_hist9->Clear();
+
+  if (nhit == 2)
+    m_canvas_hist9->Divide(2, 1);
+  else if (nhit>= 3 && nhit<=4)
+    m_canvas_hist9->Divide(2, 2);
+  else if (nhit>= 5 && nhit<=6)
+    m_canvas_hist9->Divide(2, 3);
+  else if (nhit>= 7 && nhit<=8)
+    m_canvas_hist9->Divide(2, 4);
+  else if (nhit>= 9 && nhit<=12)
+    m_canvas_hist9->Divide(3, 4);
+  else if (nhit>= 13 && nhit<=16)
+    m_canvas_hist9->Divide(4, 4);
+  else if (nhit>= 17 && nhit<=20)
+    m_canvas_hist9->Divide(5, 4);
+  else if (nhit>= 21 && nhit<=24)
+    m_canvas_hist9->Divide(6, 4);
+
+
+#endif
+}
+
+//______________________________________________________________________________
+void
+EventDisplay::DrawBGOWaveform(Int_t nc, Int_t ngraph, Int_t seg, TGraphErrors* gr )
+{
+#if BGO_WF
+  m_canvas_hist9->cd(nc);
+
+  gr->SetNameTitle(Form("gra_%d_%d", seg, ngraph),
+		  Form("Segment %d", seg));
+
+  if (ngraph == 0) {
+    gr->SetMarkerSize(1.);
+    gr->SetMarkerStyle(20);
+    gr->Draw("ap");
+  } else {
+    gr->SetMarkerSize(1.);
+    gr->SetMarkerStyle(20);
+    gr->SetMarkerColor(kRed);
+    gr->Draw("p");
+
+  }
+
+#endif
+}
+
+
+//______________________________________________________________________________
+void
+EventDisplay::DrawBGOFitFunc(Int_t nc, Int_t seg, TF1* func )
+{
+#if BGO_WF
+  m_canvas_hist9->cd(nc);
+
+  func->Draw("same");
+
 #endif
 }
 

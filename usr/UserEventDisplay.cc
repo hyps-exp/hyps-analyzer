@@ -830,6 +830,8 @@ ProcessingNormal()
   
   hodoAna.DecodeHits<HodoWaveformHit>("BGO");
   Int_t nhBGO=hodoAna.GetNHits("BGO");
+  gEvDisp.SetBGOWaveformCanvas(nhBGO);
+  int nc = 1;
   {
     const auto& U = HodoRawHit::kUp;
     for(Int_t i=0; i<nhBGO; ++i){
@@ -862,6 +864,21 @@ ProcessingNormal()
 	  gEvDisp.ShowHitBGO(seg, de);	  
 	}
       }
+
+      Int_t ngr = hit->GetNGraph();
+      for (Int_t ig=0; ig<ngr; ig++) {
+	TGraphErrors *gr = hit->GetTGraph(ig);
+	gEvDisp.DrawBGOWaveform(nc, ig, seg, gr);      
+      }
+
+      if (Npulse>0) {
+	TF1 *func = hit->GetFitTF1();
+	gEvDisp.DrawBGOFitFunc(nc, seg, func);      
+      }
+
+      if (ngr>0)
+	nc++;
+
       //if (flagTime)
       //HF2 (1000*(plane+1)+206, seg, adccorHi);	
     }
