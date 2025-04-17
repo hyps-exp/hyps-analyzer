@@ -146,8 +146,7 @@ HodoWaveformHit::Calculate()
 
   }
 
-  if (DetectorName()=="BGO") 
-    PulseSearch();
+  PulseSearch();
 
   m_is_calculated = true;
 
@@ -160,6 +159,9 @@ Bool_t HodoWaveformHit::PulseSearch( void )
 {
   if (!MakeGraph())
     return false;
+
+  if (DetectorName()!="BGO")
+    return true;
   
   // Original graph index = 0;
   Int_t index_original_graph = 0;
@@ -242,7 +244,11 @@ Bool_t HodoWaveformHit::MakeGraph()
     if ( fadc.first >= graphStart && fadc.first <= graphEnd ) {
       if ( index<n_range ) {
 	gr->SetPoint(index, fadc.first, fadc.second);
-	gr->SetPointError(index, 0, y_err);
+	if (GetName() == "BGO") {
+	  gr->SetPointError(index, 0, y_err);
+	} else {
+	  gr->SetPointError(index, 0, 0);	  
+	}
 	index++;
       }
     }

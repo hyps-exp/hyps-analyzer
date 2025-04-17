@@ -42,6 +42,7 @@
 #define SAVEPDF 0
 #define DEBUG 0
 #define UseTOF 1
+#define TAG_PL_FADC 1
 
 namespace
 {
@@ -312,12 +313,21 @@ ProcessingNormal()
   //Tag-Hodoana
   std::vector<int> PLCand;
   {  
+    Int_t nc = 0;
+#ifdef TAG_PL_FADC
+    hodoAna.DecodeHits<HodoWaveformHit>("TAG-PL");    
+#elif  
     hodoAna.DecodeHits("TAG-PL");
+#endif
   
     Int_t nh=hodoAna.GetNHits("TAG-PL");
     Int_t nseg_goodtime=0;
     for(Int_t i=0;i<nh;++i){
-      const auto& hit =hodoAna.GetHit("TAG-PL",i);
+#ifdef TAG_PL_FADC
+      const auto& hit = hodoAna.GetHit<HodoWaveformHit>("TAG-PL", i);
+#elif        
+      const auto& hit = hodoAna.GetHit("TAG-PL",i);
+#endif      
       if(!hit) continue;
       Int_t seg =hit->SegmentId();
       //std::cout<<"Tagger PL (seg) = ("<<seg<<std::endl;      
@@ -327,7 +337,7 @@ ProcessingNormal()
 	Double_t t=hit->GetTUp(m);
 	//std::cout << t << "  ";
 	//Double_t ct= hit->GetCTUp(m);
-	if(fabs(t)<5.0) is_hit_time=true;
+	if(fabs(t)<10.0) is_hit_time=true;
       }
       //std::cout << std::endl;
       if(is_hit_time){
@@ -336,7 +346,32 @@ ProcessingNormal()
 	Double_t de = hit->DeltaE();
 	gEvDisp.ShowHitTagger("TAG-PL", seg, de);	  	
       }
+
+#ifdef TAG_PL_FADC
+      Int_t ngr = hit->GetNGraph();
+      if (ngr>0)
+	nc++;
+#endif    
+
     }
+
+#ifdef TAG_PL_FADC
+    gEvDisp.SetTagWaveformCanvas(nc);    
+    nc = 1;
+    for(Int_t i=0;i<nh;++i){
+      const auto& hit = hodoAna.GetHit<HodoWaveformHit>("TAG-PL", i);
+      if(!hit) continue;
+      Int_t seg =hit->SegmentId();
+      Int_t ngr = hit->GetNGraph();
+      for (Int_t ig=0; ig<ngr; ig++) {
+	TGraphErrors *gr = hit->GetTGraph(ig);
+	gEvDisp.DrawTagWaveform(nc, ig, seg, gr);      
+      }
+      if (ngr>0)
+	nc++;
+    }
+#endif
+    
   }
 
   std::vector<double> SFFhit;
@@ -365,7 +400,7 @@ ProcessingNormal()
 	Double_t t=hit->GetTUp(m);
 	//std::cout << t << "  ";
 	//Double_t ct= hit->GetCTUp(m);
-	if(fabs(t)<5) is_hit_time=true;
+	if(fabs(t)<10) is_hit_time=true;
       }
       //std::cout << std::endl;
       if(is_hit_time){
@@ -379,7 +414,7 @@ ProcessingNormal()
       }
     }
     
-    hodoAna.TimeCut("TAG-SF",-5,5);
+    hodoAna.TimeCut("TAG-SF",-10,10);
   
     Int_t nc=hodoAna.GetNClusters("TAG-SF");
     Int_t ncl1=0, ncl2=0;
@@ -830,9 +865,8 @@ ProcessingNormal()
   
   hodoAna.DecodeHits<HodoWaveformHit>("BGO");
   Int_t nhBGO=hodoAna.GetNHits("BGO");
-  gEvDisp.SetBGOWaveformCanvas(nhBGO);
-  int nc = 1;
   {
+    int nc = 0;    
     const auto& U = HodoRawHit::kUp;
     for(Int_t i=0; i<nhBGO; ++i){
       const auto& hit = hodoAna.GetHit<HodoWaveformHit>("BGO", i);
@@ -866,22 +900,31 @@ ProcessingNormal()
       }
 
       Int_t ngr = hit->GetNGraph();
-      for (Int_t ig=0; ig<ngr; ig++) {
-	TGraphErrors *gr = hit->GetTGraph(ig);
-	gEvDisp.DrawBGOWaveform(nc, ig, seg, gr);      
-      }
-
-      if (Npulse>0) {
-	TF1 *func = hit->GetFitTF1();
-	gEvDisp.DrawBGOFitFunc(nc, seg, func);      
-      }
-
       if (ngr>0)
 	nc++;
 
       //if (flagTime)
       //HF2 (1000*(plane+1)+206, seg, adccorHi);	
     }
+
+    gEvDisp.SetBGOWaveformCanvas(nc);
+    nc=1;
+    for(Int_t i=0; i<nhBGO; ++i){
+      const auto& hit = hodoAna.GetHit<HodoWaveformHit>("BGO", i);
+      if(!hit) continue;
+      Int_t seg   = hit->SegmentId();
+
+      Int_t ngr = hit->GetNGraph();
+      for (Int_t ig=0; ig<ngr; ig++) {
+	TGraphErrors *gr = hit->GetTGraph(ig);
+	gEvDisp.DrawBGOWaveform(nc, ig, seg, gr);      
+      }
+      Int_t Npulse = hit->GetNPulse(U);
+      if (Npulse>0) {
+	TF1 *func = hit->GetFitTF1();
+	gEvDisp.DrawBGOFitFunc(nc, seg, func);      
+      }
+    }      
   }
 
  

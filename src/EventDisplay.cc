@@ -82,6 +82,7 @@
 #define CATCH_Timing 1
 #define CATCH_ADC    1
 #define BGO_WF       1
+#define TAG_WF       1
 
 namespace
 {
@@ -142,6 +143,7 @@ EventDisplay::EventDisplay()
     m_canvas_hist7(),
     m_canvas_hist8(),
     m_canvas_hist9(),
+    m_canvas_hist10(),
     m_hist_vertex_x(),
     m_hist_vertex_y(),
     m_hist_p(),
@@ -856,13 +858,17 @@ EventDisplay::Initialize()
 #endif
 
 #if BGO_WF  
-  std::cout << "m_canvas_hist9" << std::endl;
   m_canvas_hist9 = new TCanvas( "canvas_hist9", "EventDisplay Detector BGO waveform (CATCH)", 500, 500 );
   m_canvas_hist9->Divide(4,6);  
   for (int npad = 0; npad<24; npad++)
     m_canvas_hist9->cd(npad+1)->SetGrid();
+#endif
 
-  std::cout << "finish m_canvas_hist9" << std::endl;  
+#if TAG_WF  
+  m_canvas_hist10 = new TCanvas( "canvas_hist10", "EventDisplay Detector Tag-PL waveform", 500, 500 );
+  m_canvas_hist10->Divide(2,5);  
+  for (int npad = 0; npad<10; npad++)
+    m_canvas_hist10->cd(npad+1)->SetGrid();
 #endif
   
 #if CATCH
@@ -4238,6 +4244,53 @@ EventDisplay::DrawBGOFitFunc(Int_t nc, Int_t seg, TF1* func )
 
 #endif
 }
+
+//______________________________________________________________________________
+void
+EventDisplay::SetTagWaveformCanvas(Int_t nhit )
+{
+#if TAG_WF
+  m_canvas_hist10->Clear();
+
+  if (nhit == 2)
+    m_canvas_hist10->Divide(2, 1);
+  else if (nhit>= 3 && nhit<=4)
+    m_canvas_hist10->Divide(2, 2);
+  else if (nhit>= 5 && nhit<=6)
+    m_canvas_hist10->Divide(2, 3);
+  else if (nhit>= 7 && nhit<=8)
+    m_canvas_hist10->Divide(2, 4);
+  else if (nhit>= 9 && nhit<=12)
+    m_canvas_hist10->Divide(3, 4);
+
+#endif
+}
+
+//______________________________________________________________________________
+void
+EventDisplay::DrawTagWaveform(Int_t nc, Int_t ngraph, Int_t seg, TGraphErrors* gr )
+{
+#if TAG_WF
+  m_canvas_hist10->cd(nc);
+
+  gr->SetNameTitle(Form("gra_%d_%d", seg, ngraph),
+		  Form("Segment %d", seg));
+
+  if (ngraph == 0) {
+    gr->SetMarkerSize(1.);
+    gr->SetMarkerStyle(20);
+    gr->Draw("ap");
+  } else {
+    gr->SetMarkerSize(1.);
+    gr->SetMarkerStyle(20);
+    gr->SetMarkerColor(kRed);
+    gr->Draw("p");
+
+  }
+
+#endif
+}
+
 
 //______________________________________________________________________________
 void

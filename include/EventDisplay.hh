@@ -79,6 +79,7 @@ private:
   TCanvas                   *m_canvas_hist7;
   TCanvas                   *m_canvas_hist8;
   TCanvas                   *m_canvas_hist9;
+  TCanvas                   *m_canvas_hist10;  
   TCanvas                   *m_canvas_catch;  
   TH1                       *m_hist_vertex_x;
   TH1                       *m_hist_vertex_y;
@@ -349,6 +350,8 @@ public:
   void SetBGOWaveformCanvas(Int_t nhit );
   void DrawBGOWaveform(Int_t nc, Int_t ngraph, Int_t seg, TGraphErrors* gr );
   void DrawBGOFitFunc(Int_t nc, Int_t seg, TF1* func );
+  void SetTagWaveformCanvas(Int_t nhit );
+  void DrawTagWaveform(Int_t nc, Int_t ngraph, Int_t seg, TGraphErrors* gr );
   void DrawCFT_Time( Int_t layer, Int_t seg, Int_t LorT, Double_t time );
   void DrawCFT_AdcCor( Int_t layer, Int_t seg, Int_t HorL, Double_t adccor );  
   void ShowHitTagger(const TString& name, Int_t segment, Double_t de) const;    
