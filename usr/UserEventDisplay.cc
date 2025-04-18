@@ -937,6 +937,8 @@ ProcessingNormal()
 	TF1 *func = hit->GetFitTF1();
 	gEvDisp.DrawBGOFitFunc(nc, seg, func);      
       }
+      if (ngr>0)
+	nc++;
     }      
   }
 

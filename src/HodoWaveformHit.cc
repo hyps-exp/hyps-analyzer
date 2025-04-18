@@ -110,7 +110,7 @@ HodoWaveformHit::Calculate()
     for(const auto& adc: m_raw->GetArrayAdcHigh(ch)){
       Double_t de   = TMath::QuietNaN();
       Double_t time = TMath::QuietNaN();      
-      if(adc > 0 && adc < 0xffff &&
+      if(adc > 0 && adc < 0xffff && ns > 0 &&
 	 gHodo.GetTime2(id, plane, seg, ch, ns, time) 
 	 ){
 	Double_t pedestal  = gHodo.GetP0(id, plane, seg, 0);
