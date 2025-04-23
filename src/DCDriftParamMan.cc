@@ -224,7 +224,7 @@ DCDriftParamMan::DriftLength6(Int_t PlaneId, Double_t dt,
   switch(PlaneId){
     // SDC0
   case 1: case 2: case 3: case 4:
-    if(dt < -5. || 120 < dt)
+    if(dt < -10. || 120 < dt)
       return qnan;
     if(dl > 2.5 || dt > 100.)
       return 2.5;
@@ -235,7 +235,7 @@ DCDriftParamMan::DriftLength6(Int_t PlaneId, Double_t dt,
     break;
     // SDC1
   case 5: case 6: case 7: case 8: case 9: case 10:
-    if(dt < -5. || dt > 220.)
+    if(dt < -10. || dt > 220.)
       return qnan;
     if(dl > 6.0 || dt > 200.)
       return 6.0;
@@ -246,7 +246,7 @@ DCDriftParamMan::DriftLength6(Int_t PlaneId, Double_t dt,
     break;
     // SDC2
   case 31: case 32: case 33: case 34: case 35:
-    if(dt < -5. || dt > 320.)
+    if(dt < -10. || dt > 320.)
       return qnan;
     if(dl < 0. || dt < 0.)
       return 0.;
@@ -257,7 +257,7 @@ DCDriftParamMan::DriftLength6(Int_t PlaneId, Double_t dt,
     break;
     // SDC3
   case 36: case 37: case 38: case 39: case 40:
-    if(dt < -5. || dt > 320.)
+    if(dt < -10. || dt > 320.)
       return qnan;
     if(dl < 0. || dt < 0.)
       return 0.;
