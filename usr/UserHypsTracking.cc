@@ -830,11 +830,19 @@ ProcessingNormal()
 	HF2(100*layerId+16, pos, res);
       }
       HF2(100*layerId+17, xcal, ycal);
-      /*
-      if (std::abs(dl-std::abs(xcal-wp))<2.0){
-	HF2(100*layerId+22, dt, std::abs(xcal-wp));
+
+      if (layerId<41){ 
+	HF2(100*layerId+19, dt, xcal-wp);
+	if (layerId<11){
+	  if (std::abs(dl-std::abs(xcal-wp))<2.6){
+	    HF2(100*layerId+22, dt, std::abs(xcal-wp));
+	  }
+	}else{
+	  if (std::abs(dl-std::abs(xcal-wp))<2.0){
+	    HF2(100*layerId+22, dt, std::abs(xcal-wp));
+	  }
+	}
       }
-      */
       event.resG[layerId-1].push_back(res);
     }
 
@@ -1107,6 +1115,8 @@ ConfMan::InitializeHistograms()
     HB1(100*l+15, title5, NbinSdcInRes, MinSdcInRes, MaxSdcInRes);
     HB2(100*l+16, title6, 100, -100., 100., NbinSdcInRes, MinSdcInRes, MaxSdcInRes);
     HB2(100*l+17, title7, 100, -100., 100., 100, -50., 50.);
+    TString title19 = Form("DriftLength%%HitPos SdcIn%2d [HypsTrack]", i);
+    HB2(100*l+19, title19, nbindt, mindt, maxdt, 2*nbindl, -maxdl, maxdl);
     TString title22 = Form("DriftLength%%DriftTime SdcIn%2d [HypsTrack]", i);
     HB2(100*l+22, title22, nbindt, mindt, maxdt, nbindl, mindl, maxdl);
   }
@@ -1164,6 +1174,8 @@ ConfMan::InitializeHistograms()
     HB1(100*l+15, title5, NbinSdcOutRes, MinSdcOutRes, MaxSdcOutRes);
     HB2(100*l+16, title6, 2000, -1000., 1000., NbinSdcOutRes, MinSdcOutRes, MaxSdcOutRes);
     HB2(100*l+17, title7, 100, -600., 600., 100, -600., 600.);
+    TString title19 = Form("DriftLength%%HitPos SdcOut%2d [HypsTrack]", i);
+    HB2(100*l+19, title19, nbindt, mindt, maxdt, 2*nbindl, -maxdl, maxdl);
     TString title22 = Form("DriftLength%%DriftTime SdcOut%2d [HypsTrack]", i);
     HB2(100*l+22, title22, nbindt, mindt, maxdt, nbindl, mindl, maxdl);
   }
