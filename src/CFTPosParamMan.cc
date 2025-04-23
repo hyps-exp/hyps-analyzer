@@ -98,7 +98,7 @@ bool CFTPosParamMan::Initialize( void )
 	    }
 	    //printf("\n");
 	  }
-	} 
+	}
       } else if (type_id==2) {
 	input_line >> plid >> seg;
 	for (int k=0; k<NumOfUDataPar; k++) {
@@ -140,7 +140,7 @@ double  CFTPosParamMan::GetPhiShift(int layer, int angle, double z) const
     return 0.;
   }
 
-  // z --> CFT local z pos                                                      
+  // z --> CFT local z pos
   z += offsetCATCH;
 
 
@@ -157,7 +157,7 @@ double  CFTPosParamMan::GetPhiShift(int layer, int angle, double z) const
 
 double  CFTPosParamMan::PhiPosFunc(int layer, int angle, double z) const
 {
-  return PhiPosPar[layer][angle][0] 
+  return PhiPosPar[layer][angle][0]
     + PhiPosPar[layer][angle][1]*pow(z, 1.)
     + PhiPosPar[layer][angle][2]*pow(z, 2.)
     + PhiPosPar[layer][angle][3]*pow(z, 3.)
@@ -199,10 +199,10 @@ double  CFTPosParamMan::GetZposU(int layer, int seg, double phi, double theta) c
 	double y0 = UPosDataPar2[layer][seg][thetaId][index0];
 	double delta_y = UPosDataPar2[layer][seg][thetaId][index1] - UPosDataPar2[layer][seg][thetaId][index0] ;
 	double delta_x = phi-phi0 - ((index0-1)*(double)DivPhi2 + (double)DivPhi2/2);
-	
+
 	deltaShift3 = y0 + delta_x/DivPhi2*delta_y;
 	/*
-	std::cout << "phi " << phi << ", index0 " << index0 
+	std::cout << "phi " << phi << ", index0 " << index0
 		  << ", delta_y " << delta_y << ", delta_x " << delta_x
 		  << ", deltaShift3 " << deltaShift3 << std::endl;
 	*/
@@ -211,7 +211,7 @@ double  CFTPosParamMan::GetZposU(int layer, int seg, double phi, double theta) c
   }
 
 
-  return UPosPar[layer][seg][0] 
+  return UPosPar[layer][seg][0]
     + UPosPar[layer][seg][1]*pow(phi, 1.)
     + UPosPar[layer][seg][2]*pow(phi, 2.)
     + UPosPar[layer][seg][3]*pow(phi, 3.)

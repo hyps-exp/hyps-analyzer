@@ -32,10 +32,13 @@
 #include "DCGeomMan.hh"
 #include "CFTPedCorMan.hh"
 #include "CFTPosParamMan.hh"
+#include "Kinematics.hh"
 
 // #define TimeCut    1 // in cluster analysis
 #define FHitBranch 0 // make FiberHit branches (becomes heavy)
 #define HodoHitPos 0
+#define cosmic 0
+#define production 1
 
 namespace
 {
@@ -76,6 +79,12 @@ struct Event
   Double_t track_theta[MaxDepth];
   Double_t track_phi[MaxDepth];
 
+  Int_t    nVer_product;
+  Double_t dist_product[MaxDepth];
+  Double_t xtar_product[MaxDepth];
+  Double_t ytar_product[MaxDepth];
+  Double_t ztar_product[MaxDepth];
+
   Int_t    ntCFT_16layer;
   Int_t    nhXY_16layer[MaxDepth];
   Int_t    nhZ_16layer[MaxDepth];
@@ -102,7 +111,6 @@ struct Event
   Double_t phiU_16layer[4][MaxDepth];
   Double_t calZU_16layer[4][MaxDepth];
   Double_t resZU_16layer[4][MaxDepth];
-
 
   ////////// Normalized
 
@@ -134,6 +142,7 @@ Event::clear()
 
   ntCFT = 0;
   ntCFT_16layer = 0;
+  nVer_product = 0;
   for (Int_t j=0; j<4; j++) {
     nhPhi_16layer[j] = 0;
     nhU_16layer[j] = 0;
@@ -150,6 +159,10 @@ Event::clear()
     distMeanz[j] = qnan;
     track_theta[j] = qnan;
     track_phi[j] = qnan;
+    dist_product[j] = qnan;
+    xtar_product[j] = qnan;
+    ytar_product[j] = qnan;
+    ztar_product[j] = qnan;
     nhXY_16layer[j] = 0;
     nhZ_16layer[j] = 0;
     chisqrXY_16layer[j] = qnan;
@@ -557,6 +570,8 @@ ProcessingNormal()
   HF1(10, ntCFT);
   event.ntCFT = ntCFT;
 
+  ThreeVector track_Dir[MaxDepth];
+  ThreeVector track_Pos[MaxDepth];
 
   for( Int_t i=0; i<ntCFT; ++i ){
     const auto& tp=DCAna.GetTrackCFT(i);
@@ -601,9 +616,10 @@ ProcessingNormal()
     event.distMeany[i]=u0*(u0*y0-v0*x0)/(2*(u0*u0+v0*v0));
     event.distMeanz[i]=-(u0*x0+v0*y0)/(u0*u0+v0*v0);
 
-    ThreeVector track_vector = tp->GetDir();
-    event.track_theta[i] = track_vector.Theta()*TMath::RadToDeg();
-    event.track_phi[i] = track_vector.Phi()*TMath::RadToDeg();
+    track_Dir[i] = tp->GetDir();
+    track_Pos[i] = tp->GetPos0();
+    event.track_theta[i] = track_Dir[i].Theta()*TMath::RadToDeg();
+    event.track_phi[i] = track_Dir[i].Phi()*TMath::RadToDeg();
 
     for (Int_t j=0; j<nh; ++j) {
       const auto& cl = tp->GetHit(j);
@@ -651,7 +667,33 @@ ProcessingNormal()
     //<< ", theta = " << theta << std::endl;
   }
 
+  //For production data
+#if production
+  if(ntCFT>1){
+    Int_t nVer = 0;
+    TVector3 target;
+    Double_t dist_product;
+    for(Int_t i=0; i<ntCFT-1; i++){
+      for(Int_t j=i+1; j<ntCFT; j++){
+	target = Kinematics::VertexPoint3D(track_Dir[i], track_Dir[j], track_Pos[i], track_Pos[j], dist_product);
+	event.xtar_product[nVer] = target.X();
+	event.ytar_product[nVer] = target.Y();
+	event.ztar_product[nVer] = target.Z();
+	event.dist_product[nVer] = dist_product;
+
+	HF2 (30, target.X(), target.Y());
+	HF2 (31, target.Z(), target.X());
+	HF2 (32, target.Z(), target.Y());
+
+	nVer++;
+      }
+    }
+    event.nVer_product = nVer;
+  }
+#endif
+
   // For Cosmic ray data
+#if cosmic
   if(ntCFT == 2){
     // 16 layer tracking
     DCAna.TrackSearchCFT_16layer();
@@ -808,7 +850,7 @@ ProcessingNormal()
       event.cost_16layer[0]=cost;
     }
   }
-
+#endif
 
 
   return true;
@@ -863,23 +905,31 @@ ConfMan::InitializeHistograms()
   HB2(25, "Theta % Max dE (Low gain) of CFT Track",   200, -2., 18., 200, -10, 190);
   HB2(26, "Theta % Normalized Max dE (Low gain) of CFT Track",   200, 0.0, 2.5, 200, -10, 190);
 
-  HB1(50, "#Tracks CFT", 10, 0., 10.);
-  HB1(51, "#Hits of Track CFT", 20, 0., 20.);
-  HB1(52, "#Hits (PHI) of Track CFT", 10, 0., 10.);
-  HB1(53, "#Hits (UV) of Track CFT", 10, 0., 10.);
-  HB1(54, "Chisqr(PHI)", 200, 0., 100.);
-  HB1(55, "Chisqr(UV)", 200, 0., 100.);
-  HB1(56, "LayerId CFT", 10, 0., 10.);
-  HB1(57, "Theta of CFT Track", 200, -10., 190.);
-  HB1(58, "Phi of CFT Track",   200, -200., 400.);
-  HB2(59, "Theta % Phi of CFT Track",   200, -200., 400., 200, -10, 190);
-  HB1(60, "Total dE (Low gain) of CFT Track",   200, -2., 18.);
-  HB1(61, "Max dE (Low gain) of CFT Track",   200, -2., 18.);
-  HB1(62, "Normalized Total dE (Low gain) of CFT Track",   200, 0.0, 2.5);
-  HB1(63, "Normalized Max dE (Low gain) of CFT Track",   200, 0.0, 2.5);
-  HB1(64, "Total dE (High gain) of CFT Track",   200, 0., 2000.);
-  HB2(65, "Theta % Max dE (Low gain) of CFT Track",   200, -2., 18., 200, -10, 190);
-  HB2(66, "Theta % Normalized Max dE (Low gain) of CFT Track",   200, 0.0, 2.5, 200, -10, 190);
+#if production
+  HB2(30, "x vs y of CFT Track",   100, -50, 50, 100, -50, 50);
+  HB2(31, "z vs x of CFT Track",   500, -200, 300, 100, -50, 50);
+  HB2(32, "z vs y of CFT Track",   500, -200, 300, 100, -50, 50);
+#endif
+
+#if cosmic
+  HB1(50, "#Tracks CFT [16layer Track]", 10, 0., 10.);
+  HB1(51, "#Hits of Track CFT [16layer Track]", 20, 0., 20.);
+  HB1(52, "#Hits (PHI) of Track CFT [16layer Track]", 10, 0., 10.);
+  HB1(53, "#Hits (UV) of Track CFT [16layer Track]", 10, 0., 10.);
+  HB1(54, "Chisqr(PHI) [16layer Track]", 200, 0., 100.);
+  HB1(55, "Chisqr(UV) [16layer Track]", 200, 0., 100.);
+  HB1(56, "LayerId CFT [16layer Track]", 10, 0., 10.);
+  HB1(57, "Theta of CFT Track [16layer Track]", 200, -10., 190.);
+  HB1(58, "Phi of CFT Track [16layer Track]",   200, -200., 400.);
+  HB2(59, "Theta % Phi of CFT Track [16layer Track]",   200, -200., 400., 200, -10, 190);
+  HB1(60, "Total dE (Low gain) of CFT Track [16layer Track]",   200, -2., 18.);
+  HB1(61, "Max dE (Low gain) of CFT Track [16layer Track]",   200, -2., 18.);
+  HB1(62, "Normalized Total dE (Low gain) of CFT Track [16layer Track]",   200, 0.0, 2.5);
+  HB1(63, "Normalized Max dE (Low gain) of CFT Track [16layer Track]",   200, 0.0, 2.5);
+  HB1(64, "Total dE (High gain) of CFT Track [16layer Track]",   200, 0., 2000.);
+  HB2(65, "Theta % Max dE (Low gain) of CFT Track [16layer Track]",   200, -2., 18., 200, -10, 190);
+  HB2(66, "Theta % Normalized Max dE (Low gain) of CFT Track [16layer Track]",   200, 0.0, 2.5, 200, -10, 190);
+#endif
 
   for(Int_t i=0; i<NumOfPlaneCFT; i++){
     TString title100("");
@@ -893,6 +943,7 @@ ConfMan::InitializeHistograms()
     TString title115("");
     TString title116("");
 
+#if cosmic
     TString title150("");
     TString title151("");
     TString title152("");
@@ -900,6 +951,7 @@ ConfMan::InitializeHistograms()
     TString title154("");
     TString title155("");
     TString title156("");
+#endif
     if(i%2 == 0){// spiral layer
       Int_t layer = (Int_t)i/2 +1;
       title100  = Form("CFT UV %d : Time", layer);
@@ -910,16 +962,18 @@ ConfMan::InitializeHistograms()
       title112  = Form("CFT UV %d : Residual (Z) [Track]", layer);
       title113  = Form("CFT UV %d : Not Used", layer);
       title114  = Form("CFT UV %d : Not Used", layer);
-      title115  = Form("CFT UV %d : Residual (Z) % Z [Track]", layer);
-      title116  = Form("CFT UV %d : Residual (Z) % Phi [Track]", layer);
+      title115  = Form("CFT UV %d : Residual (Z) vs Z [Track]", layer);
+      title116  = Form("CFT UV %d : Residual (Z) vs Phi [Track]", layer);
 
+#if cosmic
       title150  = Form("CFT UV %d : Time [16layer Track]", layer);
       title151  = Form("CFT UV %d : MeanSeg [16layer Track]", layer);
       title152  = Form("CFT UV %d : Residual (Z) [16layer Track]", layer);
       title153  = Form("CFT UV %d : Not Used", layer);
       title154  = Form("CFT UV %d : Not Used", layer);
-      title155  = Form("CFT UV %d : Residual (Z) % Z [16layer Track]", layer);
-      title156  = Form("CFT UV %d : Residual (Z) % Phi [16layer Track]", layer);
+      title155  = Form("CFT UV %d : Residual (Z) vs Z [16layer Track]", layer);
+      title156  = Form("CFT UV %d : Residual (Z) vs Phi [16layer Track]", layer);
+#endif
     }else if(i%2 == 1){// straight layer
       Int_t layer = (Int_t)i/2 +1;
       title100  = Form("CFT Phi %d : Time", layer);
@@ -930,16 +984,18 @@ ConfMan::InitializeHistograms()
       title112  = Form("CFT Phi %d : Residual (X or Y) [Track]", layer);
       title113  = Form("CFT Phi %d : Residual (phi) [Track]", layer);
       title114  = Form("CFT Phi %d : Residual (phi_cor) [Track]", layer);
-      title115  = Form("CFT Phi %d : Residual (phi_cor) % Z [Track]", layer);
-      title116  = Form("CFT Phi %d : Residual (phi_cor) % Phi [Track]", layer);
+      title115  = Form("CFT Phi %d : Residual (phi_cor) vs Z [Track]", layer);
+      title116  = Form("CFT Phi %d : Residual (phi_cor) vs Phi [Track]", layer);
 
+#if cosmic
       title150  = Form("CFT Phi %d : Time [16layer Track]", layer);
       title151  = Form("CFT Phi %d : MeanSeg [16layer Track]", layer);
       title152  = Form("CFT Phi %d : Residual (X or Y) [16layer Track]", layer);
       title153  = Form("CFT Phi %d : Residual (phi) [16layer Track]", layer);
       title154  = Form("CFT Phi %d : Residual (phi_cor) [16layer Track]", layer);
-      title155  = Form("CFT Phi %d : Residual (phi_cor) % Z [16layer Track]", layer);
-      title156  = Form("CFT Phi %d : Residual (phi_cor) % Phi [16layer Track]", layer);
+      title155  = Form("CFT Phi %d : Residual (phi_cor) vs Z [16layer Track]", layer);
+      title156  = Form("CFT Phi %d : Residual (phi_cor) vs Phi [16layer Track]", layer);
+#endif
     }
 
     HB1( 100*(i+1) +  0, title100, 1000,-50, 150);
@@ -953,13 +1009,15 @@ ConfMan::InitializeHistograms()
     HB2( 100*(i+1) + 15, title115, 500, -200, 300, 100, -5., 5.);
     HB2( 100*(i+1) + 16, title116, 400, -20, 380, 100, -5., 5.);
 
-    HB1( 100*(i+1) + 50, title110, 1000,-50, 150);
-    HB1( 100*(i+1) + 51, title111, NumOfSegCFT[i], 0, NumOfSegCFT[i]);
-    HB1( 100*(i+1) + 52, title112, 100, -5., 5.);
-    HB1( 100*(i+1) + 53, title113, 100, -5., 5.);
-    HB1( 100*(i+1) + 54, title114, 100, -5., 5.);
-    HB2( 100*(i+1) + 55, title115, 500, -200, 300, 100, -5., 5.);
-    HB2( 100*(i+1) + 56, title116, 400, -20, 380, 100, -5., 5.);
+#if cosmic
+    HB1( 100*(i+1) + 50, title150, 1000,-50, 150);
+    HB1( 100*(i+1) + 51, title151, NumOfSegCFT[i], 0, NumOfSegCFT[i]);
+    HB1( 100*(i+1) + 52, title152, 100, -5., 5.);
+    HB1( 100*(i+1) + 53, title153, 100, -5., 5.);
+    HB1( 100*(i+1) + 54, title154, 100, -5., 5.);
+    HB2( 100*(i+1) + 55, title155, 500, -200, 300, 100, -5., 5.);
+    HB2( 100*(i+1) + 56, title156, 400, -20, 380, 100, -5., 5.);
+#endif
   }
 
 
@@ -1076,7 +1134,6 @@ ConfMan::InitializeHistograms()
   tree->Branch("cftadc_cor_l",   event.cftadc_cor_l,  Form("cftadc_cor_l[%d][%d]/I", NumOfPlaneCFT, NumOfSegCFT_PHI4));
 
 
-  // 16layer tracking
   tree->Branch("ntCFT",   &event.ntCFT,  "ntCFT/I");
   tree->Branch("x0",   event.x0,  "x0[ntCFT]/D");
   tree->Branch("y0",   event.y0,  "y0[ntCFT]/D");
@@ -1089,7 +1146,17 @@ ConfMan::InitializeHistograms()
   tree->Branch("track_theta", event.track_theta,"track_theta[ntCFT]/D");
   tree->Branch("track_phi",   event.track_phi,  "track_phi[ntCFT]/D");
 
+#if production
+  tree->Branch("nVer_product",   &event.nVer_product, "nVer_product/I");
+  tree->Branch("dist_product",   event.dist_product,  "dist_product[nVer_product]/D");
+  tree->Branch("xtar_product",   event.xtar_product,  "xtar_product[nVer_product]/D");
+  tree->Branch("ytar_product",   event.ytar_product,  "ytar_product[nVer_product]/D");
+  tree->Branch("ztar_product",   event.ztar_product,  "ztar_product[nVer_product]/D");
 
+#endif
+
+  // 16layer tracking
+#if cosmic
   tree->Branch("ntCFT_16layer",   &event.ntCFT_16layer,  "ntCFT_16layer/I");
   tree->Branch("nhXY_16layer",   event.nhXY_16layer,  "nhXY_16layer[ntCFT_16layer]/I");
   tree->Branch("nhZ_16layer",   event.nhZ_16layer,  "nhZ_16layer[ntCFT_16layer]/I");
@@ -1161,7 +1228,7 @@ ConfMan::InitializeHistograms()
   tree->Branch("calZU2_16layer",   event.calZU_16layer[1],  "calZU2_16layer[nhU2_16layer]/D");
   tree->Branch("calZU3_16layer",   event.calZU_16layer[2],  "calZU3_16layer[nhU3_16layer]/D");
   tree->Branch("calZU4_16layer",   event.calZU_16layer[3],  "calZU4_16layer[nhU4_16layer]/D");
-
+#endif
 
   // HPrint();
   return true;

@@ -389,8 +389,9 @@ bool CFTLocalTrack::DoFitZTrack()
 	return false;
       }
 
+      // modosu 2->1
       double z1 = CalculateZpos2(phi, hitp, mean_z);
-      //double z1 = CalculateZpos(phi, hitp, mean_z);
+      // double z1 = CalculateZpos(phi, hitp, mean_z);
 
       double xy1=-999.;
       if (xyFitFlag_==0)
@@ -1419,8 +1420,9 @@ bool CFTLocalTrack::SetCalculatedValue()
 	return false;
       }
 
+      // modosu 2->1
       double z1 = CalculateZpos2(phi, hitp);
-      //double z1 = CalculateZpos(phi, hitp);
+      // double z1 = CalculateZpos(phi, hitp);
       double xycal = Az_*z1 + Bz_;
       double xcal = u0_*z1 + x0_;
       double ycal = v0_*z1 + y0_;
@@ -1617,8 +1619,9 @@ bool CFTLocalTrack::SetCalculatedValue_16layer()
 	phi = phi2;
       */
 
+      // modosu 2->1
       double z1 = CalculateZpos2(phi, hitp);
-      //double z1 = CalculateZpos(phi, hitp);
+      // double z1 = CalculateZpos(phi, hitp);
       double xycal = Az_*z1 + Bz_;
       double xcal = u0_*z1 + x0_;
       double ycal = v0_*z1 + y0_;
@@ -2107,12 +2110,12 @@ double CFTLocalTrack::CalculateZpos(double phi, CFTFiberCluster *cl, double mean
 
     double z_glo = -99999.;
     if (std::abs(a1-mean_z) < std::abs(a2-mean_z)) {
-      std::cout << "a1 selected ( " << a1 << "), mean_z ( "
-		<< mean_z << " ), a2 ( " << a2 << " )" << std::endl;
+      // std::cout << "a1 selected ( " << a1 << "), mean_z ( "
+      // 		<< mean_z << " ), a2 ( " << a2 << " )" << std::endl;
       z_glo = (a1 - offsetCATCH);
     } else {
-      std::cout << "a2 selected ( " << a2 << "), mean_z ( "
-		<< mean_z << " ), a1 ( " << a1 << " )" << std::endl;
+      // std::cout << "a2 selected ( " << a2 << "), mean_z ( "
+      // 		<< mean_z << " ), a1 ( " << a1 << " )" << std::endl;
       z_glo =  (a2 - offsetCATCH);
     }
 
