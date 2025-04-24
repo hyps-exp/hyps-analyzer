@@ -682,7 +682,10 @@ ProcessingNormal()
       Int_t NhitWF = hit->GetWaveformEntries(U);
       for(Int_t m = 0; m<NhitWF; ++m){
 	std::pair<Double_t, Double_t> waveform = hit->GetWaveform(m);
-	HF2 (TagPLHid +100*(seg+1)+11, waveform.first, waveform.second);            	
+	HF2 (TagPLHid +100*(seg+1)+11, waveform.first, waveform.second);
+	if(is_hit_time){
+	  HF2 (TagPLHid +100*(seg+1)+14, waveform.first, waveform.second);
+	}
       }
       Double_t adc_integral = hit->GetAdcIntegral();
       HF1 (TagPLHid +100*(seg+1)+12, adc_integral);
@@ -1514,12 +1517,13 @@ ConfMan::InitializeHistograms()
     TString title3 = Form("TagPL-%d Tdc", i);
     TString title11 = Form("TagPL-%d Waveform", i);
     TString title12 = Form("TagPL-%d ADC integral", i);
-    TString title13 = Form("TagPL-%d ADC integral (w/ TDC)", i);            
-    HB2(TagPLHid +100*i +1, title1, 200, 0, 400, 400, 0, 20000);
+    TString title13 = Form("TagPL-%d ADC integral (w/ TDC)", i);
+    TString title14 = Form("TagPL-%d Waveform (w/ TDC)", i);                       HB2(TagPLHid +100*i +1, title1, 200, 0, 400, 400, 0, 20000);
     HB1(TagPLHid +100*i +3, title3, NbinTdc, MinTdc, MaxTdc);
     HB2(TagPLHid +100*i+11, title11, 200, -0.5, 0.5, 500, -10000, 2000);
     HB1(TagPLHid +100*i+12, title12, NbinAdc, -500, 10000);
-    HB1(TagPLHid +100*i+13, title13, NbinAdc, -500, 10000);        
+    HB1(TagPLHid +100*i+13, title13, NbinAdc, -500, 10000);
+    HB2(TagPLHid +100*i+14, title14, 200, -0.5, 0.5, 500, -10000, 2000);        
   }
 
   // T0
