@@ -95,7 +95,7 @@ const Int_t& IdTarget  = gGeom.DetectorId("Target");
   const Int_t& IdSDC1X3  = gGeom.DetectorId("SDC1-X");
   const Int_t& IdSDC2V   = gGeom.DetectorId("SDC2-V");
   const Int_t& IdSDC2X   = gGeom.DetectorId("SDC2-X");
-  const Int_t& IdSDC3X   = gGeom.DetectorId("SDC3-X");  
+  const Int_t& IdSDC3X   = gGeom.DetectorId("SDC3-X");
   //const Int_t& IdRKINIT  = gGeom.DetectorId("RKINIT");
 const Int_t& IdTOF     = gGeom.DetectorId("TOF-X");
   //const Int_t& IdAC1     = gGeom.DetectorId("AC1");
@@ -198,48 +198,48 @@ EventDisplay::EventDisplay()
     m_hist_bc3p_time(),
     m_hist_bc4_time(),
     m_hist_bc4p_time(),
-    m_hist_cft1_l(),   
-    m_hist_cft1_t(),   
-    m_hist_cft1_hi(),  
-    m_hist_cft1_lo(),  
-    m_hist_cft2_l(),   
-    m_hist_cft2_t(),   
-    m_hist_cft2_hi(),  
-    m_hist_cft2_lo(),  
-    m_hist_cft3_l(),   
-    m_hist_cft3_t(),   
-    m_hist_cft3_hi(),  
-    m_hist_cft3_lo(),  
-    m_hist_cft4_l(),   
-    m_hist_cft4_t(),   
-    m_hist_cft4_hi(),  
-    m_hist_cft4_lo(),  
-    m_hist_cft5_l(),   
-    m_hist_cft5_t(),   
-    m_hist_cft5_hi(),  
-    m_hist_cft5_lo(),  
-    m_hist_cft6_l(),   
-    m_hist_cft6_t(),   
-    m_hist_cft6_hi(),  
-    m_hist_cft6_lo(),  
-    m_hist_cft7_l(),   
-    m_hist_cft7_t(),   
-    m_hist_cft7_hi(),  
-    m_hist_cft7_lo(),  
-    m_hist_cft8_l(),   
-    m_hist_cft8_t(),   
-    m_hist_cft8_hi(),  
-    m_hist_cft8_lo(),  
-    m_hist_bgo(),      
-    m_hist_piid_l(),   
+    m_hist_cft1_l(),
+    m_hist_cft1_t(),
+    m_hist_cft1_hi(),
+    m_hist_cft1_lo(),
+    m_hist_cft2_l(),
+    m_hist_cft2_t(),
+    m_hist_cft2_hi(),
+    m_hist_cft2_lo(),
+    m_hist_cft3_l(),
+    m_hist_cft3_t(),
+    m_hist_cft3_hi(),
+    m_hist_cft3_lo(),
+    m_hist_cft4_l(),
+    m_hist_cft4_t(),
+    m_hist_cft4_hi(),
+    m_hist_cft4_lo(),
+    m_hist_cft5_l(),
+    m_hist_cft5_t(),
+    m_hist_cft5_hi(),
+    m_hist_cft5_lo(),
+    m_hist_cft6_l(),
+    m_hist_cft6_t(),
+    m_hist_cft6_hi(),
+    m_hist_cft6_lo(),
+    m_hist_cft7_l(),
+    m_hist_cft7_t(),
+    m_hist_cft7_hi(),
+    m_hist_cft7_lo(),
+    m_hist_cft8_l(),
+    m_hist_cft8_t(),
+    m_hist_cft8_hi(),
+    m_hist_cft8_lo(),
+    m_hist_bgo(),
+    m_hist_piid_l(),
     m_hist_piid_t(),
-    m_target_node(),	  
-    m_BH2wall_node(),	  
-    m_TOFwall_node(),	  
+    m_target_node(),
+    m_BH2wall_node(),
+    m_TOFwall_node(),
     m_TOFwall_0_8_node(),
     m_TOFwall_1_9_node(),
-    m_TOFwall_10_node(), 
-    m_TOFwall_11_node(), 
+    m_TOFwall_10_node(),
+    m_TOFwall_11_node(),
     m_TOFwall_12_22_node(),
     m_TOFwall_13_23_node(),
     m_TOFwall_24_34_node(),
@@ -247,11 +247,11 @@ EventDisplay::EventDisplay()
     m_TOFwall_36_node(),
     m_TOFwall_37_node(),
     m_TOFwall_38_46_node(),
-    m_TOFwall_39_47_node(),    
+    m_TOFwall_39_47_node(),
     m_AC1_node(),
     m_WCwall_node(),
     m_kurama_inner_node(),
-    m_kurama_outer_node(),        
+    m_kurama_outer_node(),
     m_BcOutTrack(),
     m_SdcInTrack(),
     m_init_step_mark(),
@@ -747,7 +747,7 @@ EventDisplay::Initialize()
 
 #if CATCH_Timing
   m_canvas_hist7 = new TCanvas( "canvas_hist7", "EventDisplay Detector Timing (CATCH)", 400, 500 );
-  m_canvas_hist7->Divide(4,3);  
+  m_canvas_hist7->Divide(4,3);
 
 
   for (Int_t layer=0; layer<8; layer++) {
@@ -811,7 +811,7 @@ EventDisplay::Initialize()
 #if CATCH_ADC
 
   m_canvas_hist8 = new TCanvas( "canvas_hist8", "EventDisplay Detector ADC (CATCH)", 400, 500 );
-  m_canvas_hist8->Divide(4,3);  
+  m_canvas_hist8->Divide(4,3);
 
   for (Int_t layer=0; layer<8; layer++) {
     TH2 *hp_hi=0, *hp_lo=0;
@@ -857,20 +857,20 @@ EventDisplay::Initialize()
 
 #endif
 
-#if BGO_WF  
+#if BGO_WF
   m_canvas_hist9 = new TCanvas( "canvas_hist9", "EventDisplay Detector BGO waveform (CATCH)", 500, 500 );
-  m_canvas_hist9->Divide(4,6);  
+  m_canvas_hist9->Divide(4,6);
   for (int npad = 0; npad<24; npad++)
     m_canvas_hist9->cd(npad+1)->SetGrid();
 #endif
 
-#if TAG_WF  
+#if TAG_WF
   m_canvas_hist10 = new TCanvas( "canvas_hist10", "EventDisplay Detector Tag-PL waveform", 500, 500 );
-  m_canvas_hist10->Divide(2,5);  
+  m_canvas_hist10->Divide(2,5);
   for (int npad = 0; npad<10; npad++)
     m_canvas_hist10->cd(npad+1)->SetGrid();
 #endif
-  
+
 #if CATCH
   ConstructCATCH();
   //ConstructCATCH3d();
@@ -908,7 +908,7 @@ EventDisplay::Initialize()
   }
 
 #endif
-  
+
   ResetVisibility();
 
   m_is_ready = true;
@@ -1702,7 +1702,7 @@ EventDisplay::ConstructSdcIn()
                                         "rotSDC1U2", "void"));
     }
   }
-  
+
   // SDC1 X2 (XP)
   {
     const Int_t lid = gGeom.GetDetectorId("SDC1-XP");
@@ -1717,7 +1717,7 @@ EventDisplay::ConstructSdcIn()
     new TRotMatrix("rotSDC1X2", "rotSDC1X2", Matrix);
     new TTUBE("SDC1X2Tube", "SDC1X2Tube", "void", Rmin, Rmax, L);
     //for(Int_t wire=1; wire<=MaxWireSDC1; ++wire){
-    for(Int_t wire=0; wire<MaxWireSDC1; ++wire){    
+    for(Int_t wire=0; wire<MaxWireSDC1; ++wire){
       Double_t localPos = gGeom.CalcWirePosition(lid, wire);
       ThreeVector wireLocalPos(localPos, 0, 0);
       ThreeVector wireGlobalPos = gGeom.Local2GlobalPos(lid, wireLocalPos);
@@ -1745,7 +1745,7 @@ EventDisplay::ConstructSdcIn()
     new TRotMatrix("rotSDC1X3", "rotSDC1X3", Matrix);
     new TTUBE("SDC1X3Tube", "SDC1X3Tube", "void", Rmin, Rmax, L);
     //for(Int_t wire=1; wire<=MaxWireSDC1; ++wire){
-    for(Int_t wire=0; wire<MaxWireSDC1; ++wire){      
+    for(Int_t wire=0; wire<MaxWireSDC1; ++wire){
       Double_t localPos = gGeom.CalcWirePosition(lid, wire);
       ThreeVector wireLocalPos(localPos, 0, 0);
       ThreeVector wireGlobalPos = gGeom.Local2GlobalPos(lid, wireLocalPos);
@@ -1758,7 +1758,7 @@ EventDisplay::ConstructSdcIn()
                                         "rotSDC1X3", "void"));
     }
   }
-  
+
 
   ConstructionDone(__func__);
   return true;
@@ -1853,7 +1853,7 @@ EventDisplay::ConstructSdcOut()
                                         "rotU2", "void"));
     }
   }
-  
+
   // SDC2 X1 (XP)
   {
     const Int_t lid = gGeom.GetDetectorId("SDC2-XP");
@@ -1868,7 +1868,7 @@ EventDisplay::ConstructSdcOut()
     new TRotMatrix("rotX1", "rotX1", Matrix);
     new TTUBE("SDC2X1Tube", "SDC2X1Tube", "void", Rmin, Rmax, L);
     //for(Int_t wire=1; wire<= MaxWireSDC2; ++wire){
-    for(Int_t wire=0; wire< MaxWireSDC2; ++wire){    
+    for(Int_t wire=0; wire< MaxWireSDC2; ++wire){
       Double_t localPos = gGeom.CalcWirePosition(lid, wire);
       ThreeVector wireLocalPos(localPos, 0., 0.);
       ThreeVector wireGlobalPos = gGeom.Local2GlobalPos(lid, wireLocalPos);
@@ -1994,7 +1994,7 @@ EventDisplay::ConstructSdcOut()
                                         "rotU2", "void"));
     }
   }
-  
+
   // SDC3 X1 (XP)
   {
     const Int_t lid = gGeom.GetDetectorId("SDC3-XP");
@@ -2155,18 +2155,18 @@ EventDisplay::ConstructTOF()
   Double_t LEPS_TOFSegY =  40.0/2.0; // Z
   Double_t LEPS_TOFSegZ = 1800.0/2.0; // Y
   Double_t LEPS_TOFPitch = 110.0; // X
-  
+
   // segment 0, 2, 4, 6, 8
   Int_t lid = gGeom.GetDetectorId("LEPS-TOF-UX-Tilt-R");
   ThreeVector localPosSeg4(gGeom.CalcWirePosition(lid, 4), 0, 0);
   ThreeVector globalPosSeg4=gGeom.Local2GlobalPos(lid, localPosSeg4);
   std::cout << "globalPosSeg4 = " << globalPosSeg4 << std::endl;
-  Double_t rotMatTOF[9] = {};  
+  Double_t rotMatTOF[9] = {};
   CalcRotMatrix(gGeom.GetTiltAngle(lid),
                 gGeom.GetRotAngle1(lid),
                 gGeom.GetRotAngle2(lid),
                 rotMatTOF);
-  new TRotMatrix("rotTOF_seg4", "rotTOF_seg4", rotMatTOF);  
+  new TRotMatrix("rotTOF_seg4", "rotTOF_seg4", rotMatTOF);
 
   Double_t TOFwallX_0_8 =  LEPS_TOFPitch * 8 + LEPS_TOFSegX*2; // X
   Double_t TOFwallY_0_8 =  LEPS_TOFSegY; // Z
@@ -2180,17 +2180,17 @@ EventDisplay::ConstructTOF()
                              globalPosSeg4.y(),
                              globalPosSeg4.z(),
                              "rotTOF_seg4", "void");
-  
+
   m_TOFwall_0_8_node->SetVisibility(0);
   m_TOFwall_0_8_node->cd();
 
   new TBRIK("LEPS_TOFseg_brik", "LEPS_TOFseg_brik", "void",
             LEPS_TOFSegX, LEPS_TOFSegY, LEPS_TOFSegZ);
-  
+
   for(Int_t i=0; i<=8; i+=2){
     Int_t ref_seg = 4;
     Double_t ref_lpos = gGeom.CalcWirePosition(lid, ref_seg);
-    Double_t lpos = gGeom.CalcWirePosition(lid, i);    
+    Double_t lpos = gGeom.CalcWirePosition(lid, i);
     ThreeVector tofSegLocalPos(lpos - ref_lpos,
                                0., 0.);
     std::cout << i << " " << tofSegLocalPos << std::endl;
@@ -2203,7 +2203,7 @@ EventDisplay::ConstructTOF()
   }
 
   m_node->cd();
-  
+
   // segment 1, 3, 5, 7, 9
   lid = gGeom.GetDetectorId("LEPS-TOF-DX-Tilt-R");
   ThreeVector localPosSeg5(gGeom.CalcWirePosition(lid, 5), 0, 0);
@@ -2212,7 +2212,7 @@ EventDisplay::ConstructTOF()
                 gGeom.GetRotAngle1(lid),
                 gGeom.GetRotAngle2(lid),
                 rotMatTOF);
-  new TRotMatrix("rotTOF_seg5", "rotTOF_seg5", rotMatTOF);  
+  new TRotMatrix("rotTOF_seg5", "rotTOF_seg5", rotMatTOF);
 
   Double_t TOFwallX_1_9 =  LEPS_TOFPitch * 8 + LEPS_TOFSegX*2; // X
   Double_t TOFwallY_1_9 =  LEPS_TOFSegY; // Z
@@ -2226,14 +2226,14 @@ EventDisplay::ConstructTOF()
                              globalPosSeg5.y(),
                              globalPosSeg5.z(),
                              "rotTOF_seg5", "void");
-  
+
   m_TOFwall_1_9_node->SetVisibility(0);
   m_TOFwall_1_9_node->cd();
 
   for(Int_t i=1; i<=9; i+=2){
     Int_t ref_seg = 5;
     Double_t ref_lpos = gGeom.CalcWirePosition(lid, ref_seg);
-    Double_t lpos = gGeom.CalcWirePosition(lid, i);    
+    Double_t lpos = gGeom.CalcWirePosition(lid, i);
     ThreeVector tofSegLocalPos(lpos - ref_lpos,
                                0., 0.);
     std::cout << i << " " << tofSegLocalPos << std::endl;
@@ -2246,7 +2246,7 @@ EventDisplay::ConstructTOF()
   }
 
   m_node->cd();
-  
+
   // segment 10
   lid = gGeom.GetDetectorId("LEPS-TOF-UX-R");
   ThreeVector localPosSeg10(gGeom.CalcWirePosition(lid, 10), 0, 0);
@@ -2255,7 +2255,7 @@ EventDisplay::ConstructTOF()
                 gGeom.GetRotAngle1(lid),
                 gGeom.GetRotAngle2(lid),
                 rotMatTOF);
-  new TRotMatrix("rotTOF_seg10", "rotTOF_seg10", rotMatTOF);  
+  new TRotMatrix("rotTOF_seg10", "rotTOF_seg10", rotMatTOF);
 
   Double_t TOFwallX_10 =  LEPS_TOFSegX; // X
   Double_t TOFwallY_10 =  LEPS_TOFSegY; // Z
@@ -2269,14 +2269,14 @@ EventDisplay::ConstructTOF()
                              globalPosSeg10.y(),
                              globalPosSeg10.z(),
                              "rotTOF_seg10", "void");
-  
+
   m_TOFwall_10_node->SetVisibility(0);
   m_TOFwall_10_node->cd();
 
   for(Int_t i=10; i<=10; i++){
     Int_t ref_seg = 10;
     Double_t ref_lpos = gGeom.CalcWirePosition(lid, ref_seg);
-    Double_t lpos = gGeom.CalcWirePosition(lid, i);    
+    Double_t lpos = gGeom.CalcWirePosition(lid, i);
     ThreeVector tofSegLocalPos(lpos - ref_lpos,
                                0., 0.);
     std::cout << i << " " << tofSegLocalPos << std::endl;
@@ -2289,7 +2289,7 @@ EventDisplay::ConstructTOF()
   }
 
   m_node->cd();
-  
+
   // segment 11
   lid = gGeom.GetDetectorId("LEPS-TOF-DX-R");
   ThreeVector localPosSeg11(gGeom.CalcWirePosition(lid, 11), 0, 0);
@@ -2298,7 +2298,7 @@ EventDisplay::ConstructTOF()
                 gGeom.GetRotAngle1(lid),
                 gGeom.GetRotAngle2(lid),
                 rotMatTOF);
-  new TRotMatrix("rotTOF_seg11", "rotTOF_seg11", rotMatTOF);  
+  new TRotMatrix("rotTOF_seg11", "rotTOF_seg11", rotMatTOF);
 
   Double_t TOFwallX_11 =  LEPS_TOFSegX; // X
   Double_t TOFwallY_11 =  LEPS_TOFSegY; // Z
@@ -2312,14 +2312,14 @@ EventDisplay::ConstructTOF()
                              globalPosSeg11.y(),
                              globalPosSeg11.z(),
                              "rotTOF_seg11", "void");
-  
+
   m_TOFwall_11_node->SetVisibility(0);
   m_TOFwall_11_node->cd();
 
   for(Int_t i=11; i<=11; i++){
     Int_t ref_seg = 11;
     Double_t ref_lpos = gGeom.CalcWirePosition(lid, ref_seg);
-    Double_t lpos = gGeom.CalcWirePosition(lid, i);    
+    Double_t lpos = gGeom.CalcWirePosition(lid, i);
     ThreeVector tofSegLocalPos(lpos - ref_lpos,
                                0., 0.);
     std::cout << i << " " << tofSegLocalPos << std::endl;
@@ -2332,7 +2332,7 @@ EventDisplay::ConstructTOF()
   }
 
   m_node->cd();
-  
+
   // segment 12, 14, 16, 18, 20, 22
   lid = gGeom.GetDetectorId("TOF-UX-R");
   ThreeVector localPosSeg12(gGeom.CalcWirePosition(lid, 12), 0, 0);
@@ -2340,17 +2340,17 @@ EventDisplay::ConstructTOF()
   ThreeVector localPosSeg22(gGeom.CalcWirePosition(lid, 22), 0, 0);
   ThreeVector globalPosSeg22=gGeom.Local2GlobalPos(lid, localPosSeg22);
   ThreeVector globalPosSeg12_22 = (globalPosSeg12 + globalPosSeg22)*0.5;
-  
+
   CalcRotMatrix(gGeom.GetTiltAngle(lid),
                 gGeom.GetRotAngle1(lid),
                 gGeom.GetRotAngle2(lid),
                 rotMatTOF);
-  new TRotMatrix("rotTOF_seg12_22", "rotTOF_seg12_22", rotMatTOF);  
+  new TRotMatrix("rotTOF_seg12_22", "rotTOF_seg12_22", rotMatTOF);
 
   Double_t KURAMA_TOFSegX =  80.0/2.0; // X
   Double_t KURAMA_TOFSegY =  30.0/2.0; // Z
   Double_t KURAMA_TOFSegZ = 1800.0/2.0; // Y
-  Double_t KURAMA_TOFPitch = 75.0; 
+  Double_t KURAMA_TOFPitch = 75.0;
 
   Double_t TOFwallX_12_22 =  KURAMA_TOFPitch * 10 + KURAMA_TOFSegX*2; // X
   Double_t TOFwallY_12_22 =  KURAMA_TOFSegY; // Z
@@ -2364,17 +2364,17 @@ EventDisplay::ConstructTOF()
                              globalPosSeg12_22.y(),
                              globalPosSeg12_22.z(),
                              "rotTOF_seg12_22", "void");
-  
+
   m_TOFwall_12_22_node->SetVisibility(0);
   m_TOFwall_12_22_node->cd();
 
   new TBRIK("KURAMA_TOFseg_brik", "KURAMA_TOFseg_brik", "void",
             KURAMA_TOFSegX, KURAMA_TOFSegY, KURAMA_TOFSegZ);
-  
+
   for(Int_t i=12; i<=22; i+=2){
     Int_t ref_seg = 17;
     Double_t ref_lpos = gGeom.CalcWirePosition(lid, ref_seg);
-    Double_t lpos = gGeom.CalcWirePosition(lid, i);    
+    Double_t lpos = gGeom.CalcWirePosition(lid, i);
     ThreeVector tofSegLocalPos(lpos - ref_lpos,
                                0., 0.);
     std::cout << i << " " << tofSegLocalPos << std::endl;
@@ -2387,7 +2387,7 @@ EventDisplay::ConstructTOF()
   }
 
   m_node->cd();
-  
+
   // segment 13, 15, 17, 19, 21, 23
   lid = gGeom.GetDetectorId("TOF-DX-R");
   ThreeVector localPosSeg13(gGeom.CalcWirePosition(lid, 13), 0, 0);
@@ -2395,12 +2395,12 @@ EventDisplay::ConstructTOF()
   ThreeVector localPosSeg23(gGeom.CalcWirePosition(lid, 23), 0, 0);
   ThreeVector globalPosSeg23=gGeom.Local2GlobalPos(lid, localPosSeg23);
   ThreeVector globalPosSeg13_23 = (globalPosSeg13 + globalPosSeg23)*0.5;
-  
+
   CalcRotMatrix(gGeom.GetTiltAngle(lid),
                 gGeom.GetRotAngle1(lid),
                 gGeom.GetRotAngle2(lid),
                 rotMatTOF);
-  new TRotMatrix("rotTOF_seg13_23", "rotTOF_seg13_23", rotMatTOF);  
+  new TRotMatrix("rotTOF_seg13_23", "rotTOF_seg13_23", rotMatTOF);
 
   Double_t TOFwallX_13_23 =  KURAMA_TOFPitch * 10 + KURAMA_TOFSegX*2; // X
   Double_t TOFwallY_13_23 =  KURAMA_TOFSegY; // Z
@@ -2414,14 +2414,14 @@ EventDisplay::ConstructTOF()
                              globalPosSeg13_23.y(),
                              globalPosSeg13_23.z(),
                              "rotTOF_seg13_23", "void");
-  
+
   m_TOFwall_13_23_node->SetVisibility(0);
   m_TOFwall_13_23_node->cd();
 
   for(Int_t i=13; i<=23; i+=2){
     Int_t ref_seg = 18;
     Double_t ref_lpos = gGeom.CalcWirePosition(lid, ref_seg);
-    Double_t lpos = gGeom.CalcWirePosition(lid, i);    
+    Double_t lpos = gGeom.CalcWirePosition(lid, i);
     ThreeVector tofSegLocalPos(lpos - ref_lpos,
                                0., 0.);
     std::cout << i << " " << tofSegLocalPos << std::endl;
@@ -2434,7 +2434,7 @@ EventDisplay::ConstructTOF()
   }
 
   m_node->cd();
-  
+
   // segment 24, 26, 28, 30, 32, 34
   lid = gGeom.GetDetectorId("TOF-DX-L");
   ThreeVector localPosSeg24(gGeom.CalcWirePosition(lid, 24), 0, 0);
@@ -2442,12 +2442,12 @@ EventDisplay::ConstructTOF()
   ThreeVector localPosSeg34(gGeom.CalcWirePosition(lid, 34), 0, 0);
   ThreeVector globalPosSeg34=gGeom.Local2GlobalPos(lid, localPosSeg34);
   ThreeVector globalPosSeg24_34 = (globalPosSeg24 + globalPosSeg34)*0.5;
-  
+
   CalcRotMatrix(gGeom.GetTiltAngle(lid),
                 gGeom.GetRotAngle1(lid),
                 gGeom.GetRotAngle2(lid),
                 rotMatTOF);
-  new TRotMatrix("rotTOF_seg24_34", "rotTOF_seg24_34", rotMatTOF);  
+  new TRotMatrix("rotTOF_seg24_34", "rotTOF_seg24_34", rotMatTOF);
 
   Double_t TOFwallX_24_34 =  KURAMA_TOFPitch * 10 + KURAMA_TOFSegX*2; // X
   Double_t TOFwallY_24_34 =  KURAMA_TOFSegY; // Z
@@ -2461,14 +2461,14 @@ EventDisplay::ConstructTOF()
                              globalPosSeg24_34.y(),
                              globalPosSeg24_34.z(),
                              "rotTOF_seg24_34", "void");
-  
+
   m_TOFwall_24_34_node->SetVisibility(0);
   m_TOFwall_24_34_node->cd();
 
   for(Int_t i=24; i<=34; i+=2){
     Int_t ref_seg = 29;
     Double_t ref_lpos = gGeom.CalcWirePosition(lid, ref_seg);
-    Double_t lpos = gGeom.CalcWirePosition(lid, i);    
+    Double_t lpos = gGeom.CalcWirePosition(lid, i);
     ThreeVector tofSegLocalPos(lpos - ref_lpos,
                                0., 0.);
     std::cout << i << " " << tofSegLocalPos << std::endl;
@@ -2489,12 +2489,12 @@ EventDisplay::ConstructTOF()
   ThreeVector localPosSeg35(gGeom.CalcWirePosition(lid, 35), 0, 0);
   ThreeVector globalPosSeg35=gGeom.Local2GlobalPos(lid, localPosSeg35);
   ThreeVector globalPosSeg25_35 = (globalPosSeg25 + globalPosSeg35)*0.5;
-  
+
   CalcRotMatrix(gGeom.GetTiltAngle(lid),
                 gGeom.GetRotAngle1(lid),
                 gGeom.GetRotAngle2(lid),
                 rotMatTOF);
-  new TRotMatrix("rotTOF_seg25_35", "rotTOF_seg25_35", rotMatTOF);  
+  new TRotMatrix("rotTOF_seg25_35", "rotTOF_seg25_35", rotMatTOF);
 
   Double_t TOFwallX_25_35 =  KURAMA_TOFPitch * 10 + KURAMA_TOFSegX*2; // X
   Double_t TOFwallY_25_35 =  KURAMA_TOFSegY; // Z
@@ -2508,14 +2508,14 @@ EventDisplay::ConstructTOF()
                              globalPosSeg25_35.y(),
                              globalPosSeg25_35.z(),
                              "rotTOF_seg25_35", "void");
-  
+
   m_TOFwall_25_35_node->SetVisibility(0);
   m_TOFwall_25_35_node->cd();
 
   for(Int_t i=25; i<=35; i+=2){
     Int_t ref_seg = 30;
     Double_t ref_lpos = gGeom.CalcWirePosition(lid, ref_seg);
-    Double_t lpos = gGeom.CalcWirePosition(lid, i);    
+    Double_t lpos = gGeom.CalcWirePosition(lid, i);
     ThreeVector tofSegLocalPos(lpos - ref_lpos,
                                0., 0.);
     std::cout << i << " " << tofSegLocalPos << std::endl;
@@ -2528,7 +2528,7 @@ EventDisplay::ConstructTOF()
   }
 
   m_node->cd();
-  
+
   // segment 36
   lid = gGeom.GetDetectorId("LEPS-TOF-DX-L");
   ThreeVector localPosSeg36(gGeom.CalcWirePosition(lid, 36), 0, 0);
@@ -2537,7 +2537,7 @@ EventDisplay::ConstructTOF()
                 gGeom.GetRotAngle1(lid),
                 gGeom.GetRotAngle2(lid),
                 rotMatTOF);
-  new TRotMatrix("rotTOF_seg36", "rotTOF_seg36", rotMatTOF);  
+  new TRotMatrix("rotTOF_seg36", "rotTOF_seg36", rotMatTOF);
 
   Double_t TOFwallX_36 =  LEPS_TOFSegX; // X
   Double_t TOFwallY_36 =  LEPS_TOFSegY; // Z
@@ -2551,14 +2551,14 @@ EventDisplay::ConstructTOF()
                              globalPosSeg36.y(),
                              globalPosSeg36.z(),
                              "rotTOF_seg36", "void");
-  
+
   m_TOFwall_36_node->SetVisibility(0);
   m_TOFwall_36_node->cd();
 
   for(Int_t i=36; i<=36; i++){
     Int_t ref_seg = 36;
     Double_t ref_lpos = gGeom.CalcWirePosition(lid, ref_seg);
-    Double_t lpos = gGeom.CalcWirePosition(lid, i);    
+    Double_t lpos = gGeom.CalcWirePosition(lid, i);
     ThreeVector tofSegLocalPos(lpos - ref_lpos,
                                0., 0.);
     std::cout << i << " " << tofSegLocalPos << std::endl;
@@ -2571,7 +2571,7 @@ EventDisplay::ConstructTOF()
   }
 
   m_node->cd();
-  
+
   // segment 37
   lid = gGeom.GetDetectorId("LEPS-TOF-UX-L");
   ThreeVector localPosSeg37(gGeom.CalcWirePosition(lid, 37), 0, 0);
@@ -2580,7 +2580,7 @@ EventDisplay::ConstructTOF()
                 gGeom.GetRotAngle1(lid),
                 gGeom.GetRotAngle2(lid),
                 rotMatTOF);
-  new TRotMatrix("rotTOF_seg37", "rotTOF_seg37", rotMatTOF);  
+  new TRotMatrix("rotTOF_seg37", "rotTOF_seg37", rotMatTOF);
 
   Double_t TOFwallX_37 =  LEPS_TOFSegX; // X
   Double_t TOFwallY_37 =  LEPS_TOFSegY; // Z
@@ -2594,14 +2594,14 @@ EventDisplay::ConstructTOF()
                              globalPosSeg37.y(),
                              globalPosSeg37.z(),
                              "rotTOF_seg37", "void");
-  
+
   m_TOFwall_37_node->SetVisibility(0);
   m_TOFwall_37_node->cd();
 
   for(Int_t i=37; i<=37; i++){
     Int_t ref_seg = 37;
     Double_t ref_lpos = gGeom.CalcWirePosition(lid, ref_seg);
-    Double_t lpos = gGeom.CalcWirePosition(lid, i);    
+    Double_t lpos = gGeom.CalcWirePosition(lid, i);
     ThreeVector tofSegLocalPos(lpos - ref_lpos,
                                0., 0.);
     std::cout << i << " " << tofSegLocalPos << std::endl;
@@ -2614,7 +2614,7 @@ EventDisplay::ConstructTOF()
   }
 
   m_node->cd();
-  
+
   // segment 38, 40, 42, 44, 46
   lid = gGeom.GetDetectorId("LEPS-TOF-DX-Tilt-L");
   ThreeVector localPosSeg42(gGeom.CalcWirePosition(lid, 42), 0, 0);
@@ -2623,7 +2623,7 @@ EventDisplay::ConstructTOF()
                 gGeom.GetRotAngle1(lid),
                 gGeom.GetRotAngle2(lid),
                 rotMatTOF);
-  new TRotMatrix("rotTOF_seg42", "rotTOF_seg42", rotMatTOF);  
+  new TRotMatrix("rotTOF_seg42", "rotTOF_seg42", rotMatTOF);
 
   Double_t TOFwallX_38_46 =  LEPS_TOFPitch * 8 + LEPS_TOFSegX*2; // X
   Double_t TOFwallY_38_46 =  LEPS_TOFSegY; // Z
@@ -2637,14 +2637,14 @@ EventDisplay::ConstructTOF()
                              globalPosSeg42.y(),
                              globalPosSeg42.z(),
                              "rotTOF_seg42", "void");
-  
+
   m_TOFwall_38_46_node->SetVisibility(0);
   m_TOFwall_38_46_node->cd();
 
   for(Int_t i=38; i<=46; i+=2){
     Int_t ref_seg = 42;
     Double_t ref_lpos = gGeom.CalcWirePosition(lid, ref_seg);
-    Double_t lpos = gGeom.CalcWirePosition(lid, i);    
+    Double_t lpos = gGeom.CalcWirePosition(lid, i);
     ThreeVector tofSegLocalPos(lpos - ref_lpos,
                                0., 0.);
     std::cout << i << " " << tofSegLocalPos << std::endl;
@@ -2657,7 +2657,7 @@ EventDisplay::ConstructTOF()
   }
 
   m_node->cd();
-  
+
   // segment 39, 41, 43, 45, 47
   lid = gGeom.GetDetectorId("LEPS-TOF-UX-Tilt-L");
   ThreeVector localPosSeg43(gGeom.CalcWirePosition(lid, 43), 0, 0);
@@ -2666,7 +2666,7 @@ EventDisplay::ConstructTOF()
                 gGeom.GetRotAngle1(lid),
                 gGeom.GetRotAngle2(lid),
                 rotMatTOF);
-  new TRotMatrix("rotTOF_seg43", "rotTOF_seg43", rotMatTOF);  
+  new TRotMatrix("rotTOF_seg43", "rotTOF_seg43", rotMatTOF);
 
   Double_t TOFwallX_39_47 =  LEPS_TOFPitch * 8 + LEPS_TOFSegX*2; // X
   Double_t TOFwallY_39_47 =  LEPS_TOFSegY; // Z
@@ -2680,14 +2680,14 @@ EventDisplay::ConstructTOF()
                              globalPosSeg43.y(),
                              globalPosSeg43.z(),
                              "rotTOF_seg43", "void");
-  
+
   m_TOFwall_39_47_node->SetVisibility(0);
   m_TOFwall_39_47_node->cd();
 
   for(Int_t i=39; i<=47; i+=2){
     Int_t ref_seg = 43;
     Double_t ref_lpos = gGeom.CalcWirePosition(lid, ref_seg);
-    Double_t lpos = gGeom.CalcWirePosition(lid, i);    
+    Double_t lpos = gGeom.CalcWirePosition(lid, i);
     ThreeVector tofSegLocalPos(lpos - ref_lpos,
                                0., 0.);
     std::cout << i << " " << tofSegLocalPos << std::endl;
@@ -2699,7 +2699,7 @@ EventDisplay::ConstructTOF()
                                       tofSegLocalPos.z()));
   }
 
-  
+
 
   m_node->cd();
   ConstructionDone(__func__);
@@ -2839,12 +2839,12 @@ Bool_t EventDisplay::ConstructCATCH(void)
   m_hbase_catch->Draw();
 
   m_Tgt_Arc = new TArc(0, 0, 40./2);
-  m_Tgt_Arc->SetLineColor(kCyan);  
+  m_Tgt_Arc->SetLineColor(kCyan);
   m_Tgt_Arc->SetFillStyle(0);
   m_Tgt_Arc->Draw("same");
 
   m_CFRP_Arc = new TArc(0, 0, 80./2);
-  m_CFRP_Arc->SetLineColor(kBlack);  
+  m_CFRP_Arc->SetLineColor(kBlack);
   m_CFRP_Arc->SetFillStyle(0);
   m_CFRP_Arc->SetLineWidth(2);
   m_CFRP_Arc->Draw("same");
@@ -2854,12 +2854,12 @@ Bool_t EventDisplay::ConstructCATCH(void)
   ConstructPiID();
 
   //m_canvas_catch->cd(2)->SetGrid();
-  m_canvas->cd(2)->cd(1)->cd(2)->SetGrid();    
+  m_canvas->cd(2)->cd(1)->cd(2)->SetGrid();
   m_hbase_catch_zx = new TH2F("hbase_catch_zx","Event Display ZX plane", 600, -200, 400, 180, -180, 180);
   m_hbase_catch_zx->Draw();
 
   //m_canvas_catch->cd(3)->SetGrid();
-  m_canvas->cd(2)->cd(1)->cd(3)->SetGrid();    
+  m_canvas->cd(2)->cd(1)->cd(3)->SetGrid();
   m_hbase_catch_zy = new TH2F("hbase_catch_zy","Event Display ZY plane", 600, -200, 400, 180, -180, 180);
   m_hbase_catch_zy->Draw();
 
@@ -2878,7 +2878,7 @@ Bool_t EventDisplay::ConstructCFT(void)
     for (Int_t seg=0; seg<NumOfSegCFT[i]; ++seg) {
       Double_t x, y;
       FiberPosPhi(i, seg, &x, &y);
-      TArc *arc = new TArc(x, y, 0.75/2);	
+      TArc *arc = new TArc(x, y, 0.75/2);
       arc->SetLineColor(kBlack);
       if (seg%32 == 0)
 	arc->SetLineColor(kOrange);
@@ -2896,7 +2896,7 @@ Bool_t EventDisplay::ConstructBGO(void)
 {
   //m_canvas_catch->cd(1);
   m_canvas->cd(2)->cd(1)->cd(1);
-  
+
   int unit=0;
 
   for (int i=0; i<NumOfBGOUnit; i++) {
@@ -3009,7 +3009,7 @@ Bool_t EventDisplay::ConstructPiID(void)
 {
   //m_canvas_catch->cd(1);
   m_canvas->cd(2)->cd(1)->cd(1);
-  
+
   int unit=0;
 
   for (int i=0; i<NumOfPiIDUnit; i++) {
@@ -3166,10 +3166,10 @@ void EventDisplay::FiberPosPhi(int layer, int seg, double *x, double *y) const
       r -= 0.4755/2;
     else
       r += 0.4755/2;
-    
+
     *x = r * cos(phi*TMath::DegToRad());
     *y = r * sin(phi*TMath::DegToRad());
-    
+
   } else if (layer == CFT_V2 || layer == CFT_V4) {
     double z = 200.;
 
@@ -3184,10 +3184,10 @@ void EventDisplay::FiberPosPhi(int layer, int seg, double *x, double *y) const
       r -= 0.4755/2;
     else
       r += 0.4755/2;
-    
+
     *x = r * cos(phi*TMath::DegToRad());
     *y = r * sin(phi*TMath::DegToRad());
-    
+
   }
   /*
   int lnum=301+layer;
@@ -3199,8 +3199,8 @@ void EventDisplay::FiberPosPhi(int layer, int seg, double *x, double *y) const
   *y = R * sin(Phi*TMath::DegToRad());
   */
   /*
-  std::cout << "FiberPos layer" << layer << ", seg" << seg 
-	    << "(" << R * cos(Theta*Deg2Rad) 
+  std::cout << "FiberPos layer" << layer << ", seg" << seg
+	    << "(" << R * cos(Theta*Deg2Rad)
 	    << "," << R * sin(Theta*Deg2Rad)
 	    << ")" << std::endl;
   */
@@ -3240,30 +3240,30 @@ void EventDisplay::BGOPos(int seg, double *x, double *y) const
 Bool_t EventDisplay::ConstructTagger(void)
 {
   m_canvas->cd(2)->cd(2);
-  
+
   m_hbase_tagger = new TH2F("m_hbase_tagger", "Tagger", 100, -40, 60, 100, -30, 70);
   m_hbase_tagger->SetMinimum(-1);
   m_hbase_tagger->Draw("");
 
   double TagSF_X = 6.;
-  double TagSF_Y = 1.;  
-  
+  double TagSF_Y = 1.;
+
   for (int i=0; i<NumOfSegTagSF; i++) {
     double x0 = 0.0;
     double y0 = i*TagSF_Y;
 
     double x1 = x0+TagSF_X/2;
     double y1 = y0+TagSF_Y/2;
-    
+
     double x2 = x0-TagSF_X/2;
     double y2 = y0+TagSF_Y/2;
-    
+
     double x3 = x0-TagSF_X/2;
     double y3 = y0-TagSF_Y/2;
-    
+
     double x4 = x0+TagSF_X/2;
     double y4 = y0-TagSF_Y/2;
-    
+
 
     double theta = 0.;
 
@@ -3301,16 +3301,16 @@ Bool_t EventDisplay::ConstructTagger(void)
 
     double x1 = x0+TagSF_X/2;
     double y1 = y0+TagSF_Y/2;
-    
+
     double x2 = x0-TagSF_X/2;
     double y2 = y0+TagSF_Y/2;
-    
+
     double x3 = x0-TagSF_X/2;
     double y3 = y0-TagSF_Y/2;
-    
+
     double x4 = x0+TagSF_X/2;
     double y4 = y0-TagSF_Y/2;
-    
+
 
     double theta = 0.;
 
@@ -3343,7 +3343,7 @@ Bool_t EventDisplay::ConstructTagger(void)
   }
 
   double TagPL_X = 3.;
-  double TagPL_Y = 7.4;  
+  double TagPL_Y = 7.4;
   double overlap = 2.7;
   for (int i=0; i<NumOfSegTagPL; i++) {
     double x0 = 24.0 + 10*(i%2);
@@ -3351,16 +3351,16 @@ Bool_t EventDisplay::ConstructTagger(void)
 
     double x1 = x0+TagPL_X/2;
     double y1 = y0+TagPL_Y/2;
-    
+
     double x2 = x0-TagPL_X/2;
     double y2 = y0+TagPL_Y/2;
-    
+
     double x3 = x0-TagPL_X/2;
     double y3 = y0-TagPL_Y/2;
-    
+
     double x4 = x0+TagPL_X/2;
     double y4 = y0-TagPL_Y/2;
-    
+
 
     double theta = 0.;
 
@@ -3458,7 +3458,7 @@ EventDisplay::DrawHitWire(Int_t lid, Int_t hit_wire,
   switch (lid) {
 
     // SDC0
-  case 1: case 2: case 3: case 4: 
+  case 1: case 2: case 3: case 4:
     if(hit_wire>MaxWireSDC0) return;
     node_name = sdcin_node_name[lid-1];
     break;
@@ -3777,13 +3777,13 @@ EventDisplay::DrawSdcOutLocalTrack(const DCLocalTrack *tp)
   Double_t z0 = gGeom.GetLocalZ(IdSDC2V);
   Double_t x0 = tp->GetX(z0), y0 = tp->GetY(z0);
   Double_t z0_X = gGeom.GetLocalZ(IdSDC2X);
-  
+
   ThreeVector gPos0 = gGeom.Local2GlobalPos(IdSDC2X , TVector3(x0, y0, z0-z0_X));
 
   //Double_t z1 = gGeom.GetLocalZ(IdRKINIT);
   //Double_t z1 = gGeom.GetLocalZ(IdTOF);
   Double_t z_offset = 1500.;
-  Double_t z1 = gGeom.GetLocalZ(IdSDC3X)+z_offset;  
+  Double_t z1 = gGeom.GetLocalZ(IdSDC3X)+z_offset;
   Double_t x1 = tp->GetX(z1), y1 = tp->GetY(z1);
   //ThreeVector gPos1 = gGeom.Local2GlobalPos(IdTOF,  TVector3(x1, y1, 0.));
   ThreeVector gPos1 = gGeom.Local2GlobalPos(IdSDC3X,  TVector3(x1, y1, z_offset));
@@ -4008,7 +4008,7 @@ void EventDisplay::ShowHitFiber(Int_t layer, Int_t segment, Double_t pe, Double_
     if (color_index>=5) {
       color_index = 4;
       sub_color = 10;
-    } 
+    }
     color = colorPallet[color_index] + sub_color ;
 
   }
@@ -4052,7 +4052,7 @@ void EventDisplay::ShowHitFiber(Int_t layer, Int_t segment, Double_t pe, Double_
 
 	for (Int_t in=0; in<n; in++) {
 	  Double_t iz = z_min + (Double_t)in*5;
-	  z_pos->SetPoint( in, x, y, (Double_t)iz - offsetCATCH);      
+	  z_pos->SetPoint( in, x, y, (Double_t)iz - offsetCATCH);
 
 	  z_pos->SetMarkerSize(0.5);
 	  z_pos->SetMarkerColor(kPink);
@@ -4119,7 +4119,7 @@ void EventDisplay::ShowHitFiber(Int_t layer, Int_t segment, Double_t pe, Double_
 	  Double_t x = R * cos(phi * math::Deg2Rad());
 	  Double_t y = R * sin(phi * math::Deg2Rad());
 
-	  z_pos->SetPoint( in, x, y, (Double_t)iz - offsetCATCH);      
+	  z_pos->SetPoint( in, x, y, (Double_t)iz - offsetCATCH);
 	  z_pos->SetMarkerSize(0.5);
 	  z_pos->SetMarkerColor(kPink);
 	  z_pos->SetMarkerStyle(20);
@@ -4128,7 +4128,7 @@ void EventDisplay::ShowHitFiber(Int_t layer, Int_t segment, Double_t pe, Double_
       }
     }
     */
-    
+
   }
 #endif
 }
@@ -4148,7 +4148,7 @@ void EventDisplay::ShowHitBGO(Int_t segment, Double_t de) const
     if (color_index>=5) {
       color_index = 4;
       sub_color = 10;
-    } 
+    }
     color = colorPallet[color_index] + sub_color ;
 
   }
@@ -4165,7 +4165,7 @@ void EventDisplay::ShowHitBGO(Int_t segment, Double_t de) const
   /*
   std::string node_name;
   node_name = Form( "BGOseg_node_%d", segment );
-  
+
   TNode *node = m_geometry_catch->GetNode( node_name.c_str() );
   if( !node ){
     hddaq::cout << "#E " << func_name << " "
@@ -4291,6 +4291,17 @@ EventDisplay::DrawTagWaveform(Int_t nc, Int_t ngraph, Int_t seg, TGraphErrors* g
 #endif
 }
 
+//______________________________________________________________________________
+void
+EventDisplay::DrawTagFitFunc(Int_t nc, Int_t seg, TF1* func )
+{
+#if TAG_WF
+  m_canvas_hist10->cd(nc);
+
+  func->Draw("same");
+
+#endif
+}
 
 //______________________________________________________________________________
 void
@@ -4336,7 +4347,7 @@ EventDisplay::DrawCFT_Time( Int_t layer, Int_t seg, Int_t LorT, Double_t time )
 
   hp->Fill( seg, time );
 #endif
-  
+
 }
 
 //______________________________________________________________________________
@@ -4398,7 +4409,7 @@ void EventDisplay::ShowHitPiID(Int_t segment)
   /*
   std::string node_name;
   node_name = Form( "PiIDseg_node_%d", segment );
-  
+
   TNode *node = m_geometry_catch->GetNode( node_name.c_str() );
   if( !node ){
     hddaq::cout << "#E " << func_name << " "
@@ -4444,10 +4455,10 @@ EventDisplay::DrawCFTLocalTrack( const CFTLocalTrack *tp, Bool_t flagP , Int_t k
     p->SetLineColor(color);
     p->SetLineWidth(2);
 
-    
-    ThreeVector pos1 = Pos0 - 3.0*Dir; 
+
+    ThreeVector pos1 = Pos0 - 3.0*Dir;
     p->SetPoint( 0, pos1.x(), pos1.y(), pos1.z() );
-    ThreeVector pos2 = Pos0 + 2.5*Dir; 
+    ThreeVector pos2 = Pos0 + 2.5*Dir;
     p->SetPoint( 1, pos2.x(), pos2.y(), pos2.z() );
     m_CFTTrack_cont.push_back(p);
 
@@ -4522,10 +4533,10 @@ EventDisplay::DrawCFTLocalTrack_dE_E( CFTParticle *CFTPart, bool flagP )
     p->SetLineColor(color);
     p->SetLineWidth(2);
 
-    
-    ThreeVector pos1 = Pos0 - 3.0*Dir; 
+
+    ThreeVector pos1 = Pos0 - 3.0*Dir;
     p->SetPoint( 0, pos1.x(), pos1.y(), pos1.z() );
-    ThreeVector pos2 = Pos0 + 2.5*Dir; 
+    ThreeVector pos2 = Pos0 + 2.5*Dir;
     p->SetPoint( 1, pos2.x(), pos2.y(), pos2.z() );
     m_CFTTrack_cont.push_back(p);
 
@@ -4550,7 +4561,7 @@ EventDisplay::DrawCFTLocalTrack_dE_E( CFTParticle *CFTPart, bool flagP )
     lzy->SetLineWidth(1);
     m_CFTTrack_zy_cont.push_back(lzy);
 
-    
+
     double slope_xy = tp->GetAxy();
     double theta_xy = atan(slope_xy)*math::Rad2Deg();
     for (int i=0; i<m_CFTTrackCand_zx_cont.size(); i++) {
@@ -4565,7 +4576,7 @@ EventDisplay::DrawCFTLocalTrack_dE_E( CFTParticle *CFTPart, bool flagP )
 	m_CFTTrackCand_zy_cont[i]->SetMarkerColor(color);
     }
     */
-    
+
     int nhPhi   = tp->GetNHit();
     int nhUV = tp->GetNHitUV();
     double Total_dEphi_max = tp->GetTotalMaxdEphi();
@@ -4576,14 +4587,14 @@ EventDisplay::DrawCFTLocalTrack_dE_E( CFTParticle *CFTPart, bool flagP )
       + Total_dEuv_max/(double)(nhUV);
     double bgo_energy = CFTPart->GetBGOEnergy();
     int    bgo_seg = CFTPart->GetTrackBGOSeg();
-    int    piid_seg = CFTPart->GetTrackPiIDSeg();    
+    int    piid_seg = CFTPart->GetTrackPiIDSeg();
     std::cout << "Total_dEphi_max : " << Total_dEphi_max
 	      << ", nhPhi : " << nhPhi
 	      << ", Total_dEuv_max : " << Total_dEuv_max
 	      << ", nhUV : " << nhUV
 	      << std::endl;
     std::cout << "BGO ( " << bgo_seg << " ) : " << bgo_energy << ", dE : " << dE << std::endl;
-    std::cout << "PiID ( " << piid_seg << " ) " << std::endl;    
+    std::cout << "PiID ( " << piid_seg << " ) " << std::endl;
 
     m_hist_dE_E->Fill(bgo_energy, dE);
 
@@ -4614,18 +4625,18 @@ void EventDisplay::ShowHitTagger(const TString& name, Int_t segment, Double_t de
     if (color_index>=5) {
       color_index = 4;
       sub_color = 10;
-    } 
+    }
     color = colorPallet[color_index] + sub_color ;
 
   }
 
   double TagSF_X = 6.;
-  double TagSF_Y = 1.;  
+  double TagSF_Y = 1.;
 
   double TagPL_X = 3.;
-  double TagPL_Y = 7.4;  
+  double TagPL_Y = 7.4;
   double overlap = 2.7;
-  
+
   if (name == "TAG-PL") {
     Int_t size = m_TagPL_Line_cont[segment].size();
     for (Int_t i=0; i<size; i++)
@@ -4634,7 +4645,7 @@ void EventDisplay::ShowHitTagger(const TString& name, Int_t segment, Double_t de
     double x0 = 24.0 + 10*(segment%2);
     double y0 = segment*(TagPL_Y - overlap);
     m_hbase_tagger->Fill(x0, y0, de);
-    
+
   } else if (name == "TAG-SFF" ) {
     Int_t size = m_TagSFF_Line_cont[segment].size();
     for (Int_t i=0; i<size; i++)
@@ -4643,7 +4654,7 @@ void EventDisplay::ShowHitTagger(const TString& name, Int_t segment, Double_t de
     double x0 = 0.0;
     double y0 = segment*TagSF_Y;
     m_hbase_tagger->Fill(x0, y0, de);
-    
+
   } else if (name == "TAG-SFB" ) {
     Int_t size = m_TagSFB_Line_cont[segment].size();
     for (Int_t i=0; i<size; i++)
@@ -4778,7 +4789,7 @@ EventDisplay::ResetVisibility()
   ResetVisibility(m_SDC0x1_node);
   ResetVisibility(m_SDC0x2_node);
   ResetVisibility(m_SDC0u1_node);
-  ResetVisibility(m_SDC0u2_node);    
+  ResetVisibility(m_SDC0u2_node);
   ResetVisibility(m_SDC1x1_node);
   ResetVisibility(m_SDC1v1_node);
   ResetVisibility(m_SDC1u1_node);
@@ -4787,12 +4798,12 @@ EventDisplay::ResetVisibility()
   ResetVisibility(m_SDC1x3_node);
   ResetVisibility(m_SDC2v1_node);
   ResetVisibility(m_SDC2u1_node);
-  ResetVisibility(m_SDC2u2_node);    
+  ResetVisibility(m_SDC2u2_node);
   ResetVisibility(m_SDC2x1_node);
   ResetVisibility(m_SDC2x2_node);
   ResetVisibility(m_SDC3v1_node);
   ResetVisibility(m_SDC3u1_node);
-  ResetVisibility(m_SDC3u2_node);    
+  ResetVisibility(m_SDC3u2_node);
   ResetVisibility(m_SDC3x1_node);
   ResetVisibility(m_SDC3x2_node);
   //ResetVisibility(m_SDC4y1_node);
@@ -4979,7 +4990,7 @@ EventDisplay::ResetHist()
     hp_hi->Reset();
     hp_lo->Reset();
   }
-#endif  
+#endif
 
 }
 
@@ -5020,7 +5031,7 @@ void EventDisplay::ResetCATCH( void )
   del::DeleteObject( m_SdcInTrack_Catch_xy_cont);
   del::DeleteObject( m_SdcInTrack_Catch_zx_cont);
   del::DeleteObject( m_SdcInTrack_Catch_zy_cont);
-  
+
   //del::DeleteObject( m_CFTTrackCand_zx_cont);
   //del::DeleteObject( m_CFTTrackCand_zy_cont);
   del::DeleteObject( m_CATCH_dE_E_cont);
@@ -5586,7 +5597,7 @@ EventDisplay::Update()
     canvas->Update();
   }
 
-  UpdateCATCH(); 
+  UpdateCATCH();
 // #if Hist_Timing
 //   for (Int_t i=0; i<9; i++) {
 //     m_canvas_hist2->cd(i+1);
@@ -5659,14 +5670,14 @@ EventDisplay::Update()
 }
 
 //______________________________________________________________________________
-void EventDisplay::UpdateCATCH( void ) 
+void EventDisplay::UpdateCATCH( void )
 {
 #if CATCH
   //m_canvas_catch->cd(1);
   //m_canvas_catch->cd(1)->SetLogz(0);
   m_canvas->cd(2)->cd(1)->cd(1);
-  m_canvas->cd(2)->cd(1)->cd(1)->SetLogz(0);  
-  
+  m_canvas->cd(2)->cd(1)->cd(1)->SetLogz(0);
+
   m_hbase_catch->Draw("colz");
 
   for (int layer=0; layer<NumOfPlaneCFT; layer++) {
@@ -5694,7 +5705,7 @@ void EventDisplay::UpdateCATCH( void )
   for (int i=0; i<m_SdcInTrack_Catch_xy_cont.size(); i++)
     m_SdcInTrack_Catch_xy_cont[i]->Draw();
 
-  /*  
+  /*
   for (int i=0; i<m_BcOutTrack_Catch_xy_cont.size(); i++)
     m_BcOutTrack_Catch_xy_cont[i]->Draw();
 
@@ -5706,7 +5717,7 @@ void EventDisplay::UpdateCATCH( void )
   */
   //m_canvas_catch->cd(2);
   m_canvas->cd(2)->cd(1)->cd(2);
-  
+
   for (int i=0; i<m_CFTTrack_zx_cont.size(); i++)
     m_CFTTrack_zx_cont[i]->Draw();
 
@@ -5728,7 +5739,7 @@ void EventDisplay::UpdateCATCH( void )
   */
   //m_canvas_catch->cd(3);
   m_canvas->cd(2)->cd(1)->cd(3);
-  
+
   for (int i=0; i<m_CFTTrack_zy_cont.size(); i++)
     m_CFTTrack_zy_cont[i]->Draw();
 
@@ -5748,7 +5759,7 @@ void EventDisplay::UpdateCATCH( void )
   for (int i=0; i<m_CFTTrackCand_zy_cont.size(); i++)
     m_CFTTrackCand_zy_cont[i]->Draw("pl");
   */
-  
+
   //m_canvas_catch->cd();
   //m_canvas_catch->Update();
   //m_canvas_catch->Modified();

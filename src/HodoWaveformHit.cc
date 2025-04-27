@@ -180,7 +180,11 @@ Bool_t HodoWaveformHit::PulseSearch( void )
   Double_t threshold = -100;
   Double_t width = 0.05;
   Double_t risetime = 0.1;
-
+  if(DetectorName()=="TAG-PL") {
+    threshold = -40;
+    width = 0.05;
+    risetime = 0.005;
+  }
 
   SearchParam sp1={"sp1", {index_original_graph, index_diff_graph},
     fitStart, fitEnd, fitStart, fitEnd,
