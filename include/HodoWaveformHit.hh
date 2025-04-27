@@ -57,19 +57,21 @@ protected:
   Double_t m_position;
   Double_t m_dxdw;
   Double_t m_adc_integral;
-  
+  Double_t m_n_discri_pulse;
+  Double_t m_n_discri_diffpulse;
+
   using waveform_t = std::vector<std::vector<std::pair<Double_t, Double_t>>>; // (time, de)[ch][mhit]
   waveform_t m_waveform;
 
   data_t     m_pulse_height;
-  data_t     m_pulse_time;  
-  
-  using TGraphC = std::vector<TGraphErrors*>; 
+  data_t     m_pulse_time;
+
+  using TGraphC = std::vector<TGraphErrors*>;
   TGraphC m_TGraphC;
   TF1    *m_func;
 
   mutable Bool_t   m_JoinTrack;
-  
+
 public:
   Bool_t   Calculate();
   Bool_t   PulseSearch();
@@ -82,7 +84,7 @@ public:
   void     CompareRise(std::vector<Double_t> rise1,
 		       std::vector<Double_t> rise2,
 		       Double_t width, std::vector<Double_t> &outrise);
-  void     SetInitial(std::vector<Double_t> &v, 
+  void     SetInitial(std::vector<Double_t> &v,
 		      Double_t begin, Double_t end,
 		      Double_t thre, Double_t rise);
   Double_t GXtoGY(Int_t index_graph, Double_t gx);
@@ -91,7 +93,7 @@ public:
   void     Fit1(FitParam *fp);
   Double_t FittedTrigX(FitParam fp, Double_t allowance);
   Double_t RisingResidual(Int_t tge_No, Double_t trig, Double_t &res_max);
-  
+
   Int_t GetWaveformEntries(Int_t i) const
     { return m_waveform.at(i).size(); }
   Int_t GetWaveformEntriesEntries() const
@@ -113,10 +115,16 @@ public:
   Int_t GetNGraph() const {return m_TGraphC.size(); }
   inline TGraphErrors * GetTGraph( std::size_t i ) const;
   inline TF1 * GetFitTF1() const;
-  
+
   Double_t GetAdcIntegral() const
   { return m_adc_integral; }
-  
+
+  Double_t GetNDiscriPulse() const
+  { return m_n_discri_pulse; }
+
+  Double_t GetNDiscriDiffPulse() const
+  { return m_n_discri_diffpulse; }
+
   Double_t GetPulseHeight(Int_t i, Int_t j) const
   { return m_pulse_height.at(i).at(j); }
 
@@ -130,8 +138,8 @@ public:
   { return m_pulse_time.at(HodoRawHit::kUp).at(j); }
 
   void   SetTrackJoined() const { m_JoinTrack = true; }
-  Bool_t IsTrackJoined() const  { return m_JoinTrack; }  
-  
+  Bool_t IsTrackJoined() const  { return m_JoinTrack; }
+
   virtual void   Print(Option_t* arg="") const;
   virtual Bool_t ReCalc(Bool_t allpyRecursively=false){ return Calculate(); }
 

@@ -11,7 +11,7 @@
 TemplateFitFunction::TemplateFitFunction(TString filename)
   : m_area(0), m_sample_num(0), m_interval(0), m_center(0)
 {
-  std::string str; 
+  std::string str;
 
   std::ifstream ifile(filename);
 
@@ -26,7 +26,7 @@ TemplateFitFunction::TemplateFitFunction(TString filename)
   m_area=0;
 
   Double_t max = 0;
-  while(getline(ifile,str)){    
+  while(getline(ifile,str)){
     sscanf(str.data(),"%lf %lf",&xxx,&yyy);
     m_tempx.push_back(xxx);
     m_tempy.push_back(yyy);
@@ -60,7 +60,7 @@ TemplateFitFunction::~TemplateFitFunction()
 
 Double_t TemplateFitFunction::myTemp(Double_t *x, Double_t *par)
 {
-  
+
   Double_t k=x[0];
   Double_t p=par[0];
 
@@ -84,7 +84,7 @@ Double_t TemplateFitFunction::GetTemplateFunction(Double_t x)
   }
   Double_t l = (x-m_tempx[p])/(m_tempx[p+1]-m_tempx[p]);
 
-  return (m_tempy[p]+(m_tempy[p+1]-m_tempy[p])*l); 
+  return (m_tempy[p]+(m_tempy[p+1]-m_tempy[p])*l);
 
 }
 
@@ -121,7 +121,7 @@ TemplateFitMan::~TemplateFitMan()
 
   for (auto& elem: m_tempfunc_collection)
     del::ClearContainer(elem.second);
-  
+
 }
 
 
@@ -140,28 +140,44 @@ TemplateFitMan::Initialize( void )
     return false;
   }
 
-  //std::vector <TString>filename_cont = split(m_file_name, '/'); 
+  //std::vector <TString>filename_cont = split(m_file_name, '/');
   //int nCont = filename_cont.size();
   //TString filename = filename_cont[nCont-1];
   //TString runnum = filename.SubString(4, 4);
-  //if (runnum == "7103") 
+  //if (runnum == "7103")
   //m_flag_ch14 = true;
 
   for (int i=0; i<NumOfSegBGO; i++) {
     m_fitFunction[i] = new TemplateFitFunction(m_file_name+"."+std::to_string(i));
   }
 
-  TString name("BGO");
-  auto& cont = m_tempfunc_collection[name];
-  for (auto& hit: cont)
-    delete hit;
-  cont.clear();
+  {
+    TString name("BGO");
+    auto& cont = m_tempfunc_collection[name];
+    for (auto& hit: cont)
+      delete hit;
+    cont.clear();
 
-  for (int i=0; i<NumOfSegBGO; i++) {
-    TemplateFitFunction *tempfunc = new TemplateFitFunction(m_file_name+"."+std::to_string(i));
-    cont.push_back(tempfunc);
+    for (int i=0; i<NumOfSegBGO; i++) {
+      TemplateFitFunction *tempfunc = new TemplateFitFunction(m_file_name+"."+std::to_string(i));
+      cont.push_back(tempfunc);
+    }
   }
-  
+
+  {
+    TString name("TAG-PL");
+    auto& cont = m_tempfunc_collection[name];
+    for (auto& hit: cont)
+      delete hit;
+    cont.clear();
+
+    for (int i=0; i<NumOfSegTagPL; i++) {
+      // TemplateFitFunction *tempfunc = new TemplateFitFunction(m_file_name+"."+std::to_string(i));
+      TemplateFitFunction *tempfunc = new TemplateFitFunction(m_file_name+"."+name);
+      cont.push_back(tempfunc);
+    }
+  }
+
   m_is_ready = true;
   return true;
 }

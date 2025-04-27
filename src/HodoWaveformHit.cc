@@ -32,11 +32,12 @@ const auto& gGeom = DCGeomMan::GetInstance();
 const auto& gHodo = HodoParamMan::GetInstance();
 const auto& gPHC  = HodoPHCMan::GetInstance();
 const auto& gTempFit = TemplateFitMan::GetInstance();
-const auto& gBGOCalib = BGOCalibMan::GetInstance();  
+const auto& gBGOCalib = BGOCalibMan::GetInstance();
 
 const double graphStart = -3.0;
 const double graphEnd   = 2.0;
 const double y_err      = 30.0;
+const double y_err_TAG  = 3.0;
 // org
 const double fitStart = -1.0;
 const double fitEnd   = 1.0;
@@ -53,9 +54,11 @@ HodoWaveformHit::HodoWaveformHit(HodoRawHit *rhit)
   : HodoHit(rhit),
     m_waveform(m_n_ch),
     m_pulse_height(m_n_ch),
-    m_pulse_time(m_n_ch),        
+    m_pulse_time(m_n_ch),
     m_position(qnan),
-    m_adc_integral(qnan),    
+    m_adc_integral(qnan),
+    m_n_discri_pulse(qnan),
+    m_n_discri_diffpulse(qnan),
     m_func(0),
     m_JoinTrack(false)
 {
@@ -68,7 +71,15 @@ HodoWaveformHit::HodoWaveformHit(HodoRawHit *rhit)
 		     //gTempFit.GetFitFunction(SegmentId()),
 		     tempFunc,
 		     fitStart, fitEnd, ParaMax );
+  }else if (DetectorName()=="TAG-PL") {
+    auto &cont = gTempFit.GetHitContainer(DetectorName());
+    TemplateFitFunction *tempFunc = cont.at(SegmentId());
+    m_func = new TF1(DetectorName()+"-"+std::to_string(SegmentId()),
+		     //gTempFit.GetFitFunction(SegmentId()),
+		     tempFunc,
+		     fitStart, fitEnd, ParaMax );
   }
+
 }
 
 //_____________________________________________________________________________
@@ -78,7 +89,7 @@ HodoWaveformHit::~HodoWaveformHit()
 
   if (m_func)
     delete m_func;
-  
+
   m_func = 0;
   debug::ObjectCounter::decrease(ClassName());
 }
@@ -105,17 +116,17 @@ HodoWaveformHit::Calculate()
 
   for(Int_t ch=0; ch<m_n_ch; ++ch){
     // adc
-    
+
     Int_t ns=0;
     for(const auto& adc: m_raw->GetArrayAdcHigh(ch)){
       Double_t de   = TMath::QuietNaN();
-      Double_t time = TMath::QuietNaN();      
+      Double_t time = TMath::QuietNaN();
       if(adc > 0 && adc < 0xffff && ns > 0 &&
-	 gHodo.GetTime2(id, plane, seg, ch, ns, time) 
+	 gHodo.GetTime2(id, plane, seg, ch, ns, time)
 	 ){
 	Double_t pedestal  = gHodo.GetP0(id, plane, seg, 0);
 	de = (Double_t)adc - pedestal;
-	
+
 	std::pair<Double_t, Double_t> wf_pair(time, de);
         m_waveform.at(ch).push_back(wf_pair);
 
@@ -135,7 +146,7 @@ HodoWaveformHit::Calculate()
     event_pedestal /= Nped;
     if (Nped>0)
       m_adc_integral = 0.;
-    
+
     for(const auto& wf: m_waveform.at(ch)){
       Double_t time = wf.first;
       if (time >= -0.01 && time <=0.03) {
@@ -160,9 +171,6 @@ Bool_t HodoWaveformHit::PulseSearch( void )
   if (!MakeGraph())
     return false;
 
-  if (DetectorName()!="BGO")
-    return true;
-  
   // Original graph index = 0;
   Int_t index_original_graph = 0;
 
@@ -175,12 +183,15 @@ Bool_t HodoWaveformHit::PulseSearch( void )
 
 
   SearchParam sp1={"sp1", {index_original_graph, index_diff_graph},
-    fitStart, fitEnd, fitStart, fitEnd, 
+    fitStart, fitEnd, fitStart, fitEnd,
     threshold, width, risetime};
 
   Bool_t flagPresearch = PreSearch(&sp1);
   if (!flagPresearch)
     return false;
+
+  // if (DetectorName()!="BGO")
+  //   return true;
 
   Int_t color = 4;
   FitParam fp1={"fp1", index_original_graph, color ,fitStart, fitEnd};
@@ -195,7 +206,7 @@ Bool_t HodoWaveformHit::PulseSearch( void )
   //}
 
   Double_t trigx = FittedTrigX(fp1,1.0);
-  //trigx =1;/////////////////////                                             
+  //trigx =1;/////////////////////
   if(std::abs(trigx)<TrigTimeReso){
     Double_t max_res = 0;
     fp1.Residual=  RisingResidual(index_original_graph, trigx, max_res);
@@ -208,7 +219,7 @@ Bool_t HodoWaveformHit::PulseSearch( void )
       Int_t waveNum = fp1.wavenum;
       for (Int_t nw=0; nw<waveNum; nw++) {
 	Double_t time = fp1.FitParam[2*nw+2];
-	Double_t height = fp1.FitParam[2*nw+3];	
+	Double_t height = fp1.FitParam[2*nw+3];
         m_pulse_time.at(HodoRawHit::kUp).push_back(time);
         m_pulse_height.at(HodoRawHit::kUp).push_back(height);
 	Double_t energy=-999.;
@@ -230,13 +241,13 @@ Bool_t HodoWaveformHit::MakeGraph()
   Int_t n_range = 0;
   for (Int_t i=0; i<nc; i++) {
     std::pair<Double_t, Double_t> fadc = GetWaveform(HodoRawHit::kUp, i);
-    if ( fadc.first >= graphStart && fadc.first <= graphEnd ) 
+    if ( fadc.first >= graphStart && fadc.first <= graphEnd )
       n_range++;
   }
-  
+
   if (n_range<=0)
     return false;
-  
+
   TGraphErrors *gr = new TGraphErrors(n_range);
   Int_t index = 0;
   for (Int_t i=0; i<nc; i++) {
@@ -246,14 +257,16 @@ Bool_t HodoWaveformHit::MakeGraph()
 	gr->SetPoint(index, fadc.first, fadc.second);
 	if (GetName() == "BGO") {
 	  gr->SetPointError(index, 0, y_err);
+	}else if(GetName() == "TAG-PL"){
+	  gr->SetPointError(index, 0, y_err_TAG);
 	} else {
-	  gr->SetPointError(index, 0, 0);	  
+	  gr->SetPointError(index, 0, 0);
 	}
 	index++;
       }
     }
   }
-  
+
   m_TGraphC.push_back(gr);
 
   return true;
@@ -299,6 +312,7 @@ Bool_t HodoWaveformHit::PreSearch(struct SearchParam *sp)
 
   std::vector<Double_t> OriR,OriF;
   Double_t threshold = -500.;
+  if(DetectorName()=="TAG-PL") threshold = -20.;
   Bool_t   flagSelectRange = BGODiscri.SelectRange(threshold, begin, end);
 
   if (!flagSelectRange)
@@ -307,6 +321,8 @@ Bool_t HodoWaveformHit::PreSearch(struct SearchParam *sp)
   BGODiscri.GetRisingPoint(OriR);
   BGODiscri.GetFallingPoint(OriF);
   BGODiscri.AllClear();
+
+  m_n_discri_pulse = OriR.size();
 
   //bool FF = FlagFrontWave(OriR,begin);
   Bool_t flagFrontWave = false;
@@ -327,6 +343,7 @@ Bool_t HodoWaveformHit::PreSearch(struct SearchParam *sp)
   BGODiscri.GetFallingPoint(fall30);
 
   Double_t width_thr = 0.05;
+  if(DetectorName()=="TAG-PL") width_thr = 0.004;
   Bool_t   flagWidthCut1 = WidthCut(rise30,fall30,width_thr,entry30);
   if (!flagWidthCut1) {
     std::cout << func_name << " : WidthCut1, Number of rise and fall points does not match" << std::endl;
@@ -363,11 +380,13 @@ Bool_t HodoWaveformHit::PreSearch(struct SearchParam *sp)
   BGODiscri.GetRisingPoint(rise100);
   BGODiscri.GetFallingPoint(fall100);
   width_thr = 0.08;
+  if(DetectorName()=="TAG-PL") width_thr = 0.004;
   WidthCut(rise100, fall100, width_thr, entry100);
 
   CompareRise(entry30,entry100,0.05,entry30_100);
   //for(int i=0;i<entry30_100.size();i++)
-  //std::cout<<"entry "<<entry30_100[i]<<std::endl;                                                    
+  //std::cout<<"entry "<<entry30_100[i]<<std::endl;
+  m_n_discri_diffpulse = entry30_100.size();
 
   if (entry30_100.size()==0)
     return false;
@@ -377,7 +396,7 @@ Bool_t HodoWaveformHit::PreSearch(struct SearchParam *sp)
   Int_t index_original_graph = 0;
   for(unsigned int i=0;i<entry30_100.size();i++){
     sp->foundx.push_back(entry30_100[i]+sp->risetime);
-    sp->foundy.push_back(-GXtoGY(index_original_graph, 
+    sp->foundy.push_back(-GXtoGY(index_original_graph,
 				 entry30_100[i]+sp->risetime)) ;
   }
 
@@ -441,7 +460,7 @@ void HodoWaveformHit::CompareRise(std::vector<Double_t> rise1,
 }
 
 //_____________________________________________________________________________
-void HodoWaveformHit::SetInitial(std::vector<Double_t> &v, 
+void HodoWaveformHit::SetInitial(std::vector<Double_t> &v,
 				 Double_t begin, Double_t end,
 				 Double_t thre, Double_t rise)
 {
@@ -466,7 +485,7 @@ void HodoWaveformHit::SetInitial(std::vector<Double_t> &v,
   Int_t index_original_graph = 0;
   for(Int_t i=0;i<size;i++)
     if(v[i]!=-1){
-      //      std::cout<<"GX "<<v[i]+0.15<<" GY "<<Original->GXtoGY(v[i]+0.15)<<std::endl;                 
+      //      std::cout<<"GX "<<v[i]+0.15<<" GY "<<Original->GXtoGY(v[i]+0.15)<<std::endl;
       Bool_t flagOverThr = false;
       for (Double_t ratio =0; ratio <= 1.0; ratio += 0.1)
 	if(GXtoGY(index_original_graph, v[i]+rise*ratio)<thre)
@@ -506,7 +525,7 @@ Double_t HodoWaveformHit::GXtoGY(Int_t index_graph, Double_t gx)
       break;
     }
   }
-  
+
   if(point == -1)
     return 0;
 
@@ -560,15 +579,15 @@ void HodoWaveformHit::Fit1(FitParam *fp)
   Int_t ParaNum = fp->ParaNum;
   Double_t par[ParaNum];
   par[0]=wavenum;
-  
-  //std::cout << "wavenum = "  << wavenum << std::endl;   
+
+  //std::cout << "wavenum = "  << wavenum << std::endl;
 
   for(Int_t i=0;i<ParaNum;i++){
     m_func -> ReleaseParameter(i);
     par[i] = fp->par[i];
     //if (seg==14 && m_flag_ch14 && (i>=2 && i%2 == 0))
     //par[i] += 0.08;
-      
+
     //std::cout << "par[" << i << "] = "  << par[i] << std::endl;
   }
 
@@ -576,7 +595,7 @@ void HodoWaveformHit::Fit1(FitParam *fp)
   m_func -> SetNpx(1000);
   m_func -> SetParameters(&par[0]);
   m_func -> FixParameter(0,par[0]);
-  //m_func -> FixParameter(1,0);                                                                             
+  //m_func -> FixParameter(1,0);
   m_func -> SetLineColor(fp->color);
   for(Int_t nine= ParaNum;nine<ParaMax;nine++)
     m_func -> FixParameter(nine,0);
@@ -605,7 +624,7 @@ Double_t HodoWaveformHit::FittedTrigX(FitParam fp, Double_t allowance)
   std::vector<Double_t> xx;
   for(Int_t i=0;i<num;i++){
     Double_t x =fp.FitParam[2+2*i];
-    //std::cout<<"x "<<x<<"  ref "<<mean<<std::endl;                                                       
+    //std::cout<<"x "<<x<<"  ref "<<mean<<std::endl;
     if(x > - reso && x< reso ){
       inrange++;
       xx.push_back(x);
@@ -647,14 +666,14 @@ Double_t HodoWaveformHit::RisingResidual(Int_t tge_No, Double_t trig, Double_t &
     a = GXtoGY(tge_No, x);
     b = m_func->Eval(x);
     if(a !=0) {
-      //Residual += sqrt((a-b)*(a-b))/ CEI->GetError() ;                                                   
-      Residual += sqrt((a-b)*(a-b))/ 15 ; //kuso tekito                        
+      //Residual += sqrt((a-b)*(a-b))/ CEI->GetError() ;
+      Residual += sqrt((a-b)*(a-b))/ 15 ; //kuso tekito
 
       if (std::abs(max_res) < std::abs(a-b))
         max_res = a-b;
-                            
+
     }
-    //std::cout<<"Residual x:"<<x<<"  a:"<<a<<"  b:"<<b<<std::endl; 
+    //std::cout<<"Residual x:"<<x<<"  a:"<<a<<"  b:"<<b<<std::endl;
   }
 
   Residual /= -GXtoGY(tge_No, trig);
