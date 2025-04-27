@@ -51,7 +51,7 @@ const auto& gGeom   = DCGeomMan::GetInstance();
 auto&       gEvDisp = EventDisplay::GetInstance();
 const auto& gUser   = UserParamMan::GetInstance();
 auto&       gUnpacker = hddaq::unpacker::GUnpacker::get_instance();
-auto&       gTAGPLMth = TAGPLMatch::GetInstance();    
+auto&       gTAGPLMth = TAGPLMatch::GetInstance();
 const auto& gEventMan = EventSelectMan::GetInstance();
 const Double_t PionMass   = pdg::PionMass();
 const Double_t KaonMass   = pdg::KaonMass();
@@ -239,9 +239,9 @@ ProcessingNormal()
     const auto& hit = hodoAna.GetHit("T0", i);
     if(!hit) continue;
     Double_t multi = hit->GetEntries();
-    for (Int_t im = 0; im <multi; ++im) {    
+    for (Int_t im = 0; im <multi; ++im) {
       Double_t mt  = hit->MeanTime(im);
-      Double_t cmt  = hit->CMeanTime(im);      
+      Double_t cmt  = hit->CMeanTime(im);
       if(std::abs(mt)<std::abs(min_time)){
 	time0    = cmt;
 	min_time = mt;
@@ -249,7 +249,7 @@ ProcessingNormal()
     }
   }
 
-  
+
   //________________________________________________________
   //___ TOFRawHit
   std::vector<Int_t> TOFSegCont;
@@ -293,7 +293,7 @@ ProcessingNormal()
     Double_t TofSeg[MaxHits];
     for (Int_t i=0; i<MaxHits; ++i)
       TofSeg[i] = -1.;
-    
+
     for(Int_t i=0; i<nhTof; ++i){
       const auto& hit = hodoAna.GetCluster("TOF", i);
       Double_t seg = hit->MeanSeg()+1;
@@ -305,32 +305,33 @@ ProcessingNormal()
 
     Bool_t tofsingleflag=nhTof==1 && (TofSeg[0]<37 && TofSeg[0]>12);
     Bool_t tofdoubleflag=nhTof==2 && (TofSeg[0]<37 && TofSeg[0]>12 && TofSeg[1]<37 && TofSeg[1]>12);
-      
+
     //if(!(tofsingleflag || tofdoubleflag)) return true;
     //if(!tofsingleflag) return true;
   }
 
   //Tag-Hodoana
   std::vector<int> PLCand;
-  {  
+  {
     Int_t nc = 0;
+    const auto& U = HodoRawHit::kUp;
 #ifdef TAG_PL_FADC
-    hodoAna.DecodeHits<HodoWaveformHit>("TAG-PL");    
-#elif  
+    hodoAna.DecodeHits<HodoWaveformHit>("TAG-PL");
+#elif
     hodoAna.DecodeHits("TAG-PL");
 #endif
-  
+
     Int_t nh=hodoAna.GetNHits("TAG-PL");
     Int_t nseg_goodtime=0;
     for(Int_t i=0;i<nh;++i){
 #ifdef TAG_PL_FADC
       const auto& hit = hodoAna.GetHit<HodoWaveformHit>("TAG-PL", i);
-#elif        
+#elif
       const auto& hit = hodoAna.GetHit("TAG-PL",i);
-#endif      
+#endif
       if(!hit) continue;
       Int_t seg =hit->SegmentId();
-      //std::cout<<"Tagger PL (seg) = ("<<seg<<std::endl;      
+      //std::cout<<"Tagger PL (seg) = ("<<seg<<std::endl;
       bool is_hit_time =false;
       Int_t n_mhit =hit->GetEntries();
       for(Int_t m=0;m<n_mhit;++m){
@@ -344,19 +345,19 @@ ProcessingNormal()
 	nseg_goodtime++;
 	PLCand.push_back(seg);
 	Double_t de = hit->DeltaE();
-	gEvDisp.ShowHitTagger("TAG-PL", seg, de);	  	
+	gEvDisp.ShowHitTagger("TAG-PL", seg, de);
       }
 
 #ifdef TAG_PL_FADC
       Int_t ngr = hit->GetNGraph();
       if (ngr>0)
 	nc++;
-#endif    
+#endif
 
     }
 
 #ifdef TAG_PL_FADC
-    gEvDisp.SetTagWaveformCanvas(nc);    
+    gEvDisp.SetTagWaveformCanvas(nc);
     nc = 1;
     for(Int_t i=0;i<nh;++i){
       const auto& hit = hodoAna.GetHit<HodoWaveformHit>("TAG-PL", i);
@@ -365,20 +366,26 @@ ProcessingNormal()
       Int_t ngr = hit->GetNGraph();
       for (Int_t ig=0; ig<ngr; ig++) {
 	TGraphErrors *gr = hit->GetTGraph(ig);
-	gEvDisp.DrawTagWaveform(nc, ig, seg, gr);      
+	gEvDisp.DrawTagWaveform(nc, ig, seg, gr);
       }
+      Int_t Npulse = hit->GetNPulse(U);
+      if (Npulse>0) {
+	TF1 *func = hit->GetFitTF1();
+	gEvDisp.DrawTagFitFunc(nc, seg, func);
+      }
+
       if (ngr>0)
 	nc++;
     }
 #endif
-    
+
   }
 
   std::vector<double> SFFhit;
   std::vector<double> SFBhit;
   std::vector<double> SFFCand;
   std::vector<double> SFBCand;
-  {  
+  {
     hodoAna.DecodeHits("TAG-SF");
 
     Int_t nh=hodoAna.GetNHits("TAG-SF");
@@ -392,7 +399,7 @@ ProcessingNormal()
       //std::cout<<"(seg, plane) = ("<<seg<<", "<<plane<<")"<<std::endl;
       /*
 	Double_t a =hit->GetAUp();
-	
+
       */
       bool is_hit_time =false;
       Int_t n_mhit =hit->GetEntries();
@@ -410,12 +417,12 @@ ProcessingNormal()
 	if (plane==0)
 	  gEvDisp.ShowHitTagger("TAG-SFF", seg, de);
 	else if (plane==1)
-	  gEvDisp.ShowHitTagger("TAG-SFB", seg, de);	  
+	  gEvDisp.ShowHitTagger("TAG-SFB", seg, de);
       }
     }
-    
+
     hodoAna.TimeCut("TAG-SF",-10,10);
-  
+
     Int_t nc=hodoAna.GetNClusters("TAG-SF");
     Int_t ncl1=0, ncl2=0;
     for(Int_t i=0;i<nc;++i){
@@ -426,14 +433,14 @@ ProcessingNormal()
       if(plane==1) ncl2++;
       Double_t ms =cl->MeanSeg();
       Double_t mt =cl->MeanTime();
-      
+
       if(plane==0 && cl->ClusterSize()<4) SFFhit.push_back(ms);
       if(plane==1 && cl->ClusterSize()<4) SFBhit.push_back(ms);
-      
+
       bool is_plmth=false;
       if(PLCand.size()==0) is_plmth=true;
       for(Int_t j=0;j<PLCand.size();j++){
-	if(gTAGPLMth.Judge(ms,PLCand[j])) is_plmth=true;	  
+	if(gTAGPLMth.Judge(ms,PLCand[j])) is_plmth=true;
       }
       if(is_plmth && cl->ClusterSize()<4){
 	if(plane==0) SFFCand.push_back(ms);
@@ -441,7 +448,7 @@ ProcessingNormal()
       }
     }
   }
-  
+
   std::vector<double> SFFCand_final;
   std::vector<double> SFBCand_final;
   double Egamma=0.0;
@@ -465,9 +472,9 @@ ProcessingNormal()
     double SFBpos=SFBCand[0]+offset_b;
     Egamma=eparb[0]+eparb[1]*SFBpos+eparb[2]*SFBpos*SFBpos;
   }
-  
+
   if(SFFCand_final.size()==1){
-    
+
     double egamf=eparf[0]+eparf[1]*SFFCand_final[0]+eparf[2]*SFFCand_final[0]*SFFCand_final[0];
     double SFBpos=SFBCand_final[0]+offset_b;
     double egamb=eparb[0]+eparb[1]*SFBpos+eparb[2]*SFBpos*SFBpos;
@@ -606,7 +613,7 @@ ProcessingNormal()
           is_good = true;
 	  Double_t dtime = hit->GetDriftTime(j);
 	  //hddaq::cout << "SdcIn layer = " << layer << ", wire = " << wire
-	  //<< ", dt = " << dtime << std::endl;	
+	  //<< ", dt = " << dtime << std::endl;
           break;
         }
       }
@@ -669,7 +676,7 @@ ProcessingNormal()
         is_good = hit->IsGood(j);
 	Double_t dtime = hit->GetDriftTime(j);
 	//hddaq::cout << "SdcOut layer = " << layer << ", wire = " << wire
-	//<< ", dt = " << dtime << std::endl;	
+	//<< ", dt = " << dtime << std::endl;
       }
       gEvDisp.DrawHitWire(layer, wire, is_good, is_good);
     }
@@ -837,7 +844,7 @@ ProcessingNormal()
 
   hodoAna.DecodeHits<CFTFiberHit>("CFT");
   hodoAna.TimeCut("CFT", MinTimeCFT, MaxTimeCFT);
-  hodoAna.AdcCut("CFT",  MinAdcCFT,  MaxAdcCFT);  
+  hodoAna.AdcCut("CFT",  MinAdcCFT,  MaxAdcCFT);
 
   {
     const auto& U = HodoRawHit::kUp;
@@ -853,12 +860,12 @@ ProcessingNormal()
       Double_t adccorLow = hit->GetAdcCorLow();
       Double_t adcLow = hit->GetRawHit()->GetAdcLow();
       Double_t mipHi  = hit->GetMipHigh();
-      Double_t mipLow = hit->GetMipLow();      
+      Double_t mipLow = hit->GetMipLow();
       Double_t deLow  = hit->DeltaELowGain();
 
-      //ADC 
+      //ADC
       gEvDisp.DrawCFT_AdcCor(plane, seg, 0, (int)adccorHi);
-      
+
       Int_t NhitT = hit->GetEntries(U);
       for(Int_t m = 0; m<NhitT; ++m){
 	Double_t ctime = hit->GetCTUp(m);
@@ -868,18 +875,18 @@ ProcessingNormal()
 	  gEvDisp.DrawCFT_Time(plane, seg, 0, ctime);
 	  //gEvDisp.DrawCFT_Time(plane, seg, 1, time);
 	}
-	
+
 	if (time>MinTimeCFT && time<MaxAdcCFT) {
 	  gEvDisp.ShowHitFiber(plane, seg, adccorLow, -999);
 	}
       }
     }
   }
-  
+
   hodoAna.DecodeHits<HodoWaveformHit>("BGO");
   Int_t nhBGO=hodoAna.GetNHits("BGO");
   {
-    int nc = 0;    
+    int nc = 0;
     const auto& U = HodoRawHit::kUp;
     for(Int_t i=0; i<nhBGO; ++i){
       const auto& hit = hodoAna.GetHit<HodoWaveformHit>("BGO", i);
@@ -894,7 +901,7 @@ ProcessingNormal()
 	if (std::abs(time)<100)
 	  flagTime = true;
       }
-      
+
       Int_t NhitWF = hit->GetWaveformEntries(U);
       for(Int_t m = 0; m<NhitWF; ++m){
 	std::pair<Double_t, Double_t> waveform = hit->GetWaveform(m);
@@ -905,10 +912,10 @@ ProcessingNormal()
       for(Int_t m = 0; m<Npulse; ++m){
 	Double_t pulse_height = hit->GetPulseHeight(m);
 	Double_t pulse_time   = hit->GetPulseTime(m);
-	Double_t de           = hit->DeltaE(m);		
+	Double_t de           = hit->DeltaE(m);
 
 	if (flagTime && std::abs(pulse_time)<100) {
-	  gEvDisp.ShowHitBGO(seg, de);	  
+	  gEvDisp.ShowHitBGO(seg, de);
 	}
       }
 
@@ -917,7 +924,7 @@ ProcessingNormal()
 	nc++;
 
       //if (flagTime)
-      //HF2 (1000*(plane+1)+206, seg, adccorHi);	
+      //HF2 (1000*(plane+1)+206, seg, adccorHi);
     }
 
     gEvDisp.SetBGOWaveformCanvas(nc);
@@ -930,19 +937,19 @@ ProcessingNormal()
       Int_t ngr = hit->GetNGraph();
       for (Int_t ig=0; ig<ngr; ig++) {
 	TGraphErrors *gr = hit->GetTGraph(ig);
-	gEvDisp.DrawBGOWaveform(nc, ig, seg, gr);      
+	gEvDisp.DrawBGOWaveform(nc, ig, seg, gr);
       }
       Int_t Npulse = hit->GetNPulse(U);
       if (Npulse>0) {
 	TF1 *func = hit->GetFitTF1();
-	gEvDisp.DrawBGOFitFunc(nc, seg, func);      
+	gEvDisp.DrawBGOFitFunc(nc, seg, func);
       }
       if (ngr>0)
 	nc++;
-    }      
+    }
   }
 
- 
+
   if(nhBGO == 0){
     hddaq::cout << "[Warning] BGO is no hit!" << std::endl;
     return true;
@@ -968,7 +975,7 @@ ProcessingNormal()
 	  flagTime = true;
       }
       if (flagTime)
-	gEvDisp.ShowHitPiID(seg);	  	
+	gEvDisp.ShowHitPiID(seg);
     }
   }
 
@@ -977,12 +984,12 @@ ProcessingNormal()
   DCAna.TrackSearchCFT();
 
   Int_t ntCFT=DCAna.GetNtracksCFT();
-  
+
   for( Int_t i=0; i<ntCFT; ++i ){
     const auto& tp=DCAna.GetTrackCFT(i);
     Bool_t flagPTrack=false;
     gEvDisp.DrawCFTLocalTrack( tp, flagPTrack );
-  }       
+  }
 
   std::vector <CFTParticle*> CFTPartCont;
   for( Int_t i=0; i<ntCFT; ++i ){
@@ -1002,14 +1009,14 @@ ProcessingNormal()
       flagPTrack = true;
     }
     gEvDisp.DrawCFTLocalTrack_dE_E( CFTPart, flagPTrack );
-    
+
   }
 
-  
+
   //________________________________________________________
   //___ Reaction
   Bool_t is_good = false;
-#if 0  
+#if 0
   if(KmPCont.size()==1 && KpPCont.size()==1){
     ThreeVector pkp = KpPCont[0];
     ThreeVector pkm = KmPCont[0];
@@ -1067,7 +1074,7 @@ ProcessingNormal()
 #endif
   is_good = true;
   gEvDisp.Update();
-  gEvDisp.GetCommand();
+  //gEvDisp.GetCommand();
   hddaq::cout << "[Info] IsGood = " << is_good << std::endl;
 
   if(is_good){
@@ -1121,13 +1128,13 @@ ConfMan::InitializeParameterFiles()
      //&& InitializeParameter<K18TransMatrix>("K18TM")
      //&& InitializeParameter<BH2Filter>("BH2FLT")
      && InitializeParameter<UserParamMan>("USER")
-     && InitializeParameter<CFTPedCorMan>("CFTPED") 
+     && InitializeParameter<CFTPedCorMan>("CFTPED")
      && InitializeParameter<CFTPosParamMan>("CFTPOS")
-     && InitializeParameter<TemplateFitMan>("BGOTEMP") 
+     && InitializeParameter<TemplateFitMan>("BGOTEMP")
      && InitializeParameter<BGOCalibMan>("BGOCALIB")
      && InitializeParameter<TAGPLMatch>("TAGPLMTH")
-     && InitializeParameter<CATCHPidMan>("CATCHPID")      
-     && InitializeParameter<EventSelectMan>("EVSELECT") 
+     && InitializeParameter<CATCHPidMan>("CATCHPID")
+     && InitializeParameter<EventSelectMan>("EVSELECT")
      && InitializeParameter<EventDisplay>());
 }
 
