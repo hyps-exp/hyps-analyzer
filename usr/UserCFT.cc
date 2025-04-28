@@ -33,7 +33,7 @@
 // #define TimeCut    1 // in cluster analysis
 #define FHitBranch 0 // make FiberHit branches (becomes heavy)
 #define HodoHitPos 0
-#define ForPHC     1
+#define ForPHC     0
 
 namespace
 {
