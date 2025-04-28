@@ -43,7 +43,6 @@ const double fitStart = -1.0;
 const double fitEnd   = 1.0;
 //const double fitStart = -0.2;
 //const double fitEnd   = 0.3;
-const double SepaLimit = 0.08;
 const int ParaMax = 64;
 //const double TrigTime = 3.70;
 const double TrigTimeReso = 1.00;
@@ -181,9 +180,9 @@ Bool_t HodoWaveformHit::PulseSearch( void )
   Double_t width = 0.05;
   Double_t risetime = 0.1;
   if(DetectorName()=="TAG-PL") {
-    threshold = -40;
+    threshold = -30;
     width = 0.05;
-    risetime = 0.005;
+    risetime = 0.012;
   }
 
   SearchParam sp1={"sp1", {index_original_graph, index_diff_graph},
@@ -338,6 +337,7 @@ Bool_t HodoWaveformHit::PreSearch(struct SearchParam *sp)
 
   std::vector<Double_t> rise30,fall30,entry30;
   threshold = -30;
+  if(DetectorName()=="TAG-PL") threshold = -15.;
 
   flagSelectRange = BGODiscri.SelectRange(threshold, begin, end);
   if (!flagSelectRange)
@@ -346,8 +346,16 @@ Bool_t HodoWaveformHit::PreSearch(struct SearchParam *sp)
   BGODiscri.GetRisingPoint(rise30);
   BGODiscri.GetFallingPoint(fall30);
 
-  Double_t width_thr = 0.05;
-  if(DetectorName()=="TAG-PL") width_thr = 0.004;
+  // if(DetectorName()=="TAG-PL") {
+  //   std::cout << "segment (" << m_raw->SegmentId() << ") Vth=-30, ";
+  //   for(int i=0;i<rise30.size();i++)
+  //     std::cout<<rise30[i] << ", ";
+  //   std::cout << std::endl;
+  // }
+
+  Double_t width_thr = 0.04;
+  if(DetectorName()=="TAG-PL") width_thr = 0.001;
+
   Bool_t   flagWidthCut1 = WidthCut(rise30,fall30,width_thr,entry30);
   if (!flagWidthCut1) {
     std::cout << func_name << " : WidthCut1, Number of rise and fall points does not match" << std::endl;
@@ -383,13 +391,25 @@ Bool_t HodoWaveformHit::PreSearch(struct SearchParam *sp)
 
   BGODiscri.GetRisingPoint(rise100);
   BGODiscri.GetFallingPoint(fall100);
+  // if(DetectorName()=="TAG-PL") {
+  //   std::cout << "segment (" << m_raw->SegmentId() << ") Vth=-100, ";
+  //   for(int i=0;i<rise100.size();i++)
+  //     std::cout<<rise100[i] << ", ";
+  //   std::cout << std::endl;
+  // }
+
+
   width_thr = 0.08;
-  if(DetectorName()=="TAG-PL") width_thr = 0.004;
+  if(DetectorName()=="TAG-PL") width_thr = 0.001;
   WidthCut(rise100, fall100, width_thr, entry100);
 
   CompareRise(entry30,entry100,0.05,entry30_100);
-  //for(int i=0;i<entry30_100.size();i++)
-  //std::cout<<"entry "<<entry30_100[i]<<std::endl;
+  // if(DetectorName()=="TAG-PL") {
+  //   std::cout << "segment (" << m_raw->SegmentId() << "), ";
+  //   for(int i=0;i<entry30_100.size();i++)
+  //     std::cout<<entry30_100[i] << ", ";
+  //   std::cout << std::endl;
+  // }
   m_n_discri_diffpulse = entry30_100.size();
 
   if (entry30_100.size()==0)
@@ -402,6 +422,12 @@ Bool_t HodoWaveformHit::PreSearch(struct SearchParam *sp)
     sp->foundx.push_back(entry30_100[i]+sp->risetime);
     sp->foundy.push_back(-GXtoGY(index_original_graph,
 				 entry30_100[i]+sp->risetime)) ;
+    // if(DetectorName()=="TAG-PL") {
+    //   std::cout << "( " << entry30_100[i]+sp->risetime << ", "
+    // 		<< -GXtoGY(index_original_graph, entry30_100[i]+sp->risetime) << "), ";
+    //   if (i==entry30_100.size()-1)
+    // 	std::cout << std::endl;
+    // }
   }
 
   if(flagAroundBegin==1){
@@ -469,7 +495,10 @@ void HodoWaveformHit::SetInitial(std::vector<Double_t> &v,
 				 Double_t thre, Double_t rise)
 {
   Int_t size=v.size();
-
+  Double_t SepaLimit = 0.08;
+  if(DetectorName()=="TAG-PL") {
+    SepaLimit = 0.004;
+  }
   if(size>1)
     for(Int_t i=0;i<size;i++){
       if(v[i]<begin || v[i]>end)
@@ -478,13 +507,21 @@ void HodoWaveformHit::SetInitial(std::vector<Double_t> &v,
 
   if(size>1){
     std::sort(v.begin(),v.end());
+
     for(Int_t i=0;i<size-1;i++){
       if(v[i+1]-v[i]<SepaLimit){
-        v[i+1] = (Double_t)((v[i+1]+v[i])/2);
-        v[i]=-1;
+	v[i+1] = (Double_t)((v[i+1]+v[i])/2);
+	v[i]=-1;
       }
     }
   }
+
+  // if(DetectorName()=="TAG-PL") {
+  //   std::cout << "segment (" << m_raw->SegmentId() << "), ";
+  //   for(int i=0;i<v.size();i++)
+  //     std::cout<<v[i] << ", ";
+  //   std::cout << std::endl;
+  // }
 
   Int_t index_original_graph = 0;
   for(Int_t i=0;i<size;i++)
@@ -502,6 +539,13 @@ void HodoWaveformHit::SetInitial(std::vector<Double_t> &v,
 	v[i]=-1;
       */
     }
+
+  // if(DetectorName()=="TAG-PL") {
+  //   std::cout << "segment (" << m_raw->SegmentId() << "), ";
+  //   for(int i=0;i<v.size();i++)
+  //     std::cout<<v[i] << ", ";
+  //   std::cout << std::endl;
+  // }
 
   std::sort(v.begin(),v.end(),std::greater<double>());
 
