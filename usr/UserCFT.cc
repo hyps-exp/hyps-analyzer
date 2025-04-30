@@ -399,12 +399,12 @@ ProcessingNormal()
 
       double time0 = -999;
       double ctime0 = -999;
-      
+
       for(Int_t m = 0; m<NhitT; ++m){
 	Double_t time = hit->GetTUp(m);
-	Double_t ctime = hit->GetCTUp(m);		
+	Double_t ctime = hit->GetCTUp(m);
 	HF2 (1000*(plane+1)+200, seg, time);
-	HF2 (1000*(plane+1)+210, seg, ctime);            			
+	HF2 (1000*(plane+1)+210, seg, ctime);
 	if (std::abs(time)<100)
 	  flagTime = true;
 
@@ -417,12 +417,17 @@ ProcessingNormal()
 	HF2 (1000*(plane+1)+206, seg, adccorHi);
 #ifdef ForPHC
 	int histId = ((plane+1)*1000+seg)*10+1;
-	if (adccorHi>1000)
-	  HF1( histId, time0);
+	if (adccorHi>1000){
+	  // HF1( histId, time0);
+	  histId = ((plane+1)*1000+seg)*10+3;
+	  HF1( histId, ctime0);
+	}
 
-	histId = ((plane+1)*1000+seg)*10+2;
-	HF2( histId, 1./sqrt(adccorHi), time0);
-#endif	
+	// histId = ((plane+1)*1000+seg)*10+2;
+	// HF2( histId, 1./sqrt(adccorHi), time0);
+	histId = ((plane+1)*1000+seg)*10+4;
+	HF2( histId, 1./sqrt(adccorHi), ctime0);
+#endif
       }
     }
 
@@ -492,30 +497,30 @@ ProcessingNormal()
       Int_t NhitAL = hit->GetSizeAdcLow();
       Int_t NhitT  = hit->GetSizeTdcUp();
 
-      bool flag_tdc = false;      
-      for(Int_t m = 0; m<NhitT; ++m){	    
+      bool flag_tdc = false;
+      for(Int_t m = 0; m<NhitT; ++m){
 	Int_t tdc_l = hit->GetTdcLeading(U, m);
 	Int_t tdc_t = hit->GetTdcTrailing(U, m);
-	HF2 (9000+100, seg, tdc_l);  //TDC Nhits 
+	HF2 (9000+100, seg, tdc_l);  //TDC Nhits
 	HF2 (9000+101, seg, tdc_t);
-	
-	Int_t width = tdc_l - tdc_t;	  
+
+	Int_t width = tdc_l - tdc_t;
 	HF2 (9000+103, seg, width);
 
 
 	if (tdc_l>MinTdcCFT && tdc_l < MaxTdcCFT) {
 	  flag_tdc = true;
-	  //event.cfttdc[plane][seg] = tdc_l;	
+	  //event.cfttdc[plane][seg] = tdc_l;
 	}
       }
       if (flag_tdc) {
 	HF1 (9000+102, seg);
       }
 
-      
+
       //ADC Hi
       for(Int_t m = 0; m<NhitAH; ++m){
-	Int_t adcH = hit->GetAdcHigh();	
+	Int_t adcH = hit->GetAdcHigh();
 	HF2 (9000+104, seg, adcH);
 	//event.cftadc_h[plane][seg] = adcH;
 
@@ -523,12 +528,12 @@ ProcessingNormal()
 	  HF2 (9000+106, seg, adcH);
 	}
       }
-	
+
       //ADC Low
-      for(Int_t m = 0; m<NhitAL; ++m){	    
-	Int_t adcL = hit->GetAdcLow();	
+      for(Int_t m = 0; m<NhitAL; ++m){
+	Int_t adcL = hit->GetAdcLow();
 	HF2 (9000+105, seg, adcL);
-	//event.cftadc_l[plane][seg] = adcL;	
+	//event.cftadc_l[plane][seg] = adcL;
       }
     }
   }
@@ -544,18 +549,18 @@ ProcessingNormal()
       Int_t plane = hit->PlaneId();
 
       Double_t adccorHi  = hit->GetAdcCorHigh();
-      Double_t adccorLow = hit->GetAdcCorLow();      
+      Double_t adccorLow = hit->GetAdcCorLow();
       Double_t mipHi  = hit->GetMipHigh();
-      Double_t mipLow = hit->GetMipLow();      
+      Double_t mipLow = hit->GetMipLow();
       Double_t deLow  = hit->DeltaELowGain();
-      
+
 
       HF2 (9000+204, seg, adccorHi);
-      HF2 (9000+205, seg, adccorLow);            
+      HF2 (9000+205, seg, adccorLow);
       HF2 (9000+207, seg, mipHi);
       HF2 (9000+208, seg, mipLow);
       /*
-      HF2 (1000*(plane+1)+209, seg, deLow);                  
+      HF2 (1000*(plane+1)+209, seg, deLow);
       event.cftadc_cor_h[plane][seg]  = (int)adccorHi;
       event.cftadc_cor_l[plane][seg] = (int)adccorLow;
 
@@ -563,7 +568,7 @@ ProcessingNormal()
 	HF2 (1000*(plane+1)+201, seg, event.cfttdc[plane][seg]);
       }
       */
-      
+
       Int_t NhitT = hit->GetEntries(U);
       bool flagTime = false;
 
@@ -572,9 +577,9 @@ ProcessingNormal()
 
       for(Int_t m = 0; m<NhitT; ++m){
 	Double_t time = hit->GetTUp(m);
-	Double_t ctime = hit->GetCTUp(m);	
+	Double_t ctime = hit->GetCTUp(m);
 
-	HF2 (9000+200, seg, time);            	
+	HF2 (9000+200, seg, time);
 	if (std::abs(time)<100)
 	  flagTime = true;
 
@@ -649,7 +654,7 @@ ConfMan::InitializeHistograms()
     TString title207("");
     TString title208("");
     TString title209("");
-    TString title210("");        
+    TString title210("");
     TString title300("");
     TString title301("");
     TString title302("");
@@ -673,7 +678,7 @@ ConfMan::InitializeHistograms()
       title207 = Form("CFT UV %d : Mip Calib(High) vs seg", layer);
       title208 = Form("CFT UV %d : Mip Calib(Low) vs seg", layer);
       title209 = Form("CFT UV %d : dE (Low) vs seg", layer);
-      title210 = Form("CFT UV %d : CTime vs seg", layer);            
+      title210 = Form("CFT UV %d : CTime vs seg", layer);
       title300 = Form("CFT UV %d : nCluster", layer);
       title301 = Form("CFT UV %d : Cluster Size", layer);
       title302 = Form("CFT UV %d (Cluster): Time vs seg", layer);
@@ -697,7 +702,7 @@ ConfMan::InitializeHistograms()
       title207 = Form("CFT Phi %d : Mip Calib(High) vs seg", layer);
       title208 = Form("CFT Phi %d : Mip Calib(Low) vs seg", layer);
       title209 = Form("CFT Phi %d : dE (Low) vs seg", layer);
-      title210 = Form("CFT Phi %d : CTime vs seg", layer);            
+      title210 = Form("CFT Phi %d : CTime vs seg", layer);
       title300 = Form("CFT Phi %d : nCluster", layer);
       title301 = Form("CFT Phi %d : Cluster Size", layer);
       title302 = Form("CFT Phi %d (Cluster): Time vs seg", layer);
@@ -720,7 +725,7 @@ ConfMan::InitializeHistograms()
     HB2( 1000*(i+1)+207, title207, NumOfSegCFT[i], 0, NumOfSegCFT[i], 1000,-10,90);
     HB2( 1000*(i+1)+208, title208, NumOfSegCFT[i], 0, NumOfSegCFT[i], 1000,-1,9);
     HB2( 1000*(i+1)+209, title209, NumOfSegCFT[i], 0, NumOfSegCFT[i], 1000,-1,9);
-    HB2( 1000*(i+1)+210, title200, NumOfSegCFT[i], 0, NumOfSegCFT[i], 1000,-500,500);    
+    HB2( 1000*(i+1)+210, title200, NumOfSegCFT[i], 0, NumOfSegCFT[i], 1000,-500,500);
     HB1( 1000*(i+1)+300, title300, 20, 0, 20);
     HB1( 1000*(i+1)+301, title301, 20, 0, 20);
     HB2( 1000*(i+1)+302, title302, NumOfSegCFT[i], 0, NumOfSegCFT[i], 1000,-500,500);
@@ -731,17 +736,21 @@ ConfMan::InitializeHistograms()
 
 
 #ifdef ForPHC
-  // Consume too many memories 
-  // use only when the each channnel study is necessary 
+  // Consume too many memories
+  // use only when the each channnel study is necessary
   for (int l=0; l<NumOfPlaneCFT; l++) {
     int NumOfSeg = NumOfSegCFT[l];
     for (int seg=0; seg<NumOfSeg; seg++ ) {
       int hid = ((l+1)*1000+seg)*10;
 
-      TString title1 = Form("Time (ADCcor>1000) %d-%d", l, seg);
-      HB1(hid+1, title1, 100, -50, 50);
-      TString title2 = Form("Time : 1/sqrt(ADCcor) %d-%d", l, seg);
-      HB2(hid+2, title2, 100, 0, 0.15, 100, -50, 50);
+      // TString title1 = Form("Time (ADCcor>1000) %d-%d", l, seg);
+      // TString title2 = Form("Time : 1/sqrt(ADCcor) %d-%d", l, seg);
+      TString title3 = Form("CTime (ADCcor>1000) %d-%d", l, seg);
+      TString title4 = Form("CTime : 1/sqrt(ADCcor) %d-%d", l, seg);
+      // HB1(hid+1, title1, 100, -50, 50);
+      // HB2(hid+2, title2, 100, 0, 0.15, 100, -50, 50);
+      HB1(hid+3, title3, 100, -50, 50);
+      HB2(hid+4, title4, 100, 0, 0.15, 100, -50, 50);
     }
   }
 #endif
@@ -753,13 +762,13 @@ ConfMan::InitializeHistograms()
 
     TString title100("PiID : Tdc(Leading) vs seg");
     TString title101("PiID : Tdc(Trailing) vs seg");
-    TString title102("PiID : Hit pattern");    
-    TString title103("PiID : TOT vs seg");    
+    TString title102("PiID : Hit pattern");
+    TString title103("PiID : TOT vs seg");
     TString title104("PiID : Adc(High) vs seg");
     TString title105("PiID : Adc(Low) vs seg");
-    TString title106("PiID : Adc(High) vs seg (w/ TDC)");      
+    TString title106("PiID : Adc(High) vs seg (w/ TDC)");
     TString title200("PiID : Time vs seg");
-    TString title201("PiID : TDC (w/ Large ADC) vs seg");      
+    TString title201("PiID : TDC (w/ Large ADC) vs seg");
     TString title204("PiID : AdcCor(High) vs seg");
     TString title205("PiID : AdcCor(Low) vs seg");
     TString title206("PiID : AdcCor(High) vs seg (w/ TDC)");
@@ -769,11 +778,11 @@ ConfMan::InitializeHistograms()
 
     HB2( 9000+100, title100, NumOfSegPiID, 0, NumOfSegPiID, 1024,0,1024);
     HB2( 9000+101, title101, NumOfSegPiID, 0, NumOfSegPiID, 1024,0,1024);
-    HB1( 9000+102, title102, NumOfSegPiID, 0, NumOfSegPiID);   
-    HB2( 9000+103, title103, NumOfSegPiID, 0, NumOfSegPiID, 1024,0,1024);        
+    HB1( 9000+102, title102, NumOfSegPiID, 0, NumOfSegPiID);
+    HB2( 9000+103, title103, NumOfSegPiID, 0, NumOfSegPiID, 1024,0,1024);
     HB2( 9000+104, title104, NumOfSegPiID, 0, NumOfSegPiID, 1000,0,4000);
     HB2( 9000+105, title105, NumOfSegPiID, 0, NumOfSegPiID, 1000,0,4000);
-    HB2( 9000+106, title106, NumOfSegPiID, 0, NumOfSegPiID, 1000,0,4000);    
+    HB2( 9000+106, title106, NumOfSegPiID, 0, NumOfSegPiID, 1000,0,4000);
 
     HB2( 9000+200, title200, NumOfSegPiID, 0, NumOfSegPiID, 1000,-500,500);
     HB2( 9000+201, title201, NumOfSegPiID, 0, NumOfSegPiID, 1024,0,1024);
