@@ -40,9 +40,9 @@ const auto& zK18Target = gGeom.LocalZ("K18Target");
 const auto& zBH2       = gGeom.LocalZ("BH2");
 const Double_t MaxChisquare       = 2000.; // Set to be More than 30
 const Double_t MaxChisquareSdcIn  = 5000.; // Set to be More than 30
-const Double_t MaxChisquareCFT    = 500.;   // Set to be More than 30  
-const Double_t MaxChi2CFT2nd_phi = 30.; 
-const Double_t MaxChi2CFT2nd_uv  = 150.; 
+const Double_t MaxChisquareCFT    = 500.;   // Set to be More than 30
+const Double_t MaxChi2CFT2nd_phi = 30.;
+const Double_t MaxChi2CFT2nd_uv  = 150.;
 
 const Double_t MaxNumOfCluster = 20.;    // Set to be Less than 30
 const Double_t MaxNumOfClusterCFT = 10.;    // Set to be Less than 30
@@ -62,7 +62,7 @@ const Double_t localPosBh2X[NumOfSegBH2] = {-41.5 + localPosBh2X_dX,
   10.5  + localPosBh2X_dX,
   19.0  + localPosBh2X_dX,
   41.5  + localPosBh2X_dX};
-  
+
 //_____________________________________________________________________________
 // Local Functions
 
@@ -746,7 +746,7 @@ MakeTrack(const std::vector<ClusterList>& CandCont,
 }
 
 //______________________________________________________________________________
-CFTLocalTrack 
+CFTLocalTrack
 * MakeTrack(  const std::vector<CFTFiberCC>&  HC,
 	      const IndexList& combination)
 {
@@ -757,7 +757,7 @@ CFTLocalTrack
   if(!tp){
     std::cerr << funcname << ": new fail" << std::endl;
     return 0;
-  }    
+  }
 
   for( std::size_t i=0, n=HC.size(); i<n; ++i ){
     Int_t m=combination[i];
@@ -767,7 +767,7 @@ CFTLocalTrack
 #if 0
       std::cout << funcname << ":" << std::setw(3)
 		<< i << std::setw(3) << m  << " "
-		<< CandCont[i][m] << std::endl; 
+		<< CandCont[i][m] << std::endl;
 #endif
 
       if(fcl){
@@ -1758,30 +1758,30 @@ LocalTrackSearchCFT( const std::vector<CFTFiberCC>& HC,
 
   IndexList nCombi(NPlane);
 
-  for( Int_t i=0; i<NPlane; ++i ){ 
+  for( Int_t i=0; i<NPlane; ++i ){
     nCombi[i]=(HC[i]).size();
-    
+
     if( nCombi[i]>MaxNumOfClusterCFT ) nCombi[i]=0;
   }
 
-  Bool_t status = true;    
-  std::vector < IndexList > 
+  Bool_t status = true;
+  std::vector < IndexList >
     CombiIndex = MakeIndex( NPlane, nCombi, status );
   Int_t nnCombi=CombiIndex.size();
-    
+
 #if 0
-  std::cout << " ===> " << nnCombi << " combinations will be checked.." 
+  std::cout << " ===> " << nnCombi << " combinations will be checked.."
 	    << std::endl;
 #endif
   if( nnCombi>MaxCombi ) return 0;
 
   for( Int_t i=0; i<nnCombi; ++i ){
     CFTLocalTrack *track = MakeTrack( HC, CombiIndex[i]);
-    Int_t nMinus = 0; 
+    Int_t nMinus = 0;
     for (Int_t j=0; j<CombiIndex[i].size(); j++) {
       if ( CombiIndex[i][j] == -1)
 	nMinus++;
-    }    
+    }
     /*
     if (nMinus==0) {
       std::cout << "( " ;
@@ -1795,13 +1795,13 @@ LocalTrackSearchCFT( const std::vector<CFTFiberCC>& HC,
 
     if( track->GetNHit()>=MinNumOfHitsPhi&& track->CheckPhi_1st() && track->DoFitXY() &&
 	track->GetChiSquareXY()<MaxChisquareCFT) {
-#if 0     
+#if 0
       std::cout << "NHit = " << track->GetNHit() << " Chisqr = " << track->GetChiSquareXY() << std::endl;
-      
+
       std::cout << "******** i = " << i << " *******************" << std::endl;
 #endif
 
-      if (track->GetNHitU()>=MinNumOfHitsU && 
+      if (track->GetNHitU()>=MinNumOfHitsU &&
 	  track->DoFitZTrack() &&
 	  track->GetChiSquareZ()<MaxChisquareCFT  &&
 	  fabs(track->GetVtxZ())<cut_range // vtx cut
@@ -1809,7 +1809,7 @@ LocalTrackSearchCFT( const std::vector<CFTFiberCC>& HC,
 
 	//std::cout << "pass 1st Z Tracking : chi2 = " << track->GetChiSquareZ()
 	//<< std::endl;
-	
+
 	track->SetCalculatedValue();
 
 	track->SetCorPhi();
@@ -1818,6 +1818,7 @@ LocalTrackSearchCFT( const std::vector<CFTFiberCC>& HC,
 	track->DoFitXY_2nd();
 	track->DoFitZTrack();
 	Double_t chi2_0 = track->GetChiSquareZ();
+
 	track->SetThetaCFT();
 
 	track->DoFitZTrack();
@@ -1842,12 +1843,12 @@ LocalTrackSearchCFT( const std::vector<CFTFiberCC>& HC,
 		  << ", nhitZ = " << track->GetNHitU()
 		  << std::endl;
 	*/
-	if (track->GetChiSquareXY() < MaxChi2CFT2nd_phi  && 
+	if (track->GetChiSquareXY() < MaxChi2CFT2nd_phi  &&
 	    track->GetChiSquareZ() < MaxChi2CFT2nd_uv  &&
 	    flag_chi2_uv &&
 	    flag_chi2_phi &&
-	    fabs(track->GetVtxZ())<cut_range /*&& 
-	    track->SetCalculatedValue() && 
+	    fabs(track->GetVtxZ())<cut_range /*&&
+	    track->SetCalculatedValue() &&
 	    track->GetChiSquareDE() < 10*/) {
 	  TrackCont.push_back(track);
 	} else {
@@ -1856,7 +1857,7 @@ LocalTrackSearchCFT( const std::vector<CFTFiberCC>& HC,
       } else {
 	delete track;
       }
-    }    
+    }
     else {
       delete track;
     }
@@ -1877,49 +1878,49 @@ LocalTrackSearchCFT( const std::vector<CFTFiberCC>& HC,
 #if 0
   {
     Int_t nn=TrackCont.size();
-    std::cout << funcname << ": Before Sorting. #Tracks = " 
+    std::cout << funcname << ": Before Sorting. #Tracks = "
  	      << nn << std::endl;
     for( Int_t i=0; i<nn; ++i ){
       CFTLocalTrack *track=TrackCont[i];
       std::cout << std::setw(3) << i << " #Hits (XY)="
- 		<< std::setw(2) << track->GetNHit() 
+ 		<< std::setw(2) << track->GetNHit()
  		<< " ChiSqr(XY)=" << track->GetChiSquareXY()
 		<< std::setw(3) << i << " #Hits (Z)="
- 		<< std::setw(2) << track->GetNHitU() 
+ 		<< std::setw(2) << track->GetNHitU()
  		<< " ChiSqr(Z)=" << track->GetChiSquareXY()
  		<< std::endl;
     }
     std::cout << std::endl;
-    
+
   }
 #endif
 
-  //partial_sort( TrackCont.begin(), TrackCont.end(), 
+  //partial_sort( TrackCont.begin(), TrackCont.end(),
   //TrackCont.end(), CFTLTrackComp() );
   std::stable_sort( TrackCont.begin(), TrackCont.end(), CFTLTrackComp() );
 
 #if 0
   {
     Int_t nn=TrackCont.size();
-    std::cout << funcname << ": After Sorting. #Tracks = " 
+    std::cout << funcname << ": After Sorting. #Tracks = "
  	      << nn << std::endl;
-    
+
     for( Int_t i=0; i<nn; ++i ){
       CFTLocalTrack *track=TrackCont[i];
       std::cout << std::setw(3) << i << " #Hits(XY)="
-		<< std::setw(2) << track->GetNHit() 
+		<< std::setw(2) << track->GetNHit()
 		<< " ChiSqr(XY)=" << track->GetChiSquareXY()
 		<< std::setw(3) << i << " #Hits(Z)="
-		<< std::setw(2) << track->GetNHitU() 
+		<< std::setw(2) << track->GetNHitU()
 		<< " ChiSqr(Z)=" << track->GetChiSquareZ()
 		<< " Total ChiSqr=" << track->GetChiSquareZ() + track->GetChiSquareXY()
 		<< std::endl;
     }
     std::cout << std::endl;
-    
+
   }
 #endif
-  
+
 
   // Delete Duplicated Tracks
   for( Int_t i=0; i<Int_t(TrackCont.size()); ++i ){
@@ -1930,7 +1931,7 @@ LocalTrackSearchCFT( const std::vector<CFTFiberCC>& HC,
 
     Int_t nhU=tp->GetNHitU();
     for( Int_t j=0; j<nhU; ++j ) tp->GetHitU(j)->setFlags();
-    
+
      for( Int_t i2=TrackCont.size()-1; i2>i; --i2 ){
        CFTLocalTrack *tp2=TrackCont[i2];
        Int_t nh2=tp2->GetNHit();
@@ -1952,7 +1953,7 @@ LocalTrackSearchCFT( const std::vector<CFTFiberCC>& HC,
        } else {
 	 //std::cout << "accept" << std::endl;
        }
-     }      
+     }
    }
 
   {
@@ -1966,16 +1967,16 @@ LocalTrackSearchCFT( const std::vector<CFTFiberCC>& HC,
 #if 0
   //  if(TrackCont.size()>1){
   Int_t nn=TrackCont.size();
-  std::cout << funcname << ": After Deleting. #Tracks = " 
+  std::cout << funcname << ": After Deleting. #Tracks = "
 	    << nn << std::endl;
-     
+
   for( Int_t i=0; i<nn; ++i ){
     CFTLocalTrack *track=TrackCont[i];
     std::cout << std::setw(3) << i << " #Hits(XY)="
-	      << std::setw(2) << track->GetNHit() 
+	      << std::setw(2) << track->GetNHit()
 	      << " ChiSqr(XY)=" << track->GetChiSquareXY()
 	      << std::setw(3) << i << " #Hits(Z)="
-	      << std::setw(2) << track->GetNHitU() 
+	      << std::setw(2) << track->GetNHitU()
 	      << " ChiSqr(Z)=" << track->GetChiSquareZ()
 	      << " Total ChiSqr=" << track->GetChiSquareZ() + track->GetChiSquareXY()
 	      << " Theta=" << track->GetThetaCFT()
@@ -1994,13 +1995,13 @@ LocalTrackSearchCFT( const std::vector<CFTFiberCC>& HC,
     std::cout << "*********************************************" << std::endl;
   }
   std::cout << std::endl;
-  
+
   //  }
 #endif
-     
+
   Int_t ntCFT = TrackCont.size();
   for (Int_t i=0; i<ntCFT; i++) {
-    CFTLocalTrack *track=TrackCont[i];    
+    CFTLocalTrack *track=TrackCont[i];
     track->CalcNormalizedDE();
   }
 
@@ -2018,7 +2019,7 @@ Int_t LocalTrackSearchCFT_16layer( CFTLocalTC& TrackCont,
   if(!track){
     std::cerr << funcname << ": new fail" << std::endl;
     return 0;
-  }    
+  }
 
 
   if (TrackCont.size() != 2)
@@ -2082,16 +2083,16 @@ Int_t LocalTrackSearchCFT_16layer( CFTLocalTC& TrackCont,
 #if 0
   //  if(TrackCont.size()>1){
   Int_t nn=TrackCont_16layer.size();
-  std::cout << funcname << ": After Deleting. #Tracks = " 
+  std::cout << funcname << ": After Deleting. #Tracks = "
 	       << nn << std::endl;
-     
+
   for( Int_t i=0; i<nn; ++i ){
     CFTLocalTrack *track=TrackCont_8layer[i];
     std::cout << std::setw(3) << i << " #Hits(XY)="
-	      << std::setw(2) << track->GetNHit() 
+	      << std::setw(2) << track->GetNHit()
 	      << " ChiSqr(XY)=" << track->GetChiSquareXY()
 	      << std::setw(3) << i << " #Hits(Z)="
-	      << std::setw(2) << track->GetNHitU() 
+	      << std::setw(2) << track->GetNHitU()
 	      << " ChiSqr(Z)=" << track->GetChiSquareZ()
 	      << " Total ChiSqr=" << track->GetChiSquare()
 	      << std::endl;
@@ -2109,16 +2110,16 @@ Int_t LocalTrackSearchCFT_16layer( CFTLocalTC& TrackCont,
     std::cout << "*********************************************" << std::endl;
   }
   std::cout << std::endl;
-  
+
   //  }
 #endif
 
   Int_t ntCFT = TrackCont_16layer.size();
   for (Int_t i=0; i<ntCFT; i++) {
-    CFTLocalTrack *track=TrackCont_16layer[i];    
+    CFTLocalTrack *track=TrackCont_16layer[i];
     track->CalcNormalizedDE();
   }
-  
+
   return TrackCont_16layer.size();
 }
 

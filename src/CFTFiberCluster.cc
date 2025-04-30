@@ -270,15 +270,13 @@ Double_t CFTFiberCluster::GetCorZ(Double_t phi, Double_t mean_z, Double_t theta)
       z1 = gCFTPos.GetZposU(uv_layer, seg1, phi+360, theta);      
     else if (phi >= phi_range2)
       z1 = gCFTPos.GetZposU(uv_layer, seg1, phi-360, theta);      
-
-
-    //std::cout << "Layer " << layer 
-    //<< ", Phi_range " << phi_range1 << " -- " << phi_range2 
-    //<< ", phi" << phi 
-    //<< ", z1 = " << z1
-    //<< std::endl;
-
-
+    /*
+    std::cout << "Layer " << uv_layer 
+	      << ", Phi_range " << phi_range1 << " -- " << phi_range2 
+	      << ", phi" << phi 
+	      << ", z1 = " << z1
+	      << std::endl;
+    */
     /*
     if (z1<0) {
       z1 = gCFTPos.GetZposU(layer, seg1, phi+360);      
@@ -302,14 +300,13 @@ Double_t CFTFiberCluster::GetCorZ(Double_t phi, Double_t mean_z, Double_t theta)
       z1 = gCFTPos.GetZposU(uv_layer, seg1, phi+360, theta);      
     else if (phi >= phi_range2)
       z1 = gCFTPos.GetZposU(uv_layer, seg1, phi-360, theta);      
-
-    //std::cout << "Layer " << layer 
-    //<< ", Phi_range " << phi_range1 << " -- " << phi_range2 
-    //<< ", phi" << phi 
-    //<< ", z1 = " << z1
-    //<< std::endl;
-
-
+    /*
+    std::cout << "Layer " << uv_layer 
+	      << ", Phi_range " << phi_range1 << " -- " << phi_range2 
+	      << ", phi" << phi 
+	      << ", z1 = " << z1
+	      << std::endl;
+    */
     /*
     if (z1<0) {
       z1 = gCFTPos.GetZposU(layer, seg1, phi-360);      
@@ -345,13 +342,13 @@ Double_t CFTFiberCluster::GetCorZ(Double_t phi, Double_t mean_z, Double_t theta)
       z2 = gCFTPos.GetZposU(uv_layer, seg2, phi+360, theta);      
     else if (phi >= phi_range2)
       z2 = gCFTPos.GetZposU(uv_layer, seg2, phi-360, theta);      
-
-    //std::cout << "Layer " << layer 
-    //<< ", Phi_range " << phi_range1 << " -- " << phi_range2 
-    //<< ", phi" << phi 
-    //<< ", z2 = " << z2
-    //<< std::endl;
-
+    /*
+    std::cout << "Layer " << uv_layer 
+	      << ", Phi_range " << phi_range1 << " -- " << phi_range2 
+	      << ", phi" << phi 
+	      << ", z2 = " << z2
+	      << std::endl;
+    */
 
     /*
     if (z2<0) {
@@ -377,12 +374,13 @@ Double_t CFTFiberCluster::GetCorZ(Double_t phi, Double_t mean_z, Double_t theta)
     else if (phi >= phi_range2)
       z2 = gCFTPos.GetZposU(uv_layer, seg2, phi-360, theta);      
 
-    //std::cout << "Layer " << layer 
-    //<< ", Phi_range " << phi_range1 << " -- " << phi_range2 
-    //<< ", phi" << phi 
-    //<< ", z2 = " << z2
-    //<< std::endl;
-
+    /*
+    std::cout << "Layer " << uv_layer 
+	      << ", Phi_range " << phi_range1 << " -- " << phi_range2 
+	      << ", phi" << phi 
+	      << ", z2 = " << z2
+	      << std::endl;
+    */
 
     /*
     if (z2<0) {
