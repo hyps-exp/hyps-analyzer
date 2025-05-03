@@ -28,6 +28,7 @@
 #include "RootHelper.hh"
 #include "UserParamMan.hh"
 #include "DCGeomMan.hh"
+#include "TemplateFitMan.hh"
 
 // #define TimeCut    1 // in cluster analysis
 #define FHitBranch 0 // make FiberHit branches (becomes heavy)
@@ -592,8 +593,7 @@ ProcessingNormal()
     event.tagsfbnhits = sfbnhits;
   }
 
-      ///// Tag-PL
-
+  ///// Tag-PL
   rawData.DecodeHits("TAG-PL");
 
   {
@@ -656,6 +656,7 @@ ProcessingNormal()
 #elif        
       const auto& hit = hodoAna.GetHit("TAG-PL",i);
 #endif      
+
       if(!hit) continue;
       Int_t seg =hit->SegmentId();
       /*
@@ -673,6 +674,7 @@ ProcessingNormal()
 	if(fabs(t-7)<5.0) is_hit_time=true;
 	//if(fabs(t)<300.0) is_hit_time=true;
       }
+
       if(is_hit_time){
 	nseg_goodtime++;
 	HF1(TagPLHid +16, seg+0.5);
@@ -692,13 +694,14 @@ ProcessingNormal()
       if (is_hit_time)
 	HF1 (TagPLHid +100*(seg+1)+13, adc_integral);            	      
 #endif
+
     }
 
     HF1(TagPLHid+10, Double_t(PLCand.size()));
 
   }
 
-  
+
   std::vector<double> SFFhit;
   std::vector<double> SFBhit;
   std::vector<double> SFFCand;
@@ -1834,6 +1837,7 @@ ConfMan::InitializeParameterFiles()
      InitializeParameter<DCDriftParamMan>("DCDRFT") &&
      InitializeParameter<DCTdcCalibMan>("DCTDC")    &&
 #endif
+     InitializeParameter<TemplateFitMan>("BGOTEMP")  &&   
      InitializeParameter<UserParamMan>("USER"));
 }
 
