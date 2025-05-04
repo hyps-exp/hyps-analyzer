@@ -199,7 +199,9 @@ Bool_t HodoWaveformHit::PulseSearch( void )
   Int_t color = 4;
   FitParam fp1={"fp1", index_original_graph, color ,fitStart, fitEnd};
 
-  SetFitParam(&fp1,sp1.foundx,sp1.foundy);
+  Bool_t flagSetFitParam = SetFitParam(&fp1,sp1.foundx,sp1.foundy);
+  if (!flagSetFitParam)
+    return false;
 
   Fit1(&fp1);
 
@@ -419,9 +421,11 @@ Bool_t HodoWaveformHit::PreSearch(struct SearchParam *sp)
 
   Int_t index_original_graph = 0;
   for(unsigned int i=0;i<entry30_100.size();i++){
-    sp->foundx.push_back(entry30_100[i]+sp->risetime);
-    sp->foundy.push_back(-GXtoGY(index_original_graph,
-				 entry30_100[i]+sp->risetime)) ;
+    if (-GXtoGY(index_original_graph, entry30_100[i]+sp->risetime)>1) {
+      sp->foundx.push_back(entry30_100[i]+sp->risetime);
+      sp->foundy.push_back(-GXtoGY(index_original_graph,
+				   entry30_100[i]+sp->risetime)) ;
+    }
     // if(DetectorName()=="TAG-PL") {
     //   std::cout << "( " << entry30_100[i]+sp->risetime << ", "
     // 		<< -GXtoGY(index_original_graph, entry30_100[i]+sp->risetime) << "), ";
@@ -635,7 +639,8 @@ void HodoWaveformHit::Fit1(FitParam *fp)
     par[i] = fp->par[i];
     //if (seg==14 && m_flag_ch14 && (i>=2 && i%2 == 0))
     //par[i] += 0.08;
-
+    if (i>=2 && i%2 == 1)
+      m_func -> SetParLimits(i, 0, 100000);
     //std::cout << "par[" << i << "] = "  << par[i] << std::endl;
   }
 
@@ -649,11 +654,11 @@ void HodoWaveformHit::Fit1(FitParam *fp)
     m_func -> FixParameter(nine,0);
 
   m_TGraphC[fp->tgen] -> Fit(m_func,"qN","",fp->FitStart,fp->FitEnd);
-  //  std::cout<< "fit: " << fp->FitStart << "~" << fp->FitEnd << std::endl;
+  //std::cout<< "fit: " << fp->FitStart << "~" << fp->FitEnd << std::endl;
 
   for(Int_t i =0;i<ParaNum;i++){
     fp -> FitParam[i] = m_func -> GetParameter(i);
-    //std::cout << i << " : " << m_func[seg] -> GetParameter(i)
+    //std::cout << i << " : " << m_func -> GetParameter(i)
     //<< std::endl;
   }
 
