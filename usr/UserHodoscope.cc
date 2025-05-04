@@ -642,18 +642,18 @@ ProcessingNormal()
   std::vector<int> PLCand;
   {
     const auto& U= HodoRawHit::kUp;
-#ifdef TAG_PL_FADC
+#if TAG_PL_FADC
     hodoAna.DecodeHits<HodoWaveformHit>("TAG-PL");
-#elif  
+#else
     hodoAna.DecodeHits("TAG-PL");
 #endif
     Int_t nh=hodoAna.GetNHits("TAG-PL");
     Int_t nseg_goodtime=0;
 
     for(Int_t i=0;i<nh;++i){
-#ifdef TAG_PL_FADC
+#if TAG_PL_FADC
       const auto& hit = hodoAna.GetHit<HodoWaveformHit>("TAG-PL", i);
-#elif        
+#else
       const auto& hit = hodoAna.GetHit("TAG-PL",i);
 #endif      
 
@@ -680,7 +680,7 @@ ProcessingNormal()
 	HF1(TagPLHid +16, seg+0.5);
 	PLCand.push_back(seg);
       }
-#ifdef TAG_PL_FADC
+#if TAG_PL_FADC
       Int_t NhitWF = hit->GetWaveformEntries(U);
       for(Int_t m = 0; m<NhitWF; ++m){
 	std::pair<Double_t, Double_t> waveform = hit->GetWaveform(m);
