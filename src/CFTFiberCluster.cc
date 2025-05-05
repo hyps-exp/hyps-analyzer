@@ -148,7 +148,8 @@ CFTFiberCluster::Calculate()
   }
   
   m_mean_position /= Double_t(m_cluster_size);
-
+  m_mean_time = m_max_ctime;
+  m_ctime = m_max_ctime;  
 
   Int_t n_true_hit=0;
   for(Int_t i=0; i<m_cluster_size; ++i){
