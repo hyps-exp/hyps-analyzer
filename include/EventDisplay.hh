@@ -294,6 +294,15 @@ private:
   TH2                       *m_hist_dE_E;
   std::vector<TGraph*>       m_CATCH_dE_E_cont;
   std::vector<TF1*>          m_CATCH_dE_E_line_cont;
+  // CATCH 3d
+  TGeometry                 *m_geometry_catch;
+  TNode                     *m_node_catch;
+  TCanvas                   *m_canvas_catch3d;
+  std::vector<TNode*>        m_CFT_node_cont[NumOfPlaneCFT/2];
+  std::vector<TPolyMarker3D*> m_CFT_UV_cont;
+  std::vector<TNode*>        m_BGOseg_node_cont;
+  std::vector<TNode*>        m_PiIDseg_node_cont;
+  
   // Tagger
   TH2                       *m_hbase_tagger;
   TLineContainer             m_TagSFF_Line_cont[NumOfSegTagSF];
@@ -322,6 +331,7 @@ public:
   Bool_t ConstructCFT();
   Bool_t ConstructBGO();
   Bool_t ConstructPiID();
+  Bool_t ConstructCATCH3d();  
   void FiberPosPhi(int layer, int seg, double *x, double *y) const;
   void BGOPos(int seg, double *x, double *y) const;
   Bool_t ConstructTagger();
@@ -346,6 +356,7 @@ public:
   void DrawHSTrack(Int_t nStep, const std::vector<TVector3>& StepPoint,
                        Double_t q);
   void ShowHitFiber(Int_t layer, Int_t segment, Double_t pe, Double_t ctime);
+  void ShowHitFiberTracked(Int_t layer, Int_t segment, Double_t z, Bool_t flagProton);
   void ShowHitBGO(Int_t segment, Double_t de) const;
   void SetBGOWaveformCanvas(Int_t nhit );
   void DrawBGOWaveform(Int_t nc, Int_t ngraph, Int_t seg, TGraphErrors* gr );

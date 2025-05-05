@@ -876,13 +876,13 @@ ProcessingNormal()
 	  //gEvDisp.DrawCFT_Time(plane, seg, 1, time);
 	}
 
-	if (time>MinTimeCFT && time<MaxAdcCFT) {
+	if (ctime>MinTimeCFT && ctime<MaxTimeCFT) {
 	  gEvDisp.ShowHitFiber(plane, seg, adccorLow, -999);
 	}
       }
     }
   }
-
+  
   hodoAna.DecodeHits<HodoWaveformHit>("BGO");
   Int_t nhBGO=hodoAna.GetNHits("BGO");
   {
@@ -949,7 +949,6 @@ ProcessingNormal()
     }
   }
 
-
   if(nhBGO == 0){
     hddaq::cout << "[Warning] BGO is no hit!" << std::endl;
     return true;
@@ -978,19 +977,21 @@ ProcessingNormal()
 	gEvDisp.ShowHitPiID(seg);
     }
   }
-
+  
   const auto& CFTClCont = hodoAna.GetClusterContainer("CFT");
   DCAna.DecodeCFTHits(CFTClCont);
   DCAna.TrackSearchCFT();
 
   Int_t ntCFT=DCAna.GetNtracksCFT();
 
+  /*
   for( Int_t i=0; i<ntCFT; ++i ){
     const auto& tp=DCAna.GetTrackCFT(i);
     Bool_t flagPTrack=false;
     gEvDisp.DrawCFTLocalTrack( tp, flagPTrack );
   }
-
+  */
+  
   std::vector <CFTParticle*> CFTPartCont;
   for( Int_t i=0; i<ntCFT; ++i ){
     const CFTLocalTrack *tp=DCAna.GetTrackCFT(i);
@@ -1009,9 +1010,81 @@ ProcessingNormal()
       flagPTrack = true;
     }
     gEvDisp.DrawCFTLocalTrack_dE_E( CFTPart, flagPTrack );
+    const CFTLocalTrack *tp=CFTPart->GetTrack();
+    
+    double mean_dE = 0;
+    int nh   = tp->GetNHit();
+    int nhUV = tp->GetNHitUV();
 
+    // straight layer
+    for(int ip=0; ip<nh; ip++){
+      CFTFiberCluster *hit = tp->GetHit(ip);
+      int layer = hit->PlaneId();
+      int seg = (int)hit->MeanSeg();
+
+      double phi_ini   = hit->MeanPhi();
+      //double phi_ini   = hit->MeanPhiCor();            
+      double phi_track   = hit->GetCalPhi();
+      double z_track = hit->GetZcal();
+      double dphi  = hit->GetResidualPhi();
+      double dE_max = hit->MaxDeltaE();
+      double theta = tp->GetThetaCFT();
+
+      mean_dE += dE_max*sin(theta*TMath::DegToRad());
+
+      gEvDisp.ShowHitFiberTracked(layer, seg, z_track, flagPTrack);
+      std::cout << "track#" << i << ", layer=" << layer << ", seg=" << seg
+		<< ", ini_phi=" << phi_ini 
+		<< ", dE = " << dE_max 
+		<< "( " << dE_max*sin(theta*TMath::DegToRad()) << " )" 
+		<< ", theta = " << theta
+		<< std::endl;
+
+
+    }
+    for(int ip=0; ip<nhUV; ip++){
+      CFTFiberCluster *hit = tp->GetHitUV(ip);
+      int layer = hit->PlaneId();
+      int seg = (int)hit->MeanSeg();
+      
+      double phi_track   = hit->GetCalPhi();
+      double z_track = hit->GetZcal();
+      double z_ini   = hit->GetZIni();
+      double dz    = hit->GetResidualZ();
+      double dE_max = hit->MaxDeltaE();
+
+      mean_dE += dE_max;
+
+      gEvDisp.ShowHitFiberTracked(layer, seg, z_track, flagPTrack);
+      std::cout << "track#" << i << ", layer=" << layer << ", seg=" << seg
+		<< ", phi=" << phi_track << ", z_ini=" << z_ini 
+		<< ", dE = " << dE_max << std::endl;      	
+
+
+    }    
+
+    mean_dE /= (double)(nh+nhUV);
+    double sigma_dE = mean_dE/4.;
+    double chisqr_dE = 0;
+    for(int ip=0; ip<nh; ip++){
+      CFTFiberCluster *hit = tp->GetHit(ip);
+      double dE_max = hit->MaxDeltaE();
+      double theta = tp->GetThetaCFT();
+
+      chisqr_dE += (dE_max*sin(theta*TMath::DegToRad()) - mean_dE)*(dE_max*sin(theta*TMath::DegToRad()) - mean_dE)/(sigma_dE*sigma_dE);
+    }
+    for(int ip=0; ip<nhUV; ip++){
+      CFTFiberCluster *hit = tp->GetHitUV(ip);
+      double dE_max = hit->MaxDeltaE();
+
+      chisqr_dE += (dE_max - mean_dE)*(dE_max - mean_dE)/(sigma_dE*sigma_dE);
+    }    
+
+    chisqr_dE /= (double)(nh+nhUV);
+
+    std::cout << "Mean dE = " << mean_dE 
+	      << ", chisqr_dE = " << chisqr_dE << std::endl;
   }
-
 
   //________________________________________________________
   //___ Reaction
@@ -1074,7 +1147,7 @@ ProcessingNormal()
 #endif
   is_good = true;
   gEvDisp.Update();
-  //gEvDisp.GetCommand();
+  gEvDisp.GetCommand();
   hddaq::cout << "[Info] IsGood = " << is_good << std::endl;
 
   if(is_good){
