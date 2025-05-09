@@ -640,8 +640,10 @@ ProcessingNormal()
 
       Double_t z_cal   = cl->GetZcal();
       Double_t phi_cal = cl->GetCalPhi();
+      // cmt = cl->CMeanTimeMaxCluster();
       HF2 (100*(plane+1)+15, z_cal, res_phi_cor);
       HF2 (100*(plane+1)+16, phi_cal, res_phi_cor);
+      HF2 (100*(plane+1)+17, z_cal, cmt);
     }
 
     for (Int_t j=0; j<nhUV; ++j) {
@@ -658,8 +660,10 @@ ProcessingNormal()
       HF1 (100*(plane+1)+12, res_z);
       Double_t z_cal   = cl->GetZcal();
       Double_t phi_cal = cl->GetCalPhi();
+      // cmt = cl->CMeanTimeMaxCluster();
       HF2 (100*(plane+1)+15, z_cal, res_z);
       HF2 (100*(plane+1)+16, phi_cal, res_z);
+      HF2 (100*(plane+1)+17, z_cal, cmt);
     }
 
     //std::cout << "nhPhi = " << nh << ", nhUV = " << nhUV
@@ -942,6 +946,7 @@ ConfMan::InitializeHistograms()
     TString title114("");
     TString title115("");
     TString title116("");
+    TString title117("");
 
 #if cosmic
     TString title150("");
@@ -964,6 +969,7 @@ ConfMan::InitializeHistograms()
       title114  = Form("CFT UV %d : Not Used", layer);
       title115  = Form("CFT UV %d : Residual (Z) vs Z [Track]", layer);
       title116  = Form("CFT UV %d : Residual (Z) vs Phi [Track]", layer);
+      title117  = Form("CFT UV %d : Z vs Time [Track]", layer);
 
 #if cosmic
       title150  = Form("CFT UV %d : Time [16layer Track]", layer);
@@ -986,6 +992,7 @@ ConfMan::InitializeHistograms()
       title114  = Form("CFT Phi %d : Residual (phi_cor) [Track]", layer);
       title115  = Form("CFT Phi %d : Residual (phi_cor) vs Z [Track]", layer);
       title116  = Form("CFT Phi %d : Residual (phi_cor) vs Phi [Track]", layer);
+      title117  = Form("CFT Phi %d : Z vs Time [Track]", layer);
 
 #if cosmic
       title150  = Form("CFT Phi %d : Time [16layer Track]", layer);
@@ -1008,6 +1015,7 @@ ConfMan::InitializeHistograms()
     HB1( 100*(i+1) + 14, title114, 100, -5., 5.);
     HB2( 100*(i+1) + 15, title115, 500, -200, 300, 100, -5., 5.);
     HB2( 100*(i+1) + 16, title116, 400, -20, 380, 100, -5., 5.);
+    HB2( 100*(i+1) + 17, title117, 1000, -200, 300, 700, -20., 50.);
 
 #if cosmic
     HB1( 100*(i+1) + 50, title150, 1000,-50, 150);

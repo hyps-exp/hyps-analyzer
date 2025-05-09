@@ -2123,20 +2123,21 @@ double CFTLocalTrack::CalculateZpos(double phi, CFTFiberCluster *cl, double mean
   }
 
   if (a1>=0 && a1<=400) {
-    //cosmic ray no use
-    // if (a1>=370 && time<=-1)
-    //   a1 = a1-400;
-    // else if (a1<=30 && time>=0.5)
-    //   a1 = a1+400;
 
+    //cosmic ray no use
+    if (a1>=360 && time<=-1)
+      a1 = a1-400;
+    else if (a1<=20 && time>=0.5)
+      a1 = a1+400;
 
     return (a1 - offsetCATCH);
   } else if (a2>=0 && a2<=400) {
+
     //cosmic ray no use
-    // if (a2>=370 && time<=-1)
-    //   a2 = a2-400;
-    // else if (a2<=30 && time>=0.5)
-    //   a2 = a2+400;
+    if (a2>=360 && time<=-1)
+      a2 = a2-400;
+    else if (a2<=20 && time>=0.5)
+      a2 = a2+400;
 
     return (a2 - offsetCATCH);
   } else
@@ -2152,10 +2153,10 @@ double CFTLocalTrack::CalculateZpos2(double phi, CFTFiberCluster *cl, double mea
   double time = cl->CMeanTimeMaxCluster();
 
   //cosmic ray no use
-  // if (z>=370 && time<=-1)
-  //   z = z-400;
-  // else if (z<=30 && time>=0.5)
-  //   z = z+400;
+  if (z>=360 && time<=-1)
+    z = z-400;
+  else if (z<=20 && time>=0.5)
+    z = z+400;
 
   return z - offsetCATCH;
 }
