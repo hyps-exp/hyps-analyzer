@@ -489,7 +489,7 @@ ProcessingNormal()
   if(nt<1) return true;
 #endif
 
-    
+
 
   gRM.Decode();
 
@@ -613,10 +613,10 @@ ProcessingNormal()
 
       Int_t NhitA = hit->GetSizeAdcHigh();
       for(Int_t m = 0; m<NhitA; ++m){
-	Int_t adc = hit->GetAdcUp(m);	
+	Int_t adc = hit->GetAdcUp(m);
 	HF2 (TagPLHid +100*(seg+1) +1, m, adc);
 
-	event.tagpla[seg]=adc;	
+	event.tagpla[seg]=adc;
       }
 
       Bool_t is_hit_l = false;
@@ -655,7 +655,7 @@ ProcessingNormal()
       const auto& hit = hodoAna.GetHit<HodoWaveformHit>("TAG-PL", i);
 #else
       const auto& hit = hodoAna.GetHit("TAG-PL",i);
-#endif      
+#endif
 
       if(!hit) continue;
       Int_t seg =hit->SegmentId();
@@ -682,6 +682,11 @@ ProcessingNormal()
       }
 #if TAG_PL_FADC
       Int_t NhitWF = hit->GetWaveformEntries(U);
+      Int_t NDiscri = hit->GetNDiscriPulse();
+      Int_t NDiffDiscri = hit->GetNDiscriDiffPulse();
+      Double_t peak = 999;
+      Double_t time = 999;
+      Double_t pede = 0;
       for(Int_t m = 0; m<NhitWF; ++m){
 	std::pair<Double_t, Double_t> waveform = hit->GetWaveform(m);
 	HF2 (TagPLHid +100*(seg+1)+11, waveform.first, waveform.second);
@@ -692,7 +697,45 @@ ProcessingNormal()
       Double_t adc_integral = hit->GetAdcIntegral();
       HF1 (TagPLHid +100*(seg+1)+12, adc_integral);
       if (is_hit_time)
-	HF1 (TagPLHid +100*(seg+1)+13, adc_integral);            	      
+	HF1 (TagPLHid +100*(seg+1)+13, adc_integral);
+      if(NDiscri==1 && NDiffDiscri==1){
+	Int_t m0 = -1;
+	for(Int_t m=0; m<NhitWF; m++){
+	  std::pair<Double_t, Double_t> waveform = hit->GetWaveform(m);
+	  if(waveform.second<peak){
+	    time = waveform.first;
+	    peak = waveform.second;
+	    m0 = m;
+	  }
+	}
+	Int_t NPede = 0;
+	for(Int_t m=0; m<m0-2; m++){
+	  if(m>m0-10){
+	    std::pair<Double_t, Double_t> height = hit->GetWaveform(m);
+	    if(std::abs(height.second) < 50){
+	      pede += height.second;
+	      NPede++;
+	    }
+	  }
+	}
+	pede /= NPede;
+      }
+      if(peak<-200){
+	for(Int_t m=0; m<NhitWF; m++){
+	  std::pair<Double_t, Double_t> waveform = hit->GetWaveform(m);
+	  HF2 (TagPLHid +100*(seg+1)+15, waveform.first - time,  -(waveform.second - pede)/(peak - pede));
+	}
+      }
+
+      Int_t n_pulse = hit->GetNPulse();
+      HF1(TagPLHid +100*(seg+1)+16, n_pulse);
+      for(Int_t m=0; m<n_pulse; m++){
+	peak = hit->GetPulseHeight(m);
+	time = hit->GetPulseTime(m);
+	HF1(TagPLHid +100*(seg+1)+17, peak);
+	HF1(TagPLHid +100*(seg+1)+18, time);
+      }
+
 #endif
 
     }
@@ -1515,19 +1558,30 @@ ConfMan::InitializeHistograms()
   HB1(TagPLHid +5, "HitPat Tag-PL (w/o TDC cut)", NumOfSegTagPL, 0, Double_t(NumOfSegTagPL));
   HB1(TagPLHid +6, "HitPat Tag-PL (w/ TDC cut)", NumOfSegTagPL, 0, Double_t(NumOfSegTagPL));
   HB1(TagPLHid +16, "HitPat Tag-PL (w/ Time cut)", NumOfSegTagPL, 0, Double_t(NumOfSegTagPL));
+#if TAG_PL_FADC
   for(Int_t i=1;i<=NumOfSegTagPL;++i){
     TString title1 = Form("TagPL-%d FADC", i);
     TString title3 = Form("TagPL-%d Tdc", i);
     TString title11 = Form("TagPL-%d Waveform", i);
     TString title12 = Form("TagPL-%d ADC integral", i);
     TString title13 = Form("TagPL-%d ADC integral (w/ TDC)", i);
-    TString title14 = Form("TagPL-%d Waveform (w/ TDC)", i);                       HB2(TagPLHid +100*i +1, title1, 200, 0, 400, 400, 0, 20000);
+    TString title14 = Form("TagPL-%d Waveform (w/ TDC)", i);
+    TString title15 = Form("TagPL-%d template Waveform", i);
+    TString title16 = Form("TagPL-%d nWaveform", i);
+    TString title17 = Form("TagPL-%d Waveform height", i);
+    TString title18 = Form("TagPL-%d Waveform time", i);
+    HB2(TagPLHid +100*i +1, title1, 200, 0, 400, 400, 0, 20000);
     HB1(TagPLHid +100*i +3, title3, NbinTdc, MinTdc, MaxTdc);
     HB2(TagPLHid +100*i+11, title11, 200, -0.5, 0.5, 500, -10000, 2000);
     HB1(TagPLHid +100*i+12, title12, NbinAdc, -500, 10000);
     HB1(TagPLHid +100*i+13, title13, NbinAdc, -500, 10000);
-    HB2(TagPLHid +100*i+14, title14, 200, -0.5, 0.5, 500, -10000, 2000);        
+    HB2(TagPLHid +100*i+14, title14, 200, -0.5, 0.5, 500, -10000, 2000);
+    HB2(TagPLHid +100*i+15, title15, 250, -0.5, 0.5, 100, -1.5, 0.5);
+    HB1(TagPLHid +100*i+16, title16, 10, 0, 10);
+    HB1(TagPLHid +100*i+17, title17, 4000, 0, 2000);
+    HB1(TagPLHid +100*i+18, title18, 400, -1, 1);
   }
+#endif
 
   // T0
   HB1(T0Hid +0, "#Hits T0",        NumOfSegT0+1, 0., Double_t(NumOfSegT0+1));
@@ -1837,7 +1891,7 @@ ConfMan::InitializeParameterFiles()
      InitializeParameter<DCDriftParamMan>("DCDRFT") &&
      InitializeParameter<DCTdcCalibMan>("DCTDC")    &&
 #endif
-     InitializeParameter<TemplateFitMan>("BGOTEMP")  &&   
+     InitializeParameter<TemplateFitMan>("BGOTEMP")  &&
      InitializeParameter<UserParamMan>("USER"));
 }
 
