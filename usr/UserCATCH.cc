@@ -61,7 +61,9 @@ struct Event
   Int_t trigflag[NumOfSegTrig];
 
   double dE[NumOfPlaneCFT][MaxDepth] , dE_max[NumOfPlaneCFT][MaxDepth] ;
-
+  Int_t  MaxSegment[NumOfPlaneCFT][MaxDepth];
+  Double_t  MaxAdcLow[NumOfPlaneCFT][MaxDepth];  
+  
   int    ntCFT;
   double theta_cft[MaxDepth];
   int    nhit_phi[MaxDepth];
@@ -98,6 +100,9 @@ Event::clear()
     for(Int_t m=0; m<MaxDepth; ++m){
       dE[it][m] = qnan;
       dE_max[it][m] = qnan;
+      MaxSegment[it][m] = qnan;
+      MaxAdcLow[it][m] = qnan;  
+
     }
   }
 
@@ -433,15 +438,10 @@ ProcessingNormal()
       const auto& hit = tp->GetHit(ip);
       //Int_t layer = hit->GetTrackingLayer() - layerId_U1;
       Int_t layer = hit->PlaneId();
-      Int_t seg = (Int_t)hit->MeanSeg();
-      //Int_t seg_max = (Int_t)hit->GetMaxSeg();
-      /*
-      Double_t phi_ini   = hit->GetPhi();
-      Double_t phi_track   = hit->GetCalPhi();
-      Double_t z_track = hit->GetZcal();
-      Double_t dphi  = hit->GetResidualPhi();
-      */
+      Int_t seg_max = hit->MaxSegment();
       event.dE[layer][i]  = hit->TotalDeltaE();
+      event.MaxSegment[layer][i]  = hit->MaxSegment();
+      event.MaxAdcLow[layer][i]  = hit->MaxAdcLow();      
     }
 
     // spiral layer
@@ -452,18 +452,14 @@ ProcessingNormal()
       //CFTFiberCluster *hit = tp->GetHitUV(ip);
       //Int_t layer = hit->GetTrackingLayer() - layerId_U1;
       Int_t layer = hit->PlaneId();
-      Int_t seg = (Int_t)hit->MeanSeg();
-      //Int_t seg_max = (Int_t)hit->GetMaxSeg();
-      /*      
-      Double_t phi_track   = hit->GetCalPhi();
-      Double_t z_track = hit->GetZcal();
-      Double_t z_ini   = hit->GetZIni();
-      Double_t dz    = hit->GetResidualZ();
-      */
+      Int_t seg_max = hit->MaxSegment();
       event.dE[layer][i]  = hit->TotalDeltaE();
+      event.MaxSegment[layer][i]  = hit->MaxSegment();
+      event.MaxAdcLow[layer][i]  = hit->MaxAdcLow();      
     }    
 
     Int_t segBGOt  = CFTPart->GetTrackBGOSeg(); // BGO  track segment
+    event.segBGOt[i] = segBGOt;
     Double_t bgo_energy = CFTPart->GetBGOEnergy();
     if (segBGOt>=0 && segBGOt < NumOfSegBGO)
       event.energybgo[segBGOt] = bgo_energy;
@@ -534,11 +530,10 @@ ConfMan::InitializeHistograms()
   tree->Branch("nhit_phi",     event.nhit_phi,    "nhit_phi[ntCFT]/I");
   tree->Branch("nhit_uv",      event.nhit_uv,     "nhit_uv[ntCFT]/I");
   
-  //tree->Branch("dE",      event.dE,       Form("dE[%d][%d]/D", NumOfPlaneCFT, MaxDepth ) );
-  //tree->Branch("dE_max",  event.dE_max,   Form("dE_max[%d][%d]/D", NumOfPlaneCFT, MaxDepth ) );
-  tree->Branch("dE",      event.dE,       Form("dE[%d][ntCFT]/D", NumOfPlaneCFT ) );
-  tree->Branch("dE_max",  event.dE_max,   Form("dE_max[%d][ntCFT]/D", NumOfPlaneCFT ) );
-
+  tree->Branch("dE",      event.dE,       Form("dE[%d][%d]/D", NumOfPlaneCFT, MaxDepth ) );
+  tree->Branch("dE_max",  event.dE_max,   Form("dE_max[%d][%d]/D", NumOfPlaneCFT, MaxDepth ) );
+  tree->Branch("MaxSegment",  event.MaxSegment,   Form("MaxSegment[%d][%d]/I", NumOfPlaneCFT, MaxDepth ) );
+  tree->Branch("MaxAdcLow",   event.MaxAdcLow,    Form("MaxAdcLow[%d][%d]/D", NumOfPlaneCFT, MaxDepth ) );    
   
   tree->Branch("Total_dE",    event.Total_dE,    "totaldE[ntCFT]/D");
   tree->Branch("Total_dEphi", event.Total_dEphi, "totaldEphi[ntCFT]/D");
@@ -555,7 +550,7 @@ ConfMan::InitializeHistograms()
   tree->Branch("energyBGO", event.energybgo, "energybgo[24]/D");
   //tree->Branch("tdcBGO",    event.tdcbgo,    "adcbgo[24]/D");
 
-  // BGO
+  // PiID
   tree->Branch("segPiIDt",   event.segPiIDt,   "segPiIDt[ntCFT]/I");
 
   
