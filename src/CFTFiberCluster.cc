@@ -39,6 +39,7 @@ CFTFiberCluster::CFTFiberCluster(const HodoHC& cont,
     m_total_de_low(),
     m_max_de_low(),  
     m_max_ctime(),
+    m_max_segment(),    
     m_mean_x(),
     m_mean_y(),  
     m_mean_phi(),
@@ -75,7 +76,10 @@ CFTFiberCluster::Calculate()
   m_total_adc_hi = 0.;
   m_max_adc_hi = 0.;  
   m_total_adc_low = 0.;
-  m_max_adc_low = 0.;  
+  m_max_adc_low = 0.;
+
+  m_max_segment = -1;
+  
   m_total_mip_hi = 0.;
   m_max_mip_hi = 0.;  
   m_total_mip_low = 0.;
@@ -84,7 +88,7 @@ CFTFiberCluster::Calculate()
   m_max_de_hi = 0.;  
   m_total_de_low = 0.;
   m_max_de_low = 0.;
-
+  
   m_de = 0.;
   
   m_max_ctime = 0.;
@@ -123,8 +127,10 @@ CFTFiberCluster::Calculate()
     Double_t adccorLow  = hit->GetAdcCorLow();
     if (adccorLow>0) {
       m_total_adc_low += adccorLow;
-      if (adccorLow > m_max_adc_low)
+      if (adccorLow > m_max_adc_low) {
 	m_max_adc_low = adccorLow;
+	m_max_segment = hit->SegmentId();
+      }
     }
 
     Double_t dE_Hi  = hit->GetMipHigh();

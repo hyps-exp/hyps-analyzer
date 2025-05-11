@@ -38,6 +38,7 @@ protected:
   Double_t m_max_de_low;  
 
   Double_t m_max_ctime;
+  Int_t    m_max_segment;
 
   Double_t m_mean_x;
   Double_t m_mean_y;  
@@ -64,6 +65,7 @@ protected:
   
 public:
   Double_t MaxAdcLow() const { return m_max_adc_low; }
+  Int_t    MaxSegment() const { return m_max_segment; }  
   Double_t MaxDeltaE() const { return m_max_de_low; }
   Double_t TotalDeltaE() const { return m_total_de_low; }  
   Double_t MaxDeltaE_Hi() const { return m_max_de_hi; }
