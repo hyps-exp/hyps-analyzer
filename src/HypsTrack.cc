@@ -32,6 +32,8 @@ const Int_t& IdTOFDX  = gGeom.DetectorId("TOF-DX");
 const Int_t& IdTOFUX  = gGeom.DetectorId("TOF-X");
 const Int_t& IdTOFDX  = gGeom.DetectorId("TOF-X");
 const Int_t& IdTOFX  = gGeom.DetectorId("TOF-X");
+const Int_t& IdLTOFXTL  = gGeom.DetectorId("LEPS-TOF-X-Tilt-L");
+const Int_t& IdLTOFXTR  = gGeom.DetectorId("LEPS-TOF-X-Tilt-R");
 const Int_t& IdRKINIT = gGeom.DetectorId("RKINIT");
 const Int_t    MaxIteration = 100;
 const Double_t InitialChiSqr = 1.e+10;
@@ -113,7 +115,7 @@ HypsTrack::FillHitArray()
     DCLTrackHit *hit  = m_track_out->GetHit(i);
     TrackHit    *thit = new TrackHit(hit);
     m_hit_array.push_back(thit);
-    if(hit->GetLayer() == IdTOFX){
+    if(hit->GetLayer() == IdTOFX || hit->GetLayer()== IdLTOFXTL || hit->GetLayer()== IdLTOFXTR){
       m_tof_seg = hit->GetWire();
       m_use_tof = true;
     }
@@ -192,8 +194,16 @@ HypsTrack::DoFit()
   Double_t estDChisqr = InitialChiSqr;
   Double_t lambdaCri  = 0.01;
   Double_t dmp = 0.;
+  
+  if(9<m_tof_seg && m_tof_seg<38){
+    m_HitPointCont = RK::MakeHPContainer();
+  }else if(m_tof_seg<10){
+    m_HitPointCont = RK::MakeHPContainerR();
+  }else if(m_tof_seg>37){
+    m_HitPointCont = RK::MakeHPContainerL();
+  }
+  //std::cout<<"TOFSEG:"<<m_tof_seg<<std::endl;
 
-  m_HitPointCont = RK::MakeHPContainer();
   RKHitPointContainer prevHPntCont;
 
   Int_t iItr = 0, iItrEf = 1;
@@ -202,8 +212,10 @@ HypsTrack::DoFit()
     m_status = (RKstatus)RK::Trace(iniCord, m_HitPointCont);
     if(m_status != kPassed){
 #ifdef WARNOUT
-      // hddaq::cerr << FUNC_NAME << " "
-      // 		<< "something is wrong : " << iItr << std::endl;
+      /*
+       hddaq::cerr << FUNC_NAME << " "
+       		<< "something is wrong : " << iItr << std::endl;
+      */
 #endif
       break;
     }
@@ -299,11 +311,13 @@ HypsTrack::DoFit()
 
   if(!RK::TraceToLast(m_HitPointCont)){
     m_status = kFailedTraceLast;
+    std::cout<<"FailedTraceLast!!"<<std::endl;
   }
   
   if(!SaveCalcPosition(m_HitPointCont) ||
      !SaveTrackParameters(iniCord)){
     m_status = kFailedSave;
+    std::cout<<"FailedSave!!"<<std::endl;
   }
 
 #if 0
@@ -342,7 +356,7 @@ HypsTrack::DoFit(RKCordParameter iniCord)
     if(!RK::Trace(iniCord, m_HitPointCont)){
       // Error
 #ifdef WARNOUT
-      //hddaq::cerr << FUNC_NAME << ": Error in RK::Trace. " << std::endl;
+      hddaq::cerr << FUNC_NAME << ": Error in RK::Trace. " << std::endl;
 #endif
       break;
     }
@@ -428,12 +442,16 @@ HypsTrack::DoFit(RKCordParameter iniCord)
   m_nef_iteration = iItrEf;
   m_chisqr        = chiSqr;
 
-  if(!RK::TraceToLast(m_HitPointCont))
+  if(!RK::TraceToLast(m_HitPointCont)){
     m_status = kFailedTraceLast;
+    std::cout<<"FailedTraceLast!!"<<std::endl;
+  }
 
   if(!SaveCalcPosition(m_HitPointCont) ||
-     !SaveTrackParameters(iniCord))
+     !SaveTrackParameters(iniCord)){
     m_status = kFailedSave;
+    std::cout<<"FailedSave!!"<<std::endl;
+  }
 
 #if 0
   Print("in "+FUNC_NAME);
@@ -849,7 +867,10 @@ HypsTrack::SaveTrackParameters(const RKCordParameter &cp)
 
   const RKcalcHitPoint& hpTofU = m_HitPointCont.HitPointOfLayer(IdTOFUX);
   const RKcalcHitPoint& hpTofD = m_HitPointCont.HitPointOfLayer(IdTOFDX);
-  const RKcalcHitPoint& hpTof = m_HitPointCont.HitPointOfLayer(IdTOFX);
+  Int_t layerid_TOFX=IdTOFX;
+  if(m_tof_seg<10) layerid_TOFX=IdLTOFXTR;
+  if(m_tof_seg>37) layerid_TOFX=IdLTOFXTL;
+  const RKcalcHitPoint& hpTof = m_HitPointCont.HitPointOfLayer(layerid_TOFX);
 
   if(!m_use_tof){
     Double_t ux, uy;

@@ -495,6 +495,28 @@ ProcessingNormal()
       Int_t lnum = 0;
       TVector3 gposTof;
       bool segflag=false;
+      if(event.TofSeg[itof]<11 && (Int_t)event.TofSeg[itof]%2 == 0){
+	lnum =gGeom.GetDetectorId("LEPS-TOF-DX-Tilt-R");
+	gposTof=gGeom.GetGlobalPosition("LEPS-TOF-DX-Tilt-R");
+	segflag=true;
+      }
+      if(event.TofSeg[itof]<11 && (Int_t)event.TofSeg[itof]%2 == 1){
+	lnum =gGeom.GetDetectorId("LEPS-TOF-UX-Tilt-R");
+	gposTof=gGeom.GetGlobalPosition("LEPS-TOF-UX-Tilt-R");
+	segflag=true;
+      }
+      if(event.TofSeg[itof]==11){
+	lnum =gGeom.GetDetectorId("LEPS-TOF-UX-R");
+	gposTof =gGeom.GetGlobalPosition("LEPS-TOF-UX-R");
+	z_tof =zTOFU;
+	segflag=true;
+      }
+      if(event.TofSeg[itof]==12){
+	lnum =gGeom.GetDetectorId("LEPS-TOF-DX-R");
+	gposTof =gGeom.GetGlobalPosition("LEPS-TOF-DX-R");
+	z_tof =zTOFD;
+	segflag=true;
+      }
       if((Int_t)event.TofSeg[itof]%2 == 0 && event.TofSeg[itof]>12 && event.TofSeg[itof]<25){
         lnum = gGeom.GetDetectorId("TOF-DX-R");
         gposTof = gGeom.GetGlobalPosition("TOF-DX-R");
@@ -519,11 +541,37 @@ ProcessingNormal()
         z_tof = zTOFD;
 	segflag=true;
       }
-      if(!segflag) continue;
+      if(event.TofSeg[itof]==37){
+	lnum =gGeom.GetDetectorId("LEPS-TOF-DX-L");
+	gposTof =gGeom.GetGlobalPosition("LEPS-TOF-DX-L");
+	z_tof =zTOFD;
+	segflag=true;
+      }
+      if(event.TofSeg[itof]==38){
+	lnum =gGeom.GetDetectorId("LEPS-TOF-UX-L");
+	gposTof =gGeom.GetGlobalPosition("LEPS-TOF-UX-L");
+	z_tof =zTOFU;
+	segflag=true;
+      }
+      if(event.TofSeg[itof]>38 && (Int_t)event.TofSeg[itof]%2 == 0){
+	lnum =gGeom.GetDetectorId("LEPS-TOF-UX-Tilt-L");
+	gposTof=gGeom.GetGlobalPosition("LEPS-TOF-UX-Tilt-L");
+	segflag=true;
+      }
+      if(event.TofSeg[itof]>38 && (Int_t)event.TofSeg[itof]%2 == 1){
+	lnum =gGeom.GetDetectorId("LEPS-TOF-DX-Tilt-L");
+	gposTof=gGeom.GetGlobalPosition("LEPS-TOF-DX-Tilt-L");
+	segflag=true;
+      }
+       if(!segflag) continue;
       Double_t wpos = gGeom.CalcWirePosition(lnum, event.TofSeg[itof]-1);
       TVector3 w(wpos, 0, 0);
+      w.RotateY(gGeom.GetRotAngle2(lnum)*TMath::DegToRad());
       Double_t ytTof = event.dtTof[itof]*77.3511;
       TVector3 posTof = gposTof + w + TVector3(0, ytTof, 0);
+      if(gGeom.GetRotAngle2(lnum)!=0.0){
+	z_tof=posTof.z()+1258.0;
+      }
       Double_t xtof=track->GetX(z_tof), ytof=track->GetY(z_tof);
       Double_t utof=u0, vtof=v0;
       if(nhTof == 1){
@@ -853,10 +901,10 @@ ConfMan::InitializeHistograms()
   HB1(43, "Common Stop TDC (w/oTOF)", 0x1000, 0, 0x1000);
 
   // ySdcOut vs dtTof
-  HB2(51, "xSdcOut % TofSeg", NumOfSegTOF, 1, NumOfSegTOF+1, 300, -1500, 1500.);
-  HB2(52, "xSdcOut % TofPos", 40, -1500, 1500, 300, -1500, 1500.);
+  HB2(51, "xSdcOut % TofSeg", NumOfSegTOF, 1, NumOfSegTOF+1, 400, -2000, 2000.);
+  HB2(52, "xSdcOut % TofPos", 50, -1750, 1750, 400, -2000, 2000.);
   HB1(53, "TofPos - xSdcOut", 400, -400, 400);
-  HB2(54, "TofPos - xSdcOut % TofPos", 40, -1500, 1500., 400, -400, 400);
+  HB2(54, "TofPos - xSdcOut % TofPos", 50, -1750, 1750., 400, -400, 400);
   HB2(55, "ySdcOut % dtTof", 300, -15., 15., 300, -1500, 1500.);
   HB1(56, "ytTof - ySdcOut", 300, -300., 300.);
   HB2(57, "ytTof - ySdcOut % dtTof", 300, -15., 15., 300, -300, 300.);

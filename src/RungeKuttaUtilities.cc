@@ -31,6 +31,10 @@ const auto& gField  = FieldMan::GetInstance();
 // const Int_t& IdTOF    = gGeom.DetectorId("TOF");
 const Int_t& IdTOF_X = gGeom.DetectorId("TOF-X");
 const Int_t& IdTOF_Y = gGeom.DetectorId("TOF-Y");
+const Int_t& IdLTOF_X_TL = gGeom.DetectorId("LEPS-TOF-X-Tilt-L");
+const Int_t& IdLTOF_Y_TL = gGeom.DetectorId("LEPS-TOF-Y-Tilt-L");
+const Int_t& IdLTOF_X_TR = gGeom.DetectorId("LEPS-TOF-X-Tilt-R");
+const Int_t& IdLTOF_Y_TR = gGeom.DetectorId("LEPS-TOF-Y-Tilt-R");
 const Int_t& IdTarget = gGeom.DetectorId("Target");
 const Int_t& IdRKINIT = gGeom.DetectorId("RKINIT");
 
@@ -633,9 +637,9 @@ RK::CheckCrossing(Int_t lnum, const RKTrajectoryPoint &startPoint,
   crossPoint.posG = ThreeVector(x, y, z);
   crossPoint.momG = ThreeVector(pz*u, pz*v, pz);
 
-  if(lnum==IdTOF_X)
+  if(lnum==IdTOF_X || lnum==IdLTOF_X_TL || lnum==IdLTOF_X_TR)
     crossPoint.s = crossPoint.posG.x();
-  else if(lnum==IdTOF_Y)
+  else if(lnum==IdTOF_Y || lnum==IdLTOF_Y_TL || lnum==IdLTOF_Y_TR)
     crossPoint.s = crossPoint.posG.y();
   else
     crossPoint.s = gGeom.Global2LocalPos(lnum, crossPoint.posG).x();
@@ -933,6 +937,75 @@ RK::MakeHPContainer()
 
   container.push_back(std::make_pair(IdTOF_X, RKcalcHitPoint()));
   container.push_back(std::make_pair(IdTOF_Y, RKcalcHitPoint()));
+
+
+  return container;
+}
+
+RKHitPointContainer
+RK::MakeHPContainerL()
+{
+  static const auto& IdList = gGeom.GetDetectorIDList();
+  RKHitPointContainer container;
+  // for(auto& id: IdList){
+  //   if(id <= IdTOF_DY){
+  //     container.push_back(std::make_pair(id, RKcalcHitPoint()));
+  //   }
+  // }
+
+  // /*** From Upstream ***/
+  container.push_back(std::make_pair(IdTarget, RKcalcHitPoint()));
+
+  for(Int_t i=0; i<NumOfLayersSdcIn; ++i){
+    container.push_back(std::make_pair(i+PlMinSdcIn, RKcalcHitPoint()));
+  }
+  for(Int_t i=0; i<NumOfLayersVP; ++i){
+    container.push_back(std::make_pair(i+PlMinVP, RKcalcHitPoint()));
+  }
+  for(Int_t i=0; i<NumOfLayersSdcOut; ++i){
+    container.push_back(std::make_pair(i+PlMinSdcOut, RKcalcHitPoint()));
+  }
+
+  container.push_back(std::make_pair(IdLTOF_X_TL, RKcalcHitPoint()));
+  container.push_back(std::make_pair(IdLTOF_Y_TL, RKcalcHitPoint()));
+    
+  container.push_back(std::make_pair(IdTOF_X, RKcalcHitPoint()));
+  container.push_back(std::make_pair(IdTOF_Y, RKcalcHitPoint()));
+  
+
+  return container;
+}
+
+RKHitPointContainer
+RK::MakeHPContainerR()
+{
+  static const auto& IdList = gGeom.GetDetectorIDList();
+  RKHitPointContainer container;
+  // for(auto& id: IdList){
+  //   if(id <= IdTOF_DY){
+  //     container.push_back(std::make_pair(id, RKcalcHitPoint()));
+  //   }
+  // }
+
+  // /*** From Upstream ***/
+  container.push_back(std::make_pair(IdTarget, RKcalcHitPoint()));
+
+  for(Int_t i=0; i<NumOfLayersSdcIn; ++i){
+    container.push_back(std::make_pair(i+PlMinSdcIn, RKcalcHitPoint()));
+  }
+  for(Int_t i=0; i<NumOfLayersVP; ++i){
+    container.push_back(std::make_pair(i+PlMinVP, RKcalcHitPoint()));
+  }
+  for(Int_t i=0; i<NumOfLayersSdcOut; ++i){
+    container.push_back(std::make_pair(i+PlMinSdcOut, RKcalcHitPoint()));
+  }
+
+  container.push_back(std::make_pair(IdLTOF_X_TR, RKcalcHitPoint()));
+  container.push_back(std::make_pair(IdLTOF_Y_TR, RKcalcHitPoint()));
+  
+  container.push_back(std::make_pair(IdTOF_X, RKcalcHitPoint()));
+  container.push_back(std::make_pair(IdTOF_Y, RKcalcHitPoint()));
+  
 
   return container;
 }

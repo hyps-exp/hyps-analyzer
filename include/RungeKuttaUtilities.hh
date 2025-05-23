@@ -58,6 +58,10 @@ TraceToLast(RKHitPointContainer &hitContainer);
 //_____________________________________________________________________________
 RKHitPointContainer
 MakeHPContainer();
+RKHitPointContainer
+MakeHPContainerL();
+RKHitPointContainer
+MakeHPContainerR();
 
 inline TString
 ClassName() { static TString s_name("RK"); return s_name; }

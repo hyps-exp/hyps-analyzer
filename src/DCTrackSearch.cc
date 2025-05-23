@@ -991,12 +991,24 @@ LocalTrackSearchSdcOut(const DCHC& TOFHC,
     */
     static const Int_t IdTOF_X = gGeom.GetDetectorId("TOF-X");
     static const Int_t IdTOF_Y = gGeom.GetDetectorId("TOF-Y");
+    static const Int_t IdLTOF_X_TL = gGeom.GetDetectorId("LEPS-TOF-X-Tilt-L");
+    static const Int_t IdLTOF_Y_TL = gGeom.GetDetectorId("LEPS-TOF-Y-Tilt-L");
+    static const Int_t IdLTOF_X_TR = gGeom.GetDetectorId("LEPS-TOF-X-Tilt-R");
+    static const Int_t IdLTOF_Y_TR = gGeom.GetDetectorId("LEPS-TOF-Y-Tilt-R");
     /*
     Bool_t TOFSegXYMatching =
       (track->GetWire(IdTOF_UX)==track->GetWire(IdTOF_UY)) ||
       (track->GetWire(IdTOF_DX)==track->GetWire(IdTOF_DY));
     */
-    Bool_t TOFSegXYMatching = (track->GetWire(IdTOF_X) == track->GetWire(IdTOF_Y));
+    
+    Int_t TOFmulti=0;
+    if(track->GetWire(IdTOF_X)==track->GetWire(IdTOF_Y)) TOFmulti++;
+    if(track->GetWire(IdLTOF_X_TL)==track->GetWire(IdLTOF_Y_TL)) TOFmulti++;
+    if(track->GetWire(IdLTOF_X_TR)==track->GetWire(IdLTOF_Y_TR)) TOFmulti++;
+    Bool_t TOFSegXYMatching=false;
+    if(TOFmulti==1) TOFSegXYMatching=true;
+    
+    //Bool_t TOFSegXYMatching = (track->GetWire(IdTOF_X) == track->GetWire(IdTOF_Y)) ||(track->GetWire(IdLTOF_X_TL) == track->GetWire(IdLTOF_Y_TL)) || (track->GetWire(IdLTOF_X_TR) == track->GetWire(IdLTOF_Y_TR));
 
     // Int_t Track[20]={0};
     // Int_t layer;

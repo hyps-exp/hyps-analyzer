@@ -68,11 +68,26 @@ const auto& gUser   = UserParamMan::GetInstance();
 const auto& valueNMR  = ConfMan::Get<Double_t>("FLDNMR");
 const Double_t& pK18 = ConfMan::Get<Double_t>("PK18");
 const Int_t& IdTOFUXL = gGeom.DetectorId("TOF-UX-L");
+const Int_t& IdTOFDXL = gGeom.DetectorId("TOF-DX-L");
+const Int_t& IdTOFDXR = gGeom.DetectorId("TOF-DX-R");  
 const Int_t& IdTOFUXR = gGeom.DetectorId("TOF-UX-R");
+const Int_t& IdLTOFUXL = gGeom.DetectorId("LEPS-TOF-UX-L");
+const Int_t& IdLTOFDXL = gGeom.DetectorId("LEPS-TOF-DX-L");
+const Int_t& IdLTOFUXR = gGeom.DetectorId("LEPS-TOF-UX-R");
+const Int_t& IdLTOFDXR = gGeom.DetectorId("LEPS-TOF-DX-R");
+const Int_t& IdLTOFUXTL = gGeom.DetectorId("LEPS-TOF-UX-Tilt-L");
+const Int_t& IdLTOFDXTL = gGeom.DetectorId("LEPS-TOF-DX-Tilt-L");
+const Int_t& IdLTOFUXTR = gGeom.DetectorId("LEPS-TOF-UX-Tilt-R");
+const Int_t& IdLTOFDXTR = gGeom.DetectorId("LEPS-TOF-DX-Tilt-R");
 const Int_t& IdTOFX = gGeom.DetectorId("TOF-X");
 const Int_t& IdTOFY = gGeom.DetectorId("TOF-Y");
-const Int_t& IdTOFDXL = gGeom.DetectorId("TOF-DX-L");
-const Int_t& IdTOFDXR = gGeom.DetectorId("TOF-DX-R");
+const Int_t& IdLTOFXTL = gGeom.DetectorId("LEPS-TOF-X-Tilt-L");
+const Int_t& IdLTOFYTL = gGeom.DetectorId("LEPS-TOF-Y-Tilt-L");
+const Int_t& IdLTOFXTR = gGeom.DetectorId("LEPS-TOF-X-Tilt-R");
+const Int_t& IdLTOFYTR = gGeom.DetectorId("LEPS-TOF-Y-Tilt-R");
+  
+
+
 
 const Double_t TimeDiffToYTOF = 77.3511; // [mm/ns]
 
@@ -586,11 +601,19 @@ DCAnalyzer::DecodeTOFHits(const HodoClusterContainer& ClCont)
   ClearTOFHits();
 
   static const Double_t RA2[3] ={0.0,-15.0,15.0};
-  static const TVector3 TOFPos[4] = {
+  static const TVector3 TOFPos[12] = {
     gGeom.GetGlobalPosition("TOF-UX-R"),
     gGeom.GetGlobalPosition("TOF-DX-R"),
     gGeom.GetGlobalPosition("TOF-UX-L"),
-    gGeom.GetGlobalPosition("TOF-DX-L")
+    gGeom.GetGlobalPosition("TOF-DX-L"),
+    gGeom.GetGlobalPosition("LEPS-TOF-UX-R"),
+    gGeom.GetGlobalPosition("LEPS-TOF-DX-R"),
+    gGeom.GetGlobalPosition("LEPS-TOF-UX-L"),
+    gGeom.GetGlobalPosition("LEPS-TOF-DX-L"), 
+    gGeom.GetGlobalPosition("LEPS-TOF-UX-Tilt-R"),
+    gGeom.GetGlobalPosition("LEPS-TOF-DX-Tilt-R"),
+    gGeom.GetGlobalPosition("LEPS-TOF-UX-Tilt-L"),
+    gGeom.GetGlobalPosition("LEPS-TOF-DX-Tilt-L"),
   };
 
   for(const auto& hodo_cluster: ClCont){
@@ -598,31 +621,92 @@ DCAnalyzer::DecodeTOFHits(const HodoClusterContainer& ClCont)
     const Double_t dt  = hodo_cluster->TimeDiff();
     Int_t layer_x = -1;
     Int_t layer_y = -1;
+    Int_t layerid_x =-1;
     Int_t Posindex= -1;
     Int_t RA2index= 0;
+    if((Int_t)seg%2==1 && seg<11 && seg>0){
+      layer_x  = IdLTOFUXTR;
+      layerid_x = IdLTOFXTR;
+      layer_y  = IdLTOFYTR;
+      Posindex=8;
+      RA2index=1;
+    }
+    if((Int_t)seg%2==0 && seg<11 && seg>0){
+      layer_x  = IdLTOFDXTR;
+      layerid_x = IdLTOFXTR;
+      layer_y  = IdLTOFYTR;
+      Posindex=9;
+      RA2index=1;
+    }
+    if(seg==11){
+      layer_x =IdLTOFUXR;
+      layerid_x =IdTOFX;
+      layer_y =IdTOFY;
+      Posindex=4;
+      RA2index=0;
+    }
+    if(seg==12){
+      layer_x =IdLTOFDXR;
+      layerid_x =IdTOFX;
+      layer_y =IdTOFY;
+      Posindex=5;
+      RA2index=0;
+    }
     if((Int_t)seg%2==1 && seg>12 && seg<25){
       layer_x  = IdTOFUXR;
+      layerid_x=IdTOFX;
       layer_y  = IdTOFY;
       Posindex=0;
       RA2index=0;
     }
     if((Int_t)seg%2==0 && seg>12 && seg<25){
       layer_x  = IdTOFDXR;
+      layerid_x= IdTOFX;
       layer_y  = IdTOFY;
       Posindex=1;
       RA2index=0;
     }
     if((Int_t)seg%2==1 && seg>24 && seg<37){
       layer_x  = IdTOFDXL;
+      layerid_x= IdTOFX;
       layer_y  = IdTOFY;
       Posindex=3;
       RA2index=0;
     }
     if((Int_t)seg%2==0 && seg>24 && seg<37){
       layer_x  = IdTOFUXL;
+      layerid_x= IdTOFX;
       layer_y  = IdTOFY;
       Posindex=2;
       RA2index=0;
+    }
+    if(seg==37){
+      layer_x =IdLTOFDXL;
+      layerid_x=IdTOFX;
+      layer_y =IdTOFY;
+      Posindex=7;
+      RA2index=0;
+    }
+    if(seg==38){
+      layer_x =IdLTOFUXL;
+      layerid_x=IdTOFX;
+      layer_y =IdTOFY;
+      Posindex=6;
+      RA2index=0;
+    }
+    if((Int_t)seg%2==1 && seg>38){
+      layer_x  = IdLTOFDXTL;
+      layerid_x= IdLTOFXTL;
+      layer_y  = IdLTOFYTL;
+      Posindex=11;
+      RA2index=2;
+    }
+    if((Int_t)seg%2==0 && seg>38){
+      layer_x  = IdLTOFUXTL;
+      layerid_x= IdLTOFXTL;
+      layer_y  = IdLTOFYTL;
+      Posindex=10;
+      RA2index=2;
     }
     if(Posindex==-1) continue;
 
@@ -633,16 +717,17 @@ DCAnalyzer::DecodeTOFHits(const HodoClusterContainer& ClCont)
       + TVector3(0., dt*TimeDiffToYTOF, 0.);
     //std::cout<<"TOF seg="<<seg<<", hit_pos=("<<hit_pos.x()<<", "<<hit_pos.y()<<", "<<hit_pos.z()<<")"<<std::endl;
     // X
-    DCHit *dc_hit_x = new DCHit(IdTOFX, seg-1);
+    Double_t diffLandG=gGeom.GetLocalZ("TOF-X")-gGeom.GetGlobalPosition("TOF-X").z();
+    DCHit *dc_hit_x = new DCHit(layerid_x, seg-1);
     dc_hit_x->SetWirePosition(hit_pos.x());
-    dc_hit_x->SetZ(gGeom.GetLocalZ(layer_x));
+    dc_hit_x->SetZ(hit_pos.z()+diffLandG);
     dc_hit_x->SetTiltAngle(0.);
     dc_hit_x->SetDCData();
     m_TOFHC.push_back(dc_hit_x);
     // Y
-    DCHit *dc_hit_y = new DCHit(IdTOFY, seg-1);
+    DCHit *dc_hit_y = new DCHit(layer_y, seg-1);
     dc_hit_y->SetWirePosition(hit_pos.y());
-    dc_hit_y->SetZ(gGeom.GetLocalZ(layer_x));
+    dc_hit_y->SetZ(hit_pos.z()+diffLandG);
     dc_hit_y->SetTiltAngle(90.);
     dc_hit_y->SetDCData();
     m_TOFHC.push_back(dc_hit_y);
@@ -1002,7 +1087,7 @@ DCAnalyzer::TrackSearchHyps()
       const auto& trOut = GetTrackSdcOut(iOut);
       //if(!trOut || !trOut->GoodForTracking()) continue;
       double xtof=trOut->GetX(gGeom.LocalZ("TOF-X"));
-      if(!trOut || fabs(xtof)>1000.) continue;
+      //if(!trOut || fabs(xtof)>1000.) continue;
       auto trHyps = new HypsTrack(trIn, trOut);
       if(!trHyps) continue;
       Double_t u0In    = trIn->GetU0();
