@@ -354,6 +354,9 @@ ProcessingNormal()
   while(RFmin_time>BunchInterval*0.5){
     RFmin_time-=BunchInterval;
   }
+  while(RFmin_time<-BunchInterval*0.5){
+      RFmin_time+=BunchInterval;
+  }
 #endif
 
   //////////////T0 Analysis
@@ -432,7 +435,7 @@ ProcessingNormal()
     Bool_t tofdoubleflag=nhTof==2 && (event.TofSeg[0]<37 && event.TofSeg[0]>12 && event.TofSeg[1]<37 && event.TofSeg[1]>12);
       
     //if(!(tofsingleflag || tofdoubleflag)) return true;
-    if(!tofsingleflag) return true;
+    //if(!tofsingleflag) return true;
 
 #if HodoCut
     if(nhOk<1) return true;
