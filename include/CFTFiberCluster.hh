@@ -65,6 +65,7 @@ protected:
   
 public:
   Double_t MaxAdcLow() const { return m_max_adc_low; }
+  Double_t MaxMipLow() const { return m_max_mip_low; }  
   Int_t    MaxSegment() const { return m_max_segment; }  
   Double_t MaxDeltaE() const { return m_max_de_low; }
   Double_t TotalDeltaE() const { return m_total_de_low; }  

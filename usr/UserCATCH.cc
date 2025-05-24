@@ -62,7 +62,8 @@ struct Event
 
   double dE[NumOfPlaneCFT][MaxDepth] , dE_max[NumOfPlaneCFT][MaxDepth] ;
   Int_t  MaxSegment[NumOfPlaneCFT][MaxDepth];
-  Double_t  MaxAdcLow[NumOfPlaneCFT][MaxDepth];  
+  Double_t  MaxAdcLow[NumOfPlaneCFT][MaxDepth];
+  Double_t  MaxMipLow[NumOfPlaneCFT][MaxDepth];    
   
   int    ntCFT;
   double theta_cft[MaxDepth];
@@ -102,7 +103,7 @@ Event::clear()
       dE_max[it][m] = qnan;
       MaxSegment[it][m] = qnan;
       MaxAdcLow[it][m] = qnan;  
-
+      MaxMipLow[it][m] = qnan;  
     }
   }
 
@@ -308,6 +309,15 @@ ProcessingNormal()
   //static const auto MaxTdcSAC = gUser.GetParameter("TdcSAC", 1);
   //static const auto MinTdcTOF = gUser.GetParameter("TdcTOF", 0);
   //static const auto MaxTdcTOF = gUser.GetParameter("TdcTOF", 1);
+
+  double mip[NumOfSegBGO] =
+    { 55, 60, 40, 50, 50, 40, 47, 32, 45, 33,
+      32, 50, 50, 39, 46, 55, 32, 45, 35, 37,
+      33, 36, 55, 15
+    };
+  double mip0=40.;
+
+
 #if HodoHitPos
   static const auto PropVelBH2 = gUser.GetParameter("PropagationBH2");
 #endif
@@ -441,7 +451,8 @@ ProcessingNormal()
       Int_t seg_max = hit->MaxSegment();
       event.dE[layer][i]  = hit->TotalDeltaE();
       event.MaxSegment[layer][i]  = hit->MaxSegment();
-      event.MaxAdcLow[layer][i]  = hit->MaxAdcLow();      
+      event.MaxAdcLow[layer][i]  = hit->MaxAdcLow();
+      event.MaxMipLow[layer][i]  = hit->MaxMipLow();            
     }
 
     // spiral layer
@@ -455,17 +466,19 @@ ProcessingNormal()
       Int_t seg_max = hit->MaxSegment();
       event.dE[layer][i]  = hit->TotalDeltaE();
       event.MaxSegment[layer][i]  = hit->MaxSegment();
-      event.MaxAdcLow[layer][i]  = hit->MaxAdcLow();      
+      event.MaxAdcLow[layer][i]  = hit->MaxAdcLow();
+      event.MaxMipLow[layer][i]  = hit->MaxMipLow();                  
     }    
 
     Int_t segBGOt  = CFTPart->GetTrackBGOSeg(); // BGO  track segment
     event.segBGOt[i] = segBGOt;
-    Double_t bgo_energy = CFTPart->GetBGOEnergy();
+    Double_t bgo_energy = CFTPart->GetBGOEnergy()*mip0/mip[segBGOt];
     if (segBGOt>=0 && segBGOt < NumOfSegBGO)
       event.energybgo[segBGOt] = bgo_energy;
     
     Int_t segPiIDt = CFTPart->GetTrackPiIDSeg();// PiID track segment
-
+    event.segPiIDt[i] = segPiIDt;
+    
     double dE = tp->GetTotalMaxdEphi()*sin(theta*TMath::DegToRad())/(double)(nh)
       + tp->GetTotalMaxdEuv()/(double)(nhUV);
 
@@ -484,7 +497,8 @@ ProcessingNormal()
 Bool_t
 ProcessingEnd()
 {
-  tree->Fill();
+  if (event.ntCFT>0)
+    tree->Fill();
   // hodo->Fill();
   return true;
 }
@@ -533,7 +547,8 @@ ConfMan::InitializeHistograms()
   tree->Branch("dE",      event.dE,       Form("dE[%d][%d]/D", NumOfPlaneCFT, MaxDepth ) );
   tree->Branch("dE_max",  event.dE_max,   Form("dE_max[%d][%d]/D", NumOfPlaneCFT, MaxDepth ) );
   tree->Branch("MaxSegment",  event.MaxSegment,   Form("MaxSegment[%d][%d]/I", NumOfPlaneCFT, MaxDepth ) );
-  tree->Branch("MaxAdcLow",   event.MaxAdcLow,    Form("MaxAdcLow[%d][%d]/D", NumOfPlaneCFT, MaxDepth ) );    
+  tree->Branch("MaxAdcLow",   event.MaxAdcLow,    Form("MaxAdcLow[%d][%d]/D", NumOfPlaneCFT, MaxDepth ) );
+  tree->Branch("MaxMipLow",   event.MaxMipLow,    Form("MaxMipLow[%d][%d]/D", NumOfPlaneCFT, MaxDepth ) );      
   
   tree->Branch("Total_dE",    event.Total_dE,    "totaldE[ntCFT]/D");
   tree->Branch("Total_dEphi", event.Total_dEphi, "totaldEphi[ntCFT]/D");
