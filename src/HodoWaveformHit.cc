@@ -180,7 +180,20 @@ Bool_t HodoWaveformHit::PulseSearch( void )
   Double_t width = 0.05;
   Double_t risetime = 0.1;
   if(DetectorName()=="TAG-PL") {
-    threshold = -30;
+    TGraphErrors *gr = m_TGraphC[index_original_graph];
+    Int_t n = gr->GetN() - 1;
+    Double_t *refy = gr->GetY();
+    Double_t baseline=0;
+    Int_t Nbaseline=0;
+    for (Int_t i=0; i<n; i++) {
+      if (refy[i+1] - refy[i] >-5 && refy[i+1] - refy[i] < 0) {
+	baseline += refy[i+1];
+	Nbaseline++;
+      }
+    }
+    baseline /= Nbaseline;
+    //std::cout << "baseline = " << baseline << std::endl;
+    threshold = -30 + baseline;
     width = 0.05;
     risetime = 0.012;
   }
