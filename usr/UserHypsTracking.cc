@@ -32,7 +32,7 @@
 
 #define HodoCut 0
 #define UseTOF  1
-#define UseRF 0
+#define UseRF 1
 
 namespace
 {
@@ -43,6 +43,7 @@ const auto& gUnpacker = GUnpacker::get_instance();
 const auto& gGeom = DCGeomMan::GetInstance();
 const auto& gUser = UserParamMan::GetInstance();
 const auto& zTOF = gGeom.LocalZ("TOF-X");
+const auto& gPHC  = HodoPHCMan::GetInstance();
 }
 
 //_____________________________________________________________________________
@@ -56,12 +57,16 @@ struct Event
   Double_t time0;
 
   Double_t RF1st;
+  Double_t CRF1st;
 
   Int_t nhT0;
   Double_t T0Seg[MaxHits];
   Double_t tT0[MaxHits];
+  Double_t dtT0[MaxHits];
   Double_t t0T0[MaxHits];
   Double_t deT0[MaxHits];
+  Double_t udeT0[MaxHits];
+  Double_t ddeT0[MaxHits];
 
   Int_t nhTof;
   Double_t TofSeg[MaxHits];
@@ -95,9 +100,11 @@ struct Event
   Double_t chisqrHyps[MaxHits];
   Double_t path[MaxHits];
   Double_t stof[MaxHits];
+  Double_t cstof[MaxHits];
   Double_t pHyps[MaxHits];
   Double_t qHyps[MaxHits];
   Double_t m2[MaxHits];
+  Double_t cm2[MaxHits];
   Double_t resP[MaxHits];
   Double_t vpx[NumOfLayersVP];
   Double_t vpy[NumOfLayersVP];
@@ -110,6 +117,10 @@ struct Event
   Double_t vtgtHyps[MaxHits];
   Double_t thetaHyps[MaxHits];
   Double_t phiHyps[MaxHits];
+  Double_t vtx_Hyps[MaxHits];
+  Double_t vty_Hyps[MaxHits];
+  Double_t vtz_Hyps[MaxHits];
+  Double_t cdist_Hyps[MaxHits];
 
   Double_t xtofHyps[MaxHits];
   Double_t ytofHyps[MaxHits];
@@ -154,6 +165,7 @@ Event::clear()
   time0 = qnan;
   btof  = qnan;
   RF1st = qnan;
+  CRF1st = qnan;
 
   for(Int_t i = 0; i<NumOfLayersVP; ++i){
     vpx[i] = qnan;
@@ -170,7 +182,10 @@ Event::clear()
   for(Int_t it=0; it<MaxHits; it++){
     T0Seg[it] = -1;
     tT0[it] = qnan;
+    dtT0[it] = qnan;
     deT0[it] = qnan;
+    udeT0[it] = qnan;
+    ddeT0[it] = qnan;
     TofSeg[it] = -1;
     tTof[it] = qnan;
     deTof[it] = qnan;
@@ -205,16 +220,22 @@ Event::clear()
     nhHyps[it]     = 0;
     chisqrHyps[it] = qnan;
     stof[it]         = qnan;
+    cstof[it]         = qnan;
     path[it]         = qnan;
     pHyps[it]      = qnan;
     qHyps[it]      = qnan;
     m2[it]           = qnan;
+    cm2[it]           = qnan;
     xtgtHyps[it]  = qnan;
     ytgtHyps[it]  = qnan;
     utgtHyps[it]  = qnan;
     vtgtHyps[it]  = qnan;
     thetaHyps[it] = qnan;
     phiHyps[it]   = qnan;
+    vtx_Hyps[it]  = qnan;
+    vty_Hyps[it]  = qnan;
+    vtz_Hyps[it]  = qnan;
+    cdist_Hyps[it] = qnan;
     resP[it]        = qnan;
     xtofHyps[it]  = qnan;
     ytofHyps[it]  = qnan;
@@ -285,6 +306,9 @@ ProcessingNormal()
 
 #if UseRF
   static const auto BunchInterval =gUser.GetParameter("BunchInterval",0);
+  static const auto bunchp0 =gUser.GetParameter("Bunchpol2",0);
+  static const auto bunchp1 =gUser.GetParameter("Bunchpol2",1);
+  static const auto bunchp2 =gUser.GetParameter("Bunchpol2",2);
 #endif
   static const auto MinStopTimingSdcOut = gUser.GetParameter("StopTimingSdcOut", 0);
   static const auto MaxStopTimingSdcOut = gUser.GetParameter("StopTimingSdcOut", 1);
@@ -336,31 +360,9 @@ ProcessingNormal()
 
   HF1(1, 1.);
 
-#if UseRF
-  //RF analysis
-  hodoAna.DecodeHits("RF");
-  hodoAna.TimeCut("RF",-5,170);
-  Int_t nhRF =hodoAna.GetNHits("RF");
-  Double_t RFmin_time =999;
-
-  for(Int_t i=0;i<nhRF;i++){
-    const auto& hit = hodoAna.GetHit("RF", i);
-    if(!hit) continue;
-    Double_t time =hit->GetTUp();
-    if(time<RFmin_time) RFmin_time=time;
-  }
-  event.RF1st=RFmin_time;
-
-  while(RFmin_time>BunchInterval*0.5){
-    RFmin_time-=BunchInterval;
-  }
-  while(RFmin_time<-BunchInterval*0.5){
-      RFmin_time+=BunchInterval;
-  }
-#endif
-
   //////////////T0 Analysis
   hodoAna.DecodeHits("T0");
+  hodoAna.TimeCut("T0",-2,2);
   Int_t nhT0 = hodoAna.GetNHits("T0");
   event.nhT0 = nhT0;
 #if HodoCut
@@ -375,23 +377,65 @@ ProcessingNormal()
     Double_t seg = hit->SegmentId()+1;
     Double_t mt  = hit->MeanTime();
     Double_t cmt = hit->CMeanTime();
+    Double_t dt =hit->TimeDiff();
     //Double_t ct0 = hit->CTime0();
     Double_t de  = hit->DeltaE();
+    Double_t ude = hit->UDeltaE();
+    Double_t dde = hit->DDeltaE();
     #if HodoCut
         if(de<MinDeT0 || MaxDeT0<de) continue;
     #endif
     event.tT0[i]   = cmt;
     //event.t0Bh2[i]  = ct0;
     event.deT0[i]  = de;
+    event.udeT0[i]  = ude;
+    event.ddeT0[i]  = dde;
     event.T0Seg[i] = seg;
+    event.dtT0[i]  =dt;
     if(std::abs(mt)<std::abs(min_time)){
       min_time = mt;
     }
   }
+  
 
 #if UseRF
-  event.time0 =RFmin_time;
-  Double_t time0=RFmin_time;
+  //RF analysis
+  hodoAna.DecodeHits("RF");
+  hodoAna.TimeCut("RF",-5,170);
+  Int_t nhRF =hodoAna.GetNHits("RF");
+  Double_t RFmin_time =999;
+  Double_t tempCRFmin_time;
+  Double_t CRFmin_time =999;
+  Int_t RFindex=0;
+
+  for(Int_t i=0;i<nhRF;i++){
+    const auto& hit = hodoAna.GetHit("RF", i);
+    if(!hit) continue;
+    Double_t time =hit->GetTUp();
+    if(time<RFmin_time) RFmin_time=time;
+  }
+  gPHC.DoCorrection(1,1,0,0,RFmin_time,event.udeT0[0],tempCRFmin_time);
+  gPHC.DoCorrection(1,1,0,1,tempCRFmin_time,event.ddeT0[0],CRFmin_time);
+ 
+  event.RF1st=RFmin_time;
+  event.CRF1st=CRFmin_time;
+
+  while(CRFmin_time>BunchInterval*0.5+bunchp0+bunchp1*event.deT0[0]+bunchp2*pow(event.deT0[0],2)){
+    CRFmin_time-=BunchInterval;
+    RFindex-=1;
+  }
+  while(CRFmin_time<-BunchInterval*0.5+bunchp0+bunchp1*event.deT0[0]+bunchp2*pow(event.deT0[0],2)){
+    CRFmin_time+=BunchInterval;
+    RFindex+=1;
+  }
+
+#endif
+
+
+
+#if UseRF
+  Double_t time0=RFmin_time+BunchInterval*RFindex;
+  event.time0 =time0;
 #else
   event.time0 = min_time;
   Double_t time0=min_time;
@@ -723,6 +767,12 @@ ProcessingNormal()
     Double_t p = Mom.Mag();
     Double_t q = track->Polarity();
     Double_t ut = Mom.x()/Mom.z(), vt = Mom.y()/Mom.z();
+    TVector3 xkp(xt,yt,0);
+    TVector3 dkp(ut,vt,1);
+    TVector3 xG(0,0,0);//beam axis is assumed to be center
+    TVector3 dG(0,0,1);
+    Double_t cdistHyps;
+    TVector3 vertex_Hyps=Kinematics::VertexPoint(xG,xkp,dG,dkp,cdistHyps);
     Double_t cost = 1./TMath::Sqrt(1.+ut*ut+vt*vt);
     Double_t theta = TMath::ACos(cost)*TMath::RadToDeg();
     Double_t phi = TMath::ATan2(ut, vt);
@@ -741,6 +791,10 @@ ProcessingNormal()
     event.ytgtHyps[i] = yt;
     event.utgtHyps[i] = ut;
     event.vtgtHyps[i] = vt;
+    event.vtx_Hyps[i] =vertex_Hyps.x();
+    event.vty_Hyps[i] =vertex_Hyps.y();
+    event.vtz_Hyps[i] =vertex_Hyps.z();
+    event.cdist_Hyps[i] =cdistHyps;
     event.thetaHyps[i] = theta;
     event.phiHyps[i] = phi;
     event.resP[i] = p - initial_momentum;
@@ -784,16 +838,23 @@ ProcessingNormal()
 	      << std::setw(10) << TofSegHyps << std::endl;
 # endif
     Double_t time = qnan;
+    Double_t ctime = qnan;
     for(const auto& hit: hodoAna.GetHitContainer("TOF")){
       if(!hit) continue;
       Int_t seg = hit->SegmentId()+1;
-      if(tof_seg == seg) time = hit->CMeanTime() - time0 + StofOffset;
+      if(tof_seg == seg){
+	time = hit->MeanTime() - time0 + StofOffset;
+	ctime = hit->CMeanTime() - time0 + StofOffset;
+      }
     }
     event.stof[i] = time;
+    event.cstof[i] = ctime;
     if(time > 0.){
       Double_t m2 = Kinematics::MassSquare(p, path, time);
+      Double_t cm2 = Kinematics::MassSquare(p, path, ctime);
       HF1(94, m2);
       event.m2[i] = m2;
+      event.cm2[i] = cm2;
 # if 0
       std::ios::fmtflags pre_flags     = std::cout.flags();
       std::size_t        pre_precision = std::cout.precision();
@@ -1255,8 +1316,12 @@ ConfMan::InitializeHistograms()
   tree->Branch("nhT0",   &event.nhT0,   "nhT0/I");
   tree->Branch("T0Seg",   event.T0Seg,  "T0Seg[nhT0]/D");
   tree->Branch("tT0",     event.tT0,    "tT0[nhT0]/D");
+  tree->Branch("dtT0",     event.dtT0,    "dtT0[nhT0]/D");
   tree->Branch("deT0",    event.deT0,   "deT0[nhT0]/D");
+  tree->Branch("udeT0",    event.udeT0,   "udeT0[nhT0]/D");
+  tree->Branch("ddeT0",    event.ddeT0,   "ddeT0[nhT0]/D");
   tree->Branch("RF1st", &event.RF1st, "RF1st/D");
+  tree->Branch("CRF1st", &event.CRF1st, "CRF1st/D");
   tree->Branch("time0",   &event.time0,   "time0/D");
 
   tree->Branch("nhTof",   &event.nhTof,   "nhTof/I");
@@ -1293,15 +1358,21 @@ ConfMan::InitializeHistograms()
   tree->Branch("nhHyps",     event.nhHyps,     "nhHyps[ntHyps]/I");
   tree->Branch("chisqrHyps", event.chisqrHyps, "chisqrHyps[ntHyps]/D");
   tree->Branch("stof",         event.stof,         "stof[ntHyps]/D");
+  tree->Branch("cstof",         event.cstof,         "cstof[ntHyps]/D");
   tree->Branch("path",         event.path,         "path[ntHyps]/D");
   tree->Branch("pHyps",      event.pHyps,      "pHyps[ntHyps]/D");
   tree->Branch("qHyps",      event.qHyps,      "qHyps[ntHyps]/D");
   tree->Branch("m2",           event.m2,           "m2[ntHyps]/D");
+  tree->Branch("cm2",           event.cm2,           "cm2[ntHyps]/D");
 
   tree->Branch("xtgtHyps",   event.xtgtHyps,   "xtgtHyps[ntHyps]/D");
   tree->Branch("ytgtHyps",   event.ytgtHyps,   "ytgtHyps[ntHyps]/D");
   tree->Branch("utgtHyps",   event.utgtHyps,   "utgtHyps[ntHyps]/D");
   tree->Branch("vtgtHyps",   event.vtgtHyps,   "vtgtHyps[ntHyps]/D");
+  tree->Branch("vtx_Hyps",   event.vtx_Hyps,   "vtx_Hyps[ntHyps]/D");
+  tree->Branch("vty_Hyps",   event.vty_Hyps,   "vty_Hyps[ntHyps]/D");
+  tree->Branch("vtz_Hyps",   event.vtz_Hyps,   "vtz_Hyps[ntHyps]/D");
+  tree->Branch("cdist_Hyps",   event.cdist_Hyps,   "cdist_Hyps[ntHyps]/D");
 
   tree->Branch("thetaHyps",  event.thetaHyps,  "thetaHyps[ntHyps]/D");
   tree->Branch("phiHyps",    event.phiHyps,    "phiHyps[ntHyps]/D");
