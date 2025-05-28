@@ -968,10 +968,6 @@ RK::MakeHPContainerL()
 
   container.push_back(std::make_pair(IdLTOF_X_TL, RKcalcHitPoint()));
   container.push_back(std::make_pair(IdLTOF_Y_TL, RKcalcHitPoint()));
-    
-  container.push_back(std::make_pair(IdTOF_X, RKcalcHitPoint()));
-  container.push_back(std::make_pair(IdTOF_Y, RKcalcHitPoint()));
-  
 
   return container;
 }
@@ -1002,10 +998,7 @@ RK::MakeHPContainerR()
 
   container.push_back(std::make_pair(IdLTOF_X_TR, RKcalcHitPoint()));
   container.push_back(std::make_pair(IdLTOF_Y_TR, RKcalcHitPoint()));
-  
-  container.push_back(std::make_pair(IdTOF_X, RKcalcHitPoint()));
-  container.push_back(std::make_pair(IdTOF_Y, RKcalcHitPoint()));
-  
+
 
   return container;
 }

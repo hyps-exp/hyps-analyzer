@@ -194,7 +194,8 @@ HypsTrack::DoFit()
   Double_t estDChisqr = InitialChiSqr;
   Double_t lambdaCri  = 0.01;
   Double_t dmp = 0.;
-  
+
+  if(!m_use_tof) return false;
   if(9<m_tof_seg && m_tof_seg<38){
     m_HitPointCont = RK::MakeHPContainer();
   }else if(m_tof_seg<10){
@@ -865,12 +866,22 @@ HypsTrack::SaveTrackParameters(const RKCordParameter &cp)
 
   m_polarity = m_primary_momentum.z()<0. ? -1. : 1.;
 
-  const RKcalcHitPoint& hpTofU = m_HitPointCont.HitPointOfLayer(IdTOFUX);
-  const RKcalcHitPoint& hpTofD = m_HitPointCont.HitPointOfLayer(IdTOFDX);
   Int_t layerid_TOFX=IdTOFX;
-  if(m_tof_seg<10) layerid_TOFX=IdLTOFXTR;
-  if(m_tof_seg>37) layerid_TOFX=IdLTOFXTL;
+  Int_t layerid_TOFUX=IdTOFUX;
+  Int_t layerid_TOFDX=IdTOFDX;
+  if(m_tof_seg<10){
+    layerid_TOFX=IdLTOFXTR;
+    layerid_TOFUX=gGeom.DetectorId("LEPS-TOF-UX-Tilt-R");
+    layerid_TOFDX=gGeom.DetectorId("LEPS-TOF-DX-Tilt-R");
+  }
+  if(m_tof_seg>37){
+    layerid_TOFX=IdLTOFXTL;
+    layerid_TOFUX=gGeom.DetectorId("LEPS-TOF-UX-Tilt-L");
+    layerid_TOFDX=gGeom.DetectorId("LEPS-TOF-DX-Tilt-L");
+  }
   const RKcalcHitPoint& hpTof = m_HitPointCont.HitPointOfLayer(layerid_TOFX);
+  const RKcalcHitPoint& hpTofU = m_HitPointCont.HitPointOfLayer(layerid_TOFX);
+  const RKcalcHitPoint& hpTofD = m_HitPointCont.HitPointOfLayer(layerid_TOFX);
 
   if(!m_use_tof){
     Double_t ux, uy;
