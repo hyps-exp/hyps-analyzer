@@ -19,6 +19,7 @@ rootfile*
 runmanager/log
 runmanager/stat
 runmanager/tmp
+runmanager/my_runlist
 set_links.sh
 param
 fig
