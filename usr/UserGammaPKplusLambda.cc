@@ -143,6 +143,7 @@ struct Event
 
   std::vector< std::vector<Double_t> > resL;
   std::vector< std::vector<Double_t> > resG;
+  std::vector< std::vector<Double_t> > posG;
 
   // Calib
   enum eParticle {electron, Pion, Kaon, Proton, nParticle };
@@ -265,6 +266,7 @@ Event::clear()
   for(Int_t i=0; i<PlMaxTOF; ++i){
     resL[i].clear();
     resG[i].clear();
+    posG[i].clear();
   }
 
   for(Int_t i=0; i<Event::nParticle; ++i){
@@ -1039,8 +1041,9 @@ ProcessingNormal()
             HF2(100*layerId+22, dt, std::abs(xlcal-wp));
 	  }
 	}
-      }}
+      }
       event.resG[layerId-1].push_back(res);
+      event.posG[layerId-1].push_back(pos);
   }
 
     const auto& trSdcIn  = track->GetLocalTrackIn();
@@ -1560,6 +1563,11 @@ ConfMan::InitializeHistograms()
   for( Int_t i = PlMinSdcOut; i<= PlMaxSdcOut; i++ ) tree->Branch(Form("ResG%d", i), &event.resG[i-1]);
   for( Int_t i = PlMinTOF;    i<= PlMaxTOF;    i++ ) tree->Branch(Form("ResG%d", i), &event.resG[i-1]);
 
+  event.posG.resize(PlMaxTOF);
+  for( Int_t i = PlMinSdcIn;  i<= PlMaxSdcIn;  i++ ) tree->Branch(Form("PosG%d", i), &event.posG[i-1]);
+  for( Int_t i = PlMinSdcOut; i<= PlMaxSdcOut; i++ ) tree->Branch(Form("PosG%d", i), &event.posG[i-1]);
+  for( Int_t i = PlMinTOF;    i<= PlMaxTOF;    i++ ) tree->Branch(Form("PosG%d", i), &event.posG[i-1]);
+  
   tree->Branch("tTofCalc",  event.tTofCalc,  "tTofCalc[4]/D");
   tree->Branch("utTofSeg",  event.utTofSeg,  Form("utTofSeg[%d]/D", NumOfSegTOF));
   tree->Branch("dtTofSeg",  event.dtTofSeg,  Form("dtTofSeg[%d]/D", NumOfSegTOF));
