@@ -882,7 +882,7 @@ ProcessingNormal()
       }
     }
   }
-  
+
   hodoAna.DecodeHits<HodoWaveformHit>("BGO");
   Int_t nhBGO=hodoAna.GetNHits("BGO");
   {
@@ -977,7 +977,7 @@ ProcessingNormal()
 	gEvDisp.ShowHitPiID(seg);
     }
   }
-  
+
   const auto& CFTClCont = hodoAna.GetClusterContainer("CFT");
   DCAna.DecodeCFTHits(CFTClCont);
   DCAna.TrackSearchCFT();
@@ -991,7 +991,7 @@ ProcessingNormal()
     gEvDisp.DrawCFTLocalTrack( tp, flagPTrack );
   }
   */
-  
+
   std::vector <CFTParticle*> CFTPartCont;
   for( Int_t i=0; i<ntCFT; ++i ){
     const CFTLocalTrack *tp=DCAna.GetTrackCFT(i);
@@ -1011,7 +1011,7 @@ ProcessingNormal()
     }
     gEvDisp.DrawCFTLocalTrack_dE_E( CFTPart, flagPTrack );
     const CFTLocalTrack *tp=CFTPart->GetTrack();
-    
+
     double mean_dE = 0;
     int nh   = tp->GetNHit();
     int nhUV = tp->GetNHitUV();
@@ -1023,7 +1023,7 @@ ProcessingNormal()
       int seg = (int)hit->MeanSeg();
 
       double phi_ini   = hit->MeanPhi();
-      //double phi_ini   = hit->MeanPhiCor();            
+      //double phi_ini   = hit->MeanPhiCor();
       double phi_track   = hit->GetCalPhi();
       double z_track = hit->GetZcal();
       double dphi  = hit->GetResidualPhi();
@@ -1034,9 +1034,9 @@ ProcessingNormal()
 
       gEvDisp.ShowHitFiberTracked(layer, seg, z_track, flagPTrack);
       std::cout << "track#" << i << ", layer=" << layer << ", seg=" << seg
-		<< ", ini_phi=" << phi_ini 
-		<< ", dE = " << dE_max 
-		<< "( " << dE_max*sin(theta*TMath::DegToRad()) << " )" 
+		<< ", ini_phi=" << phi_ini
+		<< ", dE = " << dE_max
+		<< "( " << dE_max*sin(theta*TMath::DegToRad()) << " )"
 		<< ", theta = " << theta
 		<< std::endl;
 
@@ -1046,7 +1046,7 @@ ProcessingNormal()
       CFTFiberCluster *hit = tp->GetHitUV(ip);
       int layer = hit->PlaneId();
       int seg = (int)hit->MeanSeg();
-      
+
       double phi_track   = hit->GetCalPhi();
       double z_track = hit->GetZcal();
       double z_ini   = hit->GetZIni();
@@ -1057,11 +1057,11 @@ ProcessingNormal()
 
       gEvDisp.ShowHitFiberTracked(layer, seg, z_track, flagPTrack);
       std::cout << "track#" << i << ", layer=" << layer << ", seg=" << seg
-		<< ", phi=" << phi_track << ", z_ini=" << z_ini 
-		<< ", dE = " << dE_max << std::endl;      	
+		<< ", phi=" << phi_track << ", z_ini=" << z_ini
+		<< ", dE = " << dE_max << std::endl;
 
 
-    }    
+    }
 
     mean_dE /= (double)(nh+nhUV);
     double sigma_dE = mean_dE/4.;
@@ -1078,11 +1078,11 @@ ProcessingNormal()
       double dE_max = hit->MaxDeltaE();
 
       chisqr_dE += (dE_max - mean_dE)*(dE_max - mean_dE)/(sigma_dE*sigma_dE);
-    }    
+    }
 
     chisqr_dE /= (double)(nh+nhUV);
 
-    std::cout << "Mean dE = " << mean_dE 
+    std::cout << "Mean dE = " << mean_dE
 	      << ", chisqr_dE = " << chisqr_dE << std::endl;
   }
 
@@ -1147,7 +1147,7 @@ ProcessingNormal()
 #endif
   is_good = true;
   gEvDisp.Update();
-  gEvDisp.GetCommand();
+  //gEvDisp.GetCommand();
   hddaq::cout << "[Info] IsGood = " << is_good << std::endl;
 
   if(is_good){
