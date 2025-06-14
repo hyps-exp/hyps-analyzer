@@ -831,9 +831,14 @@ ProcessingNormal()
 
     double egamf=qnan;
     double egamb=qnan;
+    /* 
     const double eparf[3]={1.486,0.03312,-0.0001588};
     const double eparb[3]={1.49797,0.0327588,-0.000152769};
     const double offset_b=0.6421;
+    */
+    const double eparf[3]={1.53569,0.0367406,-0.000154298};
+    const double eparb[3]={1.55841,0.035491,-0.000129091};
+    const double offset_b=0.0;
     if(SFFCand.size()>0 && SFBCand.size()>0){
       for(int i=0;i<SFFCand.size();i++){
 	for(int j=0;j<SFBCand.size();j++){
