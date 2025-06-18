@@ -334,7 +334,7 @@ namespace root
 {
 Event  event;
 Dst    dst;
-TH1*   h[MaxHist];
+TH1* h[MaxHist];
 TTree* tree;
 // TTree* hodo;
 enum eDetHid {
@@ -365,12 +365,6 @@ ProcessingNormal()
   static const auto MaxTimeCFT = gUser.GetParameter("TimeCFT", 1);
   static const auto MinAdcCFT = gUser.GetParameter("AdcCFT", 0);
   static const auto MaxAdcCFT = gUser.GetParameter("AdcCFT", 1);
-  //static const auto MinTdcT0  = gUser.GetParameter("TdcT0", 0);
-  //static const auto MaxTdcT0  = gUser.GetParameter("TdcT0", 1);
-  //static const auto MinTdcSAC = gUser.GetParameter("TdcSAC", 0);
-  //static const auto MaxTdcSAC = gUser.GetParameter("TdcSAC", 1);
-  //static const auto MinTdcTOF = gUser.GetParameter("TdcTOF", 0);
-  //static const auto MaxTdcTOF = gUser.GetParameter("TdcTOF", 1);
 #if HodoHitPos
   static const auto PropVelBH2 = gUser.GetParameter("PropagationBH2");
 #endif
@@ -381,7 +375,6 @@ ProcessingNormal()
 
   gRM.Decode();
 
-  // event.evnum = gRM.EventNumber();
   event.evnum = gUnpacker.get_event_number();
   event.spill = gRM.SpillNumber();
   dst.evnum   = gRM.EventNumber();
@@ -389,8 +382,7 @@ ProcessingNormal()
 
   HF1(1, 0);
 
-
-  //*****************  RawData  *****************
+  //***************** RawData  *****************
 
   // Trigger Flag
   rawData.DecodeHits("TFlag");
@@ -429,46 +421,46 @@ ProcessingNormal()
 
       bool flag_tdc = false;
       for(Int_t m = 0; m<NhitT; ++m){
-	Int_t tdc_l = hit->GetTdcLeading(U, m);
-	Int_t tdc_t = hit->GetTdcTrailing(U, m);
-	HF2 (1000*(plane+1)+100, seg, tdc_l);  //TDC Nhits
-	HF2 (1000*(plane+1)+101, seg, tdc_t);
+        Int_t tdc_l = hit->GetTdcLeading(U, m);
+        Int_t tdc_t = hit->GetTdcTrailing(U, m);
+        HF2 (1000*(plane+1)+100, seg, tdc_l);  //TDC Nhits
+        HF2 (1000*(plane+1)+101, seg, tdc_t);
 
-	Int_t width = tdc_l - tdc_t;
-	HF2 (1000*(plane+1)+103, seg, width);
+        Int_t width = tdc_l - tdc_t;
+        HF2 (1000*(plane+1)+103, seg, width);
 
 
-	if (tdc_l>MinTdcCFT && tdc_l < MaxTdcCFT) {
-	  flag_tdc = true;
-	  event.cfttdc[plane][seg] = tdc_l;
-	}
+        if (tdc_l>MinTdcCFT && tdc_l < MaxTdcCFT) {
+          flag_tdc = true;
+          event.cfttdc[plane][seg] = tdc_l;
+        }
       }
       if (flag_tdc) {
-	HF1 (1000*(plane+1)+102, seg);
+        HF1 (1000*(plane+1)+102, seg);
       }
 
 
       //ADC Hi
       for(Int_t m = 0; m<NhitAH; ++m){
-	Int_t adcH = hit->GetAdcHigh();
-	HF2 (1000*(plane+1)+104, seg, adcH);
-	event.cftadc_h[plane][seg] = adcH;
+        Int_t adcH = hit->GetAdcHigh();
+        HF2 (1000*(plane+1)+104, seg, adcH);
+        event.cftadc_h[plane][seg] = adcH;
 
-	if (flag_tdc) {
-	  HF2 (1000*(plane+1)+106, seg, adcH);
-	}
+        if (flag_tdc) {
+          HF2 (1000*(plane+1)+106, seg, adcH);
+        }
       }
 
       //ADC Low
       for(Int_t m = 0; m<NhitAL; ++m){
-	Int_t adcL = hit->GetAdcLow();
-	HF2 (1000*(plane+1)+105, seg, adcL);
-	event.cftadc_l[plane][seg] = adcL;
+        Int_t adcL = hit->GetAdcLow();
+        HF2 (1000*(plane+1)+105, seg, adcL);
+        event.cftadc_l[plane][seg] = adcL;
       }
     }
   }
 
-  hodoAna.DecodeHits<CFTFiberHit>("CFT");
+  hodoAna.DecodeHits<CFTFiberHit>("CFT");//ここ
   {
     const auto& U = HodoRawHit::kUp;
     Int_t nh=hodoAna.GetNHits("CFT");
@@ -476,7 +468,7 @@ ProcessingNormal()
       const auto& hit = hodoAna.GetHit<CFTFiberHit>("CFT", i);
       if(!hit) continue;
       Int_t seg   = hit->SegmentId();
-      Int_t plane = hit->PlaneId();
+      Int_t plane = hit->PlaneId();//レイヤー
 
 
       Double_t adccorHi  = hit->GetAdcCorHigh();
@@ -493,20 +485,22 @@ ProcessingNormal()
       event.cftadc_cor_h[plane][seg]  = (int)adccorHi;
       event.cftadc_cor_l[plane][seg] = (int)adccorLow;
 
+      
+
       if (adccorHi>1500) {
-	HF2 (1000*(plane+1)+201, seg, event.cfttdc[plane][seg]);
+        HF2 (1000*(plane+1)+201, seg, event.cfttdc[plane][seg]);
       }
 
       Int_t NhitT = hit->GetEntries(U);
       bool flagTime = false;
       for(Int_t m = 0; m<NhitT; ++m){
-	Double_t time = hit->GetTUp(m);
-	HF2 (1000*(plane+1)+200, seg, time);
-	if (std::abs(time)<100)
-	  flagTime = true;
+        Double_t time = hit->GetTUp(m);
+        HF2 (1000*(plane+1)+200, seg, time);
+        if (std::abs(time)<100)
+          flagTime = true;
       }
       if (flagTime)
-	HF2 (1000*(plane+1)+206, seg, adccorHi);
+        HF2 (1000*(plane+1)+206, seg, adccorHi);
     }
 
     Int_t nc=hodoAna.GetNClusters("CFT");
@@ -533,26 +527,16 @@ ProcessingNormal()
 
       HF1 (100*(plane+1) + 0, cmt);
       HF1 (100*(plane+1) + 1, ms);
-
       if ((cl->PlaneName()).Contains("PHI")) {
-	//std::cout << "(x, y) = (" << cl->MeanX() << ", " << cl->MeanY() << ")" << std::endl;
-	double meanPhi = cl->MeanPhi();
-	HF1(1000*(plane+1)+305, meanPhi);
+        double meanPhi = cl->MeanPhi();
+        HF1(1000*(plane+1)+305, meanPhi);
       } else if ((cl->PlaneName()).Contains("UV")) {
-	//std::cout << "(r, z0) = (" << cl->MeanR() << ", " << cl->MeanZ0() << ")" << std::endl;
-	double meanZ0 = cl->MeanZ0();
-	HF1(1000*(plane+1)+305, meanZ0);
+        double meanZ0 = cl->MeanZ0();
+        HF1(1000*(plane+1)+305, meanZ0);
       }
 
-      //std::cout << "Time : " << cmt << ", ";
       for (Int_t m=0; m<cs; ++m) {
-	CFTFiberHit* hit = (CFTFiberHit*)cl->GetHit(m);
-	Int_t planeId = hit->PlaneId();
-	Int_t seg = hit->SegmentId();
-	Double_t adccorHi  = hit->GetAdcCorHigh();
-	//std::cout << seg << " (" << planeId << ", " << adccorHi << "), ";
-	//if (m==cs-1)
-	//std::cout << std::endl;
+        CFTFiberHit* hit = (CFTFiberHit*)cl->GetHit(m);
       }
 
     }
@@ -569,12 +553,30 @@ ProcessingNormal()
   Int_t ntCFT=DCAna.GetNtracksCFT();
   HF1(10, ntCFT);
   event.ntCFT = ntCFT;
+  
+
+  if (ntCFT > 0) { 
+    
+    const Int_t n_all_hits = hodoAna.GetNHits("CFT");
+    for (Int_t i = 0; i < n_all_hits; ++i) {
+      const auto* hit = hodoAna.GetHit<CFTFiberHit>("CFT", i);
+      if (!hit) continue;
+
+      const Int_t plane = hit->PlaneId();
+      const Int_t seg = hit->SegmentId();
+      const Double_t adccorHi = hit->GetAdcCorHigh();
+
+      
+      HF2(1000 * (plane + 1) + 307, seg, adccorHi);
+    }
+  }
+
 
   ThreeVector track_Dir[MaxDepth];
   ThreeVector track_Pos[MaxDepth];
 
   for( Int_t i=0; i<ntCFT; ++i ){
-    const auto& tp=DCAna.GetTrackCFT(i);
+    const auto& tp = DCAna.GetTrackCFT(i);
 
     Int_t nh   = tp->GetNHit();
     Int_t nhUV = tp->GetNHitUV();
@@ -640,10 +642,18 @@ ProcessingNormal()
 
       Double_t z_cal   = cl->GetZcal();
       Double_t phi_cal = cl->GetCalPhi();
-      // cmt = cl->CMeanTimeMaxCluster();
       HF2 (100*(plane+1)+15, z_cal, res_phi_cor);
       HF2 (100*(plane+1)+16, phi_cal, res_phi_cor);
       HF2 (100*(plane+1)+17, z_cal, cmt);
+
+      Int_t cs = cl->ClusterSize();
+      for (Int_t k = 0; k < cs; ++k) {
+        const auto* hit = dynamic_cast<const CFTFiberHit*>(cl->GetHit(k));
+        if (!hit) continue;
+        Int_t seg = hit->SegmentId();
+        Double_t adccorHi = hit->GetAdcCorHigh();
+        HF2(1000*(plane+1)+306, seg, adccorHi);
+      }
     }
 
     for (Int_t j=0; j<nhUV; ++j) {
@@ -660,18 +670,21 @@ ProcessingNormal()
       HF1 (100*(plane+1)+12, res_z);
       Double_t z_cal   = cl->GetZcal();
       Double_t phi_cal = cl->GetCalPhi();
-      // cmt = cl->CMeanTimeMaxCluster();
       HF2 (100*(plane+1)+15, z_cal, res_z);
       HF2 (100*(plane+1)+16, phi_cal, res_z);
       HF2 (100*(plane+1)+17, z_cal, cmt);
-    }
 
-    //std::cout << "nhPhi = " << nh << ", nhUV = " << nhUV
-    //<< ", chisqrXY = " << chisqrXY << ", chisqrZ = "  << chisqrZ
-    //<< ", theta = " << theta << std::endl;
+      Int_t cs = cl->ClusterSize();
+      for (Int_t k = 0; k < cs; ++k) {
+        const auto* hit = dynamic_cast<const CFTFiberHit*>(cl->GetHit(k));
+        if (!hit) continue;
+        Int_t seg = hit->SegmentId();
+        Double_t adccorHi = hit->GetAdcCorHigh();
+        HF2(1000*(plane+1)+306, seg, adccorHi);
+      }
+    }
   }
 
-  //For production data
 #if production
   if(ntCFT>1){
     Int_t nVer = 0;
@@ -679,27 +692,25 @@ ProcessingNormal()
     Double_t dist_product;
     for(Int_t i=0; i<ntCFT-1; i++){
       for(Int_t j=i+1; j<ntCFT; j++){
-	target = Kinematics::VertexPoint3D(track_Dir[i], track_Dir[j], track_Pos[i], track_Pos[j], dist_product);
-	event.xtar_product[nVer] = target.X();
-	event.ytar_product[nVer] = target.Y();
-	event.ztar_product[nVer] = target.Z();
-	event.dist_product[nVer] = dist_product;
+        target = Kinematics::VertexPoint3D(track_Dir[i], track_Dir[j], track_Pos[i], track_Pos[j], dist_product);
+        event.xtar_product[nVer] = target.X();
+        event.ytar_product[nVer] = target.Y();
+        event.ztar_product[nVer] = target.Z();
+        event.dist_product[nVer] = dist_product;
 
-	HF2 (30, target.X(), target.Y());
-	HF2 (31, target.Z(), target.X());
-	HF2 (32, target.Z(), target.Y());
+        HF2 (30, target.X(), target.Y());
+        HF2 (31, target.Z(), target.X());
+        HF2 (32, target.Z(), target.Y());
 
-	nVer++;
+        nVer++;
       }
     }
     event.nVer_product = nVer;
   }
 #endif
 
-  // For Cosmic ray data
 #if cosmic
   if(ntCFT == 2){
-    // 16 layer tracking
     DCAna.TrackSearchCFT_16layer();
     Int_t ntCFT_16layer = DCAna.GetNtracksCFT_16layer();
     event.ntCFT_16layer = ntCFT_16layer;
@@ -754,42 +765,28 @@ ProcessingNormal()
 
       for (Int_t ih=0; ih<nhXY; ih++) {
         CFTFiberCluster *cl = tp->GetHit(ih);
-	Int_t  plane = cl->PlaneId();
-	Double_t ms = cl->MeanSeg();
-	Double_t cmt= cl->CMeanTime();
-	Double_t res = cl->GetResidual();
-	Double_t res_phi = cl->GetResidualPhi();
-	Double_t res_phi_cor = cl->GetResidualPhiCor();
+        Int_t  plane = cl->PlaneId();
+        Double_t ms = cl->MeanSeg();
+        Double_t cmt= cl->CMeanTime();
+        Double_t res = cl->GetResidual();
+        Double_t res_phi = cl->GetResidualPhi();
+        Double_t res_phi_cor = cl->GetResidualPhiCor();
         Double_t phi = cl->MeanPhi();
         Double_t phi_cor = cl->MeanPhiCor();
         Double_t phi_cal1 = cl->GetCalPhi();
-	Double_t z_cal   = cl->GetZcal();
-	Double_t phi_cal = cl->GetCalPhi();
-        if (0) {
-	  std::cout << "layer : " << plane << ", MeanSeg : " << ms
-                    << ", phi : " << phi << ", Z : " << z_cal
-                    << ", ResidualPhi : " << res_phi_cor << std::endl;
-        }
+        Double_t z_cal   = cl->GetZcal();
+        Double_t phi_cal = cl->GetCalPhi();
 
-	HF1(56, plane);
-	HF1 (100*(plane+1)+50, cmt);
-	HF1 (100*(plane+1)+51, ms);
-	HF1 (100*(plane+1)+52, res);
-	HF1 (100*(plane+1)+53, res_phi);
-	HF1 (100*(plane+1)+54, res_phi_cor);
+        HF1(56, plane);
+        HF1 (100*(plane+1)+50, cmt);
+        HF1 (100*(plane+1)+51, ms);
+        HF1 (100*(plane+1)+52, res);
+        HF1 (100*(plane+1)+53, res_phi);
+        HF1 (100*(plane+1)+54, res_phi_cor);
 
-	HF2 (100*(plane+1)+55, z_cal, res_phi_cor);
-	HF2 (100*(plane+1)+56, phi_cal, res_phi_cor);
+        HF2 (100*(plane+1)+55, z_cal, res_phi_cor);
+        HF2 (100*(plane+1)+56, phi_cal, res_phi_cor);
 
-	/*
-        int layer2 = (layer-layerId_PHI1)/2;
-        int hid = 20000+layer2*1000;
-        if (nhXY >= 7) {
-          HF1(hid, res_phi);
-          HF2(hid+1, calZ, res_phi);
-          HF2(hid+1+int(phi/10.)+1, calZ, res_phi);
-        }
-	*/
         Int_t layer2 = (Int_t)(plane/2);
         event.hitMeanSegPhi_16layer[layer2][event.nhPhi_16layer[layer2]]  = ms;
         event.resPhi_16layer[layer2][event.nhPhi_16layer[layer2]]  = res_phi_cor;
@@ -798,36 +795,24 @@ ProcessingNormal()
         event.phicor_16layer[layer2][event.nhPhi_16layer[layer2]]  = phi_cor;
         event.phical_16layer[layer2][event.nhPhi_16layer[layer2]]  = phi_cal1;
         event.nhPhi_16layer[layer2]++;
-
-        /*
-	     std::cout << "layer : " << layer2 << ", phi : " <<  phi
-	     << ", int(phi) : " << int(phi)
-	     << ", (int)phi" << (int)phi << std::endl;
-	*/
       }
 
       for (Int_t ih=0; ih<nhUV; ih++) {
         CFTFiberCluster *cl = tp->GetHitU(ih);
-	Int_t  plane     = cl->PlaneId();
-	Double_t ms = cl->MeanSeg();
-	Double_t cmt= cl->CMeanTime();
+        Int_t  plane     = cl->PlaneId();
+        Double_t ms = cl->MeanSeg();
+        Double_t cmt= cl->CMeanTime();
         Double_t phi_cal = cl->GetCalPhi();
         Double_t z_cal   = cl->GetZcal();
         Double_t res_z   = cl->GetResidualZ();
 
-        if (0) {
-	  std::cout << "layer : " << plane << ", MeanSeg : " << ms
-                    << ", phi : " << phi_cal << ", Z : " << z_cal
-                    << ", ResidualZ : " << res_z << std::endl;
-        }
+        HF1(56, plane);
 
-	HF1(56, plane);
-
-	HF1 (100*(plane+1)+50, cmt);
-	HF1 (100*(plane+1)+51, ms);
-	HF1 (100*(plane+1)+52, res_z);
-	HF2 (100*(plane+1)+55, z_cal, res_z);
-	HF2 (100*(plane+1)+56, phi_cal, res_z);
+        HF1 (100*(plane+1)+50, cmt);
+        HF1 (100*(plane+1)+51, ms);
+        HF1 (100*(plane+1)+52, res_z);
+        HF2 (100*(plane+1)+55, z_cal, res_z);
+        HF2 (100*(plane+1)+56, phi_cal, res_z);
 
         Int_t layer2 = (Int_t)(plane/2);
         event.hitMeanSegU_16layer[layer2][event.nhU_16layer[layer2]]  = ms;
@@ -835,17 +820,10 @@ ProcessingNormal()
         event.calZU_16layer[layer2][event.nhU_16layer[layer2]]  = z_cal;
         event.phiU_16layer[layer2][event.nhU_16layer[layer2]]  = phi_cal;
         event.nhU_16layer[layer2]++;
-
-        /*
-	   std::cout << "layer : " << layer2 << ", phi : " <<  phi
-	   << ", int(phi) : " << int(phi)
-	   << ", (int)phi" << (int)phi << std::endl;
-	*/
       }
 
       ThreeVector Pos0 = tp->GetPos0();
       ThreeVector Dir = tp->GetDir();
-      // double scale = 10.;
       ThreeVector bMom = ThreeVector(0, 0, 1);
       double cost = Dir*bMom/(Dir.Mag()*bMom.Mag());
       double theta = acos(cost)*TMath::RadToDeg();
@@ -1053,6 +1031,8 @@ ConfMan::InitializeHistograms()
     TString title303("");
     TString title304("");
     TString title305("");
+    TString title306("");
+    TString title307("");
     if(i%2 == 0){// spiral layer
       Int_t layer = (Int_t)i/2 +1;
       title100  = Form("CFT UV %d : Tdc(Leading) vs seg", layer);
@@ -1076,6 +1056,8 @@ ConfMan::InitializeHistograms()
       title303 = Form("CFT UV %d (Cluster): total dE vs seg", layer);
       title304 = Form("CFT UV %d (Cluster): max dE vs seg", layer);
       title305 = Form("CFT UV %d (Cluster): MeanZ0", layer);
+      title306 = Form("CFT UV %d : AdcCor(High) vs seg (Track_only)", layer);
+      title307 = Form("CFT UV %d : AdcCor(High) vs seg (Track)", layer);
     }else if(i%2 == 1){// straight layer
       Int_t layer = (Int_t)i/2 +1;
       title100  = Form("CFT Phi %d : Tdc(Leading) vs seg", layer);
@@ -1099,6 +1081,9 @@ ConfMan::InitializeHistograms()
       title303 = Form("CFT Phi %d (Cluster): total dE vs seg", layer);
       title304 = Form("CFT Phi %d (Cluster): max dE vs seg", layer);
       title305 = Form("CFT Phi %d (Cluster): MeanPhi", layer);
+      title306 = Form("CFT Phi %d : AdcCor(High) vs seg (Track_only)", layer);
+      title307 = Form("CFT Phi %d : AdcCor(High) vs seg (Track)", layer);
+
     }
     HB2( 1000*(i+1)+100, title100, NumOfSegCFT[i], 0, NumOfSegCFT[i], 1024,0,1024);
     HB2( 1000*(i+1)+101, title101, NumOfSegCFT[i], 0, NumOfSegCFT[i], 1024,0,1024);
@@ -1121,9 +1106,9 @@ ConfMan::InitializeHistograms()
     HB2( 1000*(i+1)+303, title303, NumOfSegCFT[i], 0, NumOfSegCFT[i], 1000,-1,9);
     HB2( 1000*(i+1)+304, title304, NumOfSegCFT[i], 0, NumOfSegCFT[i], 1000,-1,9);
     HB1( 1000*(i+1)+305, title305, 500, -50, 450);
+    HB2( 1000*(i+1)+306, title306, NumOfSegCFT[i], 0, NumOfSegCFT[i], 1000, 0, 4000 );
+    HB2( 1000*(i+1)+307, title307, NumOfSegCFT[i], 0, NumOfSegCFT[i], 1000, 0, 4000 );
   }
-
-
 
   ////////////////////////////////////////////
   //Tree
@@ -1160,10 +1145,8 @@ ConfMan::InitializeHistograms()
   tree->Branch("xtar_product",   event.xtar_product,  "xtar_product[nVer_product]/D");
   tree->Branch("ytar_product",   event.ytar_product,  "ytar_product[nVer_product]/D");
   tree->Branch("ztar_product",   event.ztar_product,  "ztar_product[nVer_product]/D");
-
 #endif
 
-  // 16layer tracking
 #if cosmic
   tree->Branch("ntCFT_16layer",   &event.ntCFT_16layer,  "ntCFT_16layer/I");
   tree->Branch("nhXY_16layer",   event.nhXY_16layer,  "nhXY_16layer[ntCFT_16layer]/I");
@@ -1197,7 +1180,7 @@ ConfMan::InitializeHistograms()
   tree->Branch("phi3cor_16layer",   event.phicor_16layer[2],  "phi3cor_16layer[nhPhi3_16layer]/D");
   tree->Branch("phi4cor_16layer",   event.phicor_16layer[3],  "phi4cor_16layer[nhPhi4_16layer]/D");
 
-    tree->Branch("phi1cal_16layer",   event.phical_16layer[0],  "phi1cal_16layer[nhPhi1_16layer]/D");
+  tree->Branch("phi1cal_16layer",   event.phical_16layer[0],  "phi1cal_16layer[nhPhi1_16layer]/D");
   tree->Branch("phi2cal_16layer",   event.phical_16layer[1],  "phi2cal_16layer[nhPhi2_16layer]/D");
   tree->Branch("phi3cal_16layer",   event.phical_16layer[2],  "phi3cal_16layer[nhPhi3_16layer]/D");
   tree->Branch("phi4cal_16layer",   event.phical_16layer[3],  "phi4cal_16layer[nhPhi4_16layer]/D");
@@ -1225,7 +1208,7 @@ ConfMan::InitializeHistograms()
   tree->Branch("phiU1_16layer",   event.phiU_16layer[0],  "phiU1_16layer[nhU1_16layer]/D");
   tree->Branch("phiU2_16layer",   event.phiU_16layer[1],  "phiU2_16layer[nhU2_16layer]/D");
   tree->Branch("phiU3_16layer",   event.phiU_16layer[2],  "phiU3_16layer[nhU3_16layer]/D");
-  tree->Branch("phiU4_16layer",   event.phiU_16layer[3],  "phiU4_16layer[nhU4_16layer]/D");
+  tree->Branch("phiU4_16layer",   event.phiU_16layer[3],  Form("phiU4_16layer[%s]/D", "nhU4_16layer"));
 
   tree->Branch("resZU1_16layer",   event.resZU_16layer[0],  "resZU1_16layer[nhU1_16layer]/D");
   tree->Branch("resZU2_16layer",   event.resZU_16layer[1],  "resZU2_16layer[nhU2_16layer]/D");
