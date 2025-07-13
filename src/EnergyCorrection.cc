@@ -6,7 +6,8 @@
 
 const int LH2Tag=0;
 const int WindowTag=1;
-const int CFRPTag=1;
+const int CFRPTag=2;
+const int CFTTag=3;
 
 /*
 * Correct Energy loss (Downstream part of Vertex)
@@ -284,6 +285,8 @@ int caldE(double momentum, double mass, double distance, double *momentum_cor, d
       dE_dx=calc_dE_dx2(beta);
     else if (tag == CFRPTag)
       dE_dx=calc_dE_dx3(beta);
+    else if (tag == CFTTag)
+      dE_dx=calc_dE_dxcft(beta);
     else {
       fprintf(stderr,"caldE: Invalid tag %d\n",tag);
       exit(-1);
@@ -391,6 +394,34 @@ double calc_dE_dx3(double beta)
   double rho=1.53;   /*g/cm^3 (C)*/
   double I=78.0;     /*eV*/
   double Z_A=0.49954;
+  int z=1;
+
+  gamma_2=1/(1-pow(beta,2.0));
+  //printf("sqrt(gamma_2):%f\n",sqrt(gamma_2));
+
+  W_max=2.0*m_e*pow(beta,2.0)*gamma_2;
+
+  logterm=log(2.0*m_e*gamma_2*pow(beta,2.0)*W_max*pow(10.0,12.0)/pow(I,2.0))-2.0*pow(beta,2.0);
+
+  value=C*rho*Z_A*pow((double)z,2.0)*logterm/pow(beta,2.0);
+
+  return value;
+
+}
+
+double calc_dE_dxcft(double beta)
+{
+  double value;
+  const double C=0.1535; /*MeVcm^2/g*/
+  const double m_e=0.511;
+  double logterm;
+  double gamma_2;
+  double W_max;
+
+  //polystylene
+  double rho=1.06;   /*g/cm^3 (C)*/
+  double I=68.7;     /*eV*/
+  double Z_A=0.538461;
   int z=1;
 
   gamma_2=1/(1-pow(beta,2.0));

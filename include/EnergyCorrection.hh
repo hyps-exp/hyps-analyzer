@@ -25,6 +25,7 @@ int caldE(double momentum, double mass, double distance, double *momentum_cor, d
 double calc_dE_dx(double beta);
 double calc_dE_dx2(double beta);
 double calc_dE_dx3(double beta);
+double calc_dE_dxcft(double beta);
 double mygamma(double beta);
 double mybeta(double energy,double mormentum);
 double calcLengthInTarget(ThreeVector dir, ThreeVector vertex);
