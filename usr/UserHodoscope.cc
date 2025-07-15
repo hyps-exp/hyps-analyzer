@@ -556,6 +556,32 @@ ProcessingNormal()
     event.rfnhits = rf_nhits;
   }
 
+  // HodoAna RF
+  hodoAna.DecodeHits("RF");
+  {
+    Int_t nh = hodoAna.GetNHits("RF");
+    HF1(RFHid, Double_t(nh));
+    
+    for(Int_t i=0; i<nh; ++i){
+     
+      const auto& hit = hodoAna.GetHit("RF", i);
+      if(!hit) continue; 
+      Int_t seg = hit->SegmentId();
+      Int_t m_l = 0; 
+      
+      for(Int_t m=0; m < hit->GetEntries(); ++m){
+        Double_t t = hit->GetTUp(m); 
+        HF1(RFHid +100*(seg+1) +13, t);
+
+        if(m_l < MaxDepth){
+          dst.rft[seg][m_l] = t;
+          ++m_l;
+        }
+      }
+    }
+    
+  }
+
       ///// Tag-SF
   rawData.DecodeHits("TAG-SF");
 
@@ -1518,6 +1544,11 @@ ConfMan::InitializeHistograms()
     HB1(RFHid +100*(i+1) +3, title2, NbinTdcHr, MinTdcHr, MaxTdcHr);
   }
 
+  for(Int_t i=0; i<NumOfSegRF; ++i){
+    TString title2 = Form("RF-%d Time", i);
+    HB1(RFHid + 100*(i+1) + 13, title2, NbinTdcHr, -10, 1000);
+  }
+
     //Tag-SF
 
   HB1(TagSFHid +0, "#Cluster Tag-SFF", NumOfSegTagSF+1,0.,Double_t(NumOfSegTagSF+1));
@@ -1817,6 +1848,7 @@ ConfMan::InitializeHistograms()
   tree->Branch("tofdde",     event.tofdde,     Form("tofdde[%d]/D", NumOfSegTOF));
   tree->Branch("tofctu",     event.tofctu,     Form("tofctu[%d][%d]/D", NumOfSegTOF, MaxDepth));
   tree->Branch("tofctd",     event.tofctd,     Form("tofctd[%d][%d]/D", NumOfSegTOF, MaxDepth));
+
   tree->Branch("tofcmt",     event.tofcmt,     Form("tofcmt[%d][%d]/D", NumOfSegTOF, MaxDepth));
   /*
   tree->Branch("t0",        event.t0,        Form("t0[%d][%d]/D",  NumOfSegBH2, MaxDepth));
