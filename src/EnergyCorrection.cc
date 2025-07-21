@@ -259,7 +259,7 @@ int caldE(double momentum, double mass, double distance, double *momentum_cor, d
   double E;
   double p = momentum*1000.0;
   //double delta=0.01; /*cm*/
-  double delta=0.05; /*cm*/
+  double delta=0.005; /*cm*/
   int i;
   double length=0.0;
   double total_eloss=0.0;

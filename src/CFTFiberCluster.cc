@@ -128,7 +128,7 @@ CFTFiberCluster::Calculate()
     Double_t mipLow     = hit->GetMipLow();    
     if (adccorLow>0) {
       m_total_adc_low += adccorLow;
-      m_max_mip_low   += mipLow;
+      m_total_mip_low   += mipLow;
       if (adccorLow > m_max_adc_low) {
 	m_max_adc_low = adccorLow;
 	m_max_segment = hit->SegmentId();
