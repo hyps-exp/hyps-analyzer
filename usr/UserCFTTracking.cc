@@ -674,7 +674,7 @@ ProcessingNormal()
     Double_t dist_product;
     for(Int_t i=0; i<ntCFT-1; i++){
       for(Int_t j=i+1; j<ntCFT; j++){
-        target = Kinematics::VertexPoint3D(track_Dir[i], track_Dir[j], track_Pos[i], track_Pos[j], dist_product);
+        target = Kinematics::VertexPoint3D(track_Pos[i], track_Pos[j], track_Dir[i], track_Dir[j], dist_product);
         event.xtar_product[nVer] = target.X();
         event.ytar_product[nVer] = target.Y();
         event.ztar_product[nVer] = target.Z();
