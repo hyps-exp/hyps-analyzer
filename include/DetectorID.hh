@@ -118,6 +118,12 @@ namespace trigger
 {
   enum ETriggerFlag
   {
+    kTrigAPS,
+    kTrigBPS,
+    kTrigCPS,
+    kTrigDPS,
+    kTrigEPS,
+    kTrigFPS,
     kL1SpillOn,
     kL1SpillOff,
     kSpillOnEnd,
@@ -138,12 +144,6 @@ namespace trigger
     kTrigD,
     kTrigE,
     kTrigF,
-    kTrigAPS,
-    kTrigBPS,
-    kTrigCPS,
-    kTrigDPS,
-    kTrigEPS,
-    kTrigFPS,
     kLevel1A,
     kLevel1B,
     kClockPS,
@@ -155,6 +155,12 @@ namespace trigger
 
   const std::vector<TString> STriggerFlag =
     {
+     "TrigA-PS",
+     "TrigB-PS",
+     "TrigC-PS",
+     "TrigD-PS",
+     "TrigE-PS",
+     "TrigF-PS",
      "L1SpillOn",
      "L1SpillOff",
      "SpillEnd",
@@ -175,12 +181,6 @@ namespace trigger
      "TrigD",
      "TrigE",
      "TrigF",
-     "TrigA-PS",
-     "TrigB-PS",
-     "TrigC-PS",
-     "TrigD-PS",
-     "TrigE-PS",
-     "TrigF-PS",
      "Level1A",
      "Level1B",
      "Clock-PS",
