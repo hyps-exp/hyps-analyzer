@@ -697,7 +697,7 @@ ProcessingNormal()
 	//HF1(TagPLHid +100*(seg+1) +13, t);
 	HF1(TagPLHid +13, t);
 	//if(fabs(t)<5.0) is_hit_time=true;
-	if(fabs(t-7)<5.0) is_hit_time=true;
+	if(fabs(t)<10.0) is_hit_time=true;
 	//if(fabs(t)<300.0) is_hit_time=true;
       }
 
@@ -807,7 +807,7 @@ ProcessingNormal()
 
       }
 
-      hodoAna.TimeCut("TAG-SF",-5,5);
+      hodoAna.TimeCut("TAG-SF",-10,10);
       //hodoAna.TimeCut("TAG-SF",-100,100);
 
       Int_t nc=hodoAna.GetNClusters("TAG-SF");
