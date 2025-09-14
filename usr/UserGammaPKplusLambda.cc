@@ -392,7 +392,7 @@ ProcessingNormal()
       Int_t n_mhit =hit->GetEntries();
       for(Int_t m=0;m<n_mhit;++m){
         Double_t t=hit->GetTUp(m);
-        if(fabs(t-7)<5.0) is_hit_time=true;
+        if(fabs(t)<10.0) is_hit_time=true;
       }
       if(is_hit_time){
         nseg_goodtime++;
@@ -427,7 +427,7 @@ ProcessingNormal()
         if(plane==1) SFBhit.push_back(seg);
       }
     }
-    hodoAna.TimeCut("TAG-SF",-5,5);
+    hodoAna.TimeCut("TAG-SF",-10,10);
     Int_t nc=hodoAna.GetNClusters("TAG-SF");
     Int_t ncl1=0, ncl2=0;
     for(Int_t i=0;i<nc;++i){
@@ -1081,6 +1081,25 @@ ProcessingNormal()
     }
   } // for in ntHyps
 
+  {
+    for(Int_t i=0; i<ntHyps; i++){
+      Double_t MissMass;
+      TVector3 pHyps = HypsMom[i];
+      if(std::isnan(egam)){
+	MissMass = -10;
+      }else{
+	LorentzVector LvGamma(0, 0, egam, egam);
+	LorentzVector LvProton(0., 0., 0., ProtonMass);
+	LorentzVector LvKaon(pHyps, std::sqrt(KaonMass*KaonMass+pHyps.Mag2()));
+	LorentzVector LvX = LvGamma+LvProton-LvKaon;
+
+	MissMass = LvX.Mag();
+      }
+      HF1(95, MissMass);
+      event.MissMass[i] = MissMass;
+    }
+  }
+
   for(Int_t i=0; i<ntHyps; ++i){
     const auto& track = DCAna.GetHypsTrack(i);
     if(!track) continue;
@@ -1151,24 +1170,6 @@ ProcessingNormal()
 
   HF1(1, 22.);
 
-  {
-    for(Int_t i=0; i<ntHyps; i++){
-      Double_t MissMass;
-      TVector3 pHyps = HypsMom[i];
-      if(std::isnan(egam)){
-	MissMass = -10;
-      }else{
-	LorentzVector LvGamma(0, 0, egam, egam);
-	LorentzVector LvProton(0., 0., 0., ProtonMass);
-	LorentzVector LvKaon(pHyps, std::sqrt(KaonMass*KaonMass+pHyps.Mag2()));
-	LorentzVector LvX = LvGamma+LvProton-LvKaon;
-
-	MissMass = LvX.Mag();
-      }
-      HF1(95, MissMass);
-      event.MissMass[i] = MissMass;
-    }
-  }
   
   return true;
 }
