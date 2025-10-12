@@ -561,16 +561,16 @@ ProcessingNormal()
   {
     Int_t nh = hodoAna.GetNHits("RF");
     HF1(RFHid, Double_t(nh));
-    
+
     for(Int_t i=0; i<nh; ++i){
-     
+
       const auto& hit = hodoAna.GetHit("RF", i);
-      if(!hit) continue; 
+      if(!hit) continue;
       Int_t seg = hit->SegmentId();
-      Int_t m_l = 0; 
-      
+      Int_t m_l = 0;
+
       for(Int_t m=0; m < hit->GetEntries(); ++m){
-        Double_t t = hit->GetTUp(m); 
+        Double_t t = hit->GetTUp(m);
         HF1(RFHid +100*(seg+1) +13, t);
 
         if(m_l < MaxDepth){
@@ -579,7 +579,7 @@ ProcessingNormal()
         }
       }
     }
-    
+
   }
 
       ///// Tag-SF
@@ -857,7 +857,7 @@ ProcessingNormal()
 
     double egamf=qnan;
     double egamb=qnan;
-    /* 
+    /*
     const double eparf[3]={1.486,0.03312,-0.0001588};
     const double eparb[3]={1.49797,0.0327588,-0.000152769};
     const double offset_b=0.6421;
@@ -1386,10 +1386,10 @@ ProcessingNormal()
         event.tofctu[seg][m] = ctu;
         event.tofctd[seg][m] = ctd;
         event.tofcmt[seg][m] = cmt;
-        HF1(TOFHid+100*seg+11, tu);      HF1(TOFHid+100*seg+12, td);
-        HF1(TOFHid+100*seg+13, mt);
-        HF1(TOFHid+100*seg+17, ctu);     HF1(TOFHid+100*seg+18, ctd);
-        HF1(TOFHid+100*seg+19, cmt);     HF1(TOFHid+100*seg+20, ctu-ctd);
+        HF1(TOFHid+100*(seg+1)+11, tu);      HF1(TOFHid+100*(seg+1)+12, td);
+        HF1(TOFHid+100*(seg+1)+13, mt);
+        HF1(TOFHid+100*(seg+1)+17, ctu);     HF1(TOFHid+100*(seg+1)+18, ctd);
+        HF1(TOFHid+100*(seg+1)+19, cmt);     HF1(TOFHid+100*(seg+1)+20, ctu-ctd);
         //HF2(TOFHid+100*seg+21, tu, au);  HF2(TOFHid+100*seg+22, td, ad);
         //HF2(TOFHid+100*seg+23, ctu, au); HF2(TOFHid+100*seg+24, ctd, ad);
         HF1(TOFHid+12, cmt);
@@ -1400,8 +1400,8 @@ ProcessingNormal()
         dst.ddeTofSeg[seg]   = ad;
 
         if(m == 0){
-          HF1(TOFHid+100*seg+14, au);    HF1(TOFHid+100*seg+15, ad);
-          HF1(TOFHid+100*seg+16, de);    HF1(TOFHid+13, de);
+          HF1(TOFHid+100*(seg+1)+14, au);    HF1(TOFHid+100*(seg+1)+15, ad);
+          HF1(TOFHid+100*(seg+1)+16, de);    HF1(TOFHid+13, de);
         }
 
         if(de>0.5){
