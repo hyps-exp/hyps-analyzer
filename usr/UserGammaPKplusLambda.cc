@@ -63,6 +63,13 @@ struct Event
   Double_t RF1st;
   Double_t CRF1st;
 
+  Int_t tagsffncl;
+  Double_t tagsffclhitpat[MaxHits];
+  Int_t tagsfbncl;
+  Double_t tagsfbclhitpat[MaxHits];
+  Int_t tagplnhits;
+  Int_t tagplhitpat[MaxHits];
+
   Double_t EGammaf;
   Double_t EGammab;
   Double_t EGamma;
@@ -177,6 +184,11 @@ Event::clear()
   btof  = qnan;
   RF1st = qnan;
   CRF1st = qnan;
+
+  tagsffncl=0;
+  tagsfbncl=0;
+  tagplnhits=0;
+  
   EGammaf = qnan;
   EGammab = qnan;
   EGamma = qnan;
@@ -203,6 +215,9 @@ Event::clear()
     TofSeg[it] = -1;
     tTof[it] = qnan;
     deTof[it] = qnan;
+    tagsffclhitpat[it]=-1.;
+    tagsfbclhitpat[it]=-1.;
+    tagplhitpat[it]=-1;
   }
 
   for(Int_t it=0; it<NumOfLayersSdcIn; ++it){
@@ -395,10 +410,12 @@ ProcessingNormal()
         if(fabs(t)<10.0) is_hit_time=true;
       }
       if(is_hit_time){
+	event.tagplhitpat[nseg_goodtime]=seg;
         nseg_goodtime++;
         PLCand.push_back(seg);
       }
     }
+    event.tagplnhits=nseg_goodtime;
   }
   
   std::vector<double> SFFhit;
@@ -422,10 +439,12 @@ ProcessingNormal()
         Double_t t=hit->GetTUp(m);
         if(fabs(t)<5) is_hit_time=true;
       }
+      /*
       if(is_hit_time){
         if(plane==0) SFFhit.push_back(seg);
         if(plane==1) SFBhit.push_back(seg);
       }
+      */
     }
     hodoAna.TimeCut("TAG-SF",-10,10);
     Int_t nc=hodoAna.GetNClusters("TAG-SF");
@@ -450,6 +469,16 @@ ProcessingNormal()
         if(plane==1) SFBCand.push_back(ms);
       }
     }
+    event.tagsffncl=ncl1;
+    event.tagsfbncl=ncl2;
+    for(int i=0;i<SFFhit.size();i++){
+      event.tagsffclhitpat[i]=SFFhit[i];
+    }
+
+    for(int i=0;i<SFBhit.size();i++){
+      event.tagsfbclhitpat[i]=SFBhit[i];
+    }
+    
   }
   
   std::vector<double> SFFCand_final;
@@ -1485,6 +1514,14 @@ ConfMan::InitializeHistograms()
   tree->Branch("RF1st", &event.RF1st, "RF1st/D");
   tree->Branch("CRF1st", &event.CRF1st, "CRF1st/D");
   tree->Branch("time0",   &event.time0,   "time0/D");
+
+  tree->Branch("tagsffncl", &event.tagsffncl, "tagsffncl/I");
+  tree->Branch("tagsffclhitpat", event.tagsffclhitpat, "tagsffclhitpat[tagsffncl]/D");
+  tree->Branch("tagsfbncl", &event.tagsfbncl, "tagsfbncl/I");
+  tree->Branch("tagsfbclhitpat", event.tagsfbclhitpat, "tagsffclhitpat[tagsfbncl]/D");
+  tree->Branch("tagplnhits", &event.tagplnhits, "tagplnhits/I");
+  tree->Branch("tagplhitpat", event.tagplhitpat, "tagplhitpat[tagplnhits]/I");
+
   tree->Branch("EGammaf",   &event.EGammaf,   "EGammaf/D");
   tree->Branch("EGammab",   &event.EGammab,   "EGammab/D");
   tree->Branch("EGamma",   &event.EGamma,   "EGamma/D");
