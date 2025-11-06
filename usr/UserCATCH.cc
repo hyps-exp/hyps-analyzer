@@ -63,23 +63,31 @@ struct Event
   double dE[NumOfPlaneCFT][MaxDepth] , dE_max[NumOfPlaneCFT][MaxDepth] ;
   Int_t  MaxSegment[NumOfPlaneCFT][MaxDepth];
   Double_t  MaxAdcLow[NumOfPlaneCFT][MaxDepth];
-  Double_t  MaxMipLow[NumOfPlaneCFT][MaxDepth];    
-  
+  Double_t  MaxMipLow[NumOfPlaneCFT][MaxDepth];
+
   int    ntCFT;
   double theta_cft[MaxDepth];
   int    nhit_phi[MaxDepth];
-  int    nhit_uv[MaxDepth];   
+  int    nhit_uv[MaxDepth];
   double Total_dE[MaxDepth],    Total_dE_max[MaxDepth];
   double Total_dEphi[MaxDepth], Total_dEphi_max[MaxDepth];
   double Total_dEuv[MaxDepth],  Total_dEuv_max[MaxDepth];
 
+  Double_t Dir_x[MaxDepth], Dir_y[MaxDepth], Dir_z[MaxDepth];
+  Double_t Pos0_x[MaxDepth], Pos0_y[MaxDepth], Pos0_z[MaxDepth];
+
+  // number{ Pion, Proton, others };
+  Int_t pid[MaxDepth];
+
   // BGO
-  int segBGOt[NumOfSegBGO];// matched to track
-  double energybgo[NumOfSegBGO];
+  int segBGOt[NumOfSegBGO+1];// matched to track
+  double energybgo[NumOfSegBGO+1]; // +1 : for dst (use decay pp scattering.)
+  double pulseheightBGO[NumOfSegBGO+1]; // +1 : for dst (use decay pp scattering.)
 
   // PiID counter
   int segPiIDt[MaxDepth];// matched to track
 
+  Double_t dE_cft[MaxDepth];
 
   void clear();
 };
@@ -102,15 +110,15 @@ Event::clear()
       dE[it][m] = qnan;
       dE_max[it][m] = qnan;
       MaxSegment[it][m] = qnan;
-      MaxAdcLow[it][m] = qnan;  
-      MaxMipLow[it][m] = qnan;  
+      MaxAdcLow[it][m] = qnan;
+      MaxMipLow[it][m] = qnan;
     }
   }
 
-  for(Int_t m=0; m<MaxDepth; ++m){  
+  for(Int_t m=0; m<MaxDepth; ++m){
     theta_cft[m] = qnan;
     nhit_phi[m]  = -1;
-    nhit_uv[m]   = -1;   
+    nhit_uv[m]   = -1;
 
     Total_dE[m]        = qnan;
     Total_dE_max[m]    = qnan;
@@ -118,14 +126,24 @@ Event::clear()
     Total_dEphi_max[m] = qnan;
     Total_dEuv[m]      = qnan;
     Total_dEuv_max[m]  = qnan;
+
+    Dir_x[m] = qnan;
+    Dir_y[m] = qnan;
+    Dir_z[m] = qnan;
+    Pos0_x[m] = qnan;
+    Pos0_y[m] = qnan;
+    Pos0_z[m] = qnan;
+    pid[m]   = qnan;
   }
 
-  for(Int_t m=0; m<NumOfSegBGO; ++m){    
-    segBGOt[m] = -1;
-    energybgo[m] = qnan;
+  for(Int_t m=0; m<NumOfSegBGO+1; ++m){
+    segBGOt[m]         = -1;
+    energybgo[m]       = 0;
+    pulseheightBGO[m] = qnan;
   }
-  for(Int_t m=0; m<MaxDepth; ++m){    
-    segPiIDt[m];
+  for(Int_t m=0; m<MaxDepth; ++m){
+    segPiIDt[m] = qnan;
+    dE_cft[m] = qnan;
   }
 
 }
@@ -310,13 +328,6 @@ ProcessingNormal()
   //static const auto MinTdcTOF = gUser.GetParameter("TdcTOF", 0);
   //static const auto MaxTdcTOF = gUser.GetParameter("TdcTOF", 1);
 
-  double mip[NumOfSegBGO] =
-    { 55, 60, 40, 50, 50, 40, 47, 32, 45, 33,
-      32, 50, 50, 39, 46, 55, 32, 45, 35, 37,
-      33, 36, 55, 15
-    };
-  double mip0=40.;
-
 
 #if HodoHitPos
   static const auto PropVelBH2 = gUser.GetParameter("PropagationBH2");
@@ -363,9 +374,9 @@ ProcessingNormal()
   rawData.DecodeHits("PiID");
   hodoAna.DecodeHits<CFTFiberHit>("CFT");
   hodoAna.DecodeHits<CFTFiberHit>("PiID");
-  
+
   hodoAna.TimeCut("CFT", MinTimeCFT, MaxTimeCFT);
-  hodoAna.AdcCut("CFT",  MinAdcCFT,  MaxAdcCFT);  
+  hodoAna.AdcCut("CFT",  MinAdcCFT,  MaxAdcCFT);
   const auto& CFTClCont = hodoAna.GetClusterContainer("CFT");
   DCAna.DecodeCFTHits(CFTClCont);
   DCAna.TrackSearchCFT();
@@ -397,12 +408,12 @@ ProcessingNormal()
     Double_t theta =tp->GetThetaCFT();
     Int_t xyFlag = tp->GetCFTxyFlag();
     Int_t zFlag  = tp->GetCFTzFlag() ;
-       
+
     ThreeVector Pos0 = tp->GetPos0();
     ThreeVector Dir = tp->GetDir();
     Double_t A=(Dir.x()*Dir.x()+Dir.y()*Dir.y());
 
-    // aka 
+    // aka
     Double_t D=(Dir.x()*Dir.x()+Dir.y()*Dir.y()+Dir.z()*Dir.z());
 
     Double_t phi = -999.;
@@ -433,7 +444,7 @@ ProcessingNormal()
 
     event.nhit_phi[i]   = nh;
     event.nhit_uv[i]    = nhUV;
-    event.theta_cft[i]  = theta;    
+    event.theta_cft[i]  = theta;
     event.Total_dE[i]   = tp->GetTotalSumdE()   ;
     event.Total_dEphi[i]= tp->GetTotalSumdEphi();
     event.Total_dEuv[i] = tp->GetTotalSumdEuv ();
@@ -441,7 +452,14 @@ ProcessingNormal()
     event.Total_dEphi_max[i]= tp->GetTotalMaxdEphi();
     event.Total_dEuv_max[i] = tp->GetTotalMaxdEuv ();
 
-    
+    event.Dir_x[i] = Dir.x();
+    event.Dir_y[i] = Dir.y();
+    event.Dir_z[i] = Dir.z();
+
+    event.Pos0_x[i] = Pos0.x();
+    event.Pos0_y[i] = Pos0.y();
+    event.Pos0_z[i] = Pos0.z();
+
     // straight layer
     for(Int_t ip=0; ip<nh; ip++){
       //CFTFiberCluster *hit = tp->GetHit(ip);
@@ -452,7 +470,7 @@ ProcessingNormal()
       event.dE[layer][i]  = hit->TotalDeltaE();
       event.MaxSegment[layer][i]  = hit->MaxSegment();
       event.MaxAdcLow[layer][i]  = hit->MaxAdcLow();
-      event.MaxMipLow[layer][i]  = hit->MaxMipLow();            
+      event.MaxMipLow[layer][i]  = hit->MaxMipLow();
     }
 
     // spiral layer
@@ -467,29 +485,44 @@ ProcessingNormal()
       event.dE[layer][i]  = hit->TotalDeltaE();
       event.MaxSegment[layer][i]  = hit->MaxSegment();
       event.MaxAdcLow[layer][i]  = hit->MaxAdcLow();
-      event.MaxMipLow[layer][i]  = hit->MaxMipLow();                  
-    }    
+      event.MaxMipLow[layer][i]  = hit->MaxMipLow();
+    }
 
     Int_t segBGOt  = CFTPart->GetTrackBGOSeg(); // BGO  track segment
     event.segBGOt[i] = segBGOt;
-    Double_t bgo_energy = CFTPart->GetBGOEnergy()*mip0/mip[segBGOt];
+    if(event.segBGOt[i] == -1)
+      event.segBGOt[i] = NumOfSegBGO;
+    event.pulseheightBGO[event.segBGOt[i]] = CFTPart->GetBGOPulseHeight();
+    Double_t bgo_energy = CFTPart->GetBGOEnergy(); // no easy calib
     if (segBGOt>=0 && segBGOt < NumOfSegBGO)
       event.energybgo[segBGOt] = bgo_energy;
-    
+    else
+      event.energybgo[NumOfSegBGO] = bgo_energy;
+
     Int_t segPiIDt = CFTPart->GetTrackPiIDSeg();// PiID track segment
     event.segPiIDt[i] = segPiIDt;
-    
+
     double dE = tp->GetTotalMaxdEphi()*sin(theta*TMath::DegToRad())/(double)(nh)
       + tp->GetTotalMaxdEuv()/(double)(nhUV);
+    event.dE_cft[i] = dE;
+
+    Double_t checkmass = CFTPart->GetMass();
+    if(checkmass == 0.9382720)
+      event.pid[i] = 1;
+    else if(checkmass == 0.1395701)
+      event.pid[i] = 0;
+    else
+      event.pid[i] = 2;
 
     if (segPiIDt>=0)
       HF2(11, bgo_energy, dE);
     else
       HF2(10, bgo_energy, dE);
+    HF2(12, bgo_energy, dE);
   }
-  
 
-  
+
+
   return true;
 }
 
@@ -526,8 +559,9 @@ ConfMan::InitializeHistograms()
   HB1(1, "Status", 20, 0., 20.);
 
   HB2(10, "#Delta E - E (w/o PiID)", 100, 0., 200., 100, 0, 10);
-  HB2(11, "#Delta E - E (w/ PiID)", 100, 0., 200., 100, 0, 10);  
-  
+  HB2(11, "#Delta E - E (w/ PiID)", 100, 0., 200., 100, 0, 10);
+  HB2(12, "#Delta E - E", 100, 0., 200., 100, 0, 10);
+
 
   ////////////////////////////////////////////
   //Tree
@@ -543,13 +577,13 @@ ConfMan::InitializeHistograms()
   tree->Branch("theta_cft",    event.theta_cft,    "theta[ntCFT]/D");
   tree->Branch("nhit_phi",     event.nhit_phi,    "nhit_phi[ntCFT]/I");
   tree->Branch("nhit_uv",      event.nhit_uv,     "nhit_uv[ntCFT]/I");
-  
+
   tree->Branch("dE",      event.dE,       Form("dE[%d][%d]/D", NumOfPlaneCFT, MaxDepth ) );
   tree->Branch("dE_max",  event.dE_max,   Form("dE_max[%d][%d]/D", NumOfPlaneCFT, MaxDepth ) );
   tree->Branch("MaxSegment",  event.MaxSegment,   Form("MaxSegment[%d][%d]/I", NumOfPlaneCFT, MaxDepth ) );
   tree->Branch("MaxAdcLow",   event.MaxAdcLow,    Form("MaxAdcLow[%d][%d]/D", NumOfPlaneCFT, MaxDepth ) );
-  tree->Branch("MaxMipLow",   event.MaxMipLow,    Form("MaxMipLow[%d][%d]/D", NumOfPlaneCFT, MaxDepth ) );      
-  
+  tree->Branch("MaxMipLow",   event.MaxMipLow,    Form("MaxMipLow[%d][%d]/D", NumOfPlaneCFT, MaxDepth ) );
+
   tree->Branch("Total_dE",    event.Total_dE,    "totaldE[ntCFT]/D");
   tree->Branch("Total_dEphi", event.Total_dEphi, "totaldEphi[ntCFT]/D");
   tree->Branch("Total_dEuv",  event.Total_dEuv,  "totaldEuv[ntCFT]/D");
@@ -557,18 +591,30 @@ ConfMan::InitializeHistograms()
   tree->Branch("Total_dEphi_max", event.Total_dEphi_max, "totaldEphi_max[ntCFT]/D");
   tree->Branch("Total_dEuv_max",  event.Total_dEuv_max,  "totaldEuv_max[ntCFT]/D");
 
+  tree->Branch("Dir_x",   event.Dir_x,   "Dir_x[ntCFT]/D");
+  tree->Branch("Dir_y",   event.Dir_y,   "Dir_y[ntCFT]/D");
+  tree->Branch("Dir_z",   event.Dir_z,   "Dir_z[ntCFT]/D");
+  tree->Branch("Pos0_x",  event.Pos0_x,  "Pos0_x[ntCFT]/D");
+  tree->Branch("Pos0_y",  event.Pos0_y,  "Pos0_y[ntCFT]/D");
+  tree->Branch("Pos0_z",  event.Pos0_z,  "Pos0_z[ntCFT]/D");
+
+  tree->Branch("pid",  event.pid,  "pid[ntCFT]/I");
+
+
   // BGO
   //tree->Branch("nhBGO",     &event.nhBGO,    "nhBGO/I");
   //tree->Branch("segBGO",    event.segBGO,    "segBGO[nhBGO]/I");
-  tree->Branch("segBGOt",   event.segBGOt,   "segBGOt[24]/I");
+  tree->Branch("segBGOt",   event.segBGOt,   "segBGOt[25]/I");
   //tree->Branch("adcBGO",    event.adcbgo,    "adcbgo[24]/D");
-  tree->Branch("energyBGO", event.energybgo, "energybgo[24]/D");
+  tree->Branch("energyBGO", event.energybgo, "energyBGO[25]/D");
+  tree->Branch("pulseheightBGO",   event.pulseheightBGO,   "pulseheightBGO[25]/D");
   //tree->Branch("tdcBGO",    event.tdcbgo,    "adcbgo[24]/D");
 
   // PiID
   tree->Branch("segPiIDt",   event.segPiIDt,   "segPiIDt[ntCFT]/I");
 
-  
+  tree->Branch("dE_cft",   event.dE_cft,   "dE_cft[ntCFT]/D");
+
   // HPrint();
   return true;
 }
@@ -586,7 +632,7 @@ ConfMan::InitializeParameterFiles()
      InitializeParameter<CFTPosParamMan>("CFTPOS") &&
      InitializeParameter<TemplateFitMan>("BGOTEMP") &&
      InitializeParameter<BGOCalibMan>("BGOCALIB")   &&
-     InitializeParameter<CATCHPidMan>("CATCHPID") 
+     InitializeParameter<CATCHPidMan>("CATCHPID")
      );
 }
 
