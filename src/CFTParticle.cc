@@ -16,13 +16,14 @@ namespace
   const CATCHPidMan&  gCATCHPidMan = CATCHPidMan::GetInstance();
   //const CFTdECorrMan& gCFTdECorMan = CFTdECorrMan::GetInstance();
 
+  const auto qnan = TMath::QuietNaN();
   const auto& gUser = UserParamMan::GetInstance();
-  const auto& U = HodoRawHit::kUp;  
+  const auto& U = HodoRawHit::kUp;
 }
 
 //CFTParticle::CFTParticle(DCLocalTrack *track, RawData *rawData)
 CFTParticle::CFTParticle(const CFTLocalTrack *track, HodoAnalyzer *hodoAna)
-  : m_Track(track),// RawData_(rawData), 
+  : m_Track(track),// RawData_(rawData),
     m_hodoAna(hodoAna),
     m_CFTVtx(-999, -999, -999),
     m_bgo_seg(-1),
@@ -37,8 +38,9 @@ CFTParticle::CFTParticle(const CFTLocalTrack *track, HodoAnalyzer *hodoAna)
     m_dist_xy(0.),
     m_bgo_z_surface(-999.),
     m_bgo_adc(-999),
-    m_bgo_adc_cor(-999)
-{  
+    m_bgo_adc_cor(-999),
+    m_bgo_pulse_height(qnan)
+{
   FindBGO();
   //Calculate();
 }
@@ -96,7 +98,7 @@ Bool_t CFTParticle::FindBGO()
     Int_t Npulse = hit->GetNPulse(U);
     for(Int_t m = 0; m<Npulse; ++m){
       Double_t pulse_time   = hit->GetPulseTime(m);
-      Double_t pulse_de     = hit->DeltaE(m);		
+      Double_t pulse_de     = hit->DeltaE(m);
       if(MinPulseTimeBGO<pulse_time&&pulse_time<MaxPulseTimeBGO){
 	de = pulse_de;
       }
@@ -121,7 +123,7 @@ Bool_t CFTParticle::FindBGO()
     Double_t u=Dir.x(), v=Dir.y();
     Double_t x0=Pos0.x(), y0=Pos0.y();
     Double_t t = (u*(x-x0)+v*(y-y0))/(u*u+v*v);
-    if (t>=0) {	
+    if (t>=0) {
       Double_t z = BGOZPosAtSurface(seg);
       if (fabs(distBGO)<25 && z >= -80 && z <= 330 ) {
 	if (fabs(distBGO) <= fabs(min_distBGO) ) {
@@ -141,6 +143,14 @@ Bool_t CFTParticle::FindBGO()
       if (seg == min_seg) {
 	  m_bgo_seg = seg;
 	  hit->SetTrackJoined();
+	  Int_t Npulse = hit->GetNPulse(U);
+	  Double_t pulse_height;
+	  m_bgo_pulse_height = 0;
+	  for(Int_t m = 0; m<Npulse; ++m){
+	    pulse_height = hit->GetPulseHeight(m);
+	    if(pulse_height > m_bgo_pulse_height)
+	      m_bgo_pulse_height = pulse_height;
+	  }
 	  break;
       }
     }
@@ -176,9 +186,9 @@ Bool_t CFTParticle::Calculate()
   Double_t Total_dEuv_max  = m_Track->GetTotalMaxdEuv ();
   Double_t theta =m_Track->GetThetaCFT();
 
-  m_norm_Total_dE_max = Total_dEphi_max * sin(theta*TMath::DegToRad())/nhit_phi 
+  m_norm_Total_dE_max = Total_dEphi_max * sin(theta*TMath::DegToRad())/nhit_phi
     + Total_dEuv_max/nhit_uv;
-    
+
 
   Int_t xyFlag = m_Track->GetCFTxyFlag();
   Int_t zFlag  = m_Track->GetCFTzFlag() ;
@@ -200,16 +210,16 @@ Bool_t CFTParticle::Calculate()
   for (Int_t i=0; i<nhBGO; i++) {
     const auto& hit = m_hodoAna->GetHit<HodoWaveformHit>("BGO", i);
     Int_t seg = hit->SegmentId();
-    
+
     if (seg == m_bgo_seg) {
       Double_t de = -999.;
-      Double_t pulse_height = -999.;      
+      Double_t pulse_height = -999.;
       Int_t Npulse = hit->GetNPulse(U);
       for(Int_t m = 0; m<Npulse; ++m){
 	Double_t pulse_time   = hit->GetPulseTime(m);
 	if(MinPulseTimeBGO<pulse_time&&pulse_time<MaxPulseTimeBGO){
-	  de = hit->DeltaE(m);		
-	  pulse_height = hit->GetPulseHeight(m);	  
+	  de = hit->DeltaE(m);
+	  pulse_height = hit->GetPulseHeight(m);
 	}
       }
 
@@ -241,7 +251,7 @@ Bool_t CFTParticle::Calculate()
       else
 	m_bgo_energy += de;
       */
-      m_bgo_energy += de;      
+      m_bgo_energy += de;
 
       AddBGOHit(hit);
       max_de = de;
@@ -255,16 +265,16 @@ Bool_t CFTParticle::Calculate()
     const auto& hit = m_hodoAna->GetHit<HodoWaveformHit>("BGO", i);
     Int_t seg = hit->SegmentId();
     Int_t Npulse = hit->GetNPulse(U);
-      
+
     if (seg != m_bgo_seg && Npulse>0 && !hit->IsTrackJoined()) {
       Double_t de = -999.;
-      Double_t pulse_height = -999.;      
+      Double_t pulse_height = -999.;
       Int_t Npulse = hit->GetNPulse(U);
       for(Int_t m = 0; m<Npulse; ++m){
 	Double_t pulse_time   = hit->GetPulseTime(m);
 	if(MinPulseTimeBGO<pulse_time&&pulse_time<MaxPulseTimeBGO){
-	  de = hit->DeltaE(m);		
-	  pulse_height = hit->GetPulseHeight(m);	  
+	  de = hit->DeltaE(m);
+	  pulse_height = hit->GetPulseHeight(m);
 	}
       }
 
@@ -288,7 +298,7 @@ Bool_t CFTParticle::Calculate()
       Double_t u=Dir.x(), v=Dir.y();
       Double_t x0=Pos0.x(), y0=Pos0.y();
       Double_t t = (u*(x-x0)+v*(y-y0))/(u*u+v*v);
-      if (t>=0) {	
+      if (t>=0) {
 	Double_t z = BGOZPosAtSurface(seg);
 	if (fabs(distBGO)<25 && z >= -80 && z <= 330) {
 	  //Double_t adc = (Double_t)hit->GetRawHit()->GetAdc2();
@@ -304,7 +314,7 @@ Bool_t CFTParticle::Calculate()
 	  //else
 	  //m_bgo_energy += de;
 
-	  m_bgo_energy += de;	  
+	  m_bgo_energy += de;
 
 	  AddBGOHit(hit);
 	}
@@ -312,7 +322,7 @@ Bool_t CFTParticle::Calculate()
     }
   }
 
-#if 1  
+#if 1
   // track to PiID segment
   Double_t distPiID=1000.;
   Int_t nhPiID = m_hodoAna->GetNHits("PiID");
@@ -321,10 +331,10 @@ Bool_t CFTParticle::Calculate()
     Int_t seg   = hit->SegmentId();
     Int_t NhitT = hit->GetEntries(U);
     Bool_t hit_flag = false;
-    
+
     for(Int_t m = 0; m<NhitT; ++m){
       Double_t time = hit->GetTUp(m);
-      if(time>-20&&time<50){hit_flag=true;}    
+      if(time>-20&&time<50){hit_flag=true;}
     }
 
     if(!hit_flag)continue;
@@ -335,15 +345,15 @@ Bool_t CFTParticle::Calculate()
     Double_t u=Dir.x(), v=Dir.y();
     Double_t x0=Pos0.x(), y0=Pos0.y();
     Double_t t = (u*(x-x0)+v*(y-y0))/(u*u+v*v);
-    if (t>=0) {	
+    if (t>=0) {
       if (fabs(distPiID)<40) {
 	m_piid_seg = seg;
       }
     }
   }
 #endif
-  
-#if 1    
+
+#if 1
   Int_t nc = m_BGOCont.size();
   for (Int_t i=0; i<nc; i++) {
     const HodoWaveformHit *hitp = m_BGOCont[i];
@@ -357,7 +367,7 @@ Bool_t CFTParticle::Calculate()
 
   //TotalE_ = FiberTotal_E_ + BGO_E_;
 
-#if 1    
+#if 1
   if (nc ==1 || nc>= 3) {
     Double_t delta;
     if (gCATCHPidMan.CheckProton(m_bgo_energy, m_norm_Total_dE_max, delta) && m_piid_seg < 0) {
@@ -369,12 +379,12 @@ Bool_t CFTParticle::Calculate()
     //Hodo2Hit *hitp1 = BGOCont_[0];
     const HodoWaveformHit *hitp1 = m_BGOCont[0];
     Double_t BGO_E1 = 0.;
-    
+
     Int_t Npulse1 = hitp1->GetNPulse(U);
     for(Int_t m = 0; m<Npulse1; ++m){
       Double_t pulse_time   = hitp1->GetPulseTime(m);
       if(-50<pulse_time&&pulse_time<50){
-	BGO_E1 = hitp1->DeltaE(m);		
+	BGO_E1 = hitp1->DeltaE(m);
       }
     }
 
@@ -385,10 +395,10 @@ Bool_t CFTParticle::Calculate()
     for(Int_t m = 0; m<Npulse2; ++m){
       Double_t pulse_time   = hitp2->GetPulseTime(m);
       if(-50<pulse_time&&pulse_time<50){
-	BGO_E2 = hitp2->DeltaE(m);		
+	BGO_E2 = hitp2->DeltaE(m);
       }
     }
-    
+
     Bool_t flag0 = false,  flag1 = false, flag2 = false;
     Double_t delta0, delta1, delta2;
 
@@ -397,18 +407,18 @@ Bool_t CFTParticle::Calculate()
     flag2 = gCATCHPidMan.CheckProton(BGO_E2, m_norm_Total_dE_max, delta2);
 
     if (flag0  && m_piid_seg < 0) {
-      m_Mass = 0.9382720;      
+      m_Mass = 0.9382720;
     } else if (flag1 && flag2  && m_piid_seg < 0) {
-      m_Mass = 0.9382720;      
+      m_Mass = 0.9382720;
       if (fabs(delta1) < fabs(delta2))
 	m_bgo_energy = BGO_E1;
       else
 	m_bgo_energy = BGO_E2;
     } else if (flag1  && m_piid_seg < 0) {
-      m_Mass = 0.9382720;      
+      m_Mass = 0.9382720;
       m_bgo_energy = BGO_E1;
     } else if (flag2  && m_piid_seg < 0) {
-      m_Mass = 0.9382720;      
+      m_Mass = 0.9382720;
       m_bgo_energy = BGO_E2;
       //}  else if (checkPi(m_bgo_energy)){
     } else if (gCATCHPidMan.CheckPi(m_bgo_energy, m_norm_Total_dE_max)) {
@@ -418,18 +428,18 @@ Bool_t CFTParticle::Calculate()
     Double_t delta;
     if (gCATCHPidMan.CheckProton(m_bgo_energy, m_norm_Total_dE_max, delta) && m_piid_seg < 0)
       m_Mass = 0.9382720;
-    else if (gCATCHPidMan.CheckPi(m_bgo_energy, m_norm_Total_dE_max)) 
+    else if (gCATCHPidMan.CheckPi(m_bgo_energy, m_norm_Total_dE_max))
       m_Mass = 0.1395701;
 
   }
-#endif  
+#endif
 
   Double_t dE_uv  = m_Track->GetTotalSumdEuv();
   Double_t dE_phi = m_Track->GetTotalSumdEphi();
 
   //Double_t cft_total_dE_cor = gCFTdECorMan.CorCFTdE(theta, m_cft_Total_dE + m_bgo_energy, dE_uv, dE_phi, m_cft_Total_dE );
 
-  
+
   m_TotalE = m_cft_Total_dE + m_bgo_energy;
   //m_TotalE = cft_total_dE_cor + m_bgo_energy;
 
@@ -458,7 +468,7 @@ void CFTParticle::BGOPos(Int_t seg, Double_t *x, Double_t *y) const
     Double_t n=(seg+1)/3;
     Double_t angle = +22.5+45.*(n-1); // axis change
     xc = (120.+25./2.)*cos(angle*TMath::DegToRad());
-    yc = (120.+25./2.)*sin(angle*TMath::DegToRad());    
+    yc = (120.+25./2.)*sin(angle*TMath::DegToRad());
 #if 1 // new
   }else if(seg==0 || seg==1){
     xc = 100.0 + 25./2.;
@@ -471,7 +481,7 @@ void CFTParticle::BGOPos(Int_t seg, Double_t *x, Double_t *y) const
   }else if(seg==12 || seg==13){
     xc = -100.0 - 25./2.;
     if(seg==12){yc = 30.0/2.;}
-    else if(seg==13){yc = -30.0/2.;}  
+    else if(seg==13){yc = -30.0/2.;}
   }else if(seg==18 || seg==19){
     yc = -100.0 -25./2.;
     if     (seg==18){xc = -30.0/2.;}
@@ -482,45 +492,45 @@ void CFTParticle::BGOPos(Int_t seg, Double_t *x, Double_t *y) const
     y0 = (100. + 25./2.)*sin(angle*TMath::DegToRad());
     if(seg==4){
       xc = x0 - 30./2.*cos(-angle*TMath::DegToRad());
-      yc = y0 - 30./2.*sin(-angle*TMath::DegToRad());	
+      yc = y0 - 30./2.*sin(-angle*TMath::DegToRad());
     }else if(seg==3){
       xc = x0 + 30./2.*cos(-angle*TMath::DegToRad());
-      yc = y0 + 30./2.*sin(-angle*TMath::DegToRad());	
+      yc = y0 + 30./2.*sin(-angle*TMath::DegToRad());
     }
   }else if(seg==9 || seg==10){
     //Double_t angle = -45.;
     Double_t angle = 135.;
     x0 = (100 + 25./2.)*cos(angle*TMath::DegToRad());
-    y0 = (100 + 25./2.)*sin(angle*TMath::DegToRad());      
+    y0 = (100 + 25./2.)*sin(angle*TMath::DegToRad());
     if(seg==10){
       xc = x0 + 30./2.*cos(-angle*TMath::DegToRad());
-      yc = y0 + 30./2.*sin(-angle*TMath::DegToRad());	
+      yc = y0 + 30./2.*sin(-angle*TMath::DegToRad());
     }else if(seg==9){
       xc = x0 - 30./2.*cos(-angle*TMath::DegToRad());
-      yc = y0 - 30./2.*sin(-angle*TMath::DegToRad());	
+      yc = y0 - 30./2.*sin(-angle*TMath::DegToRad());
     }
   }else if(seg==15 || seg==16){
     Double_t angle = -135.;
     x0 = (100. + 25./2.)*cos(angle*TMath::DegToRad());
-    y0 = (100. + 25./2.)*sin(angle*TMath::DegToRad());      
+    y0 = (100. + 25./2.)*sin(angle*TMath::DegToRad());
     if(seg==16){
       xc = x0 - 30./2.*cos(-angle*TMath::DegToRad());
-      yc = y0 - 30./2.*sin(-angle*TMath::DegToRad());	
+      yc = y0 - 30./2.*sin(-angle*TMath::DegToRad());
     }else if(seg==15){
       xc = x0 + 30./2.*cos(-angle*TMath::DegToRad());
-      yc = y0 + 30./2.*sin(-angle*TMath::DegToRad());	
+      yc = y0 + 30./2.*sin(-angle*TMath::DegToRad());
     }
   }else if(seg==21 || seg==22){
     //Double_t angle = 135.;
     Double_t angle = -45.;
     x0 = (100. + 25./2.)*cos(angle*TMath::DegToRad());
-    y0 = (100. + 25./2.)*sin(angle*TMath::DegToRad());      
+    y0 = (100. + 25./2.)*sin(angle*TMath::DegToRad());
     if(seg==22){
       xc = x0 + 30./2.*cos(-angle*TMath::DegToRad());
-      yc = y0 + 30./2.*sin(-angle*TMath::DegToRad());	
+      yc = y0 + 30./2.*sin(-angle*TMath::DegToRad());
     }else if(seg==21){
       xc = x0 - 30./2.*cos(-angle*TMath::DegToRad());
-      yc = y0 - 30./2.*sin(-angle*TMath::DegToRad());	
+      yc = y0 - 30./2.*sin(-angle*TMath::DegToRad());
     }
   }
 #endif
@@ -542,11 +552,11 @@ Double_t CFTParticle::BGOZPosAtSurface(Int_t seg) const
     Double_t n=(seg+1)/3;
     angle = +22.5+45.*(n-1); // axis change
     x1 = RadiusOfBGOSurface2*cos(angle*TMath::DegToRad());
-    y1 = RadiusOfBGOSurface2*sin(angle*TMath::DegToRad());    
+    y1 = RadiusOfBGOSurface2*sin(angle*TMath::DegToRad());
   } else {
     angle = 45.*UnitNum ; // axis change
     x1 = RadiusOfBGOSurface*cos(angle*TMath::DegToRad());
-    y1 = RadiusOfBGOSurface*sin(angle*TMath::DegToRad());    
+    y1 = RadiusOfBGOSurface*sin(angle*TMath::DegToRad());
   }
 
   ThreeVector Pos0 = m_Track->GetPos0();
@@ -583,30 +593,30 @@ void CFTParticle::PiIDPos(Int_t seg, Double_t *x, Double_t *y) const
     Double_t n=(seg+1)/4;
     Double_t angle = +22.5+45.*(n-1); // axis change
     xc = (164.1+tt/2.)*cos(angle*TMath::DegToRad());
-    yc = (164.1+tt/2.)*sin(angle*TMath::DegToRad());    
-  }else if(seg==0 || seg==1 || seg==2){      
+    yc = (164.1+tt/2.)*sin(angle*TMath::DegToRad());
+  }else if(seg==0 || seg==1 || seg==2){
     xc = 159.0 + t/2.;
     if     (seg==0){yc = -1.*w;}
     else if(seg==1){yc =  0.*w;}
-    else if(seg==2){yc =  1.*w;}      
+    else if(seg==2){yc =  1.*w;}
 
   }else if(seg==8 || seg==9 || seg==10){
     yc = 159.0 + t/2.;
     if     (seg==8) {xc = 1.*w;}
     else if(seg==9) {xc = 0.*w;}
-    else if(seg==10){xc =-1.*w;}      
+    else if(seg==10){xc =-1.*w;}
 
   }else if(seg==16 || seg==17 || seg==18){
     xc = -159.0 - t/2.;
     if     (seg==16){yc = 1.*w;}
     else if(seg==17){yc = 0.*w;}
-    else if(seg==18){yc =-1.*w;}      
+    else if(seg==18){yc =-1.*w;}
 
   }else if(seg==24 || seg==25 || seg==26){
     yc = -159.0 - t/2.;
     if     (seg==24) {xc =-1.*w;}
     else if(seg==25) {xc = 0.*w;}
-    else if(seg==26) {xc = 1.*w;}      
+    else if(seg==26) {xc = 1.*w;}
 
   }else if(seg==4 || seg==5 || seg==6){ // Line
     Double_t angle = 45.;
@@ -619,9 +629,9 @@ void CFTParticle::PiIDPos(Int_t seg, Double_t *x, Double_t *y) const
       xc = x0 - 0*cos(45.*TMath::DegToRad());
       yc = y0 + 0*cos(45.*TMath::DegToRad());
     }else if(seg==4){
-      xc = x0 + w*cos(45.*TMath::DegToRad()); 
-      yc = y0 - w*cos(45.*TMath::DegToRad()); 
-    }   
+      xc = x0 + w*cos(45.*TMath::DegToRad());
+      yc = y0 - w*cos(45.*TMath::DegToRad());
+    }
 
   }else if(seg==12 || seg==13 || seg==14){ // Line
       Double_t angle = 135.;
@@ -643,11 +653,11 @@ void CFTParticle::PiIDPos(Int_t seg, Double_t *x, Double_t *y) const
     x0 = (159. +t/2.)*cos(angle*TMath::DegToRad());
     y0 = (159. +t/2.)*sin(angle*TMath::DegToRad());
     if(seg==22){
-      xc = x0 + 1.*w*cos(45.*TMath::DegToRad()); 
-      yc = y0 - 1.*w*cos(45.*TMath::DegToRad()); 
+      xc = x0 + 1.*w*cos(45.*TMath::DegToRad());
+      yc = y0 - 1.*w*cos(45.*TMath::DegToRad());
     }else if(seg==21){
-      xc = x0 + 0.*w*cos(45.*TMath::DegToRad()); 
-      yc = y0 - 0.*w*cos(45.*TMath::DegToRad()); 
+      xc = x0 + 0.*w*cos(45.*TMath::DegToRad());
+      yc = y0 - 0.*w*cos(45.*TMath::DegToRad());
     }else if(seg==20){
       xc = x0 - 1.*w*cos(45.*TMath::DegToRad());
       yc = y0 + 1.*w*cos(45.*TMath::DegToRad());

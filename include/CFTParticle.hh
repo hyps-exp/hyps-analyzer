@@ -27,12 +27,13 @@ public:
 private:
   const CFTLocalTrack* m_Track;
   //RawData*      RawData_;
-  HodoAnalyzer* m_hodoAna; 
+  HodoAnalyzer* m_hodoAna;
   //std::vector <Hodo1Hit *> m_BGOCont;
   std::vector <const HodoWaveformHit *> m_BGOCont;
   std::vector <HodoHit *> m_PiVCont;
   Int_t     m_bgo_seg;
   Double_t  m_bgo_adc, m_bgo_adc_cor;
+  Double_t  m_bgo_pulse_height;
   Int_t     m_piid_seg;
   Double_t  m_bgo_energy;
   Double_t  m_cft_Total_dE;
@@ -71,9 +72,9 @@ public:
   Double_t GetCFTdETotalPhi()     { return m_cft_TotaldE_phi;}
   Double_t GetCFTdETotalUV()      { return m_cft_TotaldE_uv;}
   */
-  const HodoWaveformHit * GetBGOHit(Int_t i); 
+  const HodoWaveformHit * GetBGOHit(Int_t i);
   Int_t NHitPiV() { return m_PiVCont.size();}
-  HodoHit * GetPiVHit(Int_t i); 
+  HodoHit * GetPiVHit(Int_t i);
 
   ThreeVector GetPos0 () { return m_Track->GetPos0(); }
   ThreeVector GetDir () { return m_Track->GetDir(); }
@@ -87,6 +88,7 @@ public:
   Double_t GetNormTotalDEmax() { return m_norm_Total_dE_max;}
   Double_t GetBGOAdc() {return m_bgo_adc;}
   Double_t GetBGOAdcCor() {return m_bgo_adc_cor;}
+  Double_t GetBGOPulseHeight() {return m_bgo_pulse_height;}
 };
 
 
