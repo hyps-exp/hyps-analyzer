@@ -25,25 +25,25 @@ private:
 
 protected:
   Double_t m_total_adc_hi;
-  Double_t m_max_adc_hi;  
+  Double_t m_max_adc_hi;
   Double_t m_total_adc_low;
-  Double_t m_max_adc_low;  
+  Double_t m_max_adc_low;
   Double_t m_total_mip_hi;
-  Double_t m_max_mip_hi;  
+  Double_t m_max_mip_hi;
   Double_t m_total_mip_low;
-  Double_t m_max_mip_low;  
+  Double_t m_max_mip_low;
   Double_t m_total_de_hi;
-  Double_t m_max_de_hi;  
+  Double_t m_max_de_hi;
   Double_t m_total_de_low;
-  Double_t m_max_de_low;  
+  Double_t m_max_de_low;
 
   Double_t m_max_ctime;
   Int_t    m_max_segment;
 
   Double_t m_mean_x;
-  Double_t m_mean_y;  
+  Double_t m_mean_y;
   Double_t m_mean_phi;
-  Double_t m_mean_r;  
+  Double_t m_mean_r;
   Double_t m_mean_z0;
   Double_t m_slope;
 
@@ -62,15 +62,16 @@ protected:
 
   Bool_t   m_belongTrack;
   Int_t    m_xyFitFlag;
-  
+
 public:
   Double_t MaxAdcLow() const { return m_max_adc_low; }
-  Double_t MaxMipLow() const { return m_max_mip_low; }  
-  Int_t    MaxSegment() const { return m_max_segment; }  
+  Double_t MaxAdcHigh() const { return m_max_adc_hi; }
+  Double_t MaxMipLow() const { return m_max_mip_low; }
+  Int_t    MaxSegment() const { return m_max_segment; }
   Double_t MaxDeltaE() const { return m_max_de_low; }
-  Double_t TotalDeltaE() const { return m_total_de_low; }  
+  Double_t TotalDeltaE() const { return m_total_de_low; }
   Double_t MaxDeltaE_Hi() const { return m_max_de_hi; }
-  Double_t TotalDeltaE_Hi() const { return m_total_de_hi; }  
+  Double_t TotalDeltaE_Hi() const { return m_total_de_hi; }
   Double_t MeanX() const  { return m_mean_x; }
   Double_t MeanY() const  { return m_mean_y; }
   Double_t MeanPhi() const  { return m_mean_phi; }
@@ -82,7 +83,7 @@ public:
   void     setFlags() { m_belongTrack = true; }
   void     clearFlags() { m_belongTrack = false; }
   Bool_t   showFlags() const { return m_belongTrack; }
-  
+
   Double_t MeanXCor() const  { return m_mean_x_cor; }
   Double_t MeanYCor() const  { return m_mean_y_cor; }
   Double_t MeanPhiCor() const  { return m_mean_phi_cor; }
@@ -99,12 +100,12 @@ public:
   Double_t    GetZcal (void) const { return m_z_cal; }
   Double_t    GetCalPhi (void) const { return m_phi_cal; }
   Double_t    GetPathLength (void) const { return m_pathlength; }
-  
+
   Double_t    NormalizedTotalDEHiGain (void) const { return m_total_de_hi/m_pathlength; }
   Double_t    NormalizedTotalDELowGain (void) const { return m_total_de_low/m_pathlength; }
   Double_t    NormalizedMaxDEHiGain (void) const { return m_max_de_hi/m_pathlength; }
   Double_t    NormalizedMaxDELowGain (void) const { return m_max_de_low/m_pathlength; }
-  
+
   inline Double_t  GetResidual (void);
   Double_t  GetResidualPhi (void) const { return m_mean_phi - m_phi_cal; }
   Double_t  GetResidualPhiCor (void) const { return m_mean_phi_cor - m_phi_cal; }
@@ -112,7 +113,7 @@ public:
   Double_t  GetResidualZ (void) const { return m_z - m_z_cal; }
   Double_t  GetZIni(void)  const { return m_z; };
   Double_t  GetCorZ(Double_t phi, Double_t mean_z, Double_t theta);
-  
+
 protected:
   void Calculate();
 };
