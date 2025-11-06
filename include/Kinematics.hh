@@ -63,6 +63,7 @@ namespace Kinematics
   Double_t HypTPCBethe(Double_t *x, Double_t *p);
   Int_t HypTPCdEdxPID_temp(Double_t dedx, Double_t poq);
   void HypTPCPID_PDGCode(Int_t charge, Int_t pid, std::vector<Int_t>& pdg);
+  Bool_t CalcDecayPiMom(Double_t p1, Double_t m1, Double_t m2, Double_t m3, Double_t cost, Double_t *momCal);
 }
 
 //_____________________________________________________________________________

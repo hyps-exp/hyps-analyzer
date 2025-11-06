@@ -650,4 +650,39 @@ Beta(Double_t energy,Double_t mormentum)
   return mormentum/energy;
 }
 
+//_____________________________________________________________________________
+Bool_t CalcDecayPiMom(Double_t p1, Double_t m1, Double_t m2, Double_t m3, Double_t cost, Double_t *momCal)
+/*
+  p1 : Lambda mom
+  m1 : Lambda mass
+  m2 : Proton mass
+  m3 : Pion mass
+*/
+{
+  Double_t E1 = sqrt(p1*p1+m1*m1);
+  Double_t A  = (m1*m1+m3*m3-m2*m2)/2.;
+  Double_t hanbetu = (A*p1*cost)*(A*p1*cost)-(E1*E1-p1*p1*cost*cost)*(E1*E1*m3*m3-A*A);
+  if (hanbetu >= 0) {
+    Double_t ans1 = (A*p1*cost+sqrt(hanbetu))/(E1*E1-p1*p1*cost*cost);
+    Double_t ans2 = (A*p1*cost-sqrt(hanbetu))/(E1*E1-p1*p1*cost*cost);
+    if (ans1>=0 && ans2<0) {
+      *momCal = ans1;
+      return true;
+    } else if (ans2>=0 && ans1<0) {
+      *momCal = ans2;
+      return true;
+    } else if (ans1>=0 && ans2>=0) {
+      std::cout << "decayPiMomCal two answers: " << ans1 << ", " << ans2
+		<< std::endl;
+      return false;
+    } else if (ans1<0 && ans2<0) {
+      std::cout << "decayPiMomCal two negative answers: "
+		<< ans1 << ", " << ans2
+		<< std::endl;
+      return false;
+    }
+  }
+  return false;
+}
+
 }
