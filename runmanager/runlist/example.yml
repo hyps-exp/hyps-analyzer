@@ -2,16 +2,18 @@
 # RUN LIST (YAML format)
 #
 # The allowed keys are
-#   queue  <- bsub queue (eg. s, l, etc...)
-#   qmerge <- bsub queue for merging job to command "hadd"
-#   unit   <- dividing event unit
-#   nproc  <- number of process for merging (up to 18)
-#   buff   <- intermediate root files will be placed here if nproc is more than 2
-#             if not set, use the same "root" directory
-#   bin    <- path to executable binary
-#   conf   <- path to conf directory/file from the work directory
-#   data   <- path to data directory/file
-#   root   <- path to the output ROOT output directory/file
+#   queue   <- bsub queue (eg. s, l, etc...)
+#   qmerge  <- bsub queue for merging job to command "hadd"
+#   unit    <- dividing event unit
+#   nproc   <- number of process for merging (up to 18)
+#   buff    <- intermediate root files will be placed here if nproc is more than 2
+#              if not set, use the same "root" directory
+#   bin     <- path to executable binary
+#   conf    <- path to conf directory/file from the work directory
+#   data    <- path to data directory/file
+#   root    <- path to the output ROOT output directory/file
+#   nevents <- number of events to be analyzed.
+#   	       if not set, all recorded events are analyzed
 #
 # Be careful of the indent rule because YAML format is sensitive to it.
 # Some problems will happen if there is no default setting declaration.
@@ -80,3 +82,9 @@ RUN:
     unit:  50000
     bin:   ./bin/KuramaTracking
     data:  ../data/run03800.dat.gz
+
+  hyps: # if 'nevents' used, the specified number of events will be analyzed
+    unit:     25000
+    bin:      ./bin/HypsTracking
+    data:     ./data/run03800.data
+    nevents:  500000  # only 500000 events will be analyzed (in units of 25000)
