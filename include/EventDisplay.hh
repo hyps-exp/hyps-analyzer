@@ -290,6 +290,7 @@ private:
   std::vector<TPolyLine*>    m_SdcInTrack_Catch_xy_cont;
   std::vector<TPolyLine*>    m_SdcInTrack_Catch_zx_cont;
   std::vector<TPolyLine*>    m_SdcInTrack_Catch_zy_cont;
+  std::vector<TPolyMarker3D*> m_vertex3d_cont;
   TCanvas                   *m_canvas_dE_E;
   TH2                       *m_hist_dE_E;
   std::vector<TGraph*>       m_CATCH_dE_E_cont;
@@ -370,6 +371,8 @@ public:
   void ShowHitPiID(Int_t segment);
   void DrawCFTLocalTrack( const CFTLocalTrack *tp, bool flagP, int k_color=0 );
   void DrawCFTLocalTrack_dE_E( CFTParticle *CFTPart, bool flagP );
+  void DrawCFTLocalTrackHyperon(ThreeVector pos1, ThreeVector pos2, bool recoilflag=false, int k_color = 0);
+  void DrawVertex3d(ThreeVector vtx, int id = 1);
 
   void DrawTarget();
   void DrawMissingMomentum(const ThreeVector& mom,

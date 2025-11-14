@@ -4948,6 +4948,88 @@ EventDisplay::DrawCFTLocalTrack_dE_E( CFTParticle *CFTPart, bool flagP )
 }
 
 //______________________________________________________________________________
+void
+EventDisplay::DrawCFTLocalTrackHyperon(ThreeVector pos1, ThreeVector pos2, bool recoilflag, int k_color )
+{
+
+#if CATCH
+
+  {
+    int color = kOrange;
+    if (recoilflag)
+      color = kPink;
+
+    if (k_color==1) {
+      color = kCyan; // K0
+    } else if (k_color == 2) {
+      color = kYellow; // Lambda
+    } else if (k_color == 3) {
+      color = kMagenta; // recoil Lambda
+    } else if (k_color == 4) {
+      color = kOrange; // recoil Lambda (BGO)
+    }
+
+    TPolyLine3D *p = new TPolyLine3D(2);
+    p->SetLineColor(color);
+    p->SetLineWidth(2);
+
+    
+    p->SetPoint( 0, pos1.x(), pos1.y(), pos1.z() );
+    p->SetPoint( 1, pos2.x(), pos2.y(), pos2.z() );
+    m_CFTTrack_cont.push_back(p);
+
+    TPolyLine *lxy = new TPolyLine(2);
+    lxy->SetPoint( 0, pos1.x(), pos1.y() );
+    lxy->SetPoint( 1, pos2.x(), pos2.y() );
+    lxy->SetLineColor(color);
+    lxy->SetLineWidth(1);
+    m_CFTTrack_xy_cont.push_back(lxy);
+
+    TPolyLine *lzx = new TPolyLine(2);
+    lzx->SetPoint( 0, pos1.z(), pos1.x() );
+    lzx->SetPoint( 1, pos2.z(), pos2.x() );
+    lzx->SetLineColor(color);
+    lzx->SetLineWidth(1);
+    m_CFTTrack_zx_cont.push_back(lzx);
+
+    TPolyLine *lzy = new TPolyLine(2);
+    lzy->SetPoint( 0, pos1.z(), pos1.y() );
+    lzy->SetPoint( 1, pos2.z(), pos2.y() );
+    lzy->SetLineColor(color);
+    lzy->SetLineWidth(1);
+    m_CFTTrack_zy_cont.push_back(lzy);
+
+  }
+#endif
+
+}
+
+//______________________________________________________________________________
+void
+EventDisplay::DrawVertex3d(ThreeVector vtx, int id )
+{
+#if CATCH
+
+  {
+    int color = kBlack;
+    if (id==2)
+      color = kRed;
+    else if (id==3)
+      color = kBlue;
+
+    TPolyMarker3D *p = new TPolyMarker3D(1);
+    p->SetMarkerSize(1);
+    p->SetMarkerColor(color);
+    p->SetMarkerStyle(20);
+
+    p->SetPoint( 0, vtx.x(), vtx.y(), vtx.z() );
+    m_vertex3d_cont.push_back(p);
+  }
+#endif
+
+}
+
+//______________________________________________________________________________
 void EventDisplay::ShowHitTagger(const TString& name, Int_t segment, Double_t de) const
 {
   Color_t colorPallet[5] = {kAzure, kTeal, kSpring, kOrange, kPink};
@@ -5371,6 +5453,8 @@ void EventDisplay::ResetCATCH( void )
   del::DeleteObject( m_CFTTrack_zx_cont);
   del::DeleteObject( m_CFTTrack_zy_cont);
 
+  del::DeleteObject( m_vertex3d_cont);
+  
   del::DeleteObject( m_SdcInTrack_Catch_cont);
   del::DeleteObject( m_SdcInTrack_Catch_xy_cont);
   del::DeleteObject( m_SdcInTrack_Catch_zx_cont);
@@ -6133,8 +6217,8 @@ void EventDisplay::UpdateCATCH( void )
   for (int i=0; i<m_CFTTrack_cont.size(); i++)
     m_CFTTrack_cont[i]->Draw();
   
-  //for (int i=0; i<m_vertex3d_cont.size(); i++)
-  //m_vertex3d_cont[i]->Draw();
+  for (int i=0; i<m_vertex3d_cont.size(); i++)
+    m_vertex3d_cont[i]->Draw();
 
   gPad->GetView()->ZoomIn();
   gPad->GetView()->ZoomIn();
