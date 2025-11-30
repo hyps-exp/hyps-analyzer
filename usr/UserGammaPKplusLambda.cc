@@ -1207,7 +1207,7 @@ ProcessingNormal()
 Bool_t
 ProcessingEnd()
 {
-  tree->Fill();
+  if(event.ntHyps>0)tree->Fill();
   return true;
 }
 
