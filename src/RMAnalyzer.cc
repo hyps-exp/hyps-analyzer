@@ -35,8 +35,8 @@ RMAnalyzer::RMAnalyzer( void )
     m_local_event_number( 0 ),
     m_spill_number( 0 )
 {
-  m_data.resize( NumOfPlaneVmeRm + NumOfHulRm);
-  for( std::size_t i=0; i<NumOfPlaneVmeRm + NumOfHulRm; ++i ){
+  m_data.resize( NumOfPlaneVmeRm + NumOfPlaneHulRm);
+  for( std::size_t i=0; i<NumOfPlaneVmeRm + NumOfPlaneHulRm; ++i ){
     m_data[i].resize( nType );
     for( std::size_t j=0; j<nType; ++j ){
       m_data[i][j].resize( nData );
@@ -53,7 +53,7 @@ RMAnalyzer::~RMAnalyzer( void )
 void
 RMAnalyzer::Clear( void )
 {
-  for( std::size_t i=0; i<NumOfPlaneVmeRm + NumOfHulRm; ++i ){
+  for( std::size_t i=0; i<NumOfPlaneVmeRm + NumOfPlaneHulRm; ++i ){
     for( std::size_t j=0; j<nType; ++j ){
       for( std::size_t k=0; k<nData; ++k ){
   	m_data[i][j][k] = 0;
@@ -87,7 +87,7 @@ RMAnalyzer::Decode( void )
   }// for(plane)
 
   // HulRm
-  for( int plane=0; plane<NumOfHulRm; ++plane ){
+  for( int plane=0; plane<NumOfPlaneHulRm; ++plane ){
     for( int data=0; data<nData-2; ++data ){
       static const int device_id = gUnpacker.get_device_id("HUL-RM");
       int nhit = gUnpacker.get_entries( device_id, plane, 0, 0, data );

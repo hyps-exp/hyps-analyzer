@@ -60,7 +60,7 @@ struct Event
   Int_t vme_datasize[2 + 1]; // vme01, vme02
   Int_t optlink_datasize[1 + 1];
   Int_t hul_datasize[203 + 1];
-  Int_t vea0c_datasize[NumOfPlaneVMEEASIROC + 1];
+  Int_t vea0c_datasize[NumOfPlaneVmeEasiroc + 1];
 
   // trigger rate
   Int_t  L1req;
@@ -68,7 +68,7 @@ struct Event
   Int_t  realtime;
   Int_t  livetime;
   // scaler
-  Int_t scaler[NumOfScaler][NumOfSegScaler];
+  Int_t scaler[NumOfPlaneScaler][NumOfSegScaler];
 
   Double_t unixtime;
   Int_t clock10M;
@@ -99,13 +99,13 @@ Event::clear()
   for(Int_t i=0; i<203 + 1; ++i){
     hul_datasize[i] = 0;
   }
-  for(Int_t i=0; i<NumOfPlaneVMEEASIROC + 1; ++i){
+  for(Int_t i=0; i<NumOfPlaneVmeEasiroc + 1; ++i){
     vea0c_datasize[i] = 0;
   }
   unixtime      = -0.999;
   clock10M      = 0;
 
-  for(Int_t i=0; i<NumOfScaler; ++i){
+  for(Int_t i=0; i<NumOfPlaneScaler; ++i){
     for(Int_t it=0; it<NumOfSegScaler; ++it){
       scaler[i][it]=0;
     }
@@ -140,7 +140,7 @@ struct Dst
   Double_t unixtime;
 
   // scaler
-  Int_t scaler[NumOfScaler][NumOfSegScaler];
+  Int_t scaler[NumOfPlaneScaler][NumOfSegScaler];
 
   void clear();
 };
@@ -163,7 +163,7 @@ Dst::clear()
   vea0c_datasize = 0;
   unixtime      = -0.999;
 
-  for(Int_t i=0; i<NumOfScaler; ++i){
+  for(Int_t i=0; i<NumOfPlaneScaler; ++i){
     for(Int_t it=0; it<NumOfSegScaler; ++it){
       scaler[i][it]=0;
     }
@@ -400,7 +400,7 @@ ProcessingNormal()
   //   }
   // }
 
-  // if(trigger_flag[trigger::kSpillOnEnd] || trigger_flag[trigger::kSpillOffEnd]){
+  // if(trigger_flag[kTriggerFlag::SpillOnEnd] || trigger_flag[kTriggerFlag::SpillOffEnd]){
   //   // std::cout << "L1-Acc: " << gScaler.Get("L1-Acc") << std::endl;
   //   return true;
   // }
@@ -453,7 +453,7 @@ ConfMan::InitializeHistograms()
   for(Int_t i=0; i<203+1; ++i){
     HB1(DAQHid+2000+i, Form("hul%d datasize", i), 2500, 0., 2500.);
   }
-  for(Int_t i=0; i<NumOfPlaneVMEEASIROC+1; ++i){
+  for(Int_t i=0; i<NumOfPlaneVmeEasiroc+1; ++i){
     HB1(DAQHid+4000+i, Form("Veasiroc%d datasize", i), 2500, 0., 2500.);
     // std::cout << "Hist for Veasiroc" << i << " was created" << std::endl;
   }
@@ -477,7 +477,7 @@ ConfMan::InitializeHistograms()
   tree->Branch("vme_datasize",     &event.vme_datasize,     Form("vme_datasize[%d]/I", 2 + 1));
   tree->Branch("optlink_datasize",     &event.optlink_datasize,     Form("optlink_datasize[%d]/I", 1 + 1));
   tree->Branch("hul_datasize",     &event.hul_datasize,     Form("hul_datasize[%d]/I", 203 + 1));
-  tree->Branch("vea0c_datasize",     &event.vea0c_datasize,     Form("vea0c_datasize[%d]/I", NumOfPlaneVMEEASIROC + 1));
+  tree->Branch("vea0c_datasize",     &event.vea0c_datasize,     Form("vea0c_datasize[%d]/I", NumOfPlaneVmeEasiroc + 1));
   tree->Branch("L1req",     &event.L1req,     "L1req/I");
   tree->Branch("L1acc",     &event.L1acc,    "L1acc/I");
   tree->Branch("realtime",     &event.realtime,     "realtime/I");
@@ -489,7 +489,7 @@ ConfMan::InitializeHistograms()
   tree->Branch("trigpat",    event.trigpat,   Form("trigpat[%d]/I", NumOfSegTrig));
   tree->Branch("trigflag",   event.trigflag,  Form("trigflag[%d]/I", NumOfSegTrig));
   //Scaler
-  tree->Branch("scaler",   event.scaler,  Form("scaler[%d][%d]/I", NumOfScaler, NumOfSegScaler));
+  tree->Branch("scaler",   event.scaler,  Form("scaler[%d][%d]/I", NumOfPlaneScaler, NumOfSegScaler));
 
   ////////////////////////////////////////////
   //Dst
@@ -509,7 +509,7 @@ ConfMan::InitializeHistograms()
 
   daq->Branch("trigpat",    dst.trigpat,   Form("trigpat[%d]/I", NumOfSegTrig));
   daq->Branch("trigflag",   dst.trigflag,  Form("trigflag[%d]/I", NumOfSegTrig));
-  daq->Branch("scaler",   dst.scaler,  Form("scaler[%d][%d]/I", NumOfScaler, NumOfSegScaler));
+  daq->Branch("scaler",   dst.scaler,  Form("scaler[%d][%d]/I", NumOfPlaneScaler, NumOfSegScaler));
 
   HPrint();
   return true;

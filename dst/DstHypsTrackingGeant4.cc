@@ -1,5 +1,14 @@
 // -*- C++ -*-
 
+/************************************************\
+ *             !!! CAUTION !!!                  *
+ *                                              *
+ *    Although the code can be compiled,        *
+ *    you MUST update variables very carefully  *
+ *    because almost them is for S-2S.          *
+ *                                              *
+\************************************************/
+
 #include <iomanip>
 #include <iostream>
 #include <cstdlib>
@@ -28,8 +37,8 @@
 #include <TRandom.h>
 #include "DebugCounter.hh"
 
-#define TotCut      0
-#define UseTOF  0
+#define TotCut 0
+#define UseTOF 0
 
 namespace
 {
@@ -379,11 +388,10 @@ dst::DstRead(Int_t ievent)
 {
   static const std::string func_name("["+class_name+"::"+__func__+"]");
 
+  static const auto MinTotSDC0 = gUser.GetParameter("MinTotSDC0");
   static const auto MinTotSDC1 = gUser.GetParameter("MinTotSDC1");
   static const auto MinTotSDC2 = gUser.GetParameter("MinTotSDC2");
   static const auto MinTotSDC3 = gUser.GetParameter("MinTotSDC3");
-  static const auto MinTotSDC4 = gUser.GetParameter("MinTotSDC4");
-  static const auto MinTotSDC5 = gUser.GetParameter("MinTotSDC5");
   static const auto MaxMultiHitSdcIn  = gUser.GetParameter("MaxMultiHitSdcIn");
   static const auto MaxMultiHitSdcOut = gUser.GetParameter("MaxMultiHitSdcOut");
 
@@ -1006,6 +1014,13 @@ ConfMan::InitializeHistograms()
   //   HB1(100*i+33, title33, 200, -2.0, 2.0);
   // }
 
+  const Int_t    NbinSDC0DT =  240;
+  const Double_t MinSDC0DT  = -30.;
+  const Double_t MaxSDC0DT  = 170.;
+  const Int_t    NbinSDC0DL =   55;
+  const Double_t MinSDC0DL  = -0.5;
+  const Double_t MaxSDC0DL  =  5.0;
+
   const Int_t    NbinSDC1DT =  240;
   const Double_t MinSDC1DT  = -30.;
   const Double_t MaxSDC1DT  = 170.;
@@ -1027,27 +1042,13 @@ ConfMan::InitializeHistograms()
   const Double_t MinSDC3DL  = -2.0;
   const Double_t MaxSDC3DL  =  7.0;
 
-  const Int_t    NbinSDC4DT =  360;
-  const Double_t MinSDC4DT  = -50.;
-  const Double_t MaxSDC4DT  = 250.;
-  const Int_t    NbinSDC4DL =   90;
-  const Double_t MinSDC4DL  = -2.0;
-  const Double_t MaxSDC4DL  =  7.0;
-
-  const Int_t    NbinSDC5DT =  360;
-  const Double_t MinSDC5DT  = -50.;
-  const Double_t MaxSDC5DT  = 250.;
-  const Int_t    NbinSDC5DL =   90;
-  const Double_t MinSDC5DL  = -2.0;
-  const Double_t MaxSDC5DL  =  7.0;
-
   const Int_t NbinSdcInRes   =  200;
   const Double_t MinSdcInRes = -1.;
   const Double_t MaxSdcInRes =  1.;
 
-  const Int_t NbinSdcOutRes   = 1000;
-  const Double_t MinSdcOutRes =  -5.;
-  const Double_t MaxSdcOutRes =   5.;
+  const Int_t    NbinSdcOutRes = 1000;
+  const Double_t MinSdcOutRes  =  -5.;
+  const Double_t MaxSdcOutRes  =   5.;
 
   HB1(1, "Status", 30, 0., 30.);
 
@@ -1115,12 +1116,21 @@ ConfMan::InitializeHistograms()
   HB1(94, "MassSqr", 600, -0.4, 1.4);
 
   // SdcInTracking
-  for( Int_t i = 1; i <= NumOfLayersSdcIn; ++i ){
+  for (Int_t i = 1; i <= NumOfLayersSdcIn; ++i) {
     TString tag;
     Int_t nwire = 0, nbindt = 1, nbindl = 1;
     Double_t mindt = 0., maxdt = 1., mindl = 0., maxdl = 1.;
     Int_t l = i + PlMinSdcIn - 1;
-    if( i <= NumOfLayersSDC1 ){
+    if (i <= NumOfLayersSDC0) {
+      tag    = "SDC0";
+      nwire  = MaxWireSDC0;
+      nbindt = NbinSDC0DT;
+      mindt  = MinSDC0DT;
+      maxdt  = MaxSDC0DT;
+      nbindl = NbinSDC0DL;
+      mindl  = MinSDC0DL;
+      maxdl  = MaxSDC0DL;
+    } else {
       tag    = "SDC1";
       nwire  = MaxWireSDC1;
       nbindt = NbinSDC1DT;
@@ -1129,15 +1139,6 @@ ConfMan::InitializeHistograms()
       nbindl = NbinSDC1DL;
       mindl  = MinSDC1DL;
       maxdl  = MaxSDC1DL;
-    }else{
-      tag    = "SDC2";
-      nwire  = MaxWireSDC2;
-      nbindt = NbinSDC2DT;
-      mindt  = MinSDC2DT;
-      maxdt  = MaxSDC2DT;
-      nbindl = NbinSDC2DL;
-      mindl  = MinSDC2DL;
-      maxdl  = MaxSDC2DL;
     }
     TString title1 = Form("HitPat SdcIn%2d", i);
     TString title2 = Form("DriftTime SdcIn%d", i);
@@ -1172,12 +1173,21 @@ ConfMan::InitializeHistograms()
   }
 
   // SdcOutTracking
-  for( Int_t i = 1; i <= NumOfLayersSdcOut; ++i ){
+  for (Int_t i = 1; i <= NumOfLayersSdcOut; ++i) {
     TString tag;
     Int_t nwire = 0, nbindt = 1, nbindl = 1;
     Double_t mindt = 0., maxdt = 1., mindl = 0., maxdl = 1.;
     Int_t l = i + PlMinSdcOut - 1;
-    if( i <= NumOfLayersSDC3 ){
+    if (i <= NumOfLayersSDC2) {
+      tag    = "SDC2";
+      nwire  = MaxWireSDC2;
+      nbindt = NbinSDC2DT;
+      mindt  = MinSDC2DT;
+      maxdt  = MaxSDC2DT;
+      nbindl = NbinSDC2DL;
+      mindl  = MinSDC2DL;
+      maxdl  = MaxSDC2DL;
+    } else {
       tag    = "SDC3";
       nwire  = MaxWireSDC3;
       nbindt = NbinSDC3DT;
@@ -1186,24 +1196,6 @@ ConfMan::InitializeHistograms()
       nbindl = NbinSDC3DL;
       mindl  = MinSDC3DL;
       maxdl  = MaxSDC3DL;
-    }else if( i <= NumOfLayersSDC3 + NumOfLayersSDC4 ){
-      tag    = "SDC4";
-      nwire  = MaxWireSDC4;
-      nbindt = NbinSDC4DT;
-      mindt  = MinSDC4DT;
-      maxdt  = MaxSDC4DT;
-      nbindl = NbinSDC4DL;
-      mindl  = MinSDC4DL;
-      maxdl  = MaxSDC4DL;
-    }else{
-      tag    = "SDC5";
-      nwire  = (i==11 || i==12) ? MaxWireSDC5X : MaxWireSDC5Y;
-      nbindt = NbinSDC5DT;
-      mindt  = MinSDC5DT;
-      maxdt  = MaxSDC5DT;
-      nbindl = NbinSDC5DL;
-      mindl  = MinSDC5DL;
-      maxdl  = MaxSDC5DL;
     }
     TString title1 = Form("HitPat SdcOut%2d", i);
     TString title2 = Form("DriftTime SdcOut%d", i);
@@ -1240,12 +1232,6 @@ ConfMan::InitializeHistograms()
 
   // TOF in SdcOut/HypsTracking
   for( Int_t i = 1; i <= NumOfLayersTOF; ++i ){
-  const Int_t    NbinSDC4DT =  360;
-  const Double_t MinSDC4DT  = -50.;
-  const Double_t MaxSDC4DT  = 250.;
-  const Int_t    NbinSDC4DL =   90;
-  const Double_t MinSDC4DL  = -2.0;
-  const Double_t MaxSDC4DL  =  7.0;
     Int_t l = i + PlMinTOF - 1;
     TString title1 = Form("HitPat Tof%d", i);
     TString title2 = Form("DriftTime Tof%d", i);

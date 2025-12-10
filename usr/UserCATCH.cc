@@ -60,10 +60,10 @@ struct Event
   Int_t trigpat[NumOfSegTrig];
   Int_t trigflag[NumOfSegTrig];
 
-  double dE[NumOfPlaneCFT][MaxDepth] , dE_max[NumOfPlaneCFT][MaxDepth] ;
-  Int_t  MaxSegment[NumOfPlaneCFT][MaxDepth];
-  Double_t  MaxAdcLow[NumOfPlaneCFT][MaxDepth];
-  Double_t  MaxMipLow[NumOfPlaneCFT][MaxDepth];
+  double dE[NumOfLayersCFT][MaxDepth] , dE_max[NumOfLayersCFT][MaxDepth] ;
+  Int_t  MaxSegment[NumOfLayersCFT][MaxDepth];
+  Double_t  MaxAdcLow[NumOfLayersCFT][MaxDepth];
+  Double_t  MaxMipLow[NumOfLayersCFT][MaxDepth];
 
   int    ntCFT;
   double theta_cft[MaxDepth];
@@ -105,7 +105,7 @@ Event::clear()
     trigflag[it] = -1;
   }
 
-  for(Int_t it=0; it<NumOfPlaneCFT; ++it){
+  for(Int_t it=0; it<NumOfLayersCFT; ++it){
     for(Int_t m=0; m<MaxDepth; ++m){
       dE[it][m] = qnan;
       dE_max[it][m] = qnan;
@@ -365,8 +365,8 @@ ProcessingNormal()
     }
   }
 
-  if(trigger_flag[trigger::kSpillOnEnd] || trigger_flag[trigger::kSpillOffEnd])
-    return true;
+  // if(trigger_flag[kTriggerFlag::SpillOnEnd] || trigger_flag[kTriggerFlag::SpillOffEnd])
+  //   return true;
 
   HF1(1, 1);
 
@@ -578,11 +578,11 @@ ConfMan::InitializeHistograms()
   tree->Branch("nhit_phi",     event.nhit_phi,    "nhit_phi[ntCFT]/I");
   tree->Branch("nhit_uv",      event.nhit_uv,     "nhit_uv[ntCFT]/I");
 
-  tree->Branch("dE",      event.dE,       Form("dE[%d][%d]/D", NumOfPlaneCFT, MaxDepth ) );
-  tree->Branch("dE_max",  event.dE_max,   Form("dE_max[%d][%d]/D", NumOfPlaneCFT, MaxDepth ) );
-  tree->Branch("MaxSegment",  event.MaxSegment,   Form("MaxSegment[%d][%d]/I", NumOfPlaneCFT, MaxDepth ) );
-  tree->Branch("MaxAdcLow",   event.MaxAdcLow,    Form("MaxAdcLow[%d][%d]/D", NumOfPlaneCFT, MaxDepth ) );
-  tree->Branch("MaxMipLow",   event.MaxMipLow,    Form("MaxMipLow[%d][%d]/D", NumOfPlaneCFT, MaxDepth ) );
+  tree->Branch("dE",      event.dE,       Form("dE[%d][%d]/D", NumOfLayersCFT, MaxDepth ) );
+  tree->Branch("dE_max",  event.dE_max,   Form("dE_max[%d][%d]/D", NumOfLayersCFT, MaxDepth ) );
+  tree->Branch("MaxSegment",  event.MaxSegment,   Form("MaxSegment[%d][%d]/I", NumOfLayersCFT, MaxDepth ) );
+  tree->Branch("MaxAdcLow",   event.MaxAdcLow,    Form("MaxAdcLow[%d][%d]/D", NumOfLayersCFT, MaxDepth ) );
+  tree->Branch("MaxMipLow",   event.MaxMipLow,    Form("MaxMipLow[%d][%d]/D", NumOfLayersCFT, MaxDepth ) );
 
   tree->Branch("Total_dE",    event.Total_dE,    "totaldE[ntCFT]/D");
   tree->Branch("Total_dEphi", event.Total_dEphi, "totaldEphi[ntCFT]/D");

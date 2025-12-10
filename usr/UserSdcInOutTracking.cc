@@ -198,8 +198,8 @@ ProcessingNormal()
 
   HF1(1, 0.);
 
-  if(trigger_flag[trigger::kSpillOnEnd] || trigger_flag[trigger::kSpillOffEnd])
-    return true;
+  // if(trigger_flag[kTriggeerFlag::SpillOnEnd] || trigger_flag[kTriggerFlag::SpillOffEnd])
+  //   return true;
 
   HF1(1, 1.);
 
@@ -257,12 +257,12 @@ ProcessingNormal()
 	Int_t tot1st = -1;
         Double_t dt1st = 1e10;
 	for(Int_t k=0; k<nhdt; k++){
-	  
+
 	  Double_t dt = hit->GetDriftTime(k);
           if(dt < dt1st) dt1st = dt;
 	  HF1(100*layer+3, dt);
 	  //HF1(10000*layer+1000+Int_t(wire), dt);
-	  
+
 	  Double_t tot = hit->GetTot(k);
 	  HF1(100*layer+5, tot);
 	  if(tot > tot1st){
@@ -306,7 +306,7 @@ ProcessingNormal()
     ntSdcIn = MaxHits;
   }
   if(ntSdcIn<1) return true;
-  
+
   /* //sdcin original
 
   */
@@ -789,7 +789,3 @@ ConfMan::FinalizeProcess()
 {
   return true;
 }
-
-
-
-

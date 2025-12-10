@@ -521,8 +521,8 @@ ProcessingNormal()
     }
   }
 
-  if(trigger_flag[trigger::kSpillOnEnd] || trigger_flag[trigger::kSpillOffEnd])
-    return true;
+  // if(trigger_flag[kTriggerFlag::SpillOnEnd] || trigger_flag[kTriggerFlag::SpillOffEnd])
+  //   return true;
 
   HF1(1, 1);
 

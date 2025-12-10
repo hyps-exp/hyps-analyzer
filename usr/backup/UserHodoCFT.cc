@@ -109,29 +109,29 @@ struct Event
   int trigpat[NumOfSegTrig];
   int trigflag[NumOfSegTrig];
 
-  int    AdcHi[NumOfPlaneCFT][NumOfSegCFT_PHI4];
-  int    AdcLow[NumOfPlaneCFT][NumOfSegCFT_PHI4];
-  int    AdcHiCor[NumOfPlaneCFT][NumOfSegCFT_PHI4];
-  int    AdcLowCor[NumOfPlaneCFT][NumOfSegCFT_PHI4];
-  int    Tdc[NumOfPlaneCFT][NumOfSegCFT_PHI4];
-  double Time[NumOfPlaneCFT][NumOfSegCFT_PHI4];
-  double CTime[NumOfPlaneCFT][NumOfSegCFT_PHI4];
-  double tot[NumOfPlaneCFT][NumOfSegCFT_PHI4];
+  int    AdcHi[NumOfLayersCFT][NumOfSegCFT_PHI4];
+  int    AdcLow[NumOfLayersCFT][NumOfSegCFT_PHI4];
+  int    AdcHiCor[NumOfLayersCFT][NumOfSegCFT_PHI4];
+  int    AdcLowCor[NumOfLayersCFT][NumOfSegCFT_PHI4];
+  int    Tdc[NumOfLayersCFT][NumOfSegCFT_PHI4];
+  double Time[NumOfLayersCFT][NumOfSegCFT_PHI4];
+  double CTime[NumOfLayersCFT][NumOfSegCFT_PHI4];
+  double tot[NumOfLayersCFT][NumOfSegCFT_PHI4];
 
   //Fiber1-4
-  int    FiberHits[NumOfPlaneCFT];
-  double    FiberSeg [NumOfPlaneCFT][MaxHits2];
-  double FiberTime[NumOfPlaneCFT][MaxHits2];
-  double FiberEdep[NumOfPlaneCFT][MaxHits2];
-  int    FiberPID [NumOfPlaneCFT][MaxHits2];
+  int    FiberHits[NumOfLayersCFT];
+  double    FiberSeg [NumOfLayersCFT][MaxHits2];
+  double FiberTime[NumOfLayersCFT][MaxHits2];
+  double FiberEdep[NumOfLayersCFT][MaxHits2];
+  int    FiberPID [NumOfLayersCFT][MaxHits2];
 
-  double fClEdepForScat[NumOfPlaneCFT];
-  double fClEdepNormForScat[NumOfPlaneCFT];
-  double fClPathLengthForScat[NumOfPlaneCFT];
+  double fClEdepForScat[NumOfLayersCFT];
+  double fClEdepNormForScat[NumOfLayersCFT];
+  double fClPathLengthForScat[NumOfLayersCFT];
 
-  double fClEdepForPi[NumOfPlaneCFT];
-  double fClEdepNormForPi[NumOfPlaneCFT];
-  double fClPathLengthForPi[NumOfPlaneCFT];
+  double fClEdepForPi[NumOfLayersCFT];
+  double fClEdepNormForPi[NumOfLayersCFT];
+  double fClPathLengthForPi[NumOfLayersCFT];
 
 
 };
@@ -287,11 +287,11 @@ EventHodoCFT::ProcessingNormal( void )
   HF1(1, 5);
 
   HF1(1, 6);
-  
-  
-  // CFT Raw hit 
+
+
+  // CFT Raw hit
  {
-    for (int layer=0; layer<NumOfPlaneCFT; layer++) {
+    for (int layer=0; layer<NumOfLayersCFT; layer++) {
       const HodoRHitContainer &cont=rawData->GetCFTRawHC(layer);
       int nh = cont.size();
       for (int i=0; i<nh; i++){
@@ -300,7 +300,7 @@ EventHodoCFT::ProcessingNormal( void )
 
         int A_high=hit->GetAdcUp(), A_low=hit->GetAdcDown();
 
-        // High Gain ADC  
+        // High Gain ADC
         int histId = ((layer+1)*1000+seg)*10+1;
         //HF1( histId, double(A_high) );
 
@@ -309,7 +309,7 @@ EventHodoCFT::ProcessingNormal( void )
         histId = 100 + 10 * layer + 2;
         HF2( histId, seg, double(A_high) );
 
-        // Low Gain ADC   
+        // Low Gain ADC
         histId = ((layer+1)*1000+seg)*10+2;
         //HF1( histId, double(A_low) );
 
@@ -326,7 +326,7 @@ EventHodoCFT::ProcessingNormal( void )
         bool flag_tdc = false;
         for (int j=0; j<nhit1; j++) {
           int T_lead=hit->GetTdc1(j);
-          // Leading TDC   
+          // Leading TDC
           histId = ((layer+1)*1000+seg)*10+3;
           //HF1( histId, double(T_lead) );
 
@@ -342,7 +342,7 @@ EventHodoCFT::ProcessingNormal( void )
         }
         event.Tdc[layer][seg] = tdc_1st;
 
-	// Trailing TDC  
+	// Trailing TDC
         int nhit2 = hit->SizeTdc2();
         for (int j=0; j<nhit2; j++) {
           int T_trail=hit->GetTdcDown(j);
@@ -350,7 +350,7 @@ EventHodoCFT::ProcessingNormal( void )
           //HF1( histId, double(T_trail) );
         }
 
-        // ADC HG w/ TDC  
+        // ADC HG w/ TDC
         if (flag_tdc) {
           histId = ((layer+1)*1000+seg)*10+8;
           //HF1( histId, double(A_high));
@@ -363,7 +363,7 @@ EventHodoCFT::ProcessingNormal( void )
 
         }
 
-        // ADC HG % Leading TDC   
+        // ADC HG % Leading TDC
         histId = ((layer+1)*1000+seg)*10+5;
         //HF2( histId, double(A_high), double(tdc_1st) );
 
@@ -387,11 +387,11 @@ EventHodoCFT::ProcessingNormal( void )
   }
 
 
-  // FiberHitCFT    
+  // FiberHitCFT
   hodoAna->DecodeCFTHits(rawData);
-  for(int p = 0; p<NumOfPlaneCFT; ++p){
+  for(int p = 0; p<NumOfLayersCFT; ++p){
 
-    int nhit = hodoAna->GetNHitsCFT(p);          
+    int nhit = hodoAna->GetNHitsCFT(p);
 
     int nhit_t = 0;
     for(int i = 0; i<nhit; ++i){
@@ -399,7 +399,7 @@ EventHodoCFT::ProcessingNormal( void )
       int mhit = hit->GetNumOfHit();
       int seg = hit->PairId();
       double adcHi  = hit->GetAdcHi();
-      double adcLow = hit->GetAdcLow();  
+      double adcLow = hit->GetAdcLow();
 
       double time0 = -999;
       double ctime0 = -999;
@@ -433,13 +433,13 @@ EventHodoCFT::ProcessingNormal( void )
       }
 
     }//nhit
-  }  
+  }
 
-  for ( int l = 0; l < NumOfPlaneCFT; ++l ) {
-    
-    int ncl = hodoAna->GetNClustersCFT( l );    
+  for ( int l = 0; l < NumOfLayersCFT; ++l ) {
+
+    int ncl = hodoAna->GetNClustersCFT( l );
     for ( int j = 0; j < ncl; ++j ) {
-            
+
       FiberCluster* cl = hodoAna->GetClusterCFT( l, j );
       double mean_seg = cl->MeanSeg();
       double max_seg     = cl->MaxSeg();
@@ -450,16 +450,16 @@ EventHodoCFT::ProcessingNormal( void )
       double max_adcHi  = cl->MaxAdcHi();
       double max_adcLow  = cl->MaxAdcLow();
       double max_mipLow  = cl->MaxMIPLow();
-      double max_dELow   = cl->MaxdELow(); 
+      double max_dELow   = cl->MaxdELow();
 
       int seg = (int)max_seg;
 
       if (time>-10 && time<10) {
 	int histId = ((l+1)*1000+seg)*10+8;
 	HF1( histId, max_adcHi);
-      }      
+      }
 
-      int max_cluster_id = cl->GetMaxClusterId(); 
+      int max_cluster_id = cl->GetMaxClusterId();
       if (max_cluster_id>0) {
 	FLHit *fhit = cl->GetHit(max_cluster_id);
 	double ftime = fhit->GetTime();
@@ -494,7 +494,7 @@ EventHodoCFT::InitializeEvent( void )
     event.trigflag[it] = -1;
   }
 
-  for (int i=0; i<NumOfPlaneCFT; i++) {
+  for (int i=0; i<NumOfLayersCFT; i++) {
     for (int j=0; j<NumOfSegCFT_PHI4; j++) {
       event.AdcHi[i][j] = -999;
       event.AdcLow[i][j] = -999;
@@ -545,7 +545,7 @@ ConfMan:: InitializeHistograms( void )
   }
 
   char buf[100];
-  for (int l=0; l<NumOfPlaneCFT; l++) {
+  for (int l=0; l<NumOfLayersCFT; l++) {
     int hid = 100+10*l;
     int NumOfSeg = NumOfSegCFT[l];
 
@@ -575,9 +575,9 @@ ConfMan:: InitializeHistograms( void )
   }
 
 
-  // Consume too many memories 
-  // use only when the each channnel study is necessary 
-  for (int l=0; l<NumOfPlaneCFT; l++) {
+  // Consume too many memories
+  // use only when the each channnel study is necessary
+  for (int l=0; l<NumOfLayersCFT; l++) {
     int NumOfSeg = NumOfSegCFT[l];
     for (int seg=0; seg<NumOfSeg; seg++ ) {
       int hid = ((l+1)*1000+seg)*10;
@@ -623,7 +623,7 @@ ConfMan:: InitializeHistograms( void )
 
 
 
-  for (int i=0; i<NumOfPlaneCFT; i++) {
+  for (int i=0; i<NumOfLayersCFT; i++) {
     char buf1[100], buf2[100];
 
     sprintf(buf1, "AdcHi%d", i);

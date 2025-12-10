@@ -347,16 +347,16 @@ ProcessingNormal()
       event.trigpat[trigger_flag.count()] = seg;
       event.trigflag[seg] = tdc;
       trigger_flag.set(seg);
-      if(seg == trigger::kCommonStopSdcOut){
-        common_stop_tdc = tdc;
-      }
+      // if(seg == kTriggerFlag::CommonStopSdcOut){
+      //   common_stop_tdc = tdc;
+      // }
     }
   }
 
   HF1(1, 0.);
 
-  if(trigger_flag[trigger::kSpillOnEnd] || trigger_flag[trigger::kSpillOffEnd])
-    return true;
+  // if(trigger_flag[kTriggerFlag::SpillOnEnd] || trigger_flag[kTriggerFlag::SpillOffEnd])
+  //   return true;
 
   HF1(1, 1.);
 
@@ -396,7 +396,7 @@ ProcessingNormal()
       min_time = mt;
     }
   }
-  
+
 
 #if UseRF
   //RF analysis
@@ -416,7 +416,7 @@ ProcessingNormal()
   }
   gPHC.DoCorrection(1,1,0,0,RFmin_time,event.udeT0[0],tempCRFmin_time);
   gPHC.DoCorrection(1,1,0,1,tempCRFmin_time,event.ddeT0[0],CRFmin_time);
- 
+
   event.RF1st=RFmin_time;
   event.CRF1st=CRFmin_time;
 
@@ -477,7 +477,7 @@ ProcessingNormal()
     }
     Bool_t tofsingleflag=nhTof==1 && (event.TofSeg[0]<37 && event.TofSeg[0]>12);
     Bool_t tofdoubleflag=nhTof==2 && (event.TofSeg[0]<37 && event.TofSeg[0]>12 && event.TofSeg[1]<37 && event.TofSeg[1]>12);
-      
+
     //if(!(tofsingleflag || tofdoubleflag)) return true;
     //if(!tofsingleflag) return true;
 
@@ -811,7 +811,7 @@ ProcessingNormal()
       event.vpv[j] = vpv;
       HF2(100*l+1, vpx, vpu); HF2(100*l+2, vpy, vpv); HF2(100*l+3, vpx, vpy);
     }
-    
+
     Double_t tof_seg = track->TofSeg()+1; // 1-origin
     if( tof_seg > 0 ){
       event.tofsegHyps[i] = tof_seg;
@@ -896,7 +896,7 @@ ProcessingNormal()
       HF2(100*layerId+17, xcal, ycal);
       DCLTrackHit *lhit2=hit->GetHit();
       Double_t xlcal=lhit2->GetLocalCalPos();
-      if (layerId<41){ 
+      if (layerId<41){
 	HF2(100*layerId+19, dt, xlcal-wp);
 	if (layerId<11){
           if (std::abs(dl-std::abs(xlcal-wp))<2.6){
@@ -1032,14 +1032,14 @@ ConfMan::InitializeHistograms()
   const Int_t    NbinSDC0DL =   55;
   const Double_t MinSDC0DL  = -0.5;
   const Double_t MaxSDC0DL  =  5.0;
-  
+
   const Int_t    NbinSDC1DT =  360;
   const Double_t MinSDC1DT  = -50.;
   const Double_t MaxSDC1DT  = 250.;
   const Int_t    NbinSDC1DL =   85;
   const Double_t MinSDC1DL  = -0.5;
   const Double_t MaxSDC1DL  =  8.0;
-  
+
   const Int_t    NbinSDC2DT =  400;
   const Double_t MinSDC2DT  = -50.;
   const Double_t MaxSDC2DT  = 350.;

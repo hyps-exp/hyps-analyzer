@@ -17,7 +17,7 @@ struct CFTPedCorParam {
   double p1_HG;
   double p0_LG;
   double p1_LG;
- 
+
   bool operator<(const CFTPedCorParam& another) const {
     return sigma < another.sigma;
   }
@@ -37,7 +37,7 @@ private:
   CFTPedCorMan& operator =( const CFTPedCorMan& );
 
 private:
-  std::vector <CFTPedCorParam> m_container[NumOfPlaneCFT][NumOfSegCFT_PHI4];
+  std::vector <CFTPedCorParam> m_container[NumOfLayersCFT][NumOfSegCFT_PHI4];
 
   bool          m_is_ready;
   TString   m_file_name;

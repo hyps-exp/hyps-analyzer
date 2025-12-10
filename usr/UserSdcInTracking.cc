@@ -193,8 +193,8 @@ ProcessingNormal()
 
   HF1(1, 0.);
 
-  if(trigger_flag[trigger::kSpillOnEnd] || trigger_flag[trigger::kSpillOffEnd])
-    return true;
+  // if(trigger_flag[kTriggerFlag::SpillOnEnd] || trigger_flag[kTriggerFlag::SpillOffEnd])
+  //   return true;
 
   HF1(1, 1.);
 
@@ -238,7 +238,7 @@ ProcessingNormal()
   }
 
   HF1(1, 3.);
-  
+
   //////////////BH1 Analysis
   hodoAna.DecodeHits("BH1");
   Int_t nhBh1 = hodoAna.GetNHits("BH1");
@@ -743,7 +743,3 @@ ConfMan::FinalizeProcess()
 {
   return true;
 }
-
-
-
-

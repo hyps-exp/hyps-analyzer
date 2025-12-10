@@ -60,7 +60,7 @@ struct Event
   Int_t  realtime;
   Int_t  livetime;
   // scaler
-  Int_t scaler[NumOfScaler][NumOfSegScaler];
+  Int_t scaler[NumOfPlaneScaler][NumOfSegScaler];
 
   Double_t unixtime;
   Int_t clock10M;
@@ -86,7 +86,7 @@ Event::clear()
   unixtime      = -0.999;
   clock10M      = 0;
 
-  for(Int_t i=0; i<NumOfScaler; ++i){
+  for(Int_t i=0; i<NumOfPlaneScaler; ++i){
     for(Int_t it=0; it<NumOfSegScaler; ++it){
       scaler[i][it]=0;
     }
@@ -121,7 +121,7 @@ struct Dst
   Double_t unixtime;
 
   // scaler
-  Int_t scaler[NumOfScaler][NumOfSegScaler];
+  Int_t scaler[NumOfPlaneScaler][NumOfSegScaler];
 
   void clear();
 };
@@ -144,7 +144,7 @@ Dst::clear()
   vea0c_datasize = 0;
   unixtime      = -0.999;
 
-  for(Int_t i=0; i<NumOfScaler; ++i){
+  for(Int_t i=0; i<NumOfPlaneScaler; ++i){
     for(Int_t it=0; it<NumOfSegScaler; ++it){
       scaler[i][it]=0;
     }
@@ -332,7 +332,7 @@ ProcessingNormal()
   //   }
   // }
 
-  // if(trigger_flag[trigger::kSpillOnEnd] || trigger_flag[trigger::kSpillOffEnd]){
+  // if(trigger_flag[kTriggerFlag::SpillOnEnd] || trigger_flag[kTriggerFlag::SpillOffEnd]){
   //   // std::cout << "L1-Acc: " << gScaler.Get("L1-Acc") << std::endl;
   //   return true;
   // }
@@ -381,7 +381,7 @@ ConfMan::InitializeHistograms()
   HB1(DAQHid+900+2, "L1 accept", 10000, 0., 10000.);
   HB1(DAQHid+900+3, "realtime", 10000, 0., 10000.);
   HB1(DAQHid+900+4, "livetime", 10000, 0., 10000.);
-  HB2(DAQHid+900+5, "data size of vme-easiroc nodes", NumOfSegVMEEASIROC, 0., NumOfSegVMEEASIROC, 370, 90, 460);
+  HB2(DAQHid+900+5, "data size of vme-easiroc nodes", NumOfSegVmeEasiroc, 0., NumOfSegVmeEasiroc, 370, 90, 460);
 
   ////////////////////////////////////////////
   //Tree
@@ -404,7 +404,7 @@ ConfMan::InitializeHistograms()
   tree->Branch("trigpat",    event.trigpat,   Form("trigpat[%d]/I", NumOfSegTrig));
   tree->Branch("trigflag",   event.trigflag,  Form("trigflag[%d]/I", NumOfSegTrig));
   //Scaler
-  tree->Branch("scaler",   event.scaler,  Form("scaler[%d][%d]/I", NumOfScaler, NumOfSegScaler));
+  tree->Branch("scaler",   event.scaler,  Form("scaler[%d][%d]/I", NumOfPlaneScaler, NumOfSegScaler));
 
   ////////////////////////////////////////////
   //Dst
@@ -424,7 +424,7 @@ ConfMan::InitializeHistograms()
 
   daq->Branch("trigpat",    dst.trigpat,   Form("trigpat[%d]/I", NumOfSegTrig));
   daq->Branch("trigflag",   dst.trigflag,  Form("trigflag[%d]/I", NumOfSegTrig));
-  daq->Branch("scaler",   dst.scaler,  Form("scaler[%d][%d]/I", NumOfScaler, NumOfSegScaler));
+  daq->Branch("scaler",   dst.scaler,  Form("scaler[%d][%d]/I", NumOfPlaneScaler, NumOfSegScaler));
 
   HPrint();
   return true;

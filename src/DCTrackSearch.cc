@@ -746,9 +746,9 @@ MakeTrack(const std::vector<ClusterList>& CandCont,
 }
 
 //______________________________________________________________________________
-CFTLocalTrack
-* MakeTrack(  const std::vector<CFTFiberCC>&  HC,
-	      const IndexList& combination)
+CFTLocalTrack*
+MakeTrack(const std::vector<CFTFiberCC>& HC,
+	  const IndexList& combination)
 {
   static const std::string funcname = "[MakeTrack]";
 
@@ -771,9 +771,15 @@ CFTLocalTrack
 #endif
 
       if(fcl){
-	if (i==CFT_PHI1 || i==CFT_PHI2 || i==CFT_PHI3 || i==CFT_PHI4)
+	if (i == static_cast<std::size_t>(kCFTLayer::PHI1) ||
+	    i == static_cast<std::size_t>(kCFTLayer::PHI2) ||
+	    i == static_cast<std::size_t>(kCFTLayer::PHI3) ||
+	    i == static_cast<std::size_t>(kCFTLayer::PHI4))
 	  tp->AddHit( fcl );
-	else if (i==CFT_U1 || i==CFT_V2 || i==CFT_U3 || i==CFT_V4)
+	else if (i == static_cast<std::size_t>(kCFTLayer::U1) ||
+		 i == static_cast<std::size_t>(kCFTLayer::V2) ||
+		 i == static_cast<std::size_t>(kCFTLayer::U3) ||
+		 i == static_cast<std::size_t>(kCFTLayer::V4))
 	  tp->AddHitU( fcl );
       }
     }
@@ -1000,14 +1006,14 @@ LocalTrackSearchSdcOut(const DCHC& TOFHC,
       (track->GetWire(IdTOF_UX)==track->GetWire(IdTOF_UY)) ||
       (track->GetWire(IdTOF_DX)==track->GetWire(IdTOF_DY));
     */
-    
+
     Int_t TOFmulti=0;
     if(track->GetWire(IdTOF_X)==track->GetWire(IdTOF_Y)) TOFmulti++;
     if(track->GetWire(IdLTOF_X_TL)==track->GetWire(IdLTOF_Y_TL)) TOFmulti++;
     if(track->GetWire(IdLTOF_X_TR)==track->GetWire(IdLTOF_Y_TR)) TOFmulti++;
     Bool_t TOFSegXYMatching=false;
     if(TOFmulti==1) TOFSegXYMatching=true;
-    
+
     //Bool_t TOFSegXYMatching = (track->GetWire(IdTOF_X) == track->GetWire(IdTOF_Y)) ||(track->GetWire(IdLTOF_X_TL) == track->GetWire(IdLTOF_Y_TL)) || (track->GetWire(IdLTOF_X_TR) == track->GetWire(IdLTOF_Y_TR));
 
     // Int_t Track[20]={0};

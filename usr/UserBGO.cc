@@ -281,8 +281,8 @@ ProcessingNormal()
     }
   }
 
-  if(trigger_flag[trigger::kSpillOnEnd] || trigger_flag[trigger::kSpillOffEnd])
-    return true;
+  // if(trigger_flag[kTriggerFlag::SpillOnEnd] || trigger_flag[kTriggerFlag::SpillOffEnd])
+  //   return true;
 
   HF1(1, 1);
 
@@ -300,24 +300,24 @@ ProcessingNormal()
       Int_t NhitA = hit->GetSizeAdcHigh();
       Int_t NhitT = hit->GetSizeTdcUp();
 
-      bool flag_tdc = false;      
-      for(Int_t m = 0; m<NhitT; ++m){	    
+      bool flag_tdc = false;
+      for(Int_t m = 0; m<NhitT; ++m){
 	Int_t tdc_l = hit->GetTdcLeading(U, m);
-	HF1 (1000*(seg+1)+100, tdc_l);  //TDC Nhits 
+	HF1 (1000*(seg+1)+100, tdc_l);  //TDC Nhits
 
 	//if (tdc_l>MinTdcCFT && tdc_l < MaxTdcCFT) {
 	//flag_tdc = true;
-	//event.cfttdc[plane][seg] = tdc_l;	
+	//event.cfttdc[plane][seg] = tdc_l;
 	//}
       }
       //if (flag_tdc) {
       //HF1 (1000*(plane+1)+102, seg);
       //}
 
-      
+
       //FADC
       for(Int_t m = 0; m<NhitA; ++m){
-	Int_t adc = hit->GetAdcUp(m);	
+	Int_t adc = hit->GetAdcUp(m);
 	HF2 (1000*(seg+1)+101, m, adc);
 
 	//if (flag_tdc) {
@@ -341,15 +341,15 @@ ProcessingNormal()
       bool flagTime = false;
       for(Int_t m = 0; m<NhitT; ++m){
 	Double_t time = hit->GetTUp(m);
-	HF1 (1000*(seg+1)+200, time);            	
+	HF1 (1000*(seg+1)+200, time);
 	//if (std::abs(time)<100)
 	//flagTime = true;
       }
-      
+
       Int_t NhitWF = hit->GetWaveformEntries(U);
       for(Int_t m = 0; m<NhitWF; ++m){
 	std::pair<Double_t, Double_t> waveform = hit->GetWaveform(m);
-	HF2 (1000*(seg+1)+201, waveform.first, waveform.second);            	
+	HF2 (1000*(seg+1)+201, waveform.first, waveform.second);
       }
 
 
@@ -357,25 +357,25 @@ ProcessingNormal()
       for(Int_t m = 0; m<Npulse; ++m){
 	Double_t pulse_height = hit->GetPulseHeight(m);
 	Double_t pulse_time   = hit->GetPulseTime(m);
-	Double_t de           = hit->DeltaE(m);		
+	Double_t de           = hit->DeltaE(m);
 	HF1 (1000*(seg+1)+202, pulse_height);
 	HF1 (1000*(seg+1)+203, pulse_time);
-	HF1 (1000*(seg+1)+204, de);            			
+	HF1 (1000*(seg+1)+204, de);
       }
 
       if (Npulse == 0) {
 	for(Int_t m = 0; m<NhitWF; ++m){
 	  std::pair<Double_t, Double_t> waveform = hit->GetWaveform(m);
-	  HF2 (1000*(seg+1)+205, waveform.first, waveform.second);            	
+	  HF2 (1000*(seg+1)+205, waveform.first, waveform.second);
 	}
       }
       //if (flagTime)
-      //HF2 (1000*(plane+1)+206, seg, adccorHi);	
+      //HF2 (1000*(plane+1)+206, seg, adccorHi);
     }
   }
 
 
-  
+
   return true;
 }
 
@@ -416,23 +416,23 @@ ConfMan::InitializeHistograms()
 
   for(Int_t i=0; i<NumOfSegBGO; i++){
     TString title100 = Form("BGO seg %d : Tdc(Leading)", i);
-    TString title101 = Form("BGO seg %d : FADC", i);    
+    TString title101 = Form("BGO seg %d : FADC", i);
     TString title200 = Form("BGO seg %d : Time(Leading)", i);
     TString title201 = Form("BGO seg %d : Waveform", i);
     TString title202 = Form("BGO seg %d : Pulse Height", i);
     TString title203 = Form("BGO seg %d : Pulse Time (us)", i);
     TString title204 = Form("BGO seg %d : dE (MeV)", i);
-    TString title205 = Form("BGO seg %d : Waveform (Failure at Pulse Search)", i);    
-    HB1( 1000*(i+1)+100, title100, 4000, 0, 4000);   
+    TString title205 = Form("BGO seg %d : Waveform (Failure at Pulse Search)", i);
+    HB1( 1000*(i+1)+100, title100, 4000, 0, 4000);
     HB2( 1000*(i+1)+101, title101, 200, 0, 400, 400, 0, 20000);
-    HB1( 1000*(i+1)+200, title200, 4000, -100, 100);   
+    HB1( 1000*(i+1)+200, title200, 4000, -100, 100);
     HB2( 1000*(i+1)+201, title201, 200, -5, 5, 500, -20000, 10000);
     HB1( 1000*(i+1)+202, title202, 4000, 0, 20000);
     HB1( 1000*(i+1)+203, title203, 400, -2.0, 2.0);
     HB1( 1000*(i+1)+204, title204, 400, 0.0, 400);
-    HB2( 1000*(i+1)+205, title205, 200, -5, 5, 500, -20000, 10000);    
+    HB2( 1000*(i+1)+205, title205, 200, -5, 5, 500, -20000, 10000);
   }
-  
+
 
   ////////////////////////////////////////////
   //Tree
@@ -443,7 +443,7 @@ ConfMan::InitializeHistograms()
   tree->Branch("trigpat",    event.trigpat,   Form("trigpat[%d]/I", NumOfSegTrig));
   tree->Branch("trigflag",   event.trigflag,  Form("trigflag[%d]/I", NumOfSegTrig));
 
-  
+
   // HPrint();
   return true;
 }
@@ -458,7 +458,7 @@ ConfMan::InitializeParameterFiles()
      InitializeParameter<HodoPHCMan>("HDPHC")   &&
      InitializeParameter<UserParamMan>("USER")   &&
      InitializeParameter<TemplateFitMan>("BGOTEMP") &&
-     InitializeParameter<BGOCalibMan>("BGOCALIB")      
+     InitializeParameter<BGOCalibMan>("BGOCALIB")
      );
 }
 

@@ -279,7 +279,7 @@ private:
   TH2                       *m_hbase_catch;
   TH2                       *m_hbase_catch_zx;
   TH2                       *m_hbase_catch_zy;
-  std::vector<TArc*>         m_CFT_Arc_cont[NumOfPlaneCFT];
+  std::vector<TArc*>         m_CFT_Arc_cont[NumOfLayersCFT];
   TLineContainer             m_BGO_Line_cont[NumOfSegBGO];
   TLineContainer             m_PiID_Line_cont[NumOfSegPiID];
   std::vector<TPolyLine3D*>  m_SdcInTrack_Catch_cont;
@@ -299,11 +299,11 @@ private:
   TGeometry                 *m_geometry_catch;
   TNode                     *m_node_catch;
   TCanvas                   *m_canvas_catch3d;
-  std::vector<TNode*>        m_CFT_node_cont[NumOfPlaneCFT/2];
+  std::vector<TNode*>        m_CFT_node_cont[NumOfLayersCFT/2];
   std::vector<TPolyMarker3D*> m_CFT_UV_cont;
   std::vector<TNode*>        m_BGOseg_node_cont;
   std::vector<TNode*>        m_PiIDseg_node_cont;
-  
+
   // Tagger
   TH2                       *m_hbase_tagger;
   TLineContainer             m_TagSFF_Line_cont[NumOfSegTagSF];
@@ -332,9 +332,9 @@ public:
   Bool_t ConstructCFT();
   Bool_t ConstructBGO();
   Bool_t ConstructPiID();
-  Bool_t ConstructCATCH3d();  
-  void FiberPosPhi(int layer, int seg, double *x, double *y) const;
-  void BGOPos(int seg, double *x, double *y) const;
+  Bool_t ConstructCATCH3d();
+  void FiberPosPhi(Int_t layer, Int_t seg, Double_t *x, Double_t *y) const;
+  void BGOPos(Int_t seg, Double_t *x, Double_t *y) const;
   Bool_t ConstructTagger();
   void DrawInitTrack(Int_t nStep, ThreeVector *StepPoint);
   void DrawInitTrack();

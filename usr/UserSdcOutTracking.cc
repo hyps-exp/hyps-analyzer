@@ -204,16 +204,16 @@ ProcessingNormal()
       event.trigpat[trigger_flag.count()] = seg;
       event.trigflag[seg] = tdc;
       trigger_flag.set(seg);
-      if(seg == trigger::kCommonStopSdcOut){
-        common_stop_tdc = tdc;
-      }
+      // if(seg == kTriggerFlag::CommonStopSdcOut){
+      //   common_stop_tdc = tdc;
+      // }
     }
   }
 
   HF1(1, 0.);
 
-  if(trigger_flag[trigger::kSpillOnEnd] || trigger_flag[trigger::kSpillOffEnd])
-    return true;
+  // if(trigger_flag[kTriggerFlag::SpillOnEnd] || trigger_flag[kTriggerFlag::SpillOffEnd])
+  //   return true;
 
   HF1(1, 1.);
 
@@ -239,7 +239,7 @@ ProcessingNormal()
     event.tT0[i]   = cmt;
     event.deT0[i]  = dE;
     event.T0Seg[i] = seg;
-    
+
     if(cmt<fabs(time0)){
     event.Time0Seg = seg;
     event.deTime0  = dE;
@@ -260,7 +260,7 @@ ProcessingNormal()
 #endif
 
   //////////////Tof Analysis
-  
+
   hodoAna.DecodeHits("TOF");
   hodoAna.TimeCut("TOF", -5, 20);
   const auto& TOFCont = hodoAna.GetClusterContainer("TOF");
@@ -312,7 +312,7 @@ ProcessingNormal()
  // if(!common_stop_is_tof) return true;
 
   HF1(1, 7);
-  
+
   //////SdcIn
 #if 0
   static const Double_t MaxMultiHitSdcIn = gUser.GetParameter("MaxMultiHitSdcIn");
@@ -436,7 +436,7 @@ ProcessingNormal()
 #else
   DCAna.TrackSearchSdcOut();
 #endif
-  
+
 
 #if 1
 #if Chi2Cut
@@ -605,7 +605,7 @@ ProcessingNormal()
       else
 	layerId -= PlOffsTOF - NumOfLayersSdcOut;
 
-      
+
 
       HF1(13, hit->GetLayer());
       HF1(36, Double_t(nh));

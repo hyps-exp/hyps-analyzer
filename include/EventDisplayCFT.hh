@@ -56,10 +56,10 @@ private:
   TCanvas   *tc_;
   TH2F      *hbase_;
   TH2F      *hbaseU_;
-  TH1F      *hp_[NumOfPlaneCFT];
+  TH1F      *hp_[NumOfLayersCFT];
   TH2F      *hbaseZX_;
   TH2F      *hbaseZY_;
-  
+
   TArc      *Phi1_Arc_[NumOfSegCFT_PHI4];
   TArc      *Phi2_Arc_[NumOfSegCFT_PHI4];
   TArc      *Phi3_Arc_[NumOfSegCFT_PHI4];

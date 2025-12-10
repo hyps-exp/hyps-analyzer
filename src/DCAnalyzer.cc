@@ -69,7 +69,7 @@ const auto& valueNMR  = ConfMan::Get<Double_t>("FLDNMR");
 const Double_t& pK18 = ConfMan::Get<Double_t>("PK18");
 const Int_t& IdTOFUXL = gGeom.DetectorId("TOF-UX-L");
 const Int_t& IdTOFDXL = gGeom.DetectorId("TOF-DX-L");
-const Int_t& IdTOFDXR = gGeom.DetectorId("TOF-DX-R");  
+const Int_t& IdTOFDXR = gGeom.DetectorId("TOF-DX-R");
 const Int_t& IdTOFUXR = gGeom.DetectorId("TOF-UX-R");
 const Int_t& IdLTOFUXL = gGeom.DetectorId("LEPS-TOF-UX-L");
 const Int_t& IdLTOFDXL = gGeom.DetectorId("LEPS-TOF-DX-L");
@@ -85,7 +85,7 @@ const Int_t& IdLTOFXTL = gGeom.DetectorId("LEPS-TOF-X-Tilt-L");
 const Int_t& IdLTOFYTL = gGeom.DetectorId("LEPS-TOF-Y-Tilt-L");
 const Int_t& IdLTOFXTR = gGeom.DetectorId("LEPS-TOF-X-Tilt-R");
 const Int_t& IdLTOFYTR = gGeom.DetectorId("LEPS-TOF-Y-Tilt-R");
-  
+
 
 
 
@@ -156,7 +156,7 @@ DCAnalyzer::DCAnalyzer(const RawData& raw_data)
     m_BcOutHC(),
     m_SdcInHC(),
     m_SdcOutHC(),
-    m_CFTHC(),    
+    m_CFTHC(),
     m_SdcInExTC(NumOfLayersSdcIn),
     m_SdcOutExTC(NumOfLayersSdcOut+1),
     m_MWPCClCont(NumOfLayersBcIn+1)
@@ -174,7 +174,7 @@ DCAnalyzer::DCAnalyzer()
     m_BcOutHC(),
     m_SdcInHC(),
     m_SdcOutHC(),
-    m_CFTHC(),        
+    m_CFTHC(),
     m_SdcInExTC(NumOfLayersSdcIn),
     m_SdcOutExTC(NumOfLayersSdcOut+1),
     m_MWPCClCont(NumOfLayersBcIn+1)
@@ -199,10 +199,10 @@ DCAnalyzer::~DCAnalyzer()
   ClearTracksBcOut();
   ClearTracksBcOutSdcIn();
   ClearTracksSdcInSdcOut();
-  ClearTracksCFT();  
+  ClearTracksCFT();
   ClearDCHits();
   ClearVtxHits();
-  ClearCFTHits();  
+  ClearCFTHits();
   debug::ObjectCounter::decrease(ClassName());
 }
 
@@ -360,7 +360,7 @@ DCAnalyzer::DecodeCFTHits(const HodoCC& HitCont)
 
   Int_t id = digit_info.get_device_id("CFT");
   Int_t n_plane = digit_info.get_n_plane(id);
-  m_CFTHC.resize(n_plane);  
+  m_CFTHC.resize(n_plane);
 
   for(const auto& hit: HitCont){
     m_CFTHC[hit->PlaneId()].push_back(dynamic_cast<CFTFiberCluster*>(hit));
@@ -609,7 +609,7 @@ DCAnalyzer::DecodeTOFHits(const HodoClusterContainer& ClCont)
     gGeom.GetGlobalPosition("LEPS-TOF-UX-R"),
     gGeom.GetGlobalPosition("LEPS-TOF-DX-R"),
     gGeom.GetGlobalPosition("LEPS-TOF-UX-L"),
-    gGeom.GetGlobalPosition("LEPS-TOF-DX-L"), 
+    gGeom.GetGlobalPosition("LEPS-TOF-DX-L"),
     gGeom.GetGlobalPosition("LEPS-TOF-UX-Tilt-R"),
     gGeom.GetGlobalPosition("LEPS-TOF-DX-Tilt-R"),
     gGeom.GetGlobalPosition("LEPS-TOF-UX-Tilt-L"),
@@ -883,9 +883,9 @@ Bool_t
 DCAnalyzer::TrackSearchCFT()
 {
   static const Int_t MinLayerPhi = gUser.GetParameter("MinLayerCFTPhi");
-  static const Int_t MinLayerUV = gUser.GetParameter("MinLayerCFTUV");  
+  static const Int_t MinLayerUV = gUser.GetParameter("MinLayerCFTUV");
 
-  track::LocalTrackSearchCFT(m_CFTHC, NumOfPlaneCFT,
+  track::LocalTrackSearchCFT(m_CFTHC, NumOfLayersCFT,
 			     m_CFTTC, MinLayerPhi, MinLayerUV);
 
   return true;
@@ -1310,7 +1310,7 @@ void
 DCAnalyzer::ClearTracksCFT()
 {
   del::ClearContainer(m_CFTTC);
-  del::ClearContainer(m_CFT16TC);  
+  del::ClearContainer(m_CFT16TC);
 }
 
 #if UseBcIn
