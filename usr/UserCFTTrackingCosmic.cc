@@ -56,12 +56,12 @@ struct Event
   Int_t trigpat[NumOfSegTrig];
   Int_t trigflag[NumOfSegTrig];
 
-  Int_t cftadc_h[NumOfLayersCFT][NumOfSegCFT_PHI4];
-  Int_t cftadc_l[NumOfLayersCFT][NumOfSegCFT_PHI4];
-  Int_t cfttdc[NumOfLayersCFT][NumOfSegCFT_PHI4];
+  Int_t cftadc_h[NumOfPlaneCFT][NumOfSegCFT_PHI4];
+  Int_t cftadc_l[NumOfPlaneCFT][NumOfSegCFT_PHI4];
+  Int_t cfttdc[NumOfPlaneCFT][NumOfSegCFT_PHI4];
 
-  Int_t cftadc_cor_h[NumOfLayersCFT][NumOfSegCFT_PHI4];
-  Int_t cftadc_cor_l[NumOfLayersCFT][NumOfSegCFT_PHI4];
+  Int_t cftadc_cor_h[NumOfPlaneCFT][NumOfSegCFT_PHI4];
+  Int_t cftadc_cor_l[NumOfPlaneCFT][NumOfSegCFT_PHI4];
 
 
   Int_t    ntCFT;
@@ -121,7 +121,7 @@ Event::clear()
     trigflag[it] = -1;
   }
 
-  for( int it=0; it<NumOfLayersCFT; ++it ){
+  for( int it=0; it<NumOfPlaneCFT; ++it ){
     for(int m = 0; m<NumOfSegCFT_PHI4; ++m){
       cftadc_h[it][m] = qnan;
       cftadc_l[it][m] = qnan;
@@ -492,8 +492,8 @@ ProcessingNormal()
 
     Int_t nc=hodoAna.GetNClusters("CFT");
 
-    Int_t ncluster[NumOfLayersCFT];
-    for (Int_t i=0; i<NumOfLayersCFT; ++i)
+    Int_t ncluster[NumOfPlaneCFT];
+    for (Int_t i=0; i<NumOfPlaneCFT; ++i)
       ncluster[i]=0;
 
     for(Int_t i=0; i<nc; ++i){
@@ -530,7 +530,7 @@ ProcessingNormal()
       }
 
     }
-    for (Int_t i=0; i<NumOfLayersCFT; ++i)
+    for (Int_t i=0; i<NumOfPlaneCFT; ++i)
       HF1 (1000*(i+1)+300, ncluster[i]);
   }
 
@@ -873,7 +873,7 @@ ConfMan::InitializeHistograms()
   HB2(65, "Theta % Max dE (Low gain) of CFT Track [16layer Track]",   200, -2., 18., 200, -10, 190);
   HB2(66, "Theta % Normalized Max dE (Low gain) of CFT Track [16layer Track]",   200, 0.0, 2.5, 200, -10, 190);
 
-  for(Int_t i=0; i<NumOfLayersCFT; i++){
+  for(Int_t i=0; i<NumOfPlaneCFT; i++){
     TString title100("");
     TString title101("");
 
@@ -961,7 +961,7 @@ ConfMan::InitializeHistograms()
 
 
 
-  for(Int_t i=0; i<NumOfLayersCFT; i++){
+  for(Int_t i=0; i<NumOfPlaneCFT; i++){
     //ADC
     TString title100("");
     TString title101("");
@@ -1072,12 +1072,12 @@ ConfMan::InitializeHistograms()
   tree->Branch("trigpat",    event.trigpat,   Form("trigpat[%d]/I", NumOfSegTrig));
   tree->Branch("trigflag",   event.trigflag,  Form("trigflag[%d]/I", NumOfSegTrig));
 
-  // tree->Branch("cftadc_h",   event.cftadc_h,  Form("cftadc_h[%d][%d]/I", NumOfLayersCFT, NumOfSegCFT_PHI4));
-  // tree->Branch("cftadc_l",   event.cftadc_l,  Form("cftadc_l[%d][%d]/I", NumOfLayersCFT, NumOfSegCFT_PHI4));
-  tree->Branch("cfttdc",     event.cfttdc,    Form("cfttdc[%d][%d]/I", NumOfLayersCFT, NumOfSegCFT_PHI4));
+  // tree->Branch("cftadc_h",   event.cftadc_h,  Form("cftadc_h[%d][%d]/I", NumOfPlaneCFT, NumOfSegCFT_PHI4));
+  // tree->Branch("cftadc_l",   event.cftadc_l,  Form("cftadc_l[%d][%d]/I", NumOfPlaneCFT, NumOfSegCFT_PHI4));
+  tree->Branch("cfttdc",     event.cfttdc,    Form("cfttdc[%d][%d]/I", NumOfPlaneCFT, NumOfSegCFT_PHI4));
 
-  tree->Branch("cftadc_cor_h",   event.cftadc_cor_h,  Form("cftadc_cor_h[%d][%d]/I", NumOfLayersCFT, NumOfSegCFT_PHI4));
-  tree->Branch("cftadc_cor_l",   event.cftadc_cor_l,  Form("cftadc_cor_l[%d][%d]/I", NumOfLayersCFT, NumOfSegCFT_PHI4));
+  tree->Branch("cftadc_cor_h",   event.cftadc_cor_h,  Form("cftadc_cor_h[%d][%d]/I", NumOfPlaneCFT, NumOfSegCFT_PHI4));
+  tree->Branch("cftadc_cor_l",   event.cftadc_cor_l,  Form("cftadc_cor_l[%d][%d]/I", NumOfPlaneCFT, NumOfSegCFT_PHI4));
 
 
   tree->Branch("ntCFT",   &event.ntCFT,  "ntCFT/I");

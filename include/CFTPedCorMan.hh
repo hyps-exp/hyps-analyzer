@@ -37,7 +37,7 @@ private:
   CFTPedCorMan& operator =( const CFTPedCorMan& );
 
 private:
-  std::vector <CFTPedCorParam> m_container[NumOfLayersCFT][NumOfSegCFT_PHI4];
+  std::vector <CFTPedCorParam> m_container[NumOfPlaneCFT][NumOfSegCFT_PHI4];
 
   bool          m_is_ready;
   TString   m_file_name;

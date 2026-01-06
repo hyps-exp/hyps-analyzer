@@ -771,15 +771,15 @@ MakeTrack(const std::vector<CFTFiberCC>& HC,
 #endif
 
       if(fcl){
-	if (i == static_cast<std::size_t>(kCFTLayer::PHI1) ||
-	    i == static_cast<std::size_t>(kCFTLayer::PHI2) ||
-	    i == static_cast<std::size_t>(kCFTLayer::PHI3) ||
-	    i == static_cast<std::size_t>(kCFTLayer::PHI4))
+	if (i == static_cast<std::size_t>(kCFTPlane::PHI1) ||
+	    i == static_cast<std::size_t>(kCFTPlane::PHI2) ||
+	    i == static_cast<std::size_t>(kCFTPlane::PHI3) ||
+	    i == static_cast<std::size_t>(kCFTPlane::PHI4))
 	  tp->AddHit( fcl );
-	else if (i == static_cast<std::size_t>(kCFTLayer::U1) ||
-		 i == static_cast<std::size_t>(kCFTLayer::V2) ||
-		 i == static_cast<std::size_t>(kCFTLayer::U3) ||
-		 i == static_cast<std::size_t>(kCFTLayer::V4))
+	else if (i == static_cast<std::size_t>(kCFTPlane::U1) ||
+		 i == static_cast<std::size_t>(kCFTPlane::V2) ||
+		 i == static_cast<std::size_t>(kCFTPlane::U3) ||
+		 i == static_cast<std::size_t>(kCFTPlane::V4))
 	  tp->AddHitU( fcl );
       }
     }

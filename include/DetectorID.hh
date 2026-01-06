@@ -9,15 +9,7 @@
 #include <array>
 #include <TString.h>
 
-/**********************************************\
- *** Unify the naming rule ***
- - Detector: NumOfLayersXXX
- - FE Board: NumOfPlanesXXX
- - TAG-SF, TAG-PL -> TagSF, TagPL in DIGIT, src
-\**********************************************/
 
-
-#if 1 // New Version
 // ======= Counters ==================================================
 constexpr Int_t NumOfSegRF     =  1;
 constexpr Int_t NumOfSegTagSF  = 55;
@@ -102,8 +94,8 @@ constexpr Int_t NumOfLayersVP     = PlMaxVP     - PlMinVP     + 1;
 
 // ======= CATCH =====================================================
 // ------- CFT -----------------------------------
-constexpr Int_t NumOfLayersCFT = 8;
-constexpr std::array<Int_t, NumOfLayersCFT> NumOfSegCFT
+constexpr Int_t NumOfPlaneCFT = 8;
+constexpr std::array<Int_t, NumOfPlaneCFT> NumOfSegCFT
   {
     426, // U1
     584, // PHI1
@@ -124,7 +116,7 @@ constexpr Int_t NumOfSegCFT_PHI3 = 800;
 constexpr Int_t NumOfSegCFT_UV4  = 538;
 constexpr Int_t NumOfSegCFT_PHI4 = 910;
 
-enum class kCFTLayer : Int_t {
+enum class kCFTPlane : Int_t {
   U1,
   PHI1,
   V2,
@@ -240,8 +232,6 @@ constexpr Int_t NumOfLayersBcIn  = PlMaxBcIn  - PlMinBcIn  + 1;
 constexpr Int_t NumOfLayersBcOut = PlMaxBcOut - PlMinBcOut + 1;
 
 constexpr Int_t NumOfSegSFT_Mtx = 48;
-
-#endif
 
 
 #if 0 // Original Version

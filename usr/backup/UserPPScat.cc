@@ -204,22 +204,22 @@ struct Event
   double phi[MaxDepth];
   double theta[MaxDepth];
 
-  int seg[NumOfLayersCFT][MaxDepth];
-  int seg_max[NumOfLayersCFT][MaxDepth];
+  int seg[NumOfPlaneCFT][MaxDepth];
+  int seg_max[NumOfPlaneCFT][MaxDepth];
 
-  double dphi[NumOfLayersCFT][MaxDepth];
-  double phi_ini[NumOfLayersCFT][MaxDepth];
-  double phi_track[NumOfLayersCFT][MaxDepth];
+  double dphi[NumOfPlaneCFT][MaxDepth];
+  double phi_ini[NumOfPlaneCFT][MaxDepth];
+  double phi_track[NumOfPlaneCFT][MaxDepth];
 
-  double dz[NumOfLayersCFT][MaxDepth];
-  double z_ini[NumOfLayersCFT][MaxDepth];
-  double z_track[NumOfLayersCFT][MaxDepth];
+  double dz[NumOfPlaneCFT][MaxDepth];
+  double z_ini[NumOfPlaneCFT][MaxDepth];
+  double z_track[NumOfPlaneCFT][MaxDepth];
   ThreeVector Pos[MaxDepth];
   ThreeVector Dir[MaxDepth];
 
-  double adc[NumOfLayersCFT][MaxDepth], adc_max[NumOfLayersCFT][MaxDepth];
-  double mip[NumOfLayersCFT][MaxDepth], mip_max[NumOfLayersCFT][MaxDepth];
-  double dE[NumOfLayersCFT][MaxDepth] , dE_max[NumOfLayersCFT][MaxDepth] ;
+  double adc[NumOfPlaneCFT][MaxDepth], adc_max[NumOfPlaneCFT][MaxDepth];
+  double mip[NumOfPlaneCFT][MaxDepth], mip_max[NumOfPlaneCFT][MaxDepth];
+  double dE[NumOfPlaneCFT][MaxDepth] , dE_max[NumOfPlaneCFT][MaxDepth] ;
 
   double Total_mip[MaxDepth],    Total_mip_max[MaxDepth];
 
@@ -233,10 +233,10 @@ struct Event
   double thetaEx[MaxDepth];
   int nhVtxEx[MaxDepth];
 
-  double dphiEx[NumOfLayersCFT][MaxDepth];
-  double phiEx_track[NumOfLayersCFT][MaxDepth];
-  double dzEx[NumOfLayersCFT][MaxDepth];
-  double zEx_track[NumOfLayersCFT][MaxDepth];
+  double dphiEx[NumOfPlaneCFT][MaxDepth];
+  double phiEx_track[NumOfPlaneCFT][MaxDepth];
+  double dzEx[NumOfPlaneCFT][MaxDepth];
+  double zEx_track[NumOfPlaneCFT][MaxDepth];
   */
 
 
@@ -654,7 +654,7 @@ EventPPScat::ProcessingNormal( void )
   hodoAna->DecodeCFTHits(rawData);
 
   // Fiber Cluster
-  for(int p = 0; p<NumOfLayersCFT; ++p){
+  for(int p = 0; p<NumOfPlaneCFT; ++p){
     hodoAna->TimeCutCFT(p, -10, 10); // CATCH@J-PARC
     hodoAna->AdcCutCFT(p, 10, 4000); // CATCH@J-PARC  for proton
     //hodoAna->WidthCutCFT(p, 60, 300); // pp scattering
@@ -1116,7 +1116,7 @@ EventPPScat::InitializeEvent( void )
     //event.phiEx[i]  = -999.;
     //event.thetaEx[i]  = -999.;
     //event.nhVtxEx[i]  = -1;
-    for( int p=0; p<NumOfLayersCFT; ++p ){
+    for( int p=0; p<NumOfPlaneCFT; ++p ){
       event.seg[p][i]        = -999;
       event.seg_max[p][i]    = -999;
       event.dphi[p][i]       = -999.;
@@ -1218,7 +1218,7 @@ ConfMan:: InitializeHistograms( void )
   // Consume too many memories
   // use only when the each channnel study is necessary
 #if 0
-  for (int l=0; l<NumOfLayersCFT; l++) {
+  for (int l=0; l<NumOfPlaneCFT; l++) {
     int NumOfSeg = NumOfSegCFT[l];
     for (int seg=0; seg<NumOfSeg; seg++ ) {
       int hid = ((l+1)*1000+seg)*10;
@@ -1317,26 +1317,26 @@ ConfMan:: InitializeHistograms( void )
   tree->Branch("theta",     event.theta,    "theta[ntCFT]/D");
   tree->Branch("phi",       event.phi,      "phi[ntCFT]/D");
 
-  //tree->Branch("seg",      event.seg,     Form("seg[%d][%d]/I", NumOfLayersCFT, MaxDepth ) );
+  //tree->Branch("seg",      event.seg,     Form("seg[%d][%d]/I", NumOfPlaneCFT, MaxDepth ) );
 
-  tree->Branch("seg",      event.seg,     Form("seg[%d][ntCFT]/I", NumOfLayersCFT) );
+  tree->Branch("seg",      event.seg,     Form("seg[%d][ntCFT]/I", NumOfPlaneCFT) );
 
-  tree->Branch("seg_max",  event.seg_max, Form("seg_max[%d][%d]/I", NumOfLayersCFT, MaxDepth ) );
+  tree->Branch("seg_max",  event.seg_max, Form("seg_max[%d][%d]/I", NumOfPlaneCFT, MaxDepth ) );
 
-  tree->Branch("dphi",     event.dphi,     Form("dphi[%d][%d]/D", NumOfLayersCFT, MaxDepth ) );
-  tree->Branch("phi_ini",  event.phi_ini,  Form("phi_ini[%d][%d]/D", NumOfLayersCFT, MaxDepth ) );
-  tree->Branch("phi_track",event.phi_track,Form("phi_track[%d][%d]/D", NumOfLayersCFT, MaxDepth ) );
+  tree->Branch("dphi",     event.dphi,     Form("dphi[%d][%d]/D", NumOfPlaneCFT, MaxDepth ) );
+  tree->Branch("phi_ini",  event.phi_ini,  Form("phi_ini[%d][%d]/D", NumOfPlaneCFT, MaxDepth ) );
+  tree->Branch("phi_track",event.phi_track,Form("phi_track[%d][%d]/D", NumOfPlaneCFT, MaxDepth ) );
 
-  tree->Branch("dz",      event.dz,      Form("dz[%d][%d]/D", NumOfLayersCFT, MaxDepth ) );
-  tree->Branch("z_ini",   event.z_ini,   Form("z_ini[%d][%d]/D", NumOfLayersCFT, MaxDepth ) );
-  tree->Branch("z_track", event.z_track, Form("z_track[%d][%d]/D", NumOfLayersCFT, MaxDepth ) );
+  tree->Branch("dz",      event.dz,      Form("dz[%d][%d]/D", NumOfPlaneCFT, MaxDepth ) );
+  tree->Branch("z_ini",   event.z_ini,   Form("z_ini[%d][%d]/D", NumOfPlaneCFT, MaxDepth ) );
+  tree->Branch("z_track", event.z_track, Form("z_track[%d][%d]/D", NumOfPlaneCFT, MaxDepth ) );
 
-  tree->Branch("adc",     event.adc,      Form("adc[%d][%d]/D", NumOfLayersCFT, MaxDepth ) );
-  tree->Branch("mip",     event.mip,      Form("mip[%d][%d]/D", NumOfLayersCFT, MaxDepth ) );
-  tree->Branch("dE",      event.dE,       Form("dE[%d][%d]/D", NumOfLayersCFT, MaxDepth ) );
-  tree->Branch("adc_max", event.adc_max,  Form("adc_max[%d][%d]/D", NumOfLayersCFT, MaxDepth ) );
-  tree->Branch("mip_max", event.mip_max,  Form("mip_max[%d][%d]/D", NumOfLayersCFT, MaxDepth ) );
-  tree->Branch("dE_max",  event.dE_max,   Form("dE_max[%d][%d]/D", NumOfLayersCFT, MaxDepth ) );
+  tree->Branch("adc",     event.adc,      Form("adc[%d][%d]/D", NumOfPlaneCFT, MaxDepth ) );
+  tree->Branch("mip",     event.mip,      Form("mip[%d][%d]/D", NumOfPlaneCFT, MaxDepth ) );
+  tree->Branch("dE",      event.dE,       Form("dE[%d][%d]/D", NumOfPlaneCFT, MaxDepth ) );
+  tree->Branch("adc_max", event.adc_max,  Form("adc_max[%d][%d]/D", NumOfPlaneCFT, MaxDepth ) );
+  tree->Branch("mip_max", event.mip_max,  Form("mip_max[%d][%d]/D", NumOfPlaneCFT, MaxDepth ) );
+  tree->Branch("dE_max",  event.dE_max,   Form("dE_max[%d][%d]/D", NumOfPlaneCFT, MaxDepth ) );
 
   tree->Branch("Total_mip",     event.Total_mip,    "total_mip[ntCFT]/D");
   tree->Branch("Total_mip_max",    event.Total_mip_max,    "total_mip_max[ntCFT]/D");
@@ -1361,10 +1361,10 @@ ConfMan:: InitializeHistograms( void )
   tree->Branch("phiEx",       event.phiEx,      "phiEx[ntCFTEx]/D");
   tree->Branch("nhVtxEx",     event.nhVtxEx,    "nhVtxEx[ntCFTEx]/I");
 
-  tree->Branch("dphiEx",     event.dphiEx,     Form("dphiEx[%d][%d]/D", NumOfLayersCFT, MaxDepth ) );
-  tree->Branch("phiEx_track",event.phi_track,Form("phi_track[%d][%d]/D", NumOfLayersCFT, MaxDepth ) );
-  tree->Branch("dzEx",      event.dzEx,      Form("dzEx[%d][%d]/D", NumOfLayersCFT, MaxDepth ) );
-  tree->Branch("zEx_track", event.zEx_track, Form("zEx_track[%d][%d]/D", NumOfLayersCFT, MaxDepth ) );
+  tree->Branch("dphiEx",     event.dphiEx,     Form("dphiEx[%d][%d]/D", NumOfPlaneCFT, MaxDepth ) );
+  tree->Branch("phiEx_track",event.phi_track,Form("phi_track[%d][%d]/D", NumOfPlaneCFT, MaxDepth ) );
+  tree->Branch("dzEx",      event.dzEx,      Form("dzEx[%d][%d]/D", NumOfPlaneCFT, MaxDepth ) );
+  tree->Branch("zEx_track", event.zEx_track, Form("zEx_track[%d][%d]/D", NumOfPlaneCFT, MaxDepth ) );
   */
 
   // BGO

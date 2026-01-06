@@ -885,7 +885,7 @@ DCAnalyzer::TrackSearchCFT()
   static const Int_t MinLayerPhi = gUser.GetParameter("MinLayerCFTPhi");
   static const Int_t MinLayerUV = gUser.GetParameter("MinLayerCFTUV");
 
-  track::LocalTrackSearchCFT(m_CFTHC, NumOfLayersCFT,
+  track::LocalTrackSearchCFT(m_CFTHC, NumOfPlaneCFT,
 			     m_CFTTC, MinLayerPhi, MinLayerUV);
 
   return true;

@@ -2884,7 +2884,7 @@ Bool_t EventDisplay::ConstructCFT(void)
   //m_canvas_catch->cd(1);
   m_canvas->cd(2)->cd(1)->cd(1);
 
-  for (Int_t i=0; i<NumOfLayersCFT; ++i) {
+  for (Int_t i=0; i<NumOfPlaneCFT; ++i) {
     m_CFT_Arc_cont[i].reserve(NumOfSegCFT[i]);
     for (Int_t seg=0; seg<NumOfSegCFT[i]; ++seg) {
       Double_t x, y;
@@ -3155,7 +3155,7 @@ Bool_t EventDisplay::ConstructCATCH3d(void)
 
   new TTUBE( "CFTFiberTube", "CFTFiberTube", "void", Rmin, Rmax, L );
 
-  for (int i=0; i<NumOfLayersCFT/2; i++) {
+  for (int i=0; i<NumOfPlaneCFT/2; i++) {
     int layer = 2*i+1;
     m_CFT_node_cont[i].reserve(NumOfSegCFT[layer]);
     for (int seg=0; seg<NumOfSegCFT[layer]; seg++) {
@@ -3329,31 +3329,31 @@ void EventDisplay::FiberPosPhi(Int_t layer, Int_t seg, Double_t *x, Double_t *y)
 {
   Int_t lnum;
 
-  if (layer == static_cast<Int_t>(kCFTLayer::PHI1)) {
+  if (layer == static_cast<Int_t>(kCFTPlane::PHI1)) {
     lnum = gGeom.GetDetectorId("CFT-PHI1");
-  } else if (layer == static_cast<Int_t>(kCFTLayer::PHI2)) {
+  } else if (layer == static_cast<Int_t>(kCFTPlane::PHI2)) {
     lnum = gGeom.GetDetectorId("CFT-PHI2");
-  } else if (layer == static_cast<Int_t>(kCFTLayer::PHI3)) {
+  } else if (layer == static_cast<Int_t>(kCFTPlane::PHI3)) {
     lnum = gGeom.GetDetectorId("CFT-PHI3");
-  } else if (layer == static_cast<Int_t>(kCFTLayer::PHI4)) {
+  } else if (layer == static_cast<Int_t>(kCFTPlane::PHI4)) {
     lnum = gGeom.GetDetectorId("CFT-PHI4");
-  } else if (layer == static_cast<Int_t>(kCFTLayer::U1)) {
+  } else if (layer == static_cast<Int_t>(kCFTPlane::U1)) {
     lnum = gGeom.GetDetectorId("CFT-UV1");
-  } else if (layer == static_cast<Int_t>(kCFTLayer::V2)) {
+  } else if (layer == static_cast<Int_t>(kCFTPlane::V2)) {
     lnum = gGeom.GetDetectorId("CFT-UV2");
-  } else if (layer == static_cast<Int_t>(kCFTLayer::U3)) {
+  } else if (layer == static_cast<Int_t>(kCFTPlane::U3)) {
     lnum = gGeom.GetDetectorId("CFT-UV3");
-  } else if (layer == static_cast<Int_t>(kCFTLayer::V4)) {
+  } else if (layer == static_cast<Int_t>(kCFTPlane::V4)) {
     lnum = gGeom.GetDetectorId("CFT-UV4");
   } else {
     std::cout <<  "EventDisplay::FiberPosPhi : No PHI Layer " <<  layer << std::endl;
     return;
   }
 
-  if (layer == static_cast<Int_t>(kCFTLayer::PHI1) ||
-      layer == static_cast<Int_t>(kCFTLayer::PHI2) ||
-      layer == static_cast<Int_t>(kCFTLayer::PHI3) ||
-      layer == static_cast<Int_t>(kCFTLayer::PHI4)) {
+  if (layer == static_cast<Int_t>(kCFTPlane::PHI1) ||
+      layer == static_cast<Int_t>(kCFTPlane::PHI2) ||
+      layer == static_cast<Int_t>(kCFTPlane::PHI3) ||
+      layer == static_cast<Int_t>(kCFTPlane::PHI4)) {
     double phi = gGeom.CalcWirePosition(lnum, seg);
     double r   = gGeom.GetLocalZ(lnum);
     if (seg%2 == 0) {
@@ -3364,8 +3364,8 @@ void EventDisplay::FiberPosPhi(Int_t layer, Int_t seg, Double_t *x, Double_t *y)
 
     *x = r * cos(phi*TMath::DegToRad());
     *y = r * sin(phi*TMath::DegToRad());
-  } else if (layer == static_cast<Int_t>(kCFTLayer::U1) ||
-	     layer == static_cast<Int_t>(kCFTLayer::U3)) {
+  } else if (layer == static_cast<Int_t>(kCFTPlane::U1) ||
+	     layer == static_cast<Int_t>(kCFTPlane::U3)) {
     Double_t z = 200.;
 
     Double_t SegNumU = NumOfSegCFT[layer];
@@ -3384,8 +3384,8 @@ void EventDisplay::FiberPosPhi(Int_t layer, Int_t seg, Double_t *x, Double_t *y)
     *x = r * cos(phi*TMath::DegToRad());
     *y = r * sin(phi*TMath::DegToRad());
 
-  } else if (layer == static_cast<Int_t>(kCFTLayer::V2) ||
-	     layer == static_cast<Int_t>(kCFTLayer::V4)) {
+  } else if (layer == static_cast<Int_t>(kCFTPlane::V2) ||
+	     layer == static_cast<Int_t>(kCFTPlane::V4)) {
     Double_t z = 200.;
 
     Double_t SegNumV = NumOfSegCFT[layer];
@@ -4295,19 +4295,19 @@ void EventDisplay::ShowHitFiber(Int_t layer, Int_t segment, Double_t pe, Double_
 	R += 0.4755/2;
       Double_t SegNumUV=NumOfSegCFT[layer];
       Double_t Phi0 = -(360./SegNumUV)*(Double_t)segment + 90.;
-      if (layer == static_cast<Int_t>(kCFTLayer::V2) ||
-	  layer == static_cast<Int_t>(kCFTLayer::V4)) {
+      if (layer == static_cast<Int_t>(kCFTPlane::V2) ||
+	  layer == static_cast<Int_t>(kCFTPlane::V4)) {
 	Phi0 = (360./SegNumUV)*(Double_t)segment + 90.;
       }
 
       Double_t slope = 0.;
       Double_t d_phi = 5.0;
       Int_t nStep = (Int_t)(360/d_phi);
-      if (layer == static_cast<Int_t>(kCFTLayer::U1) ||
-	  layer == static_cast<Int_t>(kCFTLayer::U3)) {
+      if (layer == static_cast<Int_t>(kCFTPlane::U1) ||
+	  layer == static_cast<Int_t>(kCFTPlane::U3)) {
 	slope = 400. /360.;
-      }else if (layer == static_cast<Int_t>(kCFTLayer::V2) ||
-		layer == static_cast<Int_t>(kCFTLayer::V4)) {
+      }else if (layer == static_cast<Int_t>(kCFTPlane::V2) ||
+		layer == static_cast<Int_t>(kCFTPlane::V4)) {
 	slope = -400. /360.;
 	d_phi  *= -1.;
       }
@@ -4417,19 +4417,19 @@ void EventDisplay::ShowHitFiberTracked(Int_t layer, Int_t segment, Double_t z, B
 	R += 0.4755/2;
       double SegNumUV=NumOfSegCFT[layer];
       double Phi0 = -(360./SegNumUV)*(double)segment + 90.;
-      if (layer == static_cast<Int_t>(kCFTLayer::V2) ||
-	  layer == static_cast<Int_t>(kCFTLayer::V4)) {
+      if (layer == static_cast<Int_t>(kCFTPlane::V2) ||
+	  layer == static_cast<Int_t>(kCFTPlane::V4)) {
 	Phi0 = (360./SegNumUV)*(double)segment + 90.;
       }
 
       double slope = 0.;
       double d_phi = 5.0;
       int nStep = (int)(360/d_phi);
-      if (layer == static_cast<Int_t>(kCFTLayer::U1) ||
-	  layer == static_cast<Int_t>(kCFTLayer::U3)) {
+      if (layer == static_cast<Int_t>(kCFTPlane::U1) ||
+	  layer == static_cast<Int_t>(kCFTPlane::U3)) {
 	slope = 400. /360.;
-      } else if(layer == static_cast<Int_t>(kCFTLayer::V2) ||
-		layer == static_cast<Int_t>(kCFTLayer::V4)) {
+      } else if(layer == static_cast<Int_t>(kCFTPlane::V2) ||
+		layer == static_cast<Int_t>(kCFTPlane::V4)) {
 	slope = -400. /360.;
 	d_phi  *= -1.;
       }
@@ -5252,7 +5252,7 @@ EventDisplay::ResetVisibility()
   //ResetVisibility(m_WCseg_node, kBlack);
   //ResetVisibility(m_target_node, kBlack);
 
-  for (int layer=0; layer<NumOfLayersCFT/2; layer++)
+  for (int layer=0; layer<NumOfPlaneCFT/2; layer++)
     ResetVisibility( m_CFT_node_cont[layer] );
 
   ResetVisibility( m_BGOseg_node_cont );
@@ -5439,7 +5439,7 @@ EventDisplay::ResetHist()
 void EventDisplay::ResetCATCH( void )
 {
 #if CATCH
-  for (int layer=0; layer<NumOfLayersCFT; layer++) {
+  for (int layer=0; layer<NumOfPlaneCFT; layer++) {
     for (int seg=0; seg<NumOfSegCFT[layer]; seg++) {
       if (seg%32==0)
 	m_CFT_Arc_cont[layer][seg]->SetLineColor(kOrange);
@@ -6125,7 +6125,7 @@ void EventDisplay::UpdateCATCH( void )
 
   m_hbase_catch->Draw("colz");
 
-  for (int layer=0; layer<NumOfLayersCFT; layer++) {
+  for (int layer=0; layer<NumOfPlaneCFT; layer++) {
     for (int seg=0; seg<NumOfSegCFT[layer]; seg++) {
       m_CFT_Arc_cont[layer][seg]->Draw("same");
     }

@@ -56,7 +56,7 @@ private:
   TCanvas   *tc_;
   TH2F      *hbase_;
   TH2F      *hbaseU_;
-  TH1F      *hp_[NumOfLayersCFT];
+  TH1F      *hp_[NumOfPlaneCFT];
   TH2F      *hbaseZX_;
   TH2F      *hbaseZY_;
 

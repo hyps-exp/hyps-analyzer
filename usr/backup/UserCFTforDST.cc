@@ -131,23 +131,23 @@ struct Event
 
   // CFT
   int ntCFT;
-  int ncl[NumOfLayersCFT];
+  int ncl[NumOfPlaneCFT];
   double phi[MaxDepth];
   double theta[MaxDepth];
 
   double chi2_phi[MaxDepth];
   double chi2_uv[MaxDepth];
 
-  int seg[NumOfLayersCFT][MaxDepth];
-  int seg_max[NumOfLayersCFT][MaxDepth];
+  int seg[NumOfPlaneCFT][MaxDepth];
+  int seg_max[NumOfPlaneCFT][MaxDepth];
 
-  double dphi[NumOfLayersCFT][MaxDepth];
-  double phi_ini[NumOfLayersCFT][MaxDepth];
-  double phi_track[NumOfLayersCFT][MaxDepth];
+  double dphi[NumOfPlaneCFT][MaxDepth];
+  double phi_ini[NumOfPlaneCFT][MaxDepth];
+  double phi_track[NumOfPlaneCFT][MaxDepth];
 
-  double dz[NumOfLayersCFT][MaxDepth];
-  double z_ini[NumOfLayersCFT][MaxDepth];
-  double z_track[NumOfLayersCFT][MaxDepth];
+  double dz[NumOfPlaneCFT][MaxDepth];
+  double z_ini[NumOfPlaneCFT][MaxDepth];
+  double z_track[NumOfPlaneCFT][MaxDepth];
   ThreeVector Pos[MaxDepth];
   double Pos0_x[MaxDepth];
   double Pos0_y[MaxDepth];
@@ -159,15 +159,15 @@ struct Event
   double vtx_x[MaxDepth], vtx_y[MaxDepth], vtx_z[MaxDepth];
   double vtxAB_x, vtxAB_y, vtxAB_z;
 
-  //double pede[NumOfLayersCFT][60];         // N_group_cable
-  //double adc_raw_h[NumOfLayersCFT][60][16];// N_group_cable
-  //double adc_raw_l[NumOfLayersCFT][60][16];// N_group_cable
-  double adc_raw_h[NumOfLayersCFT][NumOfSegCFT_PHI4];
-  double adc_raw_l[NumOfLayersCFT][NumOfSegCFT_PHI4];
+  //double pede[NumOfPlaneCFT][60];         // N_group_cable
+  //double adc_raw_h[NumOfPlaneCFT][60][16];// N_group_cable
+  //double adc_raw_l[NumOfPlaneCFT][60][16];// N_group_cable
+  double adc_raw_h[NumOfPlaneCFT][NumOfSegCFT_PHI4];
+  double adc_raw_l[NumOfPlaneCFT][NumOfSegCFT_PHI4];
 
-  double adc[NumOfLayersCFT][MaxDepth], adc_max[NumOfLayersCFT][MaxDepth];
-  double mip[NumOfLayersCFT][MaxDepth], mip_max[NumOfLayersCFT][MaxDepth];
-  double dE[NumOfLayersCFT][MaxDepth] , dE_max[NumOfLayersCFT][MaxDepth] ;
+  double adc[NumOfPlaneCFT][MaxDepth], adc_max[NumOfPlaneCFT][MaxDepth];
+  double mip[NumOfPlaneCFT][MaxDepth], mip_max[NumOfPlaneCFT][MaxDepth];
+  double dE[NumOfPlaneCFT][MaxDepth] , dE_max[NumOfPlaneCFT][MaxDepth] ;
 
   double Total_mip[MaxDepth],    Total_mip_max[MaxDepth];
   //double Total_mip_phi[MaxDepth], Total_mip_phi_max[MaxDepth];
@@ -185,7 +185,7 @@ struct Event
   // for cosmic ray tracking
   double phi16;
   double theta16;
-  int seg16[NumOfLayersCFT][2];
+  int seg16[NumOfPlaneCFT][2];
   int nhit16_phi, nhit16_uv;
   double chi2_phi16;
   double chi2_uv16;
@@ -195,23 +195,23 @@ struct Event
   double dist16;
 
   //before pos. calib.
-  double dphi16_before[NumOfLayersCFT][2];
-  double phi16_ini_before[NumOfLayersCFT][2];
-  double phi16_track_before[NumOfLayersCFT][2];
-  double phi16__track_before[NumOfLayersCFT][2];
-  double dz16_before[NumOfLayersCFT][2];
-  double z16_ini_before[NumOfLayersCFT][2];
-  double z16_track_before[NumOfLayersCFT][2];
+  double dphi16_before[NumOfPlaneCFT][2];
+  double phi16_ini_before[NumOfPlaneCFT][2];
+  double phi16_track_before[NumOfPlaneCFT][2];
+  double phi16__track_before[NumOfPlaneCFT][2];
+  double dz16_before[NumOfPlaneCFT][2];
+  double z16_ini_before[NumOfPlaneCFT][2];
+  double z16_track_before[NumOfPlaneCFT][2];
 
   // after pos. calib.
-  double dphi16[NumOfLayersCFT][2];
-  double phi16_ini[NumOfLayersCFT][2];
-  double phi16_track[NumOfLayersCFT][2];
-  double phi16__track[NumOfLayersCFT][2];
-  double dz16[NumOfLayersCFT][2];
-  double z16_ini[NumOfLayersCFT][2];
-  double z16_track[NumOfLayersCFT][2];
-  double dr16[NumOfLayersCFT][2];
+  double dphi16[NumOfPlaneCFT][2];
+  double phi16_ini[NumOfPlaneCFT][2];
+  double phi16_track[NumOfPlaneCFT][2];
+  double phi16__track[NumOfPlaneCFT][2];
+  double dz16[NumOfPlaneCFT][2];
+  double z16_ini[NumOfPlaneCFT][2];
+  double z16_track[NumOfPlaneCFT][2];
+  double dr16[NumOfPlaneCFT][2];
 
 
   // BGO
@@ -375,7 +375,7 @@ EventCFT::ProcessingNormal( void )
 
   // CFT
   {
-    for(int p = 0; p<NumOfLayersCFT; ++p){
+    for(int p = 0; p<NumOfPlaneCFT; ++p){
       int sumnhit = 0;
       int layer = p;
 
@@ -446,7 +446,7 @@ EventCFT::ProcessingNormal( void )
 
   // FiberHitCFT
   hodoAna->DecodeCFTHits(rawData);
-  for(int p = 0; p<NumOfLayersCFT; ++p){
+  for(int p = 0; p<NumOfPlaneCFT; ++p){
 
     int nhit = hodoAna->GetNHitsCFT(p);
     //if(nhit>20){ disp_flag = true;}
@@ -530,7 +530,7 @@ EventCFT::ProcessingNormal( void )
 
 #if 1
   // Fiber Cluster
-  for(int p = 0; p<NumOfLayersCFT; ++p){
+  for(int p = 0; p<NumOfPlaneCFT; ++p){
     hodoAna->TimeCutCFT(p, -30, 30); // CATCH@J-PARC
     hodoAna->AdcCutCFT(p, 0, 4000); // CATCH@J-PARC
     //hodoAna->AdcCutCFT(p, 50, 4000); // CATCH@J-PARC  for proton
@@ -1181,7 +1181,7 @@ EventCFT::InitializeEvent( void )
     event.trigflag[it] = -1;
   }
 
-  for(int p = 0; p<NumOfLayersCFT; ++p){
+  for(int p = 0; p<NumOfPlaneCFT; ++p){
     event.ncl[p]    = 0;
   }
 
@@ -1210,7 +1210,7 @@ EventCFT::InitializeEvent( void )
     event.Dir_y[i]  =-999.;
     event.Dir_z[i]  =-999.;
 
-    for( int p=0; p<NumOfLayersCFT; ++p ){
+    for( int p=0; p<NumOfPlaneCFT; ++p ){
       event.seg[p][i]        = -999;
       event.seg_max[p][i]    = -999;
       event.dphi[p][i]       = -999.;
@@ -1265,7 +1265,7 @@ EventCFT::InitializeEvent( void )
   event.vtx16_y = -999.;
   event.vtx16_z = -999.;
   event.dist16   = -999.;
-  for( int p=0; p<NumOfLayersCFT; ++p ){
+  for( int p=0; p<NumOfPlaneCFT; ++p ){
     for(int i = 0; i<2; ++i){
       event.seg16[p][i]       = -999;
       // before pos. calib.
@@ -1339,7 +1339,7 @@ ConfMan:: InitializeHistograms( void )
   HB2( 4, "Fiber Mean Position", 400,-100,100,400,-100,100 );
   HB1( 5, "vertex z (CFT tracking)", 1000,-500,500 );
   HB1( 6, "theta (CFT tracking)", 180, 0 ,180 );
-  for(int i=0; i<NumOfLayersCFT; i++){
+  for(int i=0; i<NumOfPlaneCFT; i++){
     std::ostringstream title[30];
 
     if(i%2 == 0){// spiral layer
@@ -1485,23 +1485,23 @@ ConfMan:: InitializeHistograms( void )
   tree->Branch("Dir_y",     event.Dir_y,   "Dir_y[ntCFT]/D");
   tree->Branch("Dir_z",     event.Dir_z,   "Dir_z[ntCFT]/D");
   /*
-  tree->Branch("seg",      event.seg,     Form("seg[%d][%d]/I", NumOfLayersCFT, MaxDepth ) );
-  tree->Branch("seg_max",  event.seg_max, Form("seg_max[%d][%d]/I", NumOfLayersCFT, MaxDepth ) );
+  tree->Branch("seg",      event.seg,     Form("seg[%d][%d]/I", NumOfPlaneCFT, MaxDepth ) );
+  tree->Branch("seg_max",  event.seg_max, Form("seg_max[%d][%d]/I", NumOfPlaneCFT, MaxDepth ) );
 
-  tree->Branch("dphi",     event.dphi,     Form("dphi[%d][%d]/D", NumOfLayersCFT, MaxDepth ) );
-  tree->Branch("phi_ini",  event.phi_ini,  Form("phi_ini[%d][%d]/D", NumOfLayersCFT, MaxDepth ) );
-  tree->Branch("phi_track",event.phi_track,Form("phi_track[%d][%d]/D", NumOfLayersCFT, MaxDepth ) );
+  tree->Branch("dphi",     event.dphi,     Form("dphi[%d][%d]/D", NumOfPlaneCFT, MaxDepth ) );
+  tree->Branch("phi_ini",  event.phi_ini,  Form("phi_ini[%d][%d]/D", NumOfPlaneCFT, MaxDepth ) );
+  tree->Branch("phi_track",event.phi_track,Form("phi_track[%d][%d]/D", NumOfPlaneCFT, MaxDepth ) );
 
-  tree->Branch("dz",      event.dz,      Form("dz[%d][%d]/D", NumOfLayersCFT, MaxDepth ) );
-  tree->Branch("z_ini",   event.z_ini,   Form("z_ini[%d][%d]/D", NumOfLayersCFT, MaxDepth ) );
-  tree->Branch("z_track", event.z_track, Form("z_track[%d][%d]/D", NumOfLayersCFT, MaxDepth ) );
+  tree->Branch("dz",      event.dz,      Form("dz[%d][%d]/D", NumOfPlaneCFT, MaxDepth ) );
+  tree->Branch("z_ini",   event.z_ini,   Form("z_ini[%d][%d]/D", NumOfPlaneCFT, MaxDepth ) );
+  tree->Branch("z_track", event.z_track, Form("z_track[%d][%d]/D", NumOfPlaneCFT, MaxDepth ) );
 
-  tree->Branch("adc",     event.adc,      Form("adc[%d][%d]/D", NumOfLayersCFT, MaxDepth ) );
-  tree->Branch("mip",     event.mip,      Form("mip[%d][%d]/D", NumOfLayersCFT, MaxDepth ) );
-  tree->Branch("dE",      event.dE,       Form("dE[%d][%d]/D", NumOfLayersCFT, MaxDepth ) );
-  tree->Branch("adc_max", event.adc_max,  Form("adc_max[%d][%d]/D", NumOfLayersCFT, MaxDepth ) );
-  tree->Branch("mip_max", event.mip_max,  Form("mip_max[%d][%d]/D", NumOfLayersCFT, MaxDepth ) );
-  tree->Branch("dE_max",  event.dE_max,   Form("dE_max[%d][%d]/D", NumOfLayersCFT, MaxDepth ) );
+  tree->Branch("adc",     event.adc,      Form("adc[%d][%d]/D", NumOfPlaneCFT, MaxDepth ) );
+  tree->Branch("mip",     event.mip,      Form("mip[%d][%d]/D", NumOfPlaneCFT, MaxDepth ) );
+  tree->Branch("dE",      event.dE,       Form("dE[%d][%d]/D", NumOfPlaneCFT, MaxDepth ) );
+  tree->Branch("adc_max", event.adc_max,  Form("adc_max[%d][%d]/D", NumOfPlaneCFT, MaxDepth ) );
+  tree->Branch("mip_max", event.mip_max,  Form("mip_max[%d][%d]/D", NumOfPlaneCFT, MaxDepth ) );
+  tree->Branch("dE_max",  event.dE_max,   Form("dE_max[%d][%d]/D", NumOfPlaneCFT, MaxDepth ) );
   */
   tree->Branch("Total_mip",     event.Total_mip,    "total_mip[ntCFT]/D");
   tree->Branch("Total_mip_max",    event.Total_mip_max,    "total_mip_max[ntCFT]/D");
@@ -1514,9 +1514,9 @@ ConfMan:: InitializeHistograms( void )
   tree->Branch("Total_dEuv_max",  event.Total_dEuv_max,  "totaldEuv_max[ntCFT]/D");
 
   // pedestal correction
-  //tree->Branch("pede",       event.pede,       Form("adc[%d][%d]/D", NumOfLayersCFT, 60 ) );
-  //tree->Branch("adc_raw_h",  event.adc_raw_h,  Form("adc_raw_h[%d][%d]/D", NumOfLayersCFT, NumOfSegCFT_PHI4 ) );
-  //tree->Branch("adc_raw_l",  event.adc_raw_l,  Form("adc_raw_l[%d][%d]/D", NumOfLayersCFT, NumOfSegCFT_PHI4 ) );
+  //tree->Branch("pede",       event.pede,       Form("adc[%d][%d]/D", NumOfPlaneCFT, 60 ) );
+  //tree->Branch("adc_raw_h",  event.adc_raw_h,  Form("adc_raw_h[%d][%d]/D", NumOfPlaneCFT, NumOfSegCFT_PHI4 ) );
+  //tree->Branch("adc_raw_l",  event.adc_raw_l,  Form("adc_raw_l[%d][%d]/D", NumOfPlaneCFT, NumOfSegCFT_PHI4 ) );
 
 #if ModeCosmic + ModePP
   // for 16 layer tracking
@@ -1526,28 +1526,28 @@ ConfMan:: InitializeHistograms( void )
   tree->Branch("nhit16_uv",  &event.nhit16_uv,  "nhit16_uv/I");
   tree->Branch("chi2_phi16", &event.chi2_phi16, "chi2_phi16/D");
   tree->Branch("chi2_uv16",  &event.chi2_uv16,  "chi2_uv16/D");
-  tree->Branch("seg16",      event.seg16,      Form("seg16[%d][%d]/I", NumOfLayersCFT, 2 ) );
+  tree->Branch("seg16",      event.seg16,      Form("seg16[%d][%d]/I", NumOfPlaneCFT, 2 ) );
 
   tree->Branch("dist16",     &event.dist16,     "dist16/D");
   tree->Branch("vtx16_x",    &event.vtx16_x,    "vtx16_x/D");
   tree->Branch("vtx16_y",    &event.vtx16_y,    "vtx16_y/D");
   tree->Branch("vtx16_z",    &event.vtx16_z,    "vtx16_z/D");
 
-  tree->Branch("dphi16_before",      event.dphi16_before,      Form("dphi16_before[%d][%d]/D", NumOfLayersCFT, 2 ) );
-  tree->Branch("phi16_ini_before",   event.phi16_ini_before,   Form("phi16_ini_before[%d][%d]/D", NumOfLayersCFT, 2 ) );
-  tree->Branch("phi16_track_before", event.phi16_track_before, Form("phi16_track_before[%d][%d]/D", NumOfLayersCFT, 2 ) );
-  tree->Branch("dz16_before",        event.dz16_before,        Form("dz16_before[%d][%d]/D", NumOfLayersCFT, 2 ) );
-  tree->Branch("z16_ini_before",     event.z16_ini_before,     Form("z16_ini_before[%d][%d]/D", NumOfLayersCFT, 2 ) );
-  tree->Branch("z16_track_before",   event.z16_track_before,   Form("z16_track_before[%d][%d]/D", NumOfLayersCFT, 2 ) );
+  tree->Branch("dphi16_before",      event.dphi16_before,      Form("dphi16_before[%d][%d]/D", NumOfPlaneCFT, 2 ) );
+  tree->Branch("phi16_ini_before",   event.phi16_ini_before,   Form("phi16_ini_before[%d][%d]/D", NumOfPlaneCFT, 2 ) );
+  tree->Branch("phi16_track_before", event.phi16_track_before, Form("phi16_track_before[%d][%d]/D", NumOfPlaneCFT, 2 ) );
+  tree->Branch("dz16_before",        event.dz16_before,        Form("dz16_before[%d][%d]/D", NumOfPlaneCFT, 2 ) );
+  tree->Branch("z16_ini_before",     event.z16_ini_before,     Form("z16_ini_before[%d][%d]/D", NumOfPlaneCFT, 2 ) );
+  tree->Branch("z16_track_before",   event.z16_track_before,   Form("z16_track_before[%d][%d]/D", NumOfPlaneCFT, 2 ) );
 
-  tree->Branch("dphi16",      event.dphi16,      Form("dphi16[%d][%d]/D", NumOfLayersCFT, 2 ) );
-  tree->Branch("phi16_ini",   event.phi16_ini,   Form("phi16_ini[%d][%d]/D", NumOfLayersCFT, 2 ) );
-  tree->Branch("phi16_track", event.phi16_track, Form("phi16_track[%d][%d]/D", NumOfLayersCFT, 2 ) );
-  tree->Branch("dz16",        event.dz16,        Form("dz16[%d][%d]/D", NumOfLayersCFT, 2 ) );
-  tree->Branch("z16_ini",     event.z16_ini,     Form("z16_ini[%d][%d]/D", NumOfLayersCFT, 2 ) );
-  tree->Branch("z16_track",   event.z16_track,   Form("z16_track[%d][%d]/D", NumOfLayersCFT, 2 ) );
+  tree->Branch("dphi16",      event.dphi16,      Form("dphi16[%d][%d]/D", NumOfPlaneCFT, 2 ) );
+  tree->Branch("phi16_ini",   event.phi16_ini,   Form("phi16_ini[%d][%d]/D", NumOfPlaneCFT, 2 ) );
+  tree->Branch("phi16_track", event.phi16_track, Form("phi16_track[%d][%d]/D", NumOfPlaneCFT, 2 ) );
+  tree->Branch("dz16",        event.dz16,        Form("dz16[%d][%d]/D", NumOfPlaneCFT, 2 ) );
+  tree->Branch("z16_ini",     event.z16_ini,     Form("z16_ini[%d][%d]/D", NumOfPlaneCFT, 2 ) );
+  tree->Branch("z16_track",   event.z16_track,   Form("z16_track[%d][%d]/D", NumOfPlaneCFT, 2 ) );
 
-  tree->Branch("dr16",        event.dr16,        Form("dr16[%d][%d]/D", NumOfLayersCFT, 2 ) );
+  tree->Branch("dr16",        event.dr16,        Form("dr16[%d][%d]/D", NumOfPlaneCFT, 2 ) );
 #endif
 
   // BGO
