@@ -9,7 +9,7 @@
 #include <sstream>
 #include <vector>
 
-#include <TNamed.h>
+#include <TMacro.h>
 #include <TFile.h>
 
 #include <lexical_cast.hh>
@@ -71,9 +71,7 @@ ConfMan::~ConfMan()
 void
 ConfMan::AddObject()
 {
-  if(m_object) delete m_object;
   gFile->cd("/meta");
-  m_object = new TNamed("conf", m_buf.Data());
   m_object->Write();
   gFile->cd("/");
 }
@@ -97,11 +95,13 @@ ConfMan::Initialize()
   hddaq::cout << FUNC_NAME << " " << m_file[kConfFile] << std::endl;
   sConfDir = hddaq::dirname(m_file[kConfFile].Data());
 
-  m_buf = "\n";
+  if(m_object) delete m_object;
+  m_object = new TMacro("conf");
 
   TString line;
   while(ifs.good() && line.ReadLine(ifs)){
-    m_buf += line + "\n";
+    m_object->AddLine(line.Data());
+
     if(line.IsNull() || line[0]=='#') continue;
 
     line.ReplaceAll(",",  ""); // remove ,

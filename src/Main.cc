@@ -63,7 +63,7 @@ main(int argc, char **argv)
   hddaq::cout << "[::main()] recreate root file : " << out_file << std::endl;
   new TFile(out_file, "recreate");
 
-  auto meta = gFile->mkdir("meta");
+  auto meta = gFile->mkdir("meta", "directory for analysis metadata");
   if(!meta){
     hddaq::cerr << "#E [::main()] directory \"meta\" does not exist" << std::endl;
     return EXIT_FAILURE;

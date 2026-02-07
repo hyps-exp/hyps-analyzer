@@ -7,7 +7,7 @@
 #include <vector>
 #include <TString.h>
 
-class TNamed;
+class TMacro;
 
 //_____________________________________________________________________________
 class UserParamMan
@@ -31,7 +31,7 @@ private:
   TString  m_file_name;
   ParamMap m_param_map;
   TString  m_buf;
-  TNamed*  m_object;
+  TMacro*  m_object;
 
 public:
   void     AddObject();

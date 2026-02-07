@@ -12,7 +12,7 @@
 
 #include <std_ostream.hh>
 
-class TNamed;
+class TMacro;
 
 //_____________________________________________________________________________
 class ConfMan
@@ -43,7 +43,7 @@ private:
   IntList    m_int;
   BoolList   m_bool;
   TString    m_buf;
-  TNamed*    m_object;
+  TMacro*    m_object;
 
 public:
   void    AddObject();

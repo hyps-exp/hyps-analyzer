@@ -12,7 +12,7 @@
 
 #include <TFile.h>
 #include <TMath.h>
-#include <TNamed.h>
+#include <TMacro.h>
 
 #include <std_ostream.hh>
 
@@ -44,9 +44,7 @@ UserParamMan::~UserParamMan()
 void
 UserParamMan::AddObject()
 {
-  if(m_object) delete m_object;
   gFile->cd("/meta");
-  m_object = new TNamed("user", m_buf.Data());
   m_object->Write();
   gFile->cd("/");
 }
@@ -62,12 +60,15 @@ UserParamMan::Initialize()
     return false;
   }
 
-  m_buf = "\n";
+  if(m_object) delete(m_object);
+  m_object = new TMacro("user");
 
   TString line;
   while(ifs.good() && line.ReadLine(ifs)){
-    m_buf += line + "\n";
+    m_object->AddLine(line.Data());
+
     if(line.IsNull() || line[0]=='#') continue;
+
     std::istringstream input_line(line.Data());
     TString key;
     input_line >> key;
