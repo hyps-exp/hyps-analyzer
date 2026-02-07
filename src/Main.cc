@@ -62,9 +62,18 @@ main(int argc, char **argv)
 
   hddaq::cout << "[::main()] recreate root file : " << out_file << std::endl;
   new TFile(out_file, "recreate");
+
+  auto meta = gFile->mkdir("meta");
+  if(!meta){
+    hddaq::cerr << "#E [::main()] directory \"meta\" does not exist" << std::endl;
+    return EXIT_FAILURE;
+  }
+
+  gFile->cd("/meta");
   auto git = new TNamed
     ("git", ("\n"+gSystem->GetFromPipe("git log -1")).Data());
   git->Write();
+  gFile->cd("/");
 
   if(!gConf.Initialize(conf_file) || !gConf.InitializeUnpacker())
     return EXIT_FAILURE;

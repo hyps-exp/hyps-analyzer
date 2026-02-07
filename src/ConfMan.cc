@@ -10,6 +10,7 @@
 #include <vector>
 
 #include <TNamed.h>
+#include <TFile.h>
 
 #include <lexical_cast.hh>
 #include <filesystem_util.hh>
@@ -71,8 +72,10 @@ void
 ConfMan::AddObject()
 {
   if(m_object) delete m_object;
+  gFile->cd("/meta");
   m_object = new TNamed("conf", m_buf.Data());
   m_object->Write();
+  gFile->cd("/");
 }
 
 //_____________________________________________________________________________
@@ -80,7 +83,7 @@ Bool_t
 ConfMan::Initialize()
 {
   if(m_is_ready){
-    hddaq::cerr << FUNC_NAME << " already initialied" << std::endl;
+    hddaq::cerr << FUNC_NAME << " already initialized" << std::endl;
     return false;
   }
 

@@ -45,8 +45,10 @@ void
 UserParamMan::AddObject()
 {
   if(m_object) delete m_object;
+  gFile->cd("/meta");
   m_object = new TNamed("user", m_buf.Data());
   m_object->Write();
+  gFile->cd("/");
 }
 
 //_____________________________________________________________________________
