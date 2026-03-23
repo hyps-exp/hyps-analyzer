@@ -98,6 +98,7 @@ struct Event
 
   int    ntCFT;
   double theta_cft[MaxDepth];
+  double phi_cft[MaxDepth];
   int    nhit_phi[MaxDepth];
   int    nhit_uv[MaxDepth];
   double Total_dE[MaxDepth],    Total_dE_max[MaxDepth];
@@ -119,6 +120,7 @@ struct Event
   int segPiIDt[MaxDepth];// matched to track
 
   Double_t dE_cft[MaxDepth];
+  int    flag_spec[MaxDepth]; // 1:ntHyps>0, 2:Lambda_select
 
   Int_t nhT0;
   Double_t T0Seg[MaxHits];
@@ -215,6 +217,7 @@ struct Event
   Double_t tofda[NumOfSegTOF];
 
   Double_t MissMass[MaxHits];
+  Double_t MissMom[MaxHits];
 
   void clear();
 };
@@ -258,6 +261,7 @@ Event::clear()
 
   for(Int_t m=0; m<MaxDepth; ++m){
     theta_cft[m] = qnan;
+    phi_cft[m] = qnan;
     nhit_phi[m]  = -1;
     nhit_uv[m]   = -1;
 
@@ -285,6 +289,7 @@ Event::clear()
   for(Int_t m=0; m<MaxDepth; ++m){
     segPiIDt[m] = qnan;
     dE_cft[m] = qnan;
+    flag_spec[m] = qnan;
   }
 
   for(Int_t i = 0; i<NumOfLayersVP; ++i){
@@ -376,6 +381,7 @@ Event::clear()
     lvtofHyps[it]  = qnan;
     tofsegHyps[it] = qnan;
     MissMass[it] = qnan;
+    MissMom[it] = qnan;
   }
 
   for(Int_t i=0; i<PlMaxTOF; ++i){
@@ -631,158 +637,6 @@ ProcessingNormal()
   event.EGammaf = egamf;
   event.EGammab = egamb;
   event.EGamma = egam;
-
-  //////////////CATCH Analysis
-  rawData.DecodeHits("CFT");
-  rawData.DecodeHits("PiID");
-  hodoAna.DecodeHits<CFTFiberHit>("CFT");
-  hodoAna.DecodeHits<CFTFiberHit>("PiID");
-
-  hodoAna.TimeCut("CFT", MinTimeCFT, MaxTimeCFT);
-  hodoAna.AdcCut("CFT",  MinAdcCFT,  MaxAdcCFT);
-  const auto& CFTClCont = hodoAna.GetClusterContainer("CFT");
-  DCAna.DecodeCFTHits(CFTClCont);
-  DCAna.TrackSearchCFT();
-
-  Int_t ntCFT=DCAna.GetNtracksCFT();
-  event.ntCFT = ntCFT;
-
-  if(ntCFT<1) return true;
-  rawData.DecodeHits("BGO");
-  hodoAna.DecodeHits<HodoWaveformHit>("BGO");
-
-  std::vector <CFTParticle*> CFTPartCont;
-  for( Int_t i=0; i<ntCFT; ++i ){
-    const CFTLocalTrack *tp=DCAna.GetTrackCFT(i);
-    CFTParticle * CFTPart = new CFTParticle(tp, &hodoAna);
-    CFTPartCont.push_back(CFTPart);
-  }
-  for( Int_t i=0; i<ntCFT; ++i ){
-    CFTParticle *CFTPart  = CFTPartCont[i];
-    CFTPart->Calculate();
-
-    const CFTLocalTrack *tp=CFTPart->GetTrack();
-
-    Int_t nh   = tp->GetNHit();
-    Int_t nhUV = tp->GetNHitUV();
-    Double_t chisqrXY=tp->GetChiSquareXY();
-    Double_t chisqrXYZ=tp->GetChiSquareZ();
-    //Double_t vtx_z =tp->GetVtxZ();
-    Double_t theta =tp->GetThetaCFT();
-    Int_t xyFlag = tp->GetCFTxyFlag();
-    Int_t zFlag  = tp->GetCFTzFlag() ;
-
-    ThreeVector Pos0 = tp->GetPos0();
-    ThreeVector Dir = tp->GetDir();
-    Double_t A=(Dir.x()*Dir.x()+Dir.y()*Dir.y());
-
-    // aka
-    Double_t D=(Dir.x()*Dir.x()+Dir.y()*Dir.y()+Dir.z()*Dir.z());
-
-    Double_t phi = -999.;
-    if(Dir.x()>=0 && Dir.y()>=0){
-      phi = acos(Dir.x()/sqrt(A))*TMath::RadToDeg();
-    }//0~90
-    else if (Dir.x()<0 && Dir.y()>=0){
-      phi = acos(Dir.x()/sqrt(A))*TMath::RadToDeg();
-    }//90~180
-    else if (Dir.x()<0 && Dir.y()<0){
-      phi = 360. - acos(Dir.x()/sqrt(A))*TMath::RadToDeg();
-    }//180~270
-    else if (Dir.x()>=0 && Dir.y()<0){
-      phi = 360. - acos(Dir.x()/sqrt(A))*TMath::RadToDeg(); ;
-    }//270~360
-    else{}
-
-    // vertex
-    ThreeVector  bPos(0., 0., 0.);
-    ThreeVector  bdir(0., 0., 1.);
-    Double_t dist = 1000.;
-    if(Pos0.x()>-500.){
-      ThreeVector vtx = Kinematics::VertexPoint3D(bPos, Pos0, bdir, Dir, dist);
-      //event.vtx_x[i] = vtx.x();
-      //event.vtx_y[i] = vtx.y();
-      //event.vtx_z[i] = vtx.z();
-    }
-
-    event.nhit_phi[i]   = nh;
-    event.nhit_uv[i]    = nhUV;
-    event.theta_cft[i]  = theta;
-    event.Total_dE[i]   = tp->GetTotalSumdE()   ;
-    event.Total_dEphi[i]= tp->GetTotalSumdEphi();
-    event.Total_dEuv[i] = tp->GetTotalSumdEuv ();
-    event.Total_dE_max[i]   = tp->GetTotalMaxdE()   ;
-    event.Total_dEphi_max[i]= tp->GetTotalMaxdEphi();
-    event.Total_dEuv_max[i] = tp->GetTotalMaxdEuv ();
-
-    // event.Dir_x[i] = Dir.x();
-    // event.Dir_y[i] = Dir.y();
-    // event.Dir_z[i] = Dir.z();
-
-    // event.Pos0_x[i] = Pos0.x();
-    // event.Pos0_y[i] = Pos0.y();
-    // event.Pos0_z[i] = Pos0.z();
-
-    // straight layer
-    for(Int_t ip=0; ip<nh; ip++){
-      //CFTFiberCluster *hit = tp->GetHit(ip);
-      const auto& hit = tp->GetHit(ip);
-      //Int_t layer = hit->GetTrackingLayer() - layerId_U1;
-      Int_t layer = hit->PlaneId();
-      Int_t seg_max = hit->MaxSegment();
-      event.dE[layer][i]  = hit->TotalDeltaE();
-      event.MaxSegment[layer][i]  = hit->MaxSegment();
-      event.MaxAdcLow[layer][i]  = hit->MaxAdcLow();
-      event.MaxMipLow[layer][i]  = hit->MaxMipLow();
-    }
-
-    // spiral layer
-    Double_t xmin, xmax;
-    Double_t ymin, ymax;
-    for(Int_t ip=0; ip<nhUV; ip++){
-      const auto& hit = tp->GetHitUV(ip);
-      //CFTFiberCluster *hit = tp->GetHitUV(ip);
-      //Int_t layer = hit->GetTrackingLayer() - layerId_U1;
-      Int_t layer = hit->PlaneId();
-      Int_t seg_max = hit->MaxSegment();
-      event.dE[layer][i]  = hit->TotalDeltaE();
-      event.MaxSegment[layer][i]  = hit->MaxSegment();
-      event.MaxAdcLow[layer][i]  = hit->MaxAdcLow();
-      event.MaxMipLow[layer][i]  = hit->MaxMipLow();
-    }
-
-    Int_t segBGOt  = CFTPart->GetTrackBGOSeg(); // BGO  track segment
-    event.segBGOt[i] = segBGOt;
-    if(event.segBGOt[i] == -1)
-      event.segBGOt[i] = NumOfSegBGO;
-    event.pulseheightBGO[event.segBGOt[i]] = CFTPart->GetBGOPulseHeight();
-    Double_t bgo_energy = CFTPart->GetBGOEnergy(); // no easy calib
-    if (segBGOt>=0 && segBGOt < NumOfSegBGO)
-      event.energybgo[segBGOt] = bgo_energy;
-    else
-      event.energybgo[NumOfSegBGO] = bgo_energy;
-
-    Int_t segPiIDt = CFTPart->GetTrackPiIDSeg();// PiID track segment
-    event.segPiIDt[i] = segPiIDt;
-
-    double dE = tp->GetTotalMaxdEphi()*sin(theta*TMath::DegToRad())/(double)(nh)
-      + tp->GetTotalMaxdEuv()/(double)(nhUV);
-    event.dE_cft[i] = dE;
-
-    Double_t checkmass = CFTPart->GetMass();
-    if(checkmass == 0.9382720)
-      event.pid[i] = 1;
-    else if(checkmass == 0.1395701)
-      event.pid[i] = 0;
-    else
-      event.pid[i] = 2;
-
-    if (segPiIDt>=0)
-      HF2(50011, bgo_energy, dE);
-    else
-      HF2(50010, bgo_energy, dE);
-    HF2(50012, bgo_energy, dE);
-  }
 
   //////////////T0 Analysis
   hodoAna.DecodeHits("T0");
@@ -1177,6 +1031,8 @@ ProcessingNormal()
   //return true;
   
   //////////////HYPS Tracking
+  bool Flag_ntHyps = false;
+  bool Flag_Lambda = false;
   DCAna.TrackSearchHyps();
   Int_t ntHyps = DCAna.GetNTracksHyps();
   if(MaxHits < ntHyps){
@@ -1185,12 +1041,13 @@ ProcessingNormal()
   }
   event.ntHyps = ntHyps;
   HF1(70, ntHyps);
-
+  if(ntHyps>0) Flag_ntHyps = true;
+  
   std::vector<TVector3> HypsMom;
   std::vector<Double_t> HypsCM2;
   std::vector<Double_t> HypsPol;
   std::vector<Int_t> good;
-
+  
   for(Int_t i=0; i<ntHyps; ++i){
     auto track = DCAna.GetHypsTrack(i);
     if(!track) continue;
@@ -1394,19 +1251,24 @@ ProcessingNormal()
   {
     for(Int_t i=0; i<ntHyps; i++){
       Double_t MissMass;
+      Double_t MissMom;
       TVector3 pHyps = HypsMom[i];
       if(std::isnan(egam)){
 	MissMass = -10;
       }else{
-	LorentzVector LvGamma(0, 0, egam, egam);
+	TVector3 bmom(0, 0, egam);
+	LorentzVector LvGamma(bmom, egam);
 	LorentzVector LvProton(0., 0., 0., ProtonMass);
 	LorentzVector LvKaon(pHyps, std::sqrt(KaonMass*KaonMass+pHyps.Mag2()));
 	LorentzVector LvX = LvGamma+LvProton-LvKaon;
-
+	TVector3 MissMomentum = bmom-pHyps;
 	MissMass = LvX.Mag();
+	MissMom = MissMomentum.Mag();
       }
       HF1(95, MissMass);
       event.MissMass[i] = MissMass;
+      event.MissMom[i] = MissMom;
+      if(MissMass>1.05&&MissMass<1.155) Flag_Lambda = true;
     }
   }
 
@@ -1479,6 +1341,162 @@ ProcessingNormal()
   }
 
   HF1(1, 22.);
+
+  //////////////CATCH Analysis
+  rawData.DecodeHits("CFT");
+  rawData.DecodeHits("PiID");
+  hodoAna.DecodeHits<CFTFiberHit>("CFT");
+  hodoAna.DecodeHits<CFTFiberHit>("PiID");
+
+  hodoAna.TimeCut("CFT", MinTimeCFT, MaxTimeCFT);
+  hodoAna.AdcCut("CFT",  MinAdcCFT,  MaxAdcCFT);
+  const auto& CFTClCont = hodoAna.GetClusterContainer("CFT");
+  DCAna.DecodeCFTHits(CFTClCont);
+  DCAna.TrackSearchCFT();
+
+  Int_t ntCFT=DCAna.GetNtracksCFT();
+  event.ntCFT = ntCFT;
+
+  if(ntCFT<1) return true;
+  rawData.DecodeHits("BGO");
+  hodoAna.DecodeHits<HodoWaveformHit>("BGO");
+
+  std::vector <CFTParticle*> CFTPartCont;
+  for( Int_t i=0; i<ntCFT; ++i ){
+    const CFTLocalTrack *tp=DCAna.GetTrackCFT(i);
+    CFTParticle * CFTPart = new CFTParticle(tp, &hodoAna);
+    CFTPartCont.push_back(CFTPart);
+  }
+  for( Int_t i=0; i<ntCFT; ++i ){
+    CFTParticle *CFTPart  = CFTPartCont[i];
+    CFTPart->Calculate();
+
+    const CFTLocalTrack *tp=CFTPart->GetTrack();
+
+    Int_t nh   = tp->GetNHit();
+    Int_t nhUV = tp->GetNHitUV();
+    Double_t chisqrXY=tp->GetChiSquareXY();
+    Double_t chisqrXYZ=tp->GetChiSquareZ();
+    //Double_t vtx_z =tp->GetVtxZ();
+    Double_t theta =tp->GetThetaCFT();
+    Int_t xyFlag = tp->GetCFTxyFlag();
+    Int_t zFlag  = tp->GetCFTzFlag() ;
+
+    ThreeVector Pos0 = tp->GetPos0();
+    ThreeVector Dir = tp->GetDir();
+    Double_t A=(Dir.x()*Dir.x()+Dir.y()*Dir.y());
+
+    // aka
+    Double_t D=(Dir.x()*Dir.x()+Dir.y()*Dir.y()+Dir.z()*Dir.z());
+
+    Double_t phi = -999.;
+    if(Dir.x()>=0 && Dir.y()>=0){
+      phi = acos(Dir.x()/sqrt(A))*TMath::RadToDeg();
+    }//0~90
+    else if (Dir.x()<0 && Dir.y()>=0){
+      phi = acos(Dir.x()/sqrt(A))*TMath::RadToDeg();
+    }//90~180
+    else if (Dir.x()<0 && Dir.y()<0){
+      phi = 360. - acos(Dir.x()/sqrt(A))*TMath::RadToDeg();
+    }//180~270
+    else if (Dir.x()>=0 && Dir.y()<0){
+      phi = 360. - acos(Dir.x()/sqrt(A))*TMath::RadToDeg(); ;
+    }//270~360
+    else{}
+
+    // vertex
+    ThreeVector  bPos(0., 0., 0.);
+    ThreeVector  bdir(0., 0., 1.);
+    Double_t dist = 1000.;
+    if(Pos0.x()>-500.){
+      ThreeVector vtx = Kinematics::VertexPoint3D(bPos, Pos0, bdir, Dir, dist);
+      //event.vtx_x[i] = vtx.x();
+      //event.vtx_y[i] = vtx.y();
+      //event.vtx_z[i] = vtx.z();
+    }
+
+    event.nhit_phi[i]   = nh;
+    event.nhit_uv[i]    = nhUV;
+    event.theta_cft[i]  = theta;
+    event.phi_cft[i]    = phi;
+    event.Total_dE[i]   = tp->GetTotalSumdE()   ;
+    event.Total_dEphi[i]= tp->GetTotalSumdEphi();
+    event.Total_dEuv[i] = tp->GetTotalSumdEuv ();
+    event.Total_dE_max[i]   = tp->GetTotalMaxdE()   ;
+    event.Total_dEphi_max[i]= tp->GetTotalMaxdEphi();
+    event.Total_dEuv_max[i] = tp->GetTotalMaxdEuv ();
+
+    // event.Dir_x[i] = Dir.x();
+    // event.Dir_y[i] = Dir.y();
+    // event.Dir_z[i] = Dir.z();
+
+    // event.Pos0_x[i] = Pos0.x();
+    // event.Pos0_y[i] = Pos0.y();
+    // event.Pos0_z[i] = Pos0.z();
+
+    // straight layer
+    for(Int_t ip=0; ip<nh; ip++){
+      //CFTFiberCluster *hit = tp->GetHit(ip);
+      const auto& hit = tp->GetHit(ip);
+      //Int_t layer = hit->GetTrackingLayer() - layerId_U1;
+      Int_t layer = hit->PlaneId();
+      Int_t seg_max = hit->MaxSegment();
+      event.dE[layer][i]  = hit->TotalDeltaE();
+      event.MaxSegment[layer][i]  = hit->MaxSegment();
+      event.MaxAdcLow[layer][i]  = hit->MaxAdcLow();
+      event.MaxMipLow[layer][i]  = hit->MaxMipLow();
+    }
+
+    // spiral layer
+    Double_t xmin, xmax;
+    Double_t ymin, ymax;
+    for(Int_t ip=0; ip<nhUV; ip++){
+      const auto& hit = tp->GetHitUV(ip);
+      //CFTFiberCluster *hit = tp->GetHitUV(ip);
+      //Int_t layer = hit->GetTrackingLayer() - layerId_U1;
+      Int_t layer = hit->PlaneId();
+      Int_t seg_max = hit->MaxSegment();
+      event.dE[layer][i]  = hit->TotalDeltaE();
+      event.MaxSegment[layer][i]  = hit->MaxSegment();
+      event.MaxAdcLow[layer][i]  = hit->MaxAdcLow();
+      event.MaxMipLow[layer][i]  = hit->MaxMipLow();
+    }
+
+    Int_t segBGOt  = CFTPart->GetTrackBGOSeg(); // BGO  track segment
+    event.segBGOt[i] = segBGOt;
+    if(event.segBGOt[i] == -1)
+      event.segBGOt[i] = NumOfSegBGO;
+    event.pulseheightBGO[event.segBGOt[i]] = CFTPart->GetBGOPulseHeight();
+    Double_t bgo_energy = CFTPart->GetBGOEnergy(); // no easy calib
+    if (segBGOt>=0 && segBGOt < NumOfSegBGO)
+      event.energybgo[segBGOt] = bgo_energy;
+    else
+      event.energybgo[NumOfSegBGO] = bgo_energy;
+
+    Int_t segPiIDt = CFTPart->GetTrackPiIDSeg();// PiID track segment
+    event.segPiIDt[i] = segPiIDt;
+
+    double dE = tp->GetTotalMaxdEphi()*sin(theta*TMath::DegToRad())/(double)(nh)
+      + tp->GetTotalMaxdEuv()/(double)(nhUV);
+    event.dE_cft[i] = dE;
+
+    if(Flag_ntHyps) event.flag_spec[i] = 1;
+    if(Flag_Lambda) event.flag_spec[i] = 2;
+    
+    Double_t checkmass = CFTPart->GetMass();
+    if(checkmass == 0.9382720)
+      event.pid[i] = 1;
+    else if(checkmass == 0.1395701)
+      event.pid[i] = 0;
+    else
+      event.pid[i] = 2;
+
+    if (segPiIDt>=0)
+      HF2(50011, bgo_energy, dE);
+    else
+      HF2(50010, bgo_energy, dE);
+    HF2(50012, bgo_energy, dE);
+  }
 
   
   return true;
@@ -1803,6 +1821,7 @@ ConfMan::InitializeHistograms()
   //CATCH
   tree->Branch("ntCFT",     &event.ntCFT,    "ntCFT/I");
   tree->Branch("theta_cft",    event.theta_cft,    "theta[ntCFT]/D");
+  tree->Branch("phi_cft",    event.phi_cft,    "phi[ntCFT]/D");
   tree->Branch("nhit_phi",     event.nhit_phi,    "nhit_phi[ntCFT]/I");
   tree->Branch("nhit_uv",      event.nhit_uv,     "nhit_uv[ntCFT]/I");
   tree->Branch("dE",      event.dE,       Form("dE[%d][%d]/D", NumOfPlaneCFT, MaxDepth ) );
@@ -1823,7 +1842,7 @@ ConfMan::InitializeHistograms()
   // tree->Branch("Pos0_y",  event.Pos0_y,  "Pos0_y[ntCFT]/D");
   // tree->Branch("Pos0_z",  event.Pos0_z,  "Pos0_z[ntCFT]/D");
 
-  // tree->Branch("pid",  event.pid,  "pid[ntCFT]/I");
+  tree->Branch("pid",  event.pid,  "pid[ntCFT]/I");
 
   // BGO
   //tree->Branch("nhBGO",     &event.nhBGO,    "nhBGO/I");
@@ -1837,6 +1856,7 @@ ConfMan::InitializeHistograms()
   tree->Branch("segPiIDt",   event.segPiIDt,   "segPiIDt[ntCFT]/I");
 
   tree->Branch("dE_cft",   event.dE_cft,   "dE_cft[ntCFT]/D");
+  tree->Branch("flag_spec",   event.flag_spec,   "flag_spec[ntCFT]/I");
   
   //Hodoscope
   tree->Branch("nhT0",   &event.nhT0,   "nhT0/I");
@@ -1961,6 +1981,7 @@ ConfMan::InitializeHistograms()
   tree->Branch("tofda",     event.tofda,     Form("tofda[%d]/D", NumOfSegTOF));
 
   tree->Branch("MissMass", event.MissMass, "MissMass[ntHyps]/D");
+  tree->Branch("MissMom", event.MissMom, "MissMom[ntHyps]/D");
 
   // HPrint();
   return true;
