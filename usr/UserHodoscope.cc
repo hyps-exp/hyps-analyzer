@@ -1378,9 +1378,9 @@ ProcessingNormal()
       for(Int_t m=0; m<n_mhit; ++m){
         HF1(TOFHid+11, seg+0.5);
         Double_t au   = hit->GetAUp(),   ad  = hit->GetADown();
-        Double_t tu   = hit->GetTUp(),   td  = hit->GetTDown();
-        Double_t ctu  = hit->GetCTUp(),  ctd = hit->GetCTDown();
-        Double_t mt   = hit->MeanTime(), cmt = hit->CMeanTime();
+        Double_t tu   = hit->GetTUp(m),   td  = hit->GetTDown(m);
+        Double_t ctu  = hit->GetCTUp(m),  ctd = hit->GetCTDown(m);
+        Double_t mt   = hit->MeanTime(m), cmt = hit->CMeanTime(m);
         Double_t de   = hit->DeltaE();
         Double_t ude  = hit->UDeltaE();
         Double_t dde  = hit->DDeltaE();
