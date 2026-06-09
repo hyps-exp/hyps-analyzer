@@ -7,6 +7,7 @@
 #include <cmath>
 #include <string>
 #include <iomanip>
+#include <vector>
 
 #include <TMath.h>
 
@@ -56,6 +57,7 @@ struct Event
   Int_t evnum;
   Int_t trigpat[NumOfSegTrig];
   Int_t trigflag[NumOfSegTrig];
+  std::vector<Int_t> trigflag_unknown; // unexpected trigflag
 
   Double_t btof;
   Double_t time0;
@@ -204,6 +206,7 @@ Event::clear()
     trigpat[it] = -1;
     trigflag[it] = -1;
   }
+  trigflag_unknown.clear();
 
   for(Int_t it=0; it<MaxHits; it++){
     T0Seg[it] = -1;
@@ -374,13 +377,14 @@ ProcessingNormal()
   for(const auto& hit: rawData.GetHodoRawHitContainer("TFlag")){
     Int_t seg = hit->SegmentId();
     Int_t tdc = hit->GetTdc();
-    if(tdc > 0){
+    if (tdc > 0) {
+      if (seg >= NumOfSegTrig) {
+	event.trigflag_unknown.push_back(seg);
+	continue;
+      }
       event.trigpat[trigger_flag.count()] = seg;
       event.trigflag[seg] = tdc;
       trigger_flag.set(seg);
-      // if(seg == kTriggerFlag::CommonStopSdcOut){
-      //   common_stop_tdc = tdc;
-      // }
     }
   }
 
@@ -1502,6 +1506,7 @@ ConfMan::InitializeHistograms()
   tree->Branch("evnum",     &event.evnum,    "evnum/I");
   tree->Branch("trigpat",    event.trigpat,  Form("trigpat[%d]/I", NumOfSegTrig));
   tree->Branch("trigflag",   event.trigflag, Form("trigflag[%d]/I", NumOfSegTrig));
+  tree->Branch("trigflag_unknown", &event.trigflag_unknown);
 
   //Hodoscope
   tree->Branch("nhT0",   &event.nhT0,   "nhT0/I");

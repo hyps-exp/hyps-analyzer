@@ -7,6 +7,7 @@
 #include <cmath>
 #include <string>
 #include <iomanip>
+#include <vector>
 
 #include <TMath.h>
 
@@ -64,7 +65,7 @@ const auto& gPHC  = HodoPHCMan::GetInstance();
 auto& gTAGPLMth = TAGPLMatch::GetInstance();
 auto& gRM       = RMAnalyzer::GetInstance();
 const Double_t KaonMass = pdg::KaonMass();
-const Double_t ProtonMass = pdg::ProtonMass();  
+const Double_t ProtonMass = pdg::ProtonMass();
 }
 
 //_____________________________________________________________________________
@@ -73,6 +74,7 @@ struct Event
   Int_t evnum;
   Int_t trigpat[NumOfSegTrig];
   Int_t trigflag[NumOfSegTrig];
+  std::vector<Int_t> trigflag_unknown; // unexpected trigflag
 
   Double_t btof;
   Double_t time0;
@@ -235,7 +237,7 @@ Event::clear()
   nhT0    = 0;
   nhTof    = 0;
   ntCFT = 0;
-  
+
   time0 = qnan;
   btof  = qnan;
   RF1st = qnan;
@@ -244,7 +246,7 @@ Event::clear()
   tagsffncl=0;
   tagsfbncl=0;
   tagplnhits=0;
-  
+
   EGammaf = qnan;
   EGammab = qnan;
   EGamma = qnan;
@@ -303,6 +305,7 @@ Event::clear()
     trigpat[it] = -1;
     trigflag[it] = -1;
   }
+  trigflag_unknown.clear();
 
   for(Int_t it=0; it<MaxHits; it++){
     T0Seg[it] = -1;
@@ -488,13 +491,14 @@ ProcessingNormal()
   for(const auto& hit: rawData.GetHodoRawHitContainer("TFlag")){
     Int_t seg = hit->SegmentId();
     Int_t tdc = hit->GetTdc();
-    if(tdc > 0){
+    if (tdc > 0) {
+      if (seg >= NumOfSegTrig) {
+	event.trigflag_unknown.push_back(seg);
+	continue;
+      }
       event.trigpat[trigger_flag.count()] = seg;
       event.trigflag[seg] = tdc;
       trigger_flag.set(seg);
-      // if(seg == trigger::kCommonStopSdcOut){
-      //   common_stop_tdc = tdc;
-      // }
     }
   }
 
@@ -531,7 +535,7 @@ ProcessingNormal()
     }
     event.tagplnhits=nseg_goodtime;
   }
-  
+
   std::vector<double> SFFhit;
   std::vector<double> SFBhit;
   std::vector<double> SFFCand;
@@ -592,9 +596,9 @@ ProcessingNormal()
     for(int i=0;i<SFBhit.size();i++){
       event.tagsfbclhitpat[i]=SFBhit[i];
     }
-    
+
   }
-  
+
   std::vector<double> SFFCand_final;
   std::vector<double> SFBCand_final;
 
@@ -602,7 +606,7 @@ ProcessingNormal()
   double egamb=qnan;
   double egam=qnan;
 
-  /* 
+  /*
     const double eparf[3]={1.486,0.03312,-0.0001588};
     const double eparb[3]={1.49797,0.0327588,-0.000152769};
     const double offset_b=0.6421;
@@ -674,7 +678,7 @@ ProcessingNormal()
       min_time = mt;
     }
   }
-  
+
 
 #if UseRF
   //RF analysis
@@ -694,7 +698,7 @@ ProcessingNormal()
   }
   gPHC.DoCorrection(1,1,0,0,RFmin_time,event.udeT0[0],tempCRFmin_time);
   gPHC.DoCorrection(1,1,0,1,tempCRFmin_time,event.ddeT0[0],CRFmin_time);
- 
+
   event.RF1st=RFmin_time;
   event.CRF1st=CRFmin_time;
 
@@ -755,7 +759,7 @@ ProcessingNormal()
     }
     Bool_t tofsingleflag=nhTof==1 && (event.TofSeg[0]<37 && event.TofSeg[0]>12);
     Bool_t tofdoubleflag=nhTof==2 && (event.TofSeg[0]<37 && event.TofSeg[0]>12 && event.TofSeg[1]<37 && event.TofSeg[1]>12);
-      
+
     //if(!(tofsingleflag || tofdoubleflag)) return true;
     //if(!tofsingleflag) return true;
 
@@ -1029,7 +1033,7 @@ ProcessingNormal()
 #endif
 
   //return true;
-  
+
   //////////////HYPS Tracking
   bool Flag_ntHyps = false;
   bool Flag_Lambda = false;
@@ -1042,17 +1046,17 @@ ProcessingNormal()
   event.ntHyps = ntHyps;
   HF1(70, ntHyps);
   if(ntHyps>0) Flag_ntHyps = true;
-  
+
   std::vector<TVector3> HypsMom;
   std::vector<Double_t> HypsCM2;
   std::vector<Double_t> HypsPol;
   std::vector<Int_t> good;
-  
+
   for(Int_t i=0; i<ntHyps; ++i){
     auto track = DCAna.GetHypsTrack(i);
     if(!track) continue;
     // track->Print();
-    bool ok = true;    
+    bool ok = true;
     Int_t nh = track->GetNHits();
     Double_t chisqr = track->ChiSquare();
     const auto& Pos = track->PrimaryPosition();
@@ -1114,7 +1118,7 @@ ProcessingNormal()
       event.vpv[j] = vpv;
       HF2(100*l+1, vpx, vpu); HF2(100*l+2, vpy, vpv); HF2(100*l+3, vpx, vpy);
     }
-    
+
     Double_t tof_seg = track->TofSeg()+1; // 1-origin
     if( tof_seg > 0 ){
       event.tofsegHyps[i] = tof_seg;
@@ -1152,7 +1156,7 @@ ProcessingNormal()
     }
     event.stof[i] = time;
     event.cstof[i] = ctime;
-    if (!(time > 0.)) ok = false;    
+    if (!(time > 0.)) ok = false;
     if(time > 0.){
       Double_t m2 = Kinematics::MassSquare(p, path, time);
       Double_t cm2 = Kinematics::MassSquare(p, path, ctime);
@@ -1175,7 +1179,7 @@ ProcessingNormal()
 # endif
     }
     if (ok) good.push_back(i);
-    
+
     for(Int_t j=0; j<nh; ++j){
       const auto& hit = track->GetHit(j);
       if(!hit) continue;
@@ -1202,7 +1206,7 @@ ProcessingNormal()
       HF2(100*layerId+17, xcal, ycal);
       DCLTrackHit *lhit2=hit->GetHit();
       Double_t xlcal=lhit2->GetLocalCalPos();
-      if (layerId<41){ 
+      if (layerId<41){
 	HF2(100*layerId+19, dt, xlcal-wp);
 	if (layerId<11){
           if (std::abs(dl-std::abs(xlcal-wp))<2.6){
@@ -1482,7 +1486,7 @@ ProcessingNormal()
 
     if(Flag_ntHyps) event.flag_spec[i] = 1;
     if(Flag_Lambda) event.flag_spec[i] = 2;
-    
+
     Double_t checkmass = CFTPart->GetMass();
     if(checkmass == 0.9382720)
       event.pid[i] = 1;
@@ -1498,7 +1502,7 @@ ProcessingNormal()
     HF2(50012, bgo_energy, dE);
   }
 
-  
+
   return true;
 }
 
@@ -1506,7 +1510,7 @@ ProcessingNormal()
 Bool_t
 ProcessingEnd()
 {
-  if(event.ntHyps>0)tree->Fill();  
+  if(event.ntHyps>0)tree->Fill();
   return true;
 }
 
@@ -1532,14 +1536,14 @@ ConfMan::InitializeHistograms()
   const Int_t    NbinSDC0DL =   55;
   const Double_t MinSDC0DL  = -0.5;
   const Double_t MaxSDC0DL  =  5.0;
-  
+
   const Int_t    NbinSDC1DT =  360;
   const Double_t MinSDC1DT  = -50.;
   const Double_t MaxSDC1DT  = 250.;
   const Int_t    NbinSDC1DL =   85;
   const Double_t MinSDC1DL  = -0.5;
   const Double_t MaxSDC1DL  =  8.0;
-  
+
   const Int_t    NbinSDC2DT =  400;
   const Double_t MinSDC2DT  = -50.;
   const Double_t MaxSDC2DT  = 350.;
@@ -1817,6 +1821,7 @@ ConfMan::InitializeHistograms()
   tree->Branch("evnum",     &event.evnum,    "evnum/I");
   tree->Branch("trigpat",    event.trigpat,  Form("trigpat[%d]/I", NumOfSegTrig));
   tree->Branch("trigflag",   event.trigflag, Form("trigflag[%d]/I", NumOfSegTrig));
+  tree->Branch("trigflag_unknown", &event.trigflag_unknown);
 
   //CATCH
   tree->Branch("ntCFT",     &event.ntCFT,    "ntCFT/I");
@@ -1857,7 +1862,7 @@ ConfMan::InitializeHistograms()
 
   tree->Branch("dE_cft",   event.dE_cft,   "dE_cft[ntCFT]/D");
   tree->Branch("flag_spec",   event.flag_spec,   "flag_spec[ntCFT]/I");
-  
+
   //Hodoscope
   tree->Branch("nhT0",   &event.nhT0,   "nhT0/I");
   tree->Branch("T0Seg",   event.T0Seg,  "T0Seg[nhT0]/D");
@@ -1971,7 +1976,7 @@ ConfMan::InitializeHistograms()
   for( Int_t i = PlMinSdcIn;  i<= PlMaxSdcIn;  i++ ) tree->Branch(Form("PosG%d", i), &event.posG[i-1]);
   for( Int_t i = PlMinSdcOut; i<= PlMaxSdcOut; i++ ) tree->Branch(Form("PosG%d", i), &event.posG[i-1]);
   for( Int_t i = PlMinTOF;    i<= PlMaxTOF;    i++ ) tree->Branch(Form("PosG%d", i), &event.posG[i-1]);
-  
+
   tree->Branch("tTofCalc",  event.tTofCalc,  "tTofCalc[4]/D");
   tree->Branch("utTofSeg",  event.utTofSeg,  Form("utTofSeg[%d]/D", NumOfSegTOF));
   tree->Branch("dtTofSeg",  event.dtTofSeg,  Form("dtTofSeg[%d]/D", NumOfSegTOF));

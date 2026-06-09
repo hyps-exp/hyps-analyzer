@@ -5,6 +5,7 @@
 #include <cmath>
 #include <iostream>
 #include <sstream>
+#include <vector>
 
 #include <UnpackerManager.hh>
 
@@ -59,6 +60,7 @@ struct Event
 
   Int_t trigpat[NumOfSegTrig];
   Int_t trigflag[NumOfSegTrig];
+  std::vector<Int_t> trigflag_unknown; // unexpected trigflag
 
   double dE[NumOfPlaneCFT][MaxDepth] , dE_max[NumOfPlaneCFT][MaxDepth] ;
   Int_t  MaxSegment[NumOfPlaneCFT][MaxDepth];
@@ -104,6 +106,7 @@ Event::clear()
     trigpat[it]  = -1;
     trigflag[it] = -1;
   }
+  trigflag_unknown.clear();
 
   for(Int_t it=0; it<NumOfPlaneCFT; ++it){
     for(Int_t m=0; m<MaxDepth; ++m){
@@ -356,7 +359,11 @@ ProcessingNormal()
   for(const auto& hit: rawData.GetHodoRawHC("TFlag")){
     Int_t seg = hit->SegmentId();
     Int_t tdc = hit->GetTdc();
-    if(tdc > 0){
+    if (tdc > 0) {
+      if (seg >= NumOfSegTrig) {
+	event.trigflag_unknown.push_back(seg);
+	continue;
+      }
       event.trigpat[trigger_flag.count()] = seg;
       event.trigflag[seg] = tdc;
       dst.trigpat[trigger_flag.count()] = seg;
@@ -571,6 +578,7 @@ ConfMan::InitializeHistograms()
   //Trig
   tree->Branch("trigpat",    event.trigpat,   Form("trigpat[%d]/I", NumOfSegTrig));
   tree->Branch("trigflag",   event.trigflag,  Form("trigflag[%d]/I", NumOfSegTrig));
+  tree->Branch("trigflag_unknown", &event.trigflag_unknown);
 
   tree->Branch("ntCFT",     &event.ntCFT,    "ntCFT/I");
 

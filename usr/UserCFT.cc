@@ -5,6 +5,7 @@
 #include <cmath>
 #include <iostream>
 #include <sstream>
+#include <vector>
 
 #include <UnpackerManager.hh>
 
@@ -52,6 +53,7 @@ struct Event
 
   Int_t trigpat[NumOfSegTrig];
   Int_t trigflag[NumOfSegTrig];
+  std::vector<Int_t> trigflag_unknown;
 
   Double_t cftadc_h[NumOfPlaneCFT][NumOfSegCFT_PHI4];
   Double_t cftadc_l[NumOfPlaneCFT][NumOfSegCFT_PHI4];
@@ -78,6 +80,7 @@ Event::clear()
     trigpat[it]  = -1;
     trigflag[it] = -1;
   }
+  trigflag_unknown.clear();
 
   for( int it=0; it<NumOfPlaneCFT; ++it ){
     for(int m = 0; m<NumOfSegCFT_PHI4; ++m){
@@ -293,7 +296,12 @@ ProcessingNormal()
   for(const auto& hit: rawData.GetHodoRawHC("TFlag")){
     Int_t seg = hit->SegmentId();
     Int_t tdc = hit->GetTdc();
-    if(tdc > 0){
+    if (tdc > 0) {
+      if (seg >= NumOfSegTrig) {
+	event.trigflag_unknown.push_back(seg);
+	HF1(10, 20);
+	continue;
+      }
       event.trigpat[trigger_flag.count()] = seg;
       event.trigflag[seg] = tdc;
       dst.trigpat[trigger_flag.count()] = seg;
@@ -631,7 +639,8 @@ Bool_t
 ConfMan::InitializeHistograms()
 {
   HB1(1, "Status", 20, 0., 20.);
-  HB1(10, "Trigger HitPat", NumOfSegTrig, 0., Double_t(NumOfSegTrig));
+  // HB1(10, "Trigger HitPat", NumOfSegTrig, 0., Double_t(NumOfSegTrig));
+  HB1(10, "Trigger HitPat", 20 + 1, 0., 20.0 + 1.0); // Record unexpected trigflag, 2026.06.07 (R.Kurata)
   for(Int_t i=0; i<NumOfSegTrig; ++i){
     HB1(10+i+1, Form("Trigger Flag %d", i+1), 0x1000, 0, 0x1000);
   }
@@ -804,6 +813,7 @@ ConfMan::InitializeHistograms()
   //Trig
   tree->Branch("trigpat",    event.trigpat,   Form("trigpat[%d]/I", NumOfSegTrig));
   tree->Branch("trigflag",   event.trigflag,  Form("trigflag[%d]/I", NumOfSegTrig));
+  tree->Branch("trigflag_unknown", &event.trigflag_unknown);
 
   tree->Branch("cftadc_h",   event.cftadc_h,  Form("cftadc_h[%d][%d]/D", NumOfPlaneCFT, NumOfSegCFT_PHI4));
   tree->Branch("cftadc_l",   event.cftadc_l,  Form("cftadc_l[%d][%d]/D", NumOfPlaneCFT, NumOfSegCFT_PHI4));
