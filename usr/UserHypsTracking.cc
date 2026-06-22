@@ -850,8 +850,16 @@ ProcessingNormal()
       if(!hit) continue;
       Int_t seg = hit->SegmentId()+1;
       if(tof_seg == seg){
-	time = hit->MeanTime() - time0 + StofOffset;
-	ctime = hit->CMeanTime() - time0 + StofOffset;
+	Int_t mh = hit->GetEntries();
+	Double_t diff = 999.;
+	for(Int_t m=0; m<mh; m++){
+	  Double_t mt = hit->MeanTime(m);
+	  if(std::abs(mt-15.5)<std::abs(diff)){
+	    time = hit->MeanTime(m) - time0 + StofOffset;
+	    ctime = hit->CMeanTime(m) - time0 + StofOffset;
+	    diff = mt-15.5;
+	  }
+	}
       }
     }
     event.stof[i] = time;
