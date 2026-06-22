@@ -47,10 +47,14 @@ private:
   Double_t  m_bgo_z_surface;
 
   Double_t  m_Mass;
+  Int_t     m_PID;
 
   Double_t  m_PathLength;
   ThreeVector m_CFTVtx;
 public:
+  enum CATCHParticle {
+    kPion, kProton, kOthers, kBGOP, kHYPS, kThrough, kParicle
+  };
   void AddBGOHit(const HodoWaveformHit* hit) {m_BGOCont.push_back(hit);}
   void AddPiVHit(HodoHit* hit) {m_PiVCont.push_back(hit);}
   void BGOPos(Int_t seg, Double_t *x, Double_t *y) const;
@@ -81,6 +85,7 @@ public:
   void   SetCFTVtx(ThreeVector vtx) {m_CFTVtx=vtx;}
   ThreeVector GetCFTVtx() {return m_CFTVtx;}
   Double_t GetMass() { return m_Mass;}
+  Double_t GetPID() { return m_PID;}
   Double_t GetTotalE() { return m_TotalE;}
   Double_t GetTotalEmax() { return m_TotalE_max;}
   Double_t GetDistXY() { return m_dist_xy;}

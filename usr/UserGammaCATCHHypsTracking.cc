@@ -66,6 +66,10 @@ auto& gTAGPLMth = TAGPLMatch::GetInstance();
 auto& gRM       = RMAnalyzer::GetInstance();
 const Double_t KaonMass = pdg::KaonMass();
 const Double_t ProtonMass = pdg::ProtonMass();
+const double MinOfDeltaU_CFT = -0.1;
+const double MaxOfDeltaU_CFT = 0.1;
+const double MinOfDeltaV_CFT = -0.1;
+const double MaxOfDeltaV_CFT = 0.1;
 }
 
 //_____________________________________________________________________________
@@ -109,6 +113,9 @@ struct Event
 
   Double_t Dir_x[MaxDepth], Dir_y[MaxDepth], Dir_z[MaxDepth];
   Double_t Pos0_x[MaxDepth], Pos0_y[MaxDepth], Pos0_z[MaxDepth];
+
+  Double_t x0[MaxDepth], y0[MaxDepth];
+  Double_t u0[MaxDepth], v0[MaxDepth];
 
   // number{ Pion, Proton, others };
   Int_t pid[MaxDepth];
@@ -181,6 +188,9 @@ struct Event
   Double_t vpy[NumOfLayersVP];
   Double_t vpu[NumOfLayersVP];
   Double_t vpv[NumOfLayersVP];
+  Double_t pHyps_x[MaxHits];
+  Double_t pHyps_y[MaxHits];
+  Double_t pHyps_z[MaxHits];
 
   Double_t xtgtHyps[MaxHits];
   Double_t ytgtHyps[MaxHits];
@@ -220,6 +230,121 @@ struct Event
 
   Double_t MissMass[MaxHits];
   Double_t MissMom[MaxHits];
+
+
+  // Combination
+  Int_t nVer_product;
+  Double_t xtar_product[MaxDepth];
+  Double_t ytar_product[MaxDepth];
+  Double_t ztar_product[MaxDepth];
+  Double_t dist_product[MaxDepth];
+
+  Int_t nCFT_hyps_Vtx;
+  Double_t vtx_cft_hyps_x[MaxDepth];
+  Double_t vtx_cft_hyps_y[MaxDepth];
+  Double_t vtx_cft_hyps_z[MaxDepth];
+  Double_t cdist_cft_hyps[MaxDepth];
+
+  Int_t nP_CFT;
+  Int_t nPi_CFT;
+  Int_t nBGOP_CFT;
+  Int_t nHYPS_CFT;
+
+
+  Int_t track_proton[MaxDepth];
+  Int_t nhit_phi_p[MaxDepth];
+  Int_t nhit_uv_p[MaxDepth];
+
+  Double_t Total_dE_p[MaxDepth];
+  Double_t Total_dEphi_p[MaxDepth];
+  Double_t Total_dEuv_p[MaxDepth];
+  Double_t Total_dE_max_p[MaxDepth];
+  Double_t Total_dEphi_max_p[MaxDepth];
+  Double_t Total_dEuv_max_p[MaxDepth];
+  Double_t segBGOt_p[MaxDepth];
+  Double_t energybgo_p[MaxDepth];
+  Double_t pulseheightBGO_p[MaxDepth];
+  Double_t BGOZpos_p[MaxDepth];
+  Double_t theta_cft_p[MaxDepth];
+
+  Double_t Dir_x_p[MaxDepth];
+  Double_t Dir_y_p[MaxDepth];
+  Double_t Dir_z_p[MaxDepth];
+  Double_t Pos0_x_p[MaxDepth];
+  Double_t Pos0_y_p[MaxDepth];
+  Double_t Pos0_z_p[MaxDepth];
+
+
+  Int_t track_pion[MaxDepth];
+  Int_t nhit_phi_pi[MaxDepth];
+  Int_t nhit_uv_pi[MaxDepth];
+
+  Double_t Total_dE_pi[MaxDepth];
+  Double_t Total_dEphi_pi[MaxDepth];
+  Double_t Total_dEuv_pi[MaxDepth];
+  Double_t Total_dE_max_pi[MaxDepth];
+  Double_t Total_dEphi_max_pi[MaxDepth];
+  Double_t Total_dEuv_max_pi[MaxDepth];
+  Double_t segBGOt_pi[MaxDepth];
+  Double_t energybgo_pi[MaxDepth];
+  Double_t pulseheightBGO_pi[MaxDepth];
+  Double_t BGOZpos_pi[MaxDepth];
+  Double_t theta_cft_pi[MaxDepth];
+
+  Double_t Dir_x_pi[MaxDepth];
+  Double_t Dir_y_pi[MaxDepth];
+  Double_t Dir_z_pi[MaxDepth];
+  Double_t Pos0_x_pi[MaxDepth];
+  Double_t Pos0_y_pi[MaxDepth];
+  Double_t Pos0_z_pi[MaxDepth];
+
+
+  Int_t track_bgop[MaxDepth];
+  Int_t nhit_phi_bgop[MaxDepth];
+  Int_t nhit_uv_bgop[MaxDepth];
+
+  Double_t Total_dE_bgop[MaxDepth];
+  Double_t Total_dEphi_bgop[MaxDepth];
+  Double_t Total_dEuv_bgop[MaxDepth];
+  Double_t Total_dE_max_bgop[MaxDepth];
+  Double_t Total_dEphi_max_bgop[MaxDepth];
+  Double_t Total_dEuv_max_bgop[MaxDepth];
+  Double_t segBGOt_bgop[MaxDepth];
+  Double_t energybgo_bgop[MaxDepth];
+  Double_t pulseheightBGO_bgop[MaxDepth];
+  Double_t BGOZpos_bgop[MaxDepth];
+  Double_t theta_cft_bgop[MaxDepth];
+
+  Double_t Dir_x_bgop[MaxDepth];
+  Double_t Dir_y_bgop[MaxDepth];
+  Double_t Dir_z_bgop[MaxDepth];
+  Double_t Pos0_x_bgop[MaxDepth];
+  Double_t Pos0_y_bgop[MaxDepth];
+  Double_t Pos0_z_bgop[MaxDepth];
+
+
+  Int_t track_hyps[MaxDepth];
+  Int_t nhit_phi_hyps[MaxDepth];
+  Int_t nhit_uv_hyps[MaxDepth];
+
+  Double_t Total_dE_hyps[MaxDepth];
+  Double_t Total_dEphi_hyps[MaxDepth];
+  Double_t Total_dEuv_hyps[MaxDepth];
+  Double_t Total_dE_max_hyps[MaxDepth];
+  Double_t Total_dEphi_max_hyps[MaxDepth];
+  Double_t Total_dEuv_max_hyps[MaxDepth];
+  Double_t segBGOt_hyps[MaxDepth];
+  Double_t energybgo_hyps[MaxDepth];
+  Double_t pulseheightBGO_hyps[MaxDepth];
+  Double_t BGOZpos_hyps[MaxDepth];
+  Double_t theta_cft_hyps[MaxDepth];
+
+  Double_t Dir_x_hyps[MaxDepth];
+  Double_t Dir_y_hyps[MaxDepth];
+  Double_t Dir_z_hyps[MaxDepth];
+  Double_t Pos0_x_hyps[MaxDepth];
+  Double_t Pos0_y_hyps[MaxDepth];
+  Double_t Pos0_z_hyps[MaxDepth];
 
   void clear();
 };
@@ -273,6 +398,11 @@ Event::clear()
     Total_dEphi_max[m] = qnan;
     Total_dEuv[m]      = qnan;
     Total_dEuv_max[m]  = qnan;
+
+    x0[m]  = qnan;
+    y0[m]  = qnan;
+    u0[m]  = qnan;
+    v0[m]  = qnan;
 
     Dir_x[m] = qnan;
     Dir_y[m] = qnan;
@@ -373,6 +503,9 @@ Event::clear()
     vty_Hyps[it]  = qnan;
     vtz_Hyps[it]  = qnan;
     cdist_Hyps[it] = qnan;
+    pHyps_x[it]    = qnan;
+    pHyps_y[it]    = qnan;
+    pHyps_z[it]    = qnan;
     resP[it]        = qnan;
     xtofHyps[it]  = qnan;
     ytofHyps[it]  = qnan;
@@ -410,6 +543,125 @@ Event::clear()
     tofua[i]     = qnan;
     tofda[i]     = qnan;
   }
+
+
+  // Combination
+  nVer_product  = 0;
+  nCFT_hyps_Vtx = 0;
+
+  nP_CFT    = 0;
+  nPi_CFT   = 0;
+  nBGOP_CFT = 0;
+  nHYPS_CFT = 0;
+
+  for(Int_t it=0; it<MaxDepth; it++){
+    xtar_product[it] = 0;
+    ytar_product[it] = 0;
+    ztar_product[it] = 0;
+    dist_product[it] = 0;
+
+    vtx_cft_hyps_x[it] = 0;
+    vtx_cft_hyps_y[it] = 0;
+    vtx_cft_hyps_z[it] = 0;
+    cdist_cft_hyps[it] = 0;
+
+
+    track_proton[it] = 0;
+    nhit_phi_p[it]   = 0;
+    nhit_uv_p[it]    = 0;
+
+    Total_dE_p[it]        = 0;
+    Total_dEphi_p[it]     = 0;
+    Total_dEuv_p[it]      = 0;
+    Total_dE_max_p[it]    = 0;
+    Total_dEphi_max_p[it] = 0;
+    Total_dEuv_max_p[it]  = 0;
+    segBGOt_p[it]         = 0;
+    energybgo_p[it]       = 0;
+    pulseheightBGO_p[it]  = 0;
+    BGOZpos_p[it]         = 0;
+    theta_cft_p[it]       = 0;
+
+    Dir_x_p[it]  = 0;
+    Dir_y_p[it]  = 0;
+    Dir_z_p[it]  = 0;
+    Pos0_x_p[it] = 0;
+    Pos0_y_p[it] = 0;
+    Pos0_z_p[it] = 0;
+
+
+    track_pion[it] = 0;
+    nhit_phi_pi[it]   = 0;
+    nhit_uv_pi[it]    = 0;
+
+    Total_dE_pi[it]        = 0;
+    Total_dEphi_pi[it]     = 0;
+    Total_dEuv_pi[it]      = 0;
+    Total_dE_max_pi[it]    = 0;
+    Total_dEphi_max_pi[it] = 0;
+    Total_dEuv_max_pi[it]  = 0;
+    segBGOt_pi[it]         = 0;
+    energybgo_pi[it]       = 0;
+    pulseheightBGO_pi[it]  = 0;
+    BGOZpos_pi[it]         = 0;
+    theta_cft_pi[it]       = 0;
+
+    Dir_x_pi[it]  = 0;
+    Dir_y_pi[it]  = 0;
+    Dir_z_pi[it]  = 0;
+    Pos0_x_pi[it] = 0;
+    Pos0_y_pi[it] = 0;
+    Pos0_z_pi[it] = 0;
+
+
+    track_bgop[it] = 0;
+    nhit_phi_bgop[it]   = 0;
+    nhit_uv_bgop[it]    = 0;
+
+    Total_dE_bgop[it]        = 0;
+    Total_dEphi_bgop[it]     = 0;
+    Total_dEuv_bgop[it]      = 0;
+    Total_dE_max_bgop[it]    = 0;
+    Total_dEphi_max_bgop[it] = 0;
+    Total_dEuv_max_bgop[it]  = 0;
+    segBGOt_bgop[it]         = 0;
+    energybgo_bgop[it]       = 0;
+    pulseheightBGO_bgop[it]  = 0;
+    BGOZpos_bgop[it]         = 0;
+    theta_cft_bgop[it]       = 0;
+
+    Dir_x_bgop[it]  = 0;
+    Dir_y_bgop[it]  = 0;
+    Dir_z_bgop[it]  = 0;
+    Pos0_x_bgop[it] = 0;
+    Pos0_y_bgop[it] = 0;
+    Pos0_z_bgop[it] = 0;
+
+
+    track_hyps[it] = 0;
+    nhit_phi_hyps[it]   = 0;
+    nhit_uv_hyps[it]    = 0;
+
+    Total_dE_hyps[it]        = 0;
+    Total_dEphi_hyps[it]     = 0;
+    Total_dEuv_hyps[it]      = 0;
+    Total_dE_max_hyps[it]    = 0;
+    Total_dEphi_max_hyps[it] = 0;
+    Total_dEuv_max_hyps[it]  = 0;
+    segBGOt_hyps[it]         = 0;
+    energybgo_hyps[it]       = 0;
+    pulseheightBGO_hyps[it]  = 0;
+    BGOZpos_hyps[it]         = 0;
+    theta_cft_hyps[it]       = 0;
+
+    Dir_x_hyps[it]  = 0;
+    Dir_y_hyps[it]  = 0;
+    Dir_z_hyps[it]  = 0;
+    Pos0_x_hyps[it] = 0;
+    Pos0_y_hyps[it] = 0;
+    Pos0_z_hyps[it] = 0;
+  }
+
 }
 
 //_____________________________________________________________________________
@@ -1105,6 +1357,9 @@ ProcessingNormal()
     event.thetaHyps[i] = theta;
     event.phiHyps[i] = phi;
     event.resP[i] = p - initial_momentum;
+    event.pHyps_x[i] = Mom.x();
+    event.pHyps_y[i] = Mom.y();
+    event.pHyps_z[i] = Mom.z();
 
     for(Int_t j = 0; j<NumOfLayersVP; ++j){
       Int_t l = PlMinVP + j;
@@ -1371,6 +1626,10 @@ ProcessingNormal()
     CFTParticle * CFTPart = new CFTParticle(tp, &hodoAna);
     CFTPartCont.push_back(CFTPart);
   }
+
+  ThreeVector track_Dir[MaxDepth];
+  ThreeVector track_Pos[MaxDepth];
+
   for( Int_t i=0; i<ntCFT; ++i ){
     CFTParticle *CFTPart  = CFTPartCont[i];
     CFTPart->Calculate();
@@ -1419,6 +1678,16 @@ ProcessingNormal()
       //event.vtx_z[i] = vtx.z();
     }
 
+    Double_t x0 = tp->GetX0(), u0 = tp->GetU0();
+    Double_t y0 = tp->GetY0(), v0 = tp->GetV0();
+
+    event.x0[i] = x0;
+    event.y0[i] = y0;
+    event.u0[i] = u0;
+    event.v0[i] = v0;
+    track_Dir[i] = tp->GetDir();
+    track_Pos[i] = tp->GetPos0();
+
     event.nhit_phi[i]   = nh;
     event.nhit_uv[i]    = nhUV;
     event.theta_cft[i]  = theta;
@@ -1430,13 +1699,13 @@ ProcessingNormal()
     event.Total_dEphi_max[i]= tp->GetTotalMaxdEphi();
     event.Total_dEuv_max[i] = tp->GetTotalMaxdEuv ();
 
-    // event.Dir_x[i] = Dir.x();
-    // event.Dir_y[i] = Dir.y();
-    // event.Dir_z[i] = Dir.z();
+    event.Dir_x[i] = Dir.x();
+    event.Dir_y[i] = Dir.y();
+    event.Dir_z[i] = Dir.z();
 
-    // event.Pos0_x[i] = Pos0.x();
-    // event.Pos0_y[i] = Pos0.y();
-    // event.Pos0_z[i] = Pos0.z();
+    event.Pos0_x[i] = Pos0.x();
+    event.Pos0_y[i] = Pos0.y();
+    event.Pos0_z[i] = Pos0.z();
 
     // straight layer
     for(Int_t ip=0; ip<nh; ip++){
@@ -1487,13 +1756,11 @@ ProcessingNormal()
     if(Flag_ntHyps) event.flag_spec[i] = 1;
     if(Flag_Lambda) event.flag_spec[i] = 2;
 
-    Double_t checkmass = CFTPart->GetMass();
-    if(checkmass == 0.9382720)
-      event.pid[i] = 1;
-    else if(checkmass == 0.1395701)
-      event.pid[i] = 0;
-    else
-      event.pid[i] = 2;
+
+    event.pid[i] = CFTPart->GetPID();
+    if(event.pid[i]==-1){
+      event.pid[i] = CFTParticle::kOthers;
+    }
 
     if (segPiIDt>=0)
       HF2(50011, bgo_energy, dE);
@@ -1502,6 +1769,229 @@ ProcessingNormal()
     HF2(50012, bgo_energy, dE);
   }
 
+
+  // CFTTracking
+  if(ntCFT>1){
+    Int_t nVer = 0;
+    TVector3 target;
+    Double_t dist_product;
+    for(Int_t i=0; i<ntCFT-1; i++){
+      for(Int_t j=i+1; j<ntCFT; j++){
+        target = Kinematics::VertexPoint3D(track_Pos[i], track_Pos[j], track_Dir[i], track_Dir[j], dist_product);
+        event.xtar_product[nVer] = target.X();
+        event.ytar_product[nVer] = target.Y();
+        event.ztar_product[nVer] = target.Z();
+        event.dist_product[nVer] = dist_product;
+
+        // HF2 (30, target.X(), target.Y());
+        // HF2 (31, target.Z(), target.X());
+        // HF2 (32, target.Z(), target.Y());
+
+        nVer++;
+      }
+    }
+    event.nVer_product = nVer;
+  }
+
+  Int_t npi   = 0;
+  Int_t np    = 0;
+  Int_t nbgop = 0;
+  Int_t nhyps = 0;
+  for (int ic=0; ic<event.ntCFT; ic++) {
+    double u0 = event.u0[ic];
+    double v0 = event.v0[ic];
+
+
+    for (int ih=0; ih<event.ntHyps; ih++) {
+      ThreeVector HypsMom_check(event.pHyps_x[ih], event.pHyps_y[ih], event.pHyps_z[ih]);
+      ThreeVector HypsPos_check(event.xtgtHyps[ih], event.ytgtHyps[ih], 0);
+
+      ThreeVector Dir(event.Dir_x[ic], event.Dir_y[ic], event.Dir_z[ic]);
+      ThreeVector Pos0(event.Pos0_x[ic], event.Pos0_y[ic], event.Pos0_z[ic]);
+      // CATCH z origin --> target center origin
+      double x0 = Pos0.x() + (-Pos0.z())*Dir.x()/Dir.z();
+      double y0 = Pos0.y() + (-Pos0.z())*Dir.y()/Dir.z();
+      ThreeVector PosT0(x0, y0, 0);
+
+      double cdist_cft;
+      ThreeVector vertexCft = Kinematics::VertexPoint( HypsPos_check, PosT0, HypsMom_check, Dir, cdist_cft );
+
+      event.vtx_cft_hyps_x[event.nCFT_hyps_Vtx] = vertexCft.x();
+      event.vtx_cft_hyps_y[event.nCFT_hyps_Vtx] = vertexCft.y();
+      event.vtx_cft_hyps_z[event.nCFT_hyps_Vtx] = vertexCft.z();
+      event.cdist_cft_hyps[event.nCFT_hyps_Vtx] = cdist_cft;
+      event.nCFT_hyps_Vtx++;
+
+
+      Bool_t IsHitBGO = false;
+      double x = vertexCft.x();
+      double y = vertexCft.y();
+      double z = vertexCft.z();
+
+      if(y>=-150 && y<=150 && x>=-150 && x<=150){
+	double b00 = -210;
+	double b01 = 210;
+
+	double y00 = x + b00;
+	double y01 = -x + b00;
+	double y02 = x + b01;
+	double y03 = -x + b01;
+
+	if(y >= y00 && y >= y01 && y<= y02 && y <= y03){
+	  double b10 = -130;
+	  double b11 = 130;
+
+	  double y10 = x + b10;
+	  double y11 = -x + b10;
+	  double y12 = x + b11;
+	  double y13 = -x + b11;
+
+	  if(cdist_cft <= 15 && z >= -200 && z <= 300){
+	    if(y <= y10)
+	      IsHitBGO = true;
+	    else if(y <= y11)
+	      IsHitBGO = true;
+	    else if(y >= y12)
+	      IsHitBGO = true;
+	    else if(y >= y13)
+	      IsHitBGO = true;
+	    else if(y <= -90)
+	      IsHitBGO = true;
+	    else if(y >= 90)
+	      IsHitBGO = true;
+	    else if(x <= -90)
+	      IsHitBGO = true;
+	    else if(x >= 90)
+	      IsHitBGO = true;
+	  }
+	}
+      }
+
+      if (IsHitBGO) {
+	event.pid[ic] = CFTParticle::kBGOP;
+      }
+
+    }
+
+
+    for (int ih=0; ih<event.ntHyps; ih++) {
+      ThreeVector HypsMom_check(event.pHyps_x[ih], event.pHyps_y[ih], event.pHyps_z[ih]);
+      double ut = HypsMom_check.x()/HypsMom_check.z(), vt = HypsMom_check.y()/HypsMom_check.z();
+
+      double delta_u = ut - u0;
+      double delta_v = vt - v0;
+
+      if (delta_u > MinOfDeltaU_CFT && delta_u < MaxOfDeltaU_CFT
+	  && delta_v > MinOfDeltaV_CFT && delta_v < MaxOfDeltaV_CFT) {
+	event.pid[ic] = CFTParticle::kHYPS;
+	break;
+      }
+    }
+
+
+    if (event.pid[ic]==CFTParticle::kProton) {
+      event.track_proton[np] = ic;
+      event.nhit_phi_p[np]   = event.nhit_phi[ic];
+      event.nhit_uv_p[np]    = event.nhit_uv[ic];
+
+      event.Total_dE_p[np]        = event.Total_dE[ic];
+      event.Total_dEphi_p[np]     = event.Total_dEphi[ic];
+      event.Total_dEuv_p[np]      = event.Total_dEuv[ic];
+      event.Total_dE_max_p[np]    = event.Total_dE_max[ic];
+      event.Total_dEphi_max_p[np] = event.Total_dEphi_max[ic];
+      event.Total_dEuv_max_p[np]  = event.Total_dEuv_max[ic];
+      event.segBGOt_p[np]         = event.segBGOt[ic];
+      event.energybgo_p[np]       = event.energybgo[ic];
+      event.pulseheightBGO_p[np]  = event.pulseheightBGO[ic];
+      event.theta_cft_p[np]       = event.theta_cft[ic];
+
+      event.Dir_x_p[np]  = event.Dir_x[ic];
+      event.Dir_y_p[np]  = event.Dir_y[ic];
+      event.Dir_z_p[np]  = event.Dir_z[ic];
+      event.Pos0_x_p[np] = event.Pos0_x[ic];
+      event.Pos0_y_p[np] = event.Pos0_y[ic];
+      event.Pos0_z_p[np] = event.Pos0_z[ic];
+
+      np++;
+    } else if (event.pid[ic]==CFTParticle::kPion) {
+      event.track_pion[npi] = ic;
+      event.nhit_phi_pi[npi]   = event.nhit_phi[ic];
+      event.nhit_uv_pi[npi]    = event.nhit_uv[ic];
+
+      event.Total_dE_pi[npi]        = event.Total_dE[ic];
+      event.Total_dEphi_pi[npi]     = event.Total_dEphi[ic];
+      event.Total_dEuv_pi[npi]      = event.Total_dEuv[ic];
+      event.Total_dE_max_pi[npi]    = event.Total_dE_max[ic];
+      event.Total_dEphi_max_pi[npi] = event.Total_dEphi_max[ic];
+      event.Total_dEuv_max_pi[npi]  = event.Total_dEuv_max[ic];
+      event.segBGOt_pi[npi]         = event.segBGOt[ic];
+      event.energybgo_pi[npi]       = event.energybgo[ic];
+      event.pulseheightBGO_pi[npi]  = event.pulseheightBGO[ic];
+      event.theta_cft_pi[npi]       = event.theta_cft[ic];
+
+      event.Dir_x_pi[npi]  = event.Dir_x[ic];
+      event.Dir_y_pi[npi]  = event.Dir_y[ic];
+      event.Dir_z_pi[npi]  = event.Dir_z[ic];
+      event.Pos0_x_pi[npi] = event.Pos0_x[ic];
+      event.Pos0_y_pi[npi] = event.Pos0_y[ic];
+      event.Pos0_z_pi[npi] = event.Pos0_z[ic];
+
+      npi++;
+    } else if (event.pid[ic]==CFTParticle::kBGOP) {
+      event.track_bgop[nbgop] = ic;
+      event.nhit_phi_bgop[nbgop]   = event.nhit_phi[ic];
+      event.nhit_uv_bgop[nbgop]    = event.nhit_uv[ic];
+
+      event.Total_dE_bgop[nbgop]        = event.Total_dE[ic];
+      event.Total_dEphi_bgop[nbgop]     = event.Total_dEphi[ic];
+      event.Total_dEuv_bgop[nbgop]      = event.Total_dEuv[ic];
+      event.Total_dE_max_bgop[nbgop]    = event.Total_dE_max[ic];
+      event.Total_dEphi_max_bgop[nbgop] = event.Total_dEphi_max[ic];
+      event.Total_dEuv_max_bgop[nbgop]  = event.Total_dEuv_max[ic];
+      event.segBGOt_bgop[nbgop]         = event.segBGOt[ic];
+      event.energybgo_bgop[nbgop]       = event.energybgo[ic];
+      event.pulseheightBGO_bgop[nbgop]  = event.pulseheightBGO[ic];
+      event.theta_cft_bgop[nbgop]       = event.theta_cft[ic];
+
+      event.Dir_x_bgop[nbgop]  = event.Dir_x[ic];
+      event.Dir_y_bgop[nbgop]  = event.Dir_y[ic];
+      event.Dir_z_bgop[nbgop]  = event.Dir_z[ic];
+      event.Pos0_x_bgop[nbgop] = event.Pos0_x[ic];
+      event.Pos0_y_bgop[nbgop] = event.Pos0_y[ic];
+      event.Pos0_z_bgop[nbgop] = event.Pos0_z[ic];
+
+      nbgop++;
+    } else if (event.pid[ic]==CFTParticle::kHYPS) {
+      event.track_hyps[nhyps] = ic;
+      event.nhit_phi_hyps[nhyps]   = event.nhit_phi[ic];
+      event.nhit_uv_hyps[nhyps]    = event.nhit_uv[ic];
+
+      event.Total_dE_hyps[nhyps]        = event.Total_dE[ic];
+      event.Total_dEphi_hyps[nhyps]     = event.Total_dEphi[ic];
+      event.Total_dEuv_hyps[nhyps]      = event.Total_dEuv[ic];
+      event.Total_dE_max_hyps[nhyps]    = event.Total_dE_max[ic];
+      event.Total_dEphi_max_hyps[nhyps] = event.Total_dEphi_max[ic];
+      event.Total_dEuv_max_hyps[nhyps]  = event.Total_dEuv_max[ic];
+      event.segBGOt_hyps[nhyps]         = event.segBGOt[ic];
+      event.energybgo_hyps[nhyps]       = event.energybgo[ic];
+      event.pulseheightBGO_hyps[nhyps]  = event.pulseheightBGO[ic];
+      event.theta_cft_hyps[nhyps]       = event.theta_cft[ic];
+
+      event.Dir_x_hyps[nhyps]  = event.Dir_x[ic];
+      event.Dir_y_hyps[nhyps]  = event.Dir_y[ic];
+      event.Dir_z_hyps[nhyps]  = event.Dir_z[ic];
+      event.Pos0_x_hyps[nhyps] = event.Pos0_x[ic];
+      event.Pos0_y_hyps[nhyps] = event.Pos0_y[ic];
+      event.Pos0_z_hyps[nhyps] = event.Pos0_z[ic];
+
+      nhyps++;
+    }
+  }
+
+  event.nPi_CFT    = npi;
+  event.nP_CFT     = np;
+  event.nBGOP_CFT  = nbgop;
+  event.nHYPS_CFT  = nhyps;
 
   return true;
 }
@@ -1840,12 +2330,12 @@ ConfMan::InitializeHistograms()
   tree->Branch("Total_dE_max",    event.Total_dE_max,    "totaldE_max[ntCFT]/D");
   tree->Branch("Total_dEphi_max", event.Total_dEphi_max, "totaldEphi_max[ntCFT]/D");
   tree->Branch("Total_dEuv_max",  event.Total_dEuv_max,  "totaldEuv_max[ntCFT]/D");
-  // tree->Branch("Dir_x",   event.Dir_x,   "Dir_x[ntCFT]/D");
-  // tree->Branch("Dir_y",   event.Dir_y,   "Dir_y[ntCFT]/D");
-  // tree->Branch("Dir_z",   event.Dir_z,   "Dir_z[ntCFT]/D");
-  // tree->Branch("Pos0_x",  event.Pos0_x,  "Pos0_x[ntCFT]/D");
-  // tree->Branch("Pos0_y",  event.Pos0_y,  "Pos0_y[ntCFT]/D");
-  // tree->Branch("Pos0_z",  event.Pos0_z,  "Pos0_z[ntCFT]/D");
+  tree->Branch("Dir_x",   event.Dir_x,   "Dir_x[ntCFT]/D");
+  tree->Branch("Dir_y",   event.Dir_y,   "Dir_y[ntCFT]/D");
+  tree->Branch("Dir_z",   event.Dir_z,   "Dir_z[ntCFT]/D");
+  tree->Branch("Pos0_x",  event.Pos0_x,  "Pos0_x[ntCFT]/D");
+  tree->Branch("Pos0_y",  event.Pos0_y,  "Pos0_y[ntCFT]/D");
+  tree->Branch("Pos0_z",  event.Pos0_z,  "Pos0_z[ntCFT]/D");
 
   tree->Branch("pid",  event.pid,  "pid[ntCFT]/I");
 
@@ -1932,6 +2422,9 @@ ConfMan::InitializeHistograms()
   tree->Branch("qHyps",      event.qHyps,      "qHyps[ntHyps]/D");
   tree->Branch("m2",           event.m2,           "m2[ntHyps]/D");
   tree->Branch("cm2",           event.cm2,           "cm2[ntHyps]/D");
+  tree->Branch("pHyps_x",      event.pHyps_x,      "pHyps_x[ntHyps]/D");
+  tree->Branch("pHyps_y",      event.pHyps_y,      "pHyps_y[ntHyps]/D");
+  tree->Branch("pHyps_z",      event.pHyps_z,      "pHyps_z[ntHyps]/D");
 
   tree->Branch("xtgtHyps",   event.xtgtHyps,   "xtgtHyps[ntHyps]/D");
   tree->Branch("ytgtHyps",   event.ytgtHyps,   "ytgtHyps[ntHyps]/D");
@@ -1987,6 +2480,107 @@ ConfMan::InitializeHistograms()
 
   tree->Branch("MissMass", event.MissMass, "MissMass[ntHyps]/D");
   tree->Branch("MissMom", event.MissMom, "MissMom[ntHyps]/D");
+
+  // Combination
+  tree->Branch("nVer_product", &event.nVer_product, "nVer_product/I");
+  tree->Branch("dist_product",  event.dist_product, "dist_product[nVer_product]/D");
+  tree->Branch("xtar_product",  event.xtar_product, "xtar_product[nVer_product]/D");
+  tree->Branch("ytar_product",  event.ytar_product, "ytar_product[nVer_product]/D");
+  tree->Branch("ztar_product",  event.ztar_product, "ztar_product[nVer_product]/D");
+
+  tree->Branch("nCFT_hyps_Vtx",  &event.nCFT_hyps_Vtx,  "nCFT_hyps_Vtx/I");
+  tree->Branch("vtx_cft_hyps_x",  event.vtx_cft_hyps_x, "vtx_cft_hyps_x[nCFT_hyps_Vtx]/D");
+  tree->Branch("vtx_cft_hyps_y",  event.vtx_cft_hyps_y, "vtx_cft_hyps_y[nCFT_hyps_Vtx]/D");
+  tree->Branch("vtx_cft_hyps_z",  event.vtx_cft_hyps_z, "vtx_cft_hyps_z[nCFT_hyps_Vtx]/D");
+  tree->Branch("cdist_cft_hyps",  event.cdist_cft_hyps, "cdist_cft_hyps[nCFT_hyps_Vtx]/D");
+
+
+  tree->Branch("nP_CFT",           &event.nP_CFT,            "nP_CFT/I");
+  tree->Branch("track_proton",      event.track_proton,      "track_proton[nP_CFT]/D");
+  tree->Branch("theta_cft_p",       event.theta_cft_p,       "theta_cft_p[nP_CFT]/D");
+  tree->Branch("nhit_phi_p",        event.nhit_phi_p,        "nhit_phi_p[nP_CFT]/D");
+  tree->Branch("nhit_uv_p",         event.nhit_uv_p,         "nhit_uv_p[nP_CFT]/D");
+  tree->Branch("Total_dE_p",        event.Total_dE_p,        "Total_dE_p[nP_CFT]/D");
+  tree->Branch("Total_dEphi_p",     event.Total_dEphi_p,     "TotaldEphi_p[nP_CFT]/D");
+  tree->Branch("Total_dEuv_p",      event.Total_dEuv_p,      "TotaldEuv_p[nP_CFT]/D");
+  tree->Branch("Total_dE_max_p",    event.Total_dE_max_p,    "Total_dE_max_p[nP_CFT]/D");
+  tree->Branch("Total_dEphi_max_p", event.Total_dEphi_max_p, "totaldEphi_max_p[nP_CFT]/D");
+  tree->Branch("Total_dEuv_max_p",  event.Total_dEuv_max_p,  "totaldEuv_max_p[nP_CFT]/D");
+  tree->Branch("segBGOt_p",         event.segBGOt_p,         "segBGOt_p[nP_CFT]/I");
+  tree->Branch("energyBGO_p",       event.energybgo_p,       "energybgo_p[nP_CFT]/D");
+  tree->Branch("pulseheightBGO_p",  event.pulseheightBGO_p,  "pulseheightBGO_p[nP_CFT]/D");
+  tree->Branch("Dir_x_p",           event.Dir_x_p,           "Dir_x_p[nP_CFT]/D");
+  tree->Branch("Dir_y_p",           event.Dir_y_p,           "Dir_y_p[nP_CFT]/D");
+  tree->Branch("Dir_z_p",           event.Dir_z_p,           "Dir_z_p[nP_CFT]/D");
+  tree->Branch("Pos0_x_p",          event.Pos0_x_p,          "Pos0_x_p[nP_CFT]/D");
+  tree->Branch("Pos0_y_p",          event.Pos0_y_p,          "Pos0_y_p[nP_CFT]/D");
+  tree->Branch("Pos0_z_p",          event.Pos0_z_p,          "Pos0_z_p[nP_CFT]/D");
+
+
+  tree->Branch("nPi_CFT",           &event.nPi_CFT,            "nPi_CFT/I");
+  tree->Branch("track_pion",         event.track_pion,         "track_pion[nPi_CFT]/D");
+  tree->Branch("theta_cft_pi",       event.theta_cft_pi,       "theta_cft_pi[nPi_CFT]/D");
+  tree->Branch("nhit_phi_pi",        event.nhit_phi_pi,        "nhit_phi_pi[nPi_CFT]/D");
+  tree->Branch("nhit_uv_pi",         event.nhit_uv_pi,         "nhit_uv_pi[nPi_CFT]/D");
+  tree->Branch("Total_dE_pi",        event.Total_dE_pi,        "Total_dE_pi[nPi_CFT]/D");
+  tree->Branch("Total_dEphi_pi",     event.Total_dEphi_pi,     "TotaldEphi_pi[nPi_CFT]/D");
+  tree->Branch("Total_dEuv_pi",      event.Total_dEuv_pi,      "TotaldEuv_pi[nPi_CFT]/D");
+  tree->Branch("Total_dE_max_pi",    event.Total_dE_max_pi,    "Total_dE_max_pi[nPi_CFT]/D");
+  tree->Branch("Total_dEphi_max_pi", event.Total_dEphi_max_pi, "totaldEphi_max_pi[nPi_CFT]/D");
+  tree->Branch("Total_dEuv_max_pi",  event.Total_dEuv_max_pi,  "totaldEuv_max_pi[nPi_CFT]/D");
+  tree->Branch("segBGOt_pi",         event.segBGOt_pi,         "segBGOt_pi[nPi_CFT]/I");
+  tree->Branch("energyBGO_pi",       event.energybgo_pi,       "energybgo_pi[nPi_CFT]/D");
+  tree->Branch("pulseheightBGO_pi",  event.pulseheightBGO_pi,  "pulseheightBGO_pi[nPi_CFT]/D");
+  tree->Branch("Dir_x_pi",           event.Dir_x_pi,           "Dir_x_pi[nPi_CFT]/D");
+  tree->Branch("Dir_y_pi",           event.Dir_y_pi,           "Dir_y_pi[nPi_CFT]/D");
+  tree->Branch("Dir_z_pi",           event.Dir_z_pi,           "Dir_z_pi[nPi_CFT]/D");
+  tree->Branch("Pos0_x_pi",          event.Pos0_x_pi,          "Pos0_x_pi[nPi_CFT]/D");
+  tree->Branch("Pos0_y_pi",          event.Pos0_y_pi,          "Pos0_y_pi[nPi_CFT]/D");
+  tree->Branch("Pos0_z_pi",          event.Pos0_z_pi,          "Pos0_z_pi[nPi_CFT]/D");
+
+
+  tree->Branch("nBGOP_CFT",           &event.nBGOP_CFT,            "nBGOP_CFT/I");
+  tree->Branch("track_bgop",           event.track_bgop,           "track_bgop[nBGOP_CFT]/D");
+  tree->Branch("theta_cft_bgop",       event.theta_cft_bgop,       "theta_cft_bgop[nBGOP_CFT]/D");
+  tree->Branch("nhit_phi_bgop",        event.nhit_phi_bgop,        "nhit_phi_bgop[nBGOP_CFT]/D");
+  tree->Branch("nhit_uv_bgop",         event.nhit_uv_bgop,         "nhit_uv_bgop[nBGOP_CFT]/D");
+  tree->Branch("Total_dE_bgop",        event.Total_dE_bgop,        "Total_dE_bgop[nBGOP_CFT]/D");
+  tree->Branch("Total_dEphi_bgop",     event.Total_dEphi_bgop,     "TotaldEphi_bgop[nBGOP_CFT]/D");
+  tree->Branch("Total_dEuv_bgop",      event.Total_dEuv_bgop,      "TotaldEuv_bgop[nBGOP_CFT]/D");
+  tree->Branch("Total_dE_max_bgop",    event.Total_dE_max_bgop,    "Total_dE_max_bgop[nBGOP_CFT]/D");
+  tree->Branch("Total_dEphi_max_bgop", event.Total_dEphi_max_bgop, "totaldEphi_max_bgop[nBGOP_CFT]/D");
+  tree->Branch("Total_dEuv_max_bgop",  event.Total_dEuv_max_bgop,  "totaldEuv_max_bgop[nBGOP_CFT]/D");
+  tree->Branch("segBGOt_bgop",         event.segBGOt_bgop,         "segBGOt_bgop[nBGOP_CFT]/I");
+  tree->Branch("energyBGO_bgop",       event.energybgo_bgop,       "energybgo_bgop[nBGOP_CFT]/D");
+  tree->Branch("pulseheightBGO_bgop",  event.pulseheightBGO_bgop,  "pulseheightBGO_bgop[nBGOP_CFT]/D");
+  tree->Branch("Dir_x_bgop",           event.Dir_x_bgop,           "Dir_x_bgop[nBGOP_CFT]/D");
+  tree->Branch("Dir_y_bgop",           event.Dir_y_bgop,           "Dir_y_bgop[nBGOP_CFT]/D");
+  tree->Branch("Dir_z_bgop",           event.Dir_z_bgop,           "Dir_z_bgop[nBGOP_CFT]/D");
+  tree->Branch("Pos0_x_bgop",          event.Pos0_x_bgop,          "Pos0_x_bgop[nBGOP_CFT]/D");
+  tree->Branch("Pos0_y_bgop",          event.Pos0_y_bgop,          "Pos0_y_bgop[nBGOP_CFT]/D");
+  tree->Branch("Pos0_z_bgop",          event.Pos0_z_bgop,          "Pos0_z_bgop[nBGOP_CFT]/D");
+
+
+  tree->Branch("nHYPS_CFT",           &event.nHYPS_CFT,            "nHYPS_CFT/I");
+  tree->Branch("track_hyps",           event.track_hyps,           "track_hyps[nHYPS_CFT]/D");
+  tree->Branch("theta_cft_hyps",       event.theta_cft_hyps,       "theta_cft_hyps[nHYPS_CFT]/D");
+  tree->Branch("nhit_phi_hyps",        event.nhit_phi_hyps,        "nhit_phi_hyps[nHYPS_CFT]/D");
+  tree->Branch("nhit_uv_hyps",         event.nhit_uv_hyps,         "nhit_uv_hyps[nHYPS_CFT]/D");
+  tree->Branch("Total_dE_hyps",        event.Total_dE_hyps,        "Total_dE_hyps[nHYPS_CFT]/D");
+  tree->Branch("Total_dEphi_hyps",     event.Total_dEphi_hyps,     "TotaldEphi_hyps[nHYPS_CFT]/D");
+  tree->Branch("Total_dEuv_hyps",      event.Total_dEuv_hyps,      "TotaldEuv_hyps[nHYPS_CFT]/D");
+  tree->Branch("Total_dE_max_hyps",    event.Total_dE_max_hyps,    "Total_dE_max_hyps[nHYPS_CFT]/D");
+  tree->Branch("Total_dEphi_max_hyps", event.Total_dEphi_max_hyps, "totaldEphi_max_hyps[nHYPS_CFT]/D");
+  tree->Branch("Total_dEuv_max_hyps",  event.Total_dEuv_max_hyps,  "totaldEuv_max_hyps[nHYPS_CFT]/D");
+  tree->Branch("segBGOt_hyps",         event.segBGOt_hyps,         "segBGOt_hyps[nHYPS_CFT]/I");
+  tree->Branch("energyBGO_hyps",       event.energybgo_hyps,       "energybgo_hyps[nHYPS_CFT]/D");
+  tree->Branch("pulseheightBGO_hyps",  event.pulseheightBGO_hyps,  "pulseheightBGO_hyps[nHYPS_CFT]/D");
+  tree->Branch("Dir_x_hyps",           event.Dir_x_hyps,           "Dir_x_hyps[nHYPS_CFT]/D");
+  tree->Branch("Dir_y_hyps",           event.Dir_y_hyps,           "Dir_y_hyps[nHYPS_CFT]/D");
+  tree->Branch("Dir_z_hyps",           event.Dir_z_hyps,           "Dir_z_hyps[nHYPS_CFT]/D");
+  tree->Branch("Pos0_x_hyps",          event.Pos0_x_hyps,          "Pos0_x_hyps[nHYPS_CFT]/D");
+  tree->Branch("Pos0_y_hyps",          event.Pos0_y_hyps,          "Pos0_y_hyps[nHYPS_CFT]/D");
+  tree->Branch("Pos0_z_hyps",          event.Pos0_z_hyps,          "Pos0_z_hyps[nHYPS_CFT]/D");
 
   // HPrint();
   return true;

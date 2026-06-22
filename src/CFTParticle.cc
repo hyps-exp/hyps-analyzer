@@ -35,6 +35,7 @@ CFTParticle::CFTParticle(const CFTLocalTrack *track, HodoAnalyzer *hodoAna)
     m_TotalE(0),
     m_TotalE_max(0),
     m_Mass(-999.),
+    m_PID(-1),
     m_dist_xy(0.),
     m_bgo_z_surface(-999.),
     m_bgo_adc(-999),
@@ -370,10 +371,16 @@ Bool_t CFTParticle::Calculate()
 #if 1
   if (nc ==1 || nc>= 3) {
     Double_t delta;
-    if (gCATCHPidMan.CheckProton(m_bgo_energy, m_norm_Total_dE_max, delta) && m_piid_seg < 0) {
-      m_Mass = 0.9382720;
+    if (gCATCHPidMan.CheckProton(m_bgo_energy, m_norm_Total_dE_max, delta)){
+      if(m_piid_seg < 0) {
+	m_Mass = 0.9382720;
+	m_PID  = kProton;
+      }else{
+	m_PID  = kThrough;
+      }
     } else if (gCATCHPidMan.CheckPi(m_bgo_energy, m_norm_Total_dE_max)) {
       m_Mass = 0.1395701;
+      m_PID  = kPion;
     }
   } else if (nc == 2) {
     //Hodo2Hit *hitp1 = BGOCont_[0];
@@ -406,30 +413,61 @@ Bool_t CFTParticle::Calculate()
     flag1 = gCATCHPidMan.CheckProton(BGO_E1, m_norm_Total_dE_max, delta1);
     flag2 = gCATCHPidMan.CheckProton(BGO_E2, m_norm_Total_dE_max, delta2);
 
-    if (flag0  && m_piid_seg < 0) {
-      m_Mass = 0.9382720;
-    } else if (flag1 && flag2  && m_piid_seg < 0) {
-      m_Mass = 0.9382720;
-      if (fabs(delta1) < fabs(delta2))
+    if (flag0){
+      if(m_piid_seg < 0) {
+	m_Mass = 0.9382720;
+	m_PID  = kProton;
+      }else{
+	m_PID  = kThrough;
+      }
+    } else if (flag1 && flag2){
+      if(m_piid_seg < 0) {
+	m_Mass = 0.9382720;
+	m_PID  = kProton;
+
+	if (fabs(delta1) < fabs(delta2))
+	  m_bgo_energy = BGO_E1;
+	else
+	  m_bgo_energy = BGO_E2;
+      }else{
+	m_PID  = kThrough;
+      }
+    } else if (flag1){
+      if(m_piid_seg < 0) {
+	m_Mass = 0.9382720;
+	m_PID  = kProton;
+
 	m_bgo_energy = BGO_E1;
-      else
+      }else{
+	m_PID  = kThrough;
+      }
+    } else if (flag2){
+      if(m_piid_seg < 0) {
+	m_Mass = 0.9382720;
+	m_PID  = kProton;
+
 	m_bgo_energy = BGO_E2;
-    } else if (flag1  && m_piid_seg < 0) {
-      m_Mass = 0.9382720;
-      m_bgo_energy = BGO_E1;
-    } else if (flag2  && m_piid_seg < 0) {
-      m_Mass = 0.9382720;
-      m_bgo_energy = BGO_E2;
+      }else{
+	m_PID  = kThrough;
+      }
       //}  else if (checkPi(m_bgo_energy)){
     } else if (gCATCHPidMan.CheckPi(m_bgo_energy, m_norm_Total_dE_max)) {
       m_Mass = 0.1395701;
+      m_PID  = kPion;
     }
   } else if (nc == 0) {
     Double_t delta;
-    if (gCATCHPidMan.CheckProton(m_bgo_energy, m_norm_Total_dE_max, delta) && m_piid_seg < 0)
-      m_Mass = 0.9382720;
-    else if (gCATCHPidMan.CheckPi(m_bgo_energy, m_norm_Total_dE_max))
+    if (gCATCHPidMan.CheckProton(m_bgo_energy, m_norm_Total_dE_max, delta)){
+      if(m_piid_seg < 0){
+	m_Mass = 0.9382720;
+	m_PID  = kProton;
+      }else{
+	m_PID  = kThrough;
+      }
+    }else if (gCATCHPidMan.CheckPi(m_bgo_energy, m_norm_Total_dE_max)){
       m_Mass = 0.1395701;
+      m_PID  = kPion;
+    }
 
   }
 #endif
