@@ -693,9 +693,9 @@ ConfMan:: InitializeHistograms()
 
   // Tracking Histgrams
   HB1(10, "#Tracks SdcInOut", 10, 0., 10.);
-  HB1(11, "#Hits of Track SdcInOut", 15, 0., 15.);
+  HB1(11, "#Hits of Track SdcInOut", NumOfLayersSdcInOut + 1, 0., static_cast<Double_t>(NumOfLayersSdcInOut + 1));
   HB1(12, "Chisqr SdcInOut", 500, 0., 50.);
-  HB1(13, "LayerId SdcInOut", 21, 0., 21.);
+  HB1(13, "LayerId SdcInOut", NumOfLayersSdcInOut + 1, 0., static_cast<Double_t>(NumOfLayersSdcInOut + 1));
   HB1(14, "X0 SdcInOut", 400, -100., 100.);
   HB1(15, "Y0 SdcInOut", 400, -100., 100.);
   HB1(16, "U0 SdcInOut", 200, -0.20, 0.20);
