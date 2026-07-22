@@ -20,6 +20,7 @@
 #include "DetectorID.hh"
 #include "HodoAnalyzer.hh"
 #include "HodoHit.hh"
+#include "HodoWaveformHit.hh"
 #include "HodoParamMan.hh"
 #include "HodoCluster.hh"
 #include "HodoPHCMan.hh"
@@ -31,10 +32,12 @@
 #include "RawData.hh"
 #include "RootHelper.hh"
 #include "UnpackerManager.hh"
+#include "TemplateFitMan.hh"
 
 #define HodoCut 0
 #define UseTOF  1
 #define UseRF 1
+#define TAG_PL_FADC 1
 
 namespace
 {
@@ -400,11 +403,19 @@ ProcessingNormal()
   {
     rawData.DecodeHits("TAG-PL");
     const auto& U= HodoRawHit::kUp;
+#if TAG_PL_FADC
+    hodoAna.DecodeHits<HodoWaveformHit>("TAG-PL");
+#else  
     hodoAna.DecodeHits("TAG-PL");
+#endif
     Int_t nh=hodoAna.GetNHits("TAG-PL");
     Int_t nseg_goodtime=0;
     for(Int_t i=0;i<nh;++i){
+#if TAG_PL_FADC
+      const auto& hit = hodoAna.GetHit<HodoWaveformHit>("TAG-PL", i);
+#else        
       const auto& hit = hodoAna.GetHit("TAG-PL",i);
+#endif      
       if(!hit) continue;
       Int_t seg =hit->SegmentId();
       bool is_hit_time =false;
@@ -413,6 +424,16 @@ ProcessingNormal()
         Double_t t=hit->GetTUp(m);
         if(fabs(t)<10.0) is_hit_time=true;
       }
+
+#if TAG_PL_FADC
+      Int_t Npulse = hit->GetNPulse(U);
+      for(Int_t m = 0; m<Npulse; ++m){
+	Double_t pulse_height = hit->GetPulseHeight(m);
+	Double_t pulse_time   = hit->GetPulseTime(m);
+	if(fabs(pulse_time)<0.05 /*us*/) is_hit_time=true;	
+      }
+#endif
+
       if(is_hit_time){
 	event.tagplhitpat[nseg_goodtime]=seg;
         nseg_goodtime++;
@@ -1642,7 +1663,8 @@ ConfMan::InitializeParameterFiles()
      InitializeParameter<HodoPHCMan>("HDPHC")       &&
      InitializeParameter<TAGPLMatch>("TAGPLMTH") &&
      InitializeParameter<FieldMan>("FLDMAP") &&
-     InitializeParameter<UserParamMan>("USER"));
+     InitializeParameter<UserParamMan>("USER") &&
+     InitializeParameter<TemplateFitMan>("BGOTEMP") );
 }
 
 //_____________________________________________________________________________
