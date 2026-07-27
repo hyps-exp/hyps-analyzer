@@ -89,6 +89,7 @@ constexpr Int_t PlMinVP      = 16;
 constexpr Int_t PlMaxVP      = 16;
 constexpr Int_t NumOfLayersSdcIn  = PlMaxSdcIn  - PlMinSdcIn  + 1;
 constexpr Int_t NumOfLayersSdcOut = PlMaxSdcOut - PlMinSdcOut + 1;
+constexpr Int_t NumOfLayersSdcInOut = NumOfLayersSdcIn + NumOfLayersSdcOut;
 constexpr Int_t NumOfLayersTOF    = PlMaxTOF    - PlMinTOF    + 1;
 constexpr Int_t NumOfLayersVP     = PlMaxVP     - PlMinVP     + 1;
 
