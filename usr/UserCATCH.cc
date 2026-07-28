@@ -528,8 +528,6 @@ ProcessingNormal()
     HF2(12, bgo_energy, dE);
   }
 
-
-
   return true;
 }
 
@@ -582,7 +580,7 @@ ConfMan::InitializeHistograms()
 
   tree->Branch("ntCFT",     &event.ntCFT,    "ntCFT/I");
 
-  tree->Branch("theta_cft",    event.theta_cft,    "theta[ntCFT]/D");
+  tree->Branch("theta_cft",    event.theta_cft,   "theta[ntCFT]/D");
   tree->Branch("nhit_phi",     event.nhit_phi,    "nhit_phi[ntCFT]/I");
   tree->Branch("nhit_uv",      event.nhit_uv,     "nhit_uv[ntCFT]/I");
 
@@ -592,12 +590,12 @@ ConfMan::InitializeHistograms()
   tree->Branch("MaxAdcLow",   event.MaxAdcLow,    Form("MaxAdcLow[%d][%d]/D", NumOfPlaneCFT, MaxDepth ) );
   tree->Branch("MaxMipLow",   event.MaxMipLow,    Form("MaxMipLow[%d][%d]/D", NumOfPlaneCFT, MaxDepth ) );
 
-  tree->Branch("Total_dE",    event.Total_dE,    "totaldE[ntCFT]/D");
-  tree->Branch("Total_dEphi", event.Total_dEphi, "totaldEphi[ntCFT]/D");
-  tree->Branch("Total_dEuv",  event.Total_dEuv,  "totaldEuv[ntCFT]/D");
-  tree->Branch("Total_dE_max",    event.Total_dE_max,    "totaldE_max[ntCFT]/D");
-  tree->Branch("Total_dEphi_max", event.Total_dEphi_max, "totaldEphi_max[ntCFT]/D");
-  tree->Branch("Total_dEuv_max",  event.Total_dEuv_max,  "totaldEuv_max[ntCFT]/D");
+  tree->Branch("Total_dE",        event.Total_dE,        "Total_dE[ntCFT]/D");
+  tree->Branch("Total_dEphi",     event.Total_dEphi,     "Total_dEphi[ntCFT]/D");
+  tree->Branch("Total_dEuv",      event.Total_dEuv,      "Total_dEuv[ntCFT]/D");
+  tree->Branch("Total_dE_max",    event.Total_dE_max,    "Total_dE_max[ntCFT]/D");
+  tree->Branch("Total_dEphi_max", event.Total_dEphi_max, "Total_dEphi_max[ntCFT]/D");
+  tree->Branch("Total_dEuv_max",  event.Total_dEuv_max,  "Total_dEuv_max[ntCFT]/D");
 
   tree->Branch("Dir_x",   event.Dir_x,   "Dir_x[ntCFT]/D");
   tree->Branch("Dir_y",   event.Dir_y,   "Dir_y[ntCFT]/D");
@@ -613,10 +611,10 @@ ConfMan::InitializeHistograms()
   //tree->Branch("nhBGO",     &event.nhBGO,    "nhBGO/I");
   //tree->Branch("segBGO",    event.segBGO,    "segBGO[nhBGO]/I");
   tree->Branch("segBGOt",   event.segBGOt,   "segBGOt[25]/I");
-  //tree->Branch("adcBGO",    event.adcbgo,    "adcbgo[24]/D");
+  //tree->Branch("adcBGO",    event.adcbgo,    "adcBGO[24]/D");
   tree->Branch("energyBGO", event.energybgo, "energyBGO[25]/D");
   tree->Branch("pulseheightBGO",   event.pulseheightBGO,   "pulseheightBGO[25]/D");
-  //tree->Branch("tdcBGO",    event.tdcbgo,    "adcbgo[24]/D");
+  //tree->Branch("tdcBGO",    event.tdcbgo,    "tdcBGO[24]/D");
 
   // PiID
   tree->Branch("segPiIDt",   event.segPiIDt,   "segPiIDt[ntCFT]/I");
