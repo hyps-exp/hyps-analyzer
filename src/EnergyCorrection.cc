@@ -74,6 +74,11 @@ int CorrElossOut(double *mom_new, double *energy_new, double mom, int particle, 
     }
      //printf("******E=%f, Elow=%f, Ehigh=%f, FL=%f, FH=%f*******\n",E, Elow, Ehigh, FL, FH);
     //getchar();
+    if (Ehigh<0) {
+      *mom_new = mom;
+      *energy_new = sqrt(mass*mass+mom*mom);
+      return 1;
+    }
   }
   *energy_new = E;
   *mom_new = sqrt(E*E-mass*mass);
@@ -151,6 +156,12 @@ int CorrElossOutWithCFRP(double *mom_new, double *energy_new, double mom, int pa
     }
      //printf("******E=%f, Elow=%f, Ehigh=%f, FL=%f, FH=%f*******\n",E, Elow, Ehigh, FL, FH);
     //getchar();
+    if (Ehigh<0) {
+      *mom_new = mom;
+      *energy_new = sqrt(mass*mass+mom*mom);
+      return 1;
+    }
+
   }
   *energy_new = E;
   *mom_new = sqrt(E*E-mass*mass);
