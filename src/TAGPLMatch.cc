@@ -124,7 +124,7 @@ TAGPLMatch::Judge(Double_t bft_xpos, Double_t tagplseg)
     }
   }
 
-  return (xmin < bft_xpos && bft_xpos < xmax);
+  return (xmin <= bft_xpos && bft_xpos <= xmax);
 }
 
 //_____________________________________________________________________________
