@@ -98,7 +98,7 @@ TAGPLMatch::Initialize(const TString& file_name)
 
 //_____________________________________________________________________________
 Bool_t
-TAGPLMatch::Judge(Double_t bft_xpos, Double_t tagplseg)
+TAGPLMatch::Judge(Double_t sf_clpos, Double_t tagplseg)
 {
   if(!m_status[kReady])
     throw Exception(FUNC_NAME + " is not initialized.");
@@ -112,8 +112,8 @@ TAGPLMatch::Judge(Double_t bft_xpos, Double_t tagplseg)
     hddaq::cout << FUNC_NAME << std::endl;
     m_param.at(tagplseg).Print();
     PrintHelper helper(2, std::ios::fixed);
-    hddaq::cout << " SF pos " << std::setw(7) << bft_xpos << " -> ";
-    if(xmin < bft_xpos && bft_xpos < xmax){
+    hddaq::cout << " SF pos " << std::setw(7) << sf_clpos << " -> ";
+    if(xmin < sf_clpos && sf_clpos < xmax){
       hddaq::cout << hddaq::unpacker::esc::k_green
                   << "accept"
                   << hddaq::unpacker::esc::k_default_color << std::endl;
@@ -124,7 +124,7 @@ TAGPLMatch::Judge(Double_t bft_xpos, Double_t tagplseg)
     }
   }
 
-  return (xmin <= bft_xpos && bft_xpos <= xmax);
+  return (xmin <= sf_clpos && sf_clpos <= xmax);
 }
 
 //_____________________________________________________________________________

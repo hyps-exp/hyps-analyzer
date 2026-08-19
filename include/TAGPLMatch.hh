@@ -51,7 +51,7 @@ public:
     kNParam
   };
   Bool_t Initialize(const TString& file_name);
-  Bool_t Judge(Double_t bft_xpos, Double_t bh1seg);
+  Bool_t Judge(Double_t sf_clpos, Double_t tagplseg);
   void   Print() const;
   void   SetVerbose();
 };
