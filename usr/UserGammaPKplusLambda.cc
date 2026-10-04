@@ -1621,22 +1621,25 @@ ConfMan::InitializeHistograms()
   tree->Branch("vpy",          event.vpy,          Form("vpy[%d]/D", NumOfLayersVP));
   tree->Branch("vpu",          event.vpu,          Form("vpu[%d]/D", NumOfLayersVP));
   tree->Branch("vpv",          event.vpv,          Form("vpv[%d]/D", NumOfLayersVP));
-
+  
   event.resL.resize(PlMaxTOF);
+  /*
   for( Int_t i = PlMinSdcIn;  i<= PlMaxSdcIn;  i++ ) tree->Branch(Form("ResL%d", i), &event.resL[i-1]);
   for( Int_t i = PlMinSdcOut; i<= PlMaxSdcOut; i++ ) tree->Branch(Form("ResL%d", i), &event.resL[i-1]);
   for( Int_t i = PlMinTOF;    i<= PlMaxTOF;    i++ ) tree->Branch(Form("ResL%d", i), &event.resL[i-1]);
-
+  */
   event.resG.resize(PlMaxTOF);
+  /*
   for( Int_t i = PlMinSdcIn;  i<= PlMaxSdcIn;  i++ ) tree->Branch(Form("ResG%d", i), &event.resG[i-1]);
   for( Int_t i = PlMinSdcOut; i<= PlMaxSdcOut; i++ ) tree->Branch(Form("ResG%d", i), &event.resG[i-1]);
   for( Int_t i = PlMinTOF;    i<= PlMaxTOF;    i++ ) tree->Branch(Form("ResG%d", i), &event.resG[i-1]);
-
+  */
   event.posG.resize(PlMaxTOF);
+  /*
   for( Int_t i = PlMinSdcIn;  i<= PlMaxSdcIn;  i++ ) tree->Branch(Form("PosG%d", i), &event.posG[i-1]);
   for( Int_t i = PlMinSdcOut; i<= PlMaxSdcOut; i++ ) tree->Branch(Form("PosG%d", i), &event.posG[i-1]);
   for( Int_t i = PlMinTOF;    i<= PlMaxTOF;    i++ ) tree->Branch(Form("PosG%d", i), &event.posG[i-1]);
-
+  */
   tree->Branch("tTofCalc",  event.tTofCalc,  "tTofCalc[4]/D");
   tree->Branch("utTofSeg",  event.utTofSeg,  Form("utTofSeg[%d]/D", NumOfSegTOF));
   tree->Branch("dtTofSeg",  event.dtTofSeg,  Form("dtTofSeg[%d]/D", NumOfSegTOF));
