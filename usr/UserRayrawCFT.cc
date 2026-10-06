@@ -6,6 +6,7 @@
 //-----------------------------------------------------------------
 #include "VEvent.hh"
 
+#include <algorithm>
 #include <cmath>
 #include <iostream>
 #include <sstream>
@@ -65,6 +66,7 @@ struct Event
   std::vector<std::vector<Double_t>> crs_cnt;      // waveform sample time tag ( 13.33 ns/count)
   std::vector<std::vector<Double_t>> tdc_leading;  // TDC leading  ( 0.8333 ns/count)
   std::vector<std::vector<Double_t>> tdc_trailing; // TDC trailing ( 0.8333 ns/count)
+  std::vector<Double_t>              adc_max;      // max(fadc), one value per hit (for PHC)
   void clear();
 };
 
@@ -79,6 +81,7 @@ Event::clear()
   crs_cnt.clear();
   tdc_leading.clear();
   tdc_trailing.clear();
+  adc_max.clear();
 }
 
 //_____________________________________________________________________________
@@ -130,6 +133,7 @@ ProcessingNormal()
     event.crs_cnt.push_back(std::vector<Double_t>(crs_cnt.begin(), crs_cnt.end()));
     event.tdc_leading.push_back(std::vector<Double_t>(leading.begin(), leading.end()));
     event.tdc_trailing.push_back(std::vector<Double_t>(trailing.begin(), trailing.end()));
+    event.adc_max.push_back(fadc.empty() ? qnan : *std::max_element(fadc.begin(), fadc.end()));
 
     Int_t hid_wf      = RayrawCFTHid + gid*10 + 0; // waveform
     Int_t hid_tdc_l   = RayrawCFTHid + gid*10 + 1;
@@ -205,6 +209,7 @@ ConfMan::InitializeHistograms()
   tree->Branch("crs_cnt",      &event.crs_cnt);
   tree->Branch("tdc_leading",  &event.tdc_leading);
   tree->Branch("tdc_trailing", &event.tdc_trailing);
+  tree->Branch("adc_max",      &event.adc_max);
 
   HPrint();
   return true;
