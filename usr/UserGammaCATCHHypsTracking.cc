@@ -119,6 +119,7 @@ struct Event
 
   // number{ Pion, Proton, others };
   Int_t pid[MaxDepth];
+  Int_t ihMatchedHyps[MaxDepth];
 
   // BGO
   int segBGOt[NumOfSegBGO+1];// matched to track
@@ -411,6 +412,7 @@ Event::clear()
     Pos0_y[m] = qnan;
     Pos0_z[m] = qnan;
     pid[m]   = qnan;
+    ihMatchedHyps[m] = -1;
   }
 
   for(Int_t m=0; m<NumOfSegBGO+1; ++m){
@@ -1884,6 +1886,7 @@ ProcessingNormal()
       if (delta_u > MinOfDeltaU_CFT && delta_u < MaxOfDeltaU_CFT
 	  && delta_v > MinOfDeltaV_CFT && delta_v < MaxOfDeltaV_CFT) {
 	event.pid[ic] = CFTParticle::kHYPS;
+	event.ihMatchedHyps[ic] = ih;
 	break;
       }
     }
@@ -1901,8 +1904,8 @@ ProcessingNormal()
       event.Total_dEphi_max_p[np] = event.Total_dEphi_max[ic];
       event.Total_dEuv_max_p[np]  = event.Total_dEuv_max[ic];
       event.segBGOt_p[np]         = event.segBGOt[ic];
-      event.energybgo_p[np]       = event.energybgo[ic];
-      event.pulseheightBGO_p[np]  = event.pulseheightBGO[ic];
+      event.energybgo_p[np]       = event.energybgo[event.segBGOt[ic]];
+      event.pulseheightBGO_p[np]  = event.pulseheightBGO[event.segBGOt[ic]];
       event.theta_cft_p[np]       = event.theta_cft[ic];
 
       event.Dir_x_p[np]  = event.Dir_x[ic];
@@ -1925,8 +1928,8 @@ ProcessingNormal()
       event.Total_dEphi_max_pi[npi] = event.Total_dEphi_max[ic];
       event.Total_dEuv_max_pi[npi]  = event.Total_dEuv_max[ic];
       event.segBGOt_pi[npi]         = event.segBGOt[ic];
-      event.energybgo_pi[npi]       = event.energybgo[ic];
-      event.pulseheightBGO_pi[npi]  = event.pulseheightBGO[ic];
+      event.energybgo_pi[npi]       = event.energybgo[event.segBGOt[ic]];
+      event.pulseheightBGO_pi[npi]  = event.pulseheightBGO[event.segBGOt[ic]];
       event.theta_cft_pi[npi]       = event.theta_cft[ic];
 
       event.Dir_x_pi[npi]  = event.Dir_x[ic];
@@ -1949,8 +1952,8 @@ ProcessingNormal()
       event.Total_dEphi_max_bgop[nbgop] = event.Total_dEphi_max[ic];
       event.Total_dEuv_max_bgop[nbgop]  = event.Total_dEuv_max[ic];
       event.segBGOt_bgop[nbgop]         = event.segBGOt[ic];
-      event.energybgo_bgop[nbgop]       = event.energybgo[ic];
-      event.pulseheightBGO_bgop[nbgop]  = event.pulseheightBGO[ic];
+      event.energybgo_bgop[nbgop]       = event.energybgo[event.segBGOt[ic]];
+      event.pulseheightBGO_bgop[nbgop]  = event.pulseheightBGO[event.segBGOt[ic]];
       event.theta_cft_bgop[nbgop]       = event.theta_cft[ic];
 
       event.Dir_x_bgop[nbgop]  = event.Dir_x[ic];
@@ -1973,8 +1976,8 @@ ProcessingNormal()
       event.Total_dEphi_max_hyps[nhyps] = event.Total_dEphi_max[ic];
       event.Total_dEuv_max_hyps[nhyps]  = event.Total_dEuv_max[ic];
       event.segBGOt_hyps[nhyps]         = event.segBGOt[ic];
-      event.energybgo_hyps[nhyps]       = event.energybgo[ic];
-      event.pulseheightBGO_hyps[nhyps]  = event.pulseheightBGO[ic];
+      event.energybgo_hyps[nhyps]       = event.energybgo[event.segBGOt[ic]];
+      event.pulseheightBGO_hyps[nhyps]  = event.pulseheightBGO[event.segBGOt[ic]];
       event.theta_cft_hyps[nhyps]       = event.theta_cft[ic];
 
       event.Dir_x_hyps[nhyps]  = event.Dir_x[ic];
@@ -2338,6 +2341,7 @@ ConfMan::InitializeHistograms()
   tree->Branch("Pos0_z",  event.Pos0_z,  "Pos0_z[ntCFT]/D");
 
   tree->Branch("pid",  event.pid,  "pid[ntCFT]/I");
+  tree->Branch("ihMatchedHyps", event.ihMatchedHyps, "ihMatchedHyps[ntCFT]/I");
 
   // BGO
   //tree->Branch("nhBGO",     &event.nhBGO,    "nhBGO/I");
