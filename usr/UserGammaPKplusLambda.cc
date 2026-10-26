@@ -168,6 +168,8 @@ struct Event
   Double_t tofda[NumOfSegTOF];
 
   Double_t MissMass[MaxHits];
+  Double_t MissMass_Gpi[MaxHits];
+  Double_t EGammacalc_npi;
 
   void clear();
 };
@@ -197,6 +199,8 @@ Event::clear()
   EGammaf = qnan;
   EGammab = qnan;
   EGamma = qnan;
+
+  EGammacalc_npi= qnan;
 
   for(Int_t i = 0; i<NumOfLayersVP; ++i){
     vpx[i] = qnan;
@@ -282,6 +286,7 @@ Event::clear()
     lvtofHyps[it]  = qnan;
     tofsegHyps[it] = qnan;
     MissMass[it] = qnan;
+    MissMass_Gpi[it] = qnan;
   }
 
   for(Int_t i=0; i<PlMaxTOF; ++i){
@@ -548,7 +553,7 @@ ProcessingNormal()
   event.EGammaf = egamf;
   event.EGammab = egamb;
   event.EGamma = egam;
-
+  
   //////////////T0 Analysis
   hodoAna.DecodeHits("T0");
   hodoAna.TimeCut("T0",-2,2);
@@ -1138,19 +1143,33 @@ ProcessingNormal()
   {
     for(Int_t i=0; i<ntHyps; i++){
       Double_t MissMass;
+      Double_t MissMass_Gpi;
       TVector3 pHyps = HypsMom[i];
       if(std::isnan(egam)){
 	MissMass = -10;
+	MissMass_Gpi = -10;
       }else{
 	LorentzVector LvGamma(0, 0, egam, egam);
 	LorentzVector LvProton(0., 0., 0., ProtonMass);
 	LorentzVector LvKaon(pHyps, std::sqrt(KaonMass*KaonMass+pHyps.Mag2()));
+	LorentzVector LvPion(pHyps, std::sqrt(pdg::PionMass()*pdg::PionMass()+pHyps.Mag2()));
 	LorentzVector LvX = LvGamma+LvProton-LvKaon;
+	LorentzVector LvX_Gpi = LvGamma+LvProton-LvPion;
+	
 
 	MissMass = LvX.Mag();
+	MissMass_Gpi = LvX_Gpi.Mag();
+	
+	if(fabs(event.cm2[i])<0.15 && event.qHyps[i]>0 && event.chisqrHyps[i]<50 && event.vtz_Hyps[i]<150 && event.vtz_Hyps[i]>-200 && fabs(event.ytofHyps[i])>65 && MissMass_Gpi<1.0 && MissMass_Gpi>0.8){
+	  Double_t Epi=sqrt(pHyps.Mag2()+pdg::PionMass()*pdg::PionMass());
+	  Double_t ppiz=pHyps.z();
+	  event.EGammacalc_npi=(pdg::NeutronMass()*pdg::NeutronMass()-pdg::ProtonMass()*pdg::ProtonMass()-pdg::PionMass()*pdg::PionMass()+2*pdg::ProtonMass()*Epi)*0.5/(pdg::ProtonMass()-Epi+ppiz);
+	}
+	
       }
       HF1(95, MissMass);
       event.MissMass[i] = MissMass;
+      event.MissMass_Gpi[i] = MissMass_Gpi;
     }
   }
 
@@ -1551,6 +1570,7 @@ ConfMan::InitializeHistograms()
   tree->Branch("EGammaf",   &event.EGammaf,   "EGammaf/D");
   tree->Branch("EGammab",   &event.EGammab,   "EGammab/D");
   tree->Branch("EGamma",   &event.EGamma,   "EGamma/D");
+  tree->Branch("EGammacalc_npi",   &event.EGammacalc_npi,   "EGammacalc_npi/D");
 
   tree->Branch("nhTof",   &event.nhTof,   "nhTof/I");
   tree->Branch("TofSeg",   event.TofSeg,  "TofSeg[nhTof]/D");
@@ -1649,6 +1669,7 @@ ConfMan::InitializeHistograms()
   tree->Branch("tofda",     event.tofda,     Form("tofda[%d]/D", NumOfSegTOF));
 
   tree->Branch("MissMass", event.MissMass, "MissMass[ntHyps]/D");
+  tree->Branch("MissMass_Gpi", event.MissMass_Gpi, "MissMass_Gpi[ntHyps]/D");
 
   // HPrint();
   return true;
