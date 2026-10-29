@@ -564,7 +564,7 @@ ProcessingNormal()
 	  Int_t seg_max = hit->MaxSegment();
 	  Double_t adclow = hit->MaxAdcLow();
 
-	  HF1(layer*100+seg_max, adclow);
+	  HF1((layer+1)*1000+seg_max, adclow);
 	}
 
 	for(Int_t ip=0; ip<nhUV; ip++){
@@ -573,7 +573,7 @@ ProcessingNormal()
 	  Int_t seg_max = hit->MaxSegment();
 	  Double_t adclow = hit->MaxAdcLow();
 
-	  HF1(layer*100+seg_max, adclow);
+	  HF1((layer+1)*1000+seg_max, adclow);
 	}
       }
     }
