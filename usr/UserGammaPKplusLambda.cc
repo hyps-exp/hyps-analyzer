@@ -365,6 +365,16 @@ ProcessingNormal()
   static const auto MaxMultiHitSdcIn  = gUser.GetParameter("MaxMultiHitSdcIn");
   static const auto MaxMultiHitSdcOut = gUser.GetParameter("MaxMultiHitSdcOut");
 
+  static const auto eparf0 = gUser.GetParameter("TAGSFF_epar", 0);
+  static const auto eparf1 = gUser.GetParameter("TAGSFF_epar", 1);
+  static const auto eparf2 = gUser.GetParameter("TAGSFF_epar", 2);
+  static const auto eparb0 = gUser.GetParameter("TAGSFB_epar", 0);
+  static const auto eparb1 = gUser.GetParameter("TAGSFB_epar", 1);
+  static const auto eparb2 = gUser.GetParameter("TAGSFB_epar", 2);
+  const double eparf[3] = {eparf0, eparf1, eparf2};
+  const double eparb[3] = {eparf0, eparf1, eparf2};
+  static const auto offset_b = gUser.GetParameter("TAGSF_offset");
+
   RawData rawData;
   rawData.DecodeHits("TFlag");
   rawData.DecodeHits("RF");
@@ -410,7 +420,7 @@ ProcessingNormal()
     const auto& U= HodoRawHit::kUp;
 #if TAG_PL_FADC
     hodoAna.DecodeHits<HodoWaveformHit>("TAG-PL");
-#else  
+#else
     hodoAna.DecodeHits("TAG-PL");
 #endif
     Int_t nh=hodoAna.GetNHits("TAG-PL");
@@ -418,9 +428,9 @@ ProcessingNormal()
     for(Int_t i=0;i<nh;++i){
 #if TAG_PL_FADC
       const auto& hit = hodoAna.GetHit<HodoWaveformHit>("TAG-PL", i);
-#else        
+#else
       const auto& hit = hodoAna.GetHit("TAG-PL",i);
-#endif      
+#endif
       if(!hit) continue;
       Int_t seg =hit->SegmentId();
       bool is_hit_time =false;
@@ -435,7 +445,7 @@ ProcessingNormal()
       for(Int_t m = 0; m<Npulse; ++m){
 	Double_t pulse_height = hit->GetPulseHeight(m);
 	Double_t pulse_time   = hit->GetPulseTime(m);
-	if(fabs(pulse_time)<0.05 /*us*/) is_hit_time=true;	
+	if(fabs(pulse_time)<0.05 /*us*/) is_hit_time=true;
       }
 #endif
 
@@ -523,9 +533,9 @@ ProcessingNormal()
     const double eparb[3]={1.49797,0.0327588,-0.000152769};
     const double offset_b=0.6421;
   */
-    const double eparf[3]={1.53569,0.0367406,-0.000154298};
-    const double eparb[3]={1.55841,0.035491,-0.000129091};
-    const double offset_b=0.0;
+    // const double eparf[3]={1.53569,0.0367406,-0.000154298};
+    // const double eparb[3]={1.55841,0.035491,-0.000129091};
+    // const double offset_b=0.0;
 
   if(SFFCand.size()>0 && SFBCand.size()>0){
     for(int i=0;i<SFFCand.size();i++){
@@ -553,7 +563,7 @@ ProcessingNormal()
   event.EGammaf = egamf;
   event.EGammab = egamb;
   event.EGamma = egam;
-  
+
   //////////////T0 Analysis
   hodoAna.DecodeHits("T0");
   hodoAna.TimeCut("T0",-2,2);
@@ -1155,17 +1165,17 @@ ProcessingNormal()
 	LorentzVector LvPion(pHyps, std::sqrt(pdg::PionMass()*pdg::PionMass()+pHyps.Mag2()));
 	LorentzVector LvX = LvGamma+LvProton-LvKaon;
 	LorentzVector LvX_Gpi = LvGamma+LvProton-LvPion;
-	
+
 
 	MissMass = LvX.Mag();
 	MissMass_Gpi = LvX_Gpi.Mag();
-	
+
 	if(fabs(event.cm2[i])<0.15 && event.qHyps[i]>0 && event.chisqrHyps[i]<50 && event.vtz_Hyps[i]<150 && event.vtz_Hyps[i]>-200 && fabs(event.ytofHyps[i])>65 && MissMass_Gpi<1.0 && MissMass_Gpi>0.8){
 	  Double_t Epi=sqrt(pHyps.Mag2()+pdg::PionMass()*pdg::PionMass());
 	  Double_t ppiz=pHyps.z();
 	  event.EGammacalc_npi=(pdg::NeutronMass()*pdg::NeutronMass()-pdg::ProtonMass()*pdg::ProtonMass()-pdg::PionMass()*pdg::PionMass()+2*pdg::ProtonMass()*Epi)*0.5/(pdg::ProtonMass()-Epi+ppiz);
 	}
-	
+
       }
       HF1(95, MissMass);
       event.MissMass[i] = MissMass;
@@ -1641,7 +1651,7 @@ ConfMan::InitializeHistograms()
   tree->Branch("vpy",          event.vpy,          Form("vpy[%d]/D", NumOfLayersVP));
   tree->Branch("vpu",          event.vpu,          Form("vpu[%d]/D", NumOfLayersVP));
   tree->Branch("vpv",          event.vpv,          Form("vpv[%d]/D", NumOfLayersVP));
-  
+
   event.resL.resize(PlMaxTOF);
   /*
   for( Int_t i = PlMinSdcIn;  i<= PlMaxSdcIn;  i++ ) tree->Branch(Form("ResL%d", i), &event.resL[i-1]);
