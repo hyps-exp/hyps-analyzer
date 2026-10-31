@@ -90,6 +90,7 @@ const Int_t& IdLTOFYTR = gGeom.DetectorId("LEPS-TOF-Y-Tilt-R");
 
 
 const Double_t TimeDiffToYTOF = 77.3511; // [mm/ns]
+const Double_t TimeDiffToYTOF_LEPS = 61.73; // [mm/ns]
 
 const Double_t MaxChiSqrHypsTrack = 10000.;
 const Double_t MaxTimeDifMWPC       =   100.;
@@ -538,7 +539,7 @@ DCAnalyzer::DecodeTOFHits(const HodoHC& HitCont)
   };
 
   for(const auto& hodo_hit: HitCont){
-    const Double_t seg = hodo_hit->SegmentId()+1;
+    const Double_t seg = hodo_hit->SegmentId()+1;// 1 origin
     const Double_t dt  = hodo_hit->TimeDiff();
     Int_t layer_x = -1;
     Int_t layer_y = -1;
@@ -569,11 +570,13 @@ DCAnalyzer::DecodeTOFHits(const HodoHC& HitCont)
       RA2index=0;
     }
     if(Posindex==-1) continue;
+    Double_t TimeDiff=TimeDiffToYTOF;
+    if(seg<=3 || seg==9 || seg==10 || seg==40 || seg==47 || seg==48) TimeDiff=TimeDiffToYTOF_LEPS;
     Double_t wpos = gGeom.CalcWirePosition(layer_x, seg-1);
     TVector3 w(wpos, 0., 0.);
     w.RotateY(RA2[RA2index]*TMath::DegToRad()); // for the tilting plane case
     const TVector3 hit_pos = TOFPos[Posindex] + w
-      + TVector3(0., dt*TimeDiffToYTOF, 0.);
+      + TVector3(0., dt*TimeDiff, 0.);
     // X
     DCHit *dc_hit_x = new DCHit(IdTOFX, seg-1);
     dc_hit_x->SetWirePosition(hit_pos.x());
@@ -617,7 +620,7 @@ DCAnalyzer::DecodeTOFHits(const HodoClusterContainer& ClCont)
   };
 
   for(const auto& hodo_cluster: ClCont){
-    const Double_t seg = hodo_cluster->MeanSeg()+1;
+    const Double_t seg = hodo_cluster->MeanSeg()+1;//1 origin
     const Double_t dt  = hodo_cluster->TimeDiff();
     Int_t layer_x = -1;
     Int_t layer_y = -1;
@@ -709,12 +712,14 @@ DCAnalyzer::DecodeTOFHits(const HodoClusterContainer& ClCont)
       RA2index=2;
     }
     if(Posindex==-1) continue;
+    Double_t TimeDiff=TimeDiffToYTOF;
+    if(seg<=3 || seg==9 || seg==10 || seg==40 || seg==47 || seg==48) TimeDiff=TimeDiffToYTOF_LEPS;
 
     Double_t wpos = gGeom.CalcWirePosition(layer_x, seg-1);
     TVector3 w(wpos, 0., 0.);
     w.RotateY(RA2[RA2index]*TMath::DegToRad());
     const TVector3& hit_pos = TOFPos[Posindex] + w
-      + TVector3(0., dt*TimeDiffToYTOF, 0.);
+      + TVector3(0., dt*TimeDiff, 0.);
     //std::cout<<"TOF seg="<<seg<<", hit_pos=("<<hit_pos.x()<<", "<<hit_pos.y()<<", "<<hit_pos.z()<<")"<<std::endl;
     // X
     Double_t diffLandG=gGeom.GetLocalZ("TOF-X")-gGeom.GetGlobalPosition("TOF-X").z();
