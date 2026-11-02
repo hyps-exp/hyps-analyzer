@@ -538,6 +538,15 @@ DCAnalyzer::DecodeTOFHits(const HodoHC& HitCont)
     gGeom.GetGlobalPosition("TOF-DX-L")
   };
 
+  Bool_t LEPSTOFFlag[NumOfSegTOF]={false};
+  static const Int_t NumOfLEPSTOF= gUser.GetSize("LEPSTOFSEG");
+  //std::cout<<"LEPSTOF NSEG: "<<NumOfLEPSTOF<<std::endl;
+  for(Int_t index=0;index<NumOfLEPSTOF;index++){
+    Int_t LEPSseg= gUser.GetParameter("LEPSTOFSEG",index);//0 origin
+    LEPSTOFFlag[LEPSseg]=true;
+    //std::cout<<"LEPSTOFFlag ON SEG: "<<LEPSseg<<std::endl;
+  }
+
   for(const auto& hodo_hit: HitCont){
     const Double_t seg = hodo_hit->SegmentId()+1;// 1 origin
     const Double_t dt  = hodo_hit->TimeDiff();
@@ -571,7 +580,11 @@ DCAnalyzer::DecodeTOFHits(const HodoHC& HitCont)
     }
     if(Posindex==-1) continue;
     Double_t TimeDiff=TimeDiffToYTOF;
-    if(seg<=3 || seg==9 || seg==10 || seg==40 || seg==47 || seg==48) TimeDiff=TimeDiffToYTOF_LEPS;
+    if(LEPSTOFFlag[(Int_t)seg-1]){
+      TimeDiff=TimeDiffToYTOF_LEPS;
+      //  std::cout<<"LEPSTOF set SEG: "<<seg<<std::endl;
+    }
+
     Double_t wpos = gGeom.CalcWirePosition(layer_x, seg-1);
     TVector3 w(wpos, 0., 0.);
     w.RotateY(RA2[RA2index]*TMath::DegToRad()); // for the tilting plane case
@@ -618,6 +631,15 @@ DCAnalyzer::DecodeTOFHits(const HodoClusterContainer& ClCont)
     gGeom.GetGlobalPosition("LEPS-TOF-UX-Tilt-L"),
     gGeom.GetGlobalPosition("LEPS-TOF-DX-Tilt-L"),
   };
+
+  Bool_t LEPSTOFFlag[NumOfSegTOF]={false};
+  static const Int_t NumOfLEPSTOF= gUser.GetSize("LEPSTOFSEG");
+  //std::cout<<"LEPSTOF NSEG: "<<NumOfLEPSTOF<<std::endl;
+  for(Int_t index=0;index<NumOfLEPSTOF;index++){
+    Int_t LEPSseg= gUser.GetParameter("LEPSTOFSEG",index);//0 origin
+    LEPSTOFFlag[LEPSseg]=true;
+    //std::cout<<"LEPSTOFFlag ON SEG: "<<LEPSseg<<std::endl;
+  }
 
   for(const auto& hodo_cluster: ClCont){
     const Double_t seg = hodo_cluster->MeanSeg()+1;//1 origin
@@ -713,7 +735,11 @@ DCAnalyzer::DecodeTOFHits(const HodoClusterContainer& ClCont)
     }
     if(Posindex==-1) continue;
     Double_t TimeDiff=TimeDiffToYTOF;
-    if(seg<=3 || seg==9 || seg==10 || seg==40 || seg==47 || seg==48) TimeDiff=TimeDiffToYTOF_LEPS;
+
+    if(LEPSTOFFlag[(Int_t)seg-1]){
+      TimeDiff=TimeDiffToYTOF_LEPS;
+      //std::cout<<"LEPSTOF set SEG: "<<seg<<std::endl;
+    }
 
     Double_t wpos = gGeom.CalcWirePosition(layer_x, seg-1);
     TVector3 w(wpos, 0., 0.);
