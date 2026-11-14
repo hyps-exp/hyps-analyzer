@@ -51,6 +51,8 @@ private:
 
   Double_t  m_PathLength;
   ThreeVector m_CFTVtx;
+
+  Int_t     m_N_decayHit;
 public:
   enum CATCHParticle {
     kPion, kProton, kOthers, kBGOP, kHYPS, kThrough, kParicle
@@ -94,6 +96,7 @@ public:
   Double_t GetBGOAdc() {return m_bgo_adc;}
   Double_t GetBGOAdcCor() {return m_bgo_adc_cor;}
   Double_t GetBGOPulseHeight() {return m_bgo_pulse_height;}
+  Int_t    GetNDecayHit() { return m_N_decayHit;}  
 };
 
 

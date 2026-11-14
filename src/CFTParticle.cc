@@ -486,6 +486,130 @@ Bool_t CFTParticle::Calculate()
 
   m_TotalE_max = m_cft_Total_dE_max + m_bgo_energy;
 
+  // Kaon+ ID
+  Int_t N_decayHitMinus=0, N_decayHitPlus=0;;
+  if (m_bgo_seg>=0 && m_bgo_seg<NumOfSegBGO) {
+    std::vector<Int_t> BGOCandSegMinus;
+    std::vector<Int_t> BGOCandSegPlus;
+    Int_t N_neighbor=5;
+    for (Int_t i=1; i<=N_neighbor; i++) {
+      Int_t candSeg = m_bgo_seg - i;
+      if (candSeg < 0)
+	candSeg += NumOfSegBGO;
+
+      BGOCandSegMinus.push_back(candSeg);
+    }
+    for (Int_t i=1; i<=N_neighbor; i++) {
+      Int_t candSeg = m_bgo_seg + i;
+      if (candSeg >= NumOfSegBGO)
+	candSeg -= NumOfSegBGO;
+
+      BGOCandSegPlus.push_back(candSeg);
+    }
+
+    for (Int_t i=0; i<nhBGO; i++) {
+      const auto& hit = m_hodoAna->GetHit<HodoWaveformHit>("BGO", i);
+      Int_t seg = hit->SegmentId();
+      Int_t Npulse = hit->GetNPulse(U);
+
+      if (seg != m_bgo_seg && Npulse>0 && !hit->IsTrackJoined()) {
+	Double_t de = -999.;
+	Int_t Npulse = hit->GetNPulse(U);
+	for(Int_t m = 0; m<Npulse; ++m){
+	  Double_t pulse_time   = hit->GetPulseTime(m);
+	  if(MinPulseTimeBGO<pulse_time&&pulse_time<MaxPulseTimeBGO){
+	    de = hit->DeltaE(m);
+	  }
+	}
+
+	Bool_t hit_flag = false;
+	Int_t NhitT = hit->GetEntries(U);
+	if(de>0){
+	  for(Int_t m=0; m<NhitT; ++m){
+	    Double_t time = hit->GetTUp(m);
+	    if(MinTimeBGO<time&&time<MaxTimeBGO){
+	      hit_flag = true;
+	    }
+	  }
+	}
+	if(hit_flag) {
+	  for (Int_t iseg = 0; iseg<BGOCandSegMinus.size(); ++iseg) {
+	    if (seg == BGOCandSegMinus[iseg])
+	      N_decayHitMinus++;	      
+	  }
+	  for (Int_t iseg = 0; iseg<BGOCandSegPlus.size(); ++iseg) {
+	    if (seg == BGOCandSegPlus[iseg])
+	      N_decayHitPlus++;	      
+	  }
+	}
+      }
+    }
+  }
+
+  {
+    distPiID=1000.;
+    Int_t segPiID = -1;
+    for(Int_t iseg = 0; iseg<NumOfSegPiID; ++iseg){
+
+      Double_t x, y;
+      PiIDPos(iseg, &x, &y);
+      if     (xyFlag==0){distPiID = (Axy*x-y+Bxy)/sqrt(Axy*Axy+1.*1.);}
+      else if(xyFlag==1){distPiID = (Axy*y-x+Bxy)/sqrt(Axy*Axy+1.*1.);}
+      Double_t u=Dir.x(), v=Dir.y();
+      Double_t x0=Pos0.x(), y0=Pos0.y();
+      Double_t t = (u*(x-x0)+v*(y-y0))/(u*u+v*v);
+      if (t>=0) {
+	if (fabs(distPiID)<40) {
+	  segPiID = iseg;
+	}
+      }
+    }
+
+    if (segPiID>=0 && segPiID<NumOfSegPiID) {
+      std::vector<Int_t> PiIDCandSegMinus;
+      std::vector<Int_t> PiIDCandSegPlus;
+      Int_t N_neighbor=4;
+      for (Int_t i=1; i<=N_neighbor; i++) {
+	Int_t candSeg = segPiID - i;
+	if (candSeg < 0)
+	  candSeg += NumOfSegPiID;
+
+	PiIDCandSegMinus.push_back(candSeg);
+      }
+      for (Int_t i=1; i<=N_neighbor; i++) {
+	Int_t candSeg = segPiID + i;
+	if (candSeg >= NumOfSegPiID)
+	  candSeg -= NumOfSegPiID;
+
+	PiIDCandSegPlus.push_back(candSeg);
+      }
+
+      for(Int_t i = 0; i<nhPiID; ++i){
+	const auto& hit = m_hodoAna->GetHit<CFTFiberHit>("PiID", i);
+	Int_t seg   = hit->SegmentId();
+	Int_t NhitT = hit->GetEntries(U);
+	Bool_t hit_flag = false;
+	
+	for(Int_t m = 0; m<NhitT; ++m){
+	  Double_t time = hit->GetTUp(m);
+	  if(time>-20&&time<50){hit_flag=true;}
+	}
+	
+	if(!hit_flag)continue;
+	
+	for (Int_t iseg = 0; iseg<PiIDCandSegMinus.size(); ++iseg) {
+	  if (seg == PiIDCandSegMinus[iseg])
+	    N_decayHitMinus++;	      
+	}
+	for (Int_t iseg = 0; iseg<PiIDCandSegPlus.size(); ++iseg) {
+	  if (seg == PiIDCandSegPlus[iseg])
+	    N_decayHitPlus++;	      
+	}
+      }
+    }
+  }
+  m_N_decayHit = N_decayHitMinus + N_decayHitPlus;
+  
   return true;
 
 }
