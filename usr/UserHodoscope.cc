@@ -80,6 +80,17 @@ struct Event
   Double_t t0ra[NumOfSegT0];
   Double_t t0rt[NumOfSegT0][MaxDepth];
 
+  //T0, RF, RF-PHC
+  Int_t nhT0;
+  Double_t T0Seg[MaxHits];
+  Double_t tT0[MaxHits];
+  Double_t dtT0[MaxHits];
+  Double_t deT0[MaxHits];
+  Double_t udeT0[MaxHits];
+  Double_t ddeT0[MaxHits];
+
+  Double_t RF1st;
+
   Int_t sacnhits;
   Int_t sachitpat[MaxHits];
   Double_t saca[NumOfSegSAC];
@@ -155,6 +166,9 @@ Event::clear()
   Time0       = qnan;
   CTime0      = qnan;
 
+  nhT0  = 0;
+  RF1st = qnan;
+
   for(Int_t it=0; it<NumOfSegTrig; ++it){
     trigpat[it]  = -1;
     trigflag[it] = -1;
@@ -201,6 +215,15 @@ Event::clear()
       t0[it][m]        = qnan;
       ct0[it][m]       = qnan;
     }
+  }
+
+  for(Int_t it=0; it<MaxHits; ++it){
+    T0Seg[it] = -1;
+    tT0[it]   = qnan;
+    dtT0[it]  = qnan;
+    deT0[it]  = qnan;
+    udeT0[it] = qnan;
+    ddeT0[it] = qnan;
   }
 
 
@@ -570,6 +593,7 @@ ProcessingNormal()
     Int_t nh = hodoAna.GetNHits("RF");
     HF1(RFHid, Double_t(nh));
 
+    Double_t rf1st = 999.; // RF1st hit
     for(Int_t i=0; i<nh; ++i){
 
       const auto& hit = hodoAna.GetHit("RF", i);
@@ -586,8 +610,12 @@ ProcessingNormal()
           ++m_l;
         }
       }
+
+      Double_t t_first = hit->GetTUp();
+      if(t_first < rf1st) rf1st = t_first;
     }
 
+    event.RF1st = rf1st;
   }
 
       ///// Tag-SF
@@ -1370,7 +1398,30 @@ ProcessingNormal()
       }
     }
   }
-#endif // BH2, SAC
+#endif // BH2, SAC, T0, RF-PHC
+
+  hodoAna.DecodeHits("T0");
+  hodoAna.TimeCut("T0", -2, 2);
+  {
+    Int_t nh = hodoAna.GetNHits("T0");
+    event.nhT0 = nh;
+    for(Int_t i=0; i<nh && i<MaxHits; ++i){
+      const auto& hit = hodoAna.GetHit("T0", i);
+      if(!hit) continue;
+      Double_t seg = hit->SegmentId()+1;
+      Double_t cmt = hit->CMeanTime();
+      Double_t dt  = hit->TimeDiff();
+      Double_t de  = hit->DeltaE();
+      Double_t ude = hit->UDeltaE();
+      Double_t dde = hit->DDeltaE();
+      event.T0Seg[i] = seg;
+      event.tT0[i]   = cmt;
+      event.dtT0[i]  = dt;
+      event.deT0[i]  = de;
+      event.udeT0[i] = ude;
+      event.ddeT0[i] = dde;
+    }
+  }
 
   // TOF
   hodoAna.DecodeHits("TOF");
@@ -1823,6 +1874,16 @@ ConfMan::InitializeHistograms()
   tree->Branch("t0lt",       event.t0lt,      Form("t0lt[%d][%d]/D", NumOfSegT0, MaxDepth));
   tree->Branch("t0ra",       event.t0ra,      Form("t0ra[%d]/D", NumOfSegT0));
   tree->Branch("t0rt",       event.t0rt,      Form("t0rt[%d][%d]/D", NumOfSegT0, MaxDepth));
+
+  // RF-PHC ( T0, RF)
+  tree->Branch("nhT0",   &event.nhT0,   "nhT0/I");
+  tree->Branch("T0Seg",   event.T0Seg,  "T0Seg[nhT0]/D");
+  tree->Branch("tT0",     event.tT0,    "tT0[nhT0]/D");
+  tree->Branch("dtT0",    event.dtT0,   "dtT0[nhT0]/D");
+  tree->Branch("deT0",    event.deT0,   "deT0[nhT0]/D");
+  tree->Branch("udeT0",   event.udeT0,  "udeT0[nhT0]/D");
+  tree->Branch("ddeT0",   event.ddeT0,  "ddeT0[nhT0]/D");
+  tree->Branch("RF1st",  &event.RF1st,  "RF1st/D");
   // //SAC
   tree->Branch("sacnhits",   &event.sacnhits,   "sacnhits/I");
   tree->Branch("sachitpat",   event.sachitpat,  Form("sachitpat[%d]/I", NumOfSegSAC));
