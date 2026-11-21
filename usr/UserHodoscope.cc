@@ -840,6 +840,7 @@ ProcessingNormal()
 	  //HF1(TagPLHid +100*(seg+1) +13, t);
 	  if(fabs(t)<5) is_hit_time=true;
 	  HF1(TagSFHid +13 +plane, t);
+	  HF1(TagSFHid +100*(seg+1) +13 +plane, t);
 	}
 	if(is_hit_time){
 	  //if(plane==0) SFFhit.push_back(seg);
@@ -1626,8 +1627,8 @@ ConfMan::InitializeHistograms()
   HB1(TagSFHid +31, "#Cluster Tag-SFB all matching", NumOfSegTagSF+1,0.,Double_t(NumOfSegTagSF+1));
   HB1(TagSFHid +3, "SFF leading", NbinTdc, MinTdc, MaxTdc);
   HB1(TagSFHid +4, "SFB leading", NbinTdc, MinTdc, MaxTdc);
-  HB1(TagSFHid +13, "Tag-SFF time", 20, -10, 10);
-  HB1(TagSFHid +14, "Tag-SFB time", 20, -10, 10);
+  HB1(TagSFHid +13, "Tag-SFF time", 2000, -100, 100);
+  HB1(TagSFHid +14, "Tag-SFB time", 2000, -100, 100);
   HB1(TagSFHid +5, "HitPat SFF", NumOfSegTagSF, 0, Double_t(NumOfSegTagSF));
   HB1(TagSFHid +6, "HitPat SFB", NumOfSegTagSF, 0, Double_t(NumOfSegTagSF));
   HB1(TagSFHid +15, "HitPat SFF cluster", NumOfSegTagSF*2, 0, Double_t(NumOfSegTagSF));
@@ -1647,8 +1648,12 @@ ConfMan::InitializeHistograms()
   for(Int_t i=1;i<=NumOfSegTagSF;++i){
     TString title3 = Form("SFF-%d Tdc", i);
     TString title4 = Form("SFB-%d Tdc", i);
+    TString title13 = Form("SFF-%d time", i);
+    TString title14 = Form("SFB-%d time", i);
     HB1(TagSFHid +100*i +3, title3, NbinTdc, MinTdc, MaxTdc);
     HB1(TagSFHid +100*i +4, title4, NbinTdc, MinTdc, MaxTdc);
+    HB1(TagSFHid +100*i +13, title13, 2000, -100, 100);
+    HB1(TagSFHid +100*i +14, title14, 2000, -100, 100);
   }
 
   //Tag-PL
