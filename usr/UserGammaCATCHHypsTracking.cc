@@ -65,7 +65,9 @@ const auto& gPHC  = HodoPHCMan::GetInstance();
 auto& gTAGPLMth = TAGPLMatch::GetInstance();
 auto& gRM       = RMAnalyzer::GetInstance();
 const Double_t KaonMass = pdg::KaonMass();
+const Double_t PionMass = pdg::PionMass();
 const Double_t ProtonMass = pdg::ProtonMass();
+const Double_t LambdaMass = pdg::LambdaMass();
 const double MinOfDeltaU_CFT = -0.1;
 const double MaxOfDeltaU_CFT = 0.1;
 const double MinOfDeltaV_CFT = -0.1;
@@ -346,6 +348,15 @@ struct Event
   Double_t Pos0_x_hyps[MaxDepth];
   Double_t Pos0_y_hyps[MaxDepth];
   Double_t Pos0_z_hyps[MaxDepth];
+
+  // decay lambda
+  Double_t decayLambda_theta_pion;
+  Double_t decayLambda_theta_proton;
+  Double_t decayLambda_mom_pi;
+  Double_t decayLambda_mom_p;
+  Double_t decayLambda_mom_p_x;
+  Double_t decayLambda_mom_p_y;
+  Double_t decayLambda_mom_p_z;
 
   void clear();
 };
@@ -663,6 +674,14 @@ Event::clear()
     Pos0_y_hyps[it] = 0;
     Pos0_z_hyps[it] = 0;
   }
+
+  decayLambda_theta_pion   = qnan;
+  decayLambda_theta_proton = qnan;
+  decayLambda_mom_pi  = qnan;
+  decayLambda_mom_p   = qnan;
+  decayLambda_mom_p_x = qnan;
+  decayLambda_mom_p_y = qnan;
+  decayLambda_mom_p_z = qnan;
 
 }
 
@@ -1517,6 +1536,7 @@ ProcessingNormal()
     }
   } // for in ntHyps
 
+  Int_t nl = -999;
   {
     for(Int_t i=0; i<ntHyps; i++){
       Double_t MissMass;
@@ -1537,7 +1557,10 @@ ProcessingNormal()
       HF1(95, MissMass);
       event.MissMass[i] = MissMass;
       event.MissMom[i] = MissMom;
-      if(MissMass>1.05&&MissMass<1.155) Flag_Lambda = true;
+      if(MissMass>1.05&&MissMass<1.155){
+	Flag_Lambda = true;
+	nl = i;
+      }
     }
   }
 
@@ -2004,6 +2027,50 @@ ProcessingNormal()
   event.nBGOP_CFT  = nbgop;
   event.nHYPS_CFT  = nhyps;
 
+  {
+    Bool_t flagCFTMatch = true;
+    if(npi == 1 && np == 1 && Flag_Lambda){
+      for(Int_t ih=0; ih<event.nBGOP_CFT; ih++){
+	if(event.track_bgop[ih] == event.track_pion[0] || event.track_bgop[ih] == event.track_proton[0]){
+	  flagCFTMatch = false;
+	  break;
+	}
+      }
+      for(Int_t ih=0; ih<event.nHYPS_CFT; ih++){
+	if(event.track_hyps[ih] == event.track_pion[0] || event.track_hyps[ih] == event.track_proton[0]){
+	  flagCFTMatch = false;
+	  break;
+	}
+      }
+
+      if(flagCFTMatch){
+	ThreeVector pL(-HypsMom[nl].x(), -HypsMom[nl].y(), event.EGamma - HypsMom[nl].z());
+	Double_t D = TMath::Sqrt(event.Dir_x_pi[0]*event.Dir_x_pi[0] + event.Dir_y_pi[0]*event.Dir_y_pi[0] + event.Dir_z_pi[0]*event.Dir_z_pi[0]);
+	ThreeVector Dir_pion(event.Dir_x_pi[0]/D, event.Dir_y_pi[0]/D, event.Dir_z_pi[0]/D);
+	Double_t cost = (pL.x()*Dir_pion.x() + pL.y()*Dir_pion.y() + pL.z()*Dir_pion.z())/(pL.Mag() * Dir_pion.Mag());
+	Double_t momCal;
+	Bool_t Piflag = Kinematics::CalcDecayPiMom(pL.Mag(), LambdaMass, ProtonMass, PionMass, cost, &momCal);
+	// std::cout << "Piflag" << Piflag << std::endl;
+	if(Piflag){
+	  event.decayLambda_theta_pion = TMath::ACos(cost)*TMath::RadToDeg();
+	  event.decayLambda_mom_pi     = momCal;
+
+	  Double_t x = pL.x() - event.decayLambda_mom_pi*Dir_pion.x();
+	  Double_t y = pL.y() - event.decayLambda_mom_pi*Dir_pion.y();
+	  Double_t z = pL.z() - event.decayLambda_mom_pi*Dir_pion.z();
+	  event.decayLambda_mom_p = TMath::Sqrt(x*x + y*y + z*z);
+
+	  event.decayLambda_mom_p_x = x;
+	  event.decayLambda_mom_p_y = y;
+	  event.decayLambda_mom_p_z = z;
+
+	  Double_t cosp = (pL.x()*x + pL.y()*y + pL.z()*z)/(pL.Mag() * event.decayLambda_mom_p);
+	  event.decayLambda_theta_proton = TMath::ACos(cosp)*TMath::RadToDeg();
+	}
+      }
+    }
+  }
+
   return true;
 }
 
@@ -2466,7 +2533,7 @@ ConfMan::InitializeHistograms()
   tree->Branch("vpy",          event.vpy,          Form("vpy[%d]/D", NumOfLayersVP));
   tree->Branch("vpu",          event.vpu,          Form("vpu[%d]/D", NumOfLayersVP));
   tree->Branch("vpv",          event.vpv,          Form("vpv[%d]/D", NumOfLayersVP));
-  
+
   event.resL.resize(PlMaxTOF);
   /*
   for( Int_t i = PlMinSdcIn;  i<= PlMaxSdcIn;  i++ ) tree->Branch(Form("ResL%d", i), &event.resL[i-1]);
@@ -2597,6 +2664,13 @@ ConfMan::InitializeHistograms()
   tree->Branch("Pos0_y_hyps",          event.Pos0_y_hyps,          "Pos0_y_hyps[nHYPS_CFT]/D");
   tree->Branch("Pos0_z_hyps",          event.Pos0_z_hyps,          "Pos0_z_hyps[nHYPS_CFT]/D");
 
+  tree->Branch("decayLambda_theta_pion",           &event.decayLambda_theta_pion,          "decayLambda_theta_pion/D");
+  tree->Branch("decayLambda_theta_proton",         &event.decayLambda_theta_proton,        "decayLambda_theta_proton/D");
+  tree->Branch("decayLambda_mom_pi",               &event.decayLambda_mom_pi,              "decayLambda_mom_pi/D");
+  tree->Branch("decayLambda_mom_p",                &event.decayLambda_mom_p,               "decayLambda_mom_p/D");
+  tree->Branch("decayLambda_mom_p_x",              &event.decayLambda_mom_p_x,             "decayLambda_mom_p_x/D");
+  tree->Branch("decayLambda_mom_p_y",              &event.decayLambda_mom_p_y,             "decayLambda_mom_p_y/D");
+  tree->Branch("decayLambda_mom_p_z",              &event.decayLambda_mom_p_z,             "decayLambda_mom_p_z/D");
   // HPrint();
   return true;
 }
