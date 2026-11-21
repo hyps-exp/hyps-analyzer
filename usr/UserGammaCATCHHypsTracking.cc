@@ -350,6 +350,9 @@ struct Event
   Double_t Pos0_z_hyps[MaxDepth];
 
   // decay lambda
+  Double_t decayLambda_vtx_x;
+  Double_t decayLambda_vtx_y;
+  Double_t decayLambda_vtx_z;
   Double_t decayLambda_theta_pion;
   Double_t decayLambda_theta_proton;
   Double_t decayLambda_mom_pi;
@@ -675,6 +678,9 @@ Event::clear()
     Pos0_z_hyps[it] = 0;
   }
 
+  decayLambda_vtx_x = qnan;
+  decayLambda_vtx_y = qnan;
+  decayLambda_vtx_z = qnan;
   decayLambda_theta_pion   = qnan;
   decayLambda_theta_proton = qnan;
   decayLambda_mom_pi  = qnan;
@@ -2066,6 +2072,23 @@ ProcessingNormal()
 
 	  Double_t cosp = (pL.x()*x + pL.y()*y + pL.z()*z)/(pL.Mag() * event.decayLambda_mom_p);
 	  event.decayLambda_theta_proton = TMath::ACos(cosp)*TMath::RadToDeg();
+
+	  ThreeVector bPos(0, 0, 0);
+	  ThreeVector bMom(0, 0, 1);
+	  ThreeVector HypsPos_check(event.vtx_Hyps[nl], event.vty_Hyps[nl], event.vtz_Hyps[nl]);
+	  ThreeVector HypsMom_check(event.pHyps_x[nl],  event.pHyps_y[nl],  event.pHyps_z[nl]);
+	  ThreeVector vtxL = Kinematics::VertexPoint(bPos, HypsPos_check, bMom, HypsMom_check);
+
+	  ThreeVector Pos0_pion(event.Pos0_x_pi[0],  event.Pos0_y_pi[0],  event.Pos0_z_pi[0]);
+	  ThreeVector Pos0_proton(event.Pos0_x_p[0],  event.Pos0_y_p[0],  event.Pos0_z_p[0]);
+	  Double_t D = TMath::Sqrt(event.Dir_x_p[0]*event.Dir_x_p[0] + event.Dir_y_p[0]*event.Dir_y_p[0] + event.Dir_z_p[0]*event.Dir_z_p[0]);
+	  ThreeVector Dir_proton = ThreeVector(event.Dir_x_p[0]/D, event.Dir_y_p[0]/D, event.Dir_z_p[0]/D);
+
+	  Double_t dist_pip;
+	  ThreeVector Ver = Kinematics::VertexPoint3D(vtxL, Pos0_pion, pL, Dir_pion, dist_pip);
+	  event.decayLambda_vtx_x = Ver.x();
+	  event.decayLambda_vtx_y = Ver.y();
+	  event.decayLambda_vtx_z = Ver.z();
 	}
       }
     }
